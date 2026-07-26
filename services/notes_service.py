@@ -1,0 +1,70 @@
+from services.ai_service import ai_service
+from prompts.notes import NOTES_PROMPT
+from repositories.note_repository import note_repository
+from sqlalchemy.orm import Session
+
+class NotesService:
+    @staticmethod
+    def generate_notes(db: Session, subject_id: int, title: str, context: str):
+        response = ai_service.generate(
+            capability="reasoning",
+            prompt_template=NOTES_PROMPT,
+            input_variables={"context": context}
+        )
+        note = note_repository.create(db, {
+            "subject_id": subject_id,
+            "title": title,
+            "content": response
+        })
+        return note
+
+    @staticmethod
+    def get_by_subject(db: Session, subject_id: int):
+        return note_repository.get_by_subject(db, subject_id)
+        
+    @staticmethod
+    def get_all(db: Session):
+        return note_repository.get_all(db)
+
+    @staticmethod
+    def get(db: Session, note_id: int):
+        return note_repository.get(db, note_id)
+        
+    @staticmethod
+    def delete(db: Session, note_id: int):
+        return note_repository.delete(db, note_id)
+        
+    @staticmethod
+    def process_action(db: Session, note_id: int, action: str):
+        from services.flashcard_service import flashcard_service
+        from services.quiz_service import quiz_service
+        from services.summary_service import summary_service
+        
+        note = note_repository.get(db, note_id)
+        if not note: return False
+        
+        if action == 'rapikan':
+            from langchain_core.prompts import PromptTemplate
+            prompt = PromptTemplate.from_template("Rapikan format dan bahasa dari catatan berikut tanpa mengubah makna aslinya:\n\n{context}")
+            new_content = ai_service.generate("reasoning", prompt, {"context": note.content})
+            note_repository.update(db, note, {"content": new_content})
+            
+        elif action == 'ringkas':
+            summary = summary_service.generate_summary(note.content, "Ringkas poin-poin penting.")
+            note_repository.update(db, note, {"content": note.content + "\n\n--- RINGKASAN AI ---\n" + summary})
+            
+        elif action == 'jelaskan':
+            from langchain_core.prompts import PromptTemplate
+            prompt = PromptTemplate.from_template("Jelaskan catatan berikut dengan bahasa yang lebih sederhana dan mudah dipahami:\n\n{context}")
+            explanation = ai_service.generate("reasoning", prompt, {"context": note.content})
+            note_repository.update(db, note, {"content": note.content + "\n\n--- PENJELASAN AI ---\n" + explanation})
+            
+        elif action == 'flashcard':
+            flashcard_service.generate_flashcards(db, note.subject_id, note.content)
+            
+        elif action == 'quiz':
+            quiz_service.generate_quiz(db, note.subject_id, note.content)
+            
+        return True
+
+notes_service = NotesService()

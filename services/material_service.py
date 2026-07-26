@@ -1,0 +1,86 @@
+import os
+import shutil
+from fastapi import UploadFile
+from sqlalchemy.orm import Session
+import config
+from repositories.material_repository import material_repository
+from services.cache_service import cache_service
+from services.rag_service import rag_service
+from parsers.document_parser import extract_text
+
+class MaterialService:
+    @staticmethod
+    def upload_material_sync(db: Session, subject_id: int, file: UploadFile) -> str:
+        filepath = os.path.join(config.UPLOADS_DIR, file.filename)
+        with open(filepath, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+            
+        mat = material_repository.create(db, {
+            "subject_id": subject_id,
+            "filename": file.filename,
+            "filepath": filepath
+        })
+        
+        # This will be called via BackgroundTasks
+        return filepath, mat.id
+
+    @staticmethod
+    def process_material_async(filepath: str, doc_id: str):
+        # Read file
+        text = extract_text(filepath)
+        if not text:
+            return
+            
+        # Smart chunking
+        paragraphs = text.split('\n\n')
+        chunks = []
+        current_chunk = []
+        current_word_count = 0
+        target_words = config.CHUNK_SIZE
+
+        for para in paragraphs:
+            para = para.strip()
+            if not para:
+                continue
+            word_count = len(para.split())
+            if current_word_count + word_count > target_words and current_chunk:
+                chunks.append("\n\n".join(current_chunk))
+                current_chunk = [para]
+                current_word_count = word_count
+            else:
+                current_chunk.append(para)
+                current_word_count += word_count
+                
+        if current_chunk:
+            chunks.append("\n\n".join(current_chunk))
+
+        rag_service.index_document(doc_id, chunks)
+
+        # Invalidate cache since material changed
+        from database import SessionLocal
+        db = SessionLocal()
+        cache_service.invalidate_all(db)
+        db.close()
+
+    @staticmethod
+    def delete(db: Session, id: int) -> bool:
+        mat = material_repository.get(db, id)
+        if mat:
+            doc_id = f"mat_{mat.id}"
+            rag_service.delete_document_chunks(doc_id)
+            if os.path.exists(mat.filepath):
+                try:
+                    os.remove(mat.filepath)
+                except:
+                    pass
+            success = material_repository.delete(db, id)
+            if success:
+                cache_service.invalidate_all(db)
+            return success
+        return False
+
+    @staticmethod
+    def get_by_subject(db: Session, subject_id: int):
+        return material_repository.get_by_subject(db, subject_id)
+
+material_service = MaterialService()

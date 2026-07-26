@@ -1,0 +1,23 @@
+from repositories.settings_repository import setting_repository
+from sqlalchemy.orm import Session
+
+class SettingsService:
+    @staticmethod
+    def get_embedding_model(db: Session) -> str:
+        setting = setting_repository.get_by_key(db, "embedding_model")
+        return setting.value if setting else "all-MiniLM-L6-v2"
+
+    @staticmethod
+    def set_embedding_model(db: Session, model_name: str):
+        setting_repository.set_value(db, "embedding_model", model_name)
+
+    @staticmethod
+    def get_setting(db: Session, key: str, default: str = "") -> str:
+        setting = setting_repository.get_by_key(db, key)
+        return setting.value if setting else default
+
+    @staticmethod
+    def set_setting(db: Session, key: str, value: str):
+        setting_repository.set_value(db, key, value)
+
+settings_service = SettingsService()
