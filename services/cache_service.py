@@ -1,6 +1,7 @@
 import hashlib
 from sqlalchemy.orm import Session
 from repositories.cache_repository import cache_repository
+from models import Cache
 
 class CacheService:
     @staticmethod
@@ -21,13 +22,22 @@ class CacheService:
         prompt_hash = CacheService._hash(prompt)
         context_hash = CacheService._hash(context)
         setting_hash = CacheService._hash(setting)
-        
-        cache_repository.create(db, {
-            "prompt_hash": prompt_hash,
-            "context_hash": context_hash,
-            "setting_hash": setting_hash,
-            "response": response
-        })
+
+        existing = db.query(Cache).filter(
+            Cache.prompt_hash == prompt_hash,
+            Cache.context_hash == context_hash,
+            Cache.setting_hash == setting_hash
+        ).first()
+        if existing:
+            existing.response = response
+        else:
+            db.add(Cache(
+                prompt_hash=prompt_hash,
+                context_hash=context_hash,
+                setting_hash=setting_hash,
+                response=response
+            ))
+        db.commit()
 
     @staticmethod
     def invalidate_all(db: Session):

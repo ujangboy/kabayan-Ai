@@ -1,5 +1,5 @@
 import enum
-from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Enum
+from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Enum, UniqueConstraint
 from sqlalchemy.orm import relationship
 import datetime
 from database import Base
@@ -101,6 +101,9 @@ class Message(Base):
 
 class Cache(Base):
     __tablename__ = "caches"
+    __table_args__ = (
+        UniqueConstraint('prompt_hash', 'context_hash', 'setting_hash', name='uq_cache_hash'),
+    )
     id = Column(Integer, primary_key=True, index=True)
     prompt_hash = Column(String, index=True)
     context_hash = Column(String, index=True)
