@@ -50,40 +50,43 @@ async def upload_material(
     file: UploadFile = File(...),
     db: Session = Depends(get_db)
 ):
-    # REQ-01: Validasi ukuran (max 50MB)
-    MAX_SIZE = 50 * 1024 * 1024
-    file_bytes = await file.read()
-    if len(file_bytes) > MAX_SIZE:
-        return JSONResponse(status_code=400, content={"status": "error", "message": f"Ukuran file melebihi batas 50MB. Ukuran file: {len(file_bytes) // (1024*1024)}MB"})
-    await file.seek(0)
+    try:
+        # REQ-01: Validasi ukuran (max 50MB)
+        MAX_SIZE = 50 * 1024 * 1024
+        file_bytes = await file.read()
+        if len(file_bytes) > MAX_SIZE:
+            return JSONResponse(status_code=400, content={"status": "error", "message": f"Ukuran file melebihi batas 50MB. Ukuran file: {len(file_bytes) // (1024*1024)}MB"})
+        await file.seek(0)
 
-    # REQ-01: Validasi ekstensi file
-    filename_lower = (file.filename or "").lower()
-    ALLOWED_EXTENSIONS = (".pdf", ".docx", ".doc", ".txt", ".md", ".pptx", ".xlsx")
-    if not any(filename_lower.endswith(ext) for ext in ALLOWED_EXTENSIONS):
-        return JSONResponse(status_code=400, content={"status": "error", "message": f"Format file tidak didukung. Gunakan: PDF, DOCX, TXT, MD, PPTX, XLSX"})
+        # REQ-01: Validasi ekstensi file
+        filename_lower = (file.filename or "").lower()
+        ALLOWED_EXTENSIONS = (".pdf", ".docx", ".doc", ".txt", ".md", ".pptx", ".xlsx")
+        if not any(filename_lower.endswith(ext) for ext in ALLOWED_EXTENSIONS):
+            return JSONResponse(status_code=400, content={"status": "error", "message": f"Format file tidak didukung. Gunakan: PDF, DOCX, TXT, MD, PPTX, XLSX"})
 
-    # REQ-01: Validasi magic bytes — cegah file palsu (rename ekstensi)
-    MAGIC_BYTES = {
-        ".pdf":  [b"%PDF"],
-        ".docx": [b"PK\x03\x04"],  # ZIP header (OOXML)
-        ".pptx": [b"PK\x03\x04"],
-        ".xlsx": [b"PK\x03\x04"],
-        ".txt":  None,  # teks plain, tidak ada magic bytes spesifik
-        ".md":   None,
-        ".doc":  [b"\xd0\xcf\x11\xe0"],  # OLE2 compound
-    }
-    ext = next((e for e in ALLOWED_EXTENSIONS if filename_lower.endswith(e)), None)
-    magic_list = MAGIC_BYTES.get(ext)
-    if magic_list:
-        if not any(file_bytes[:8].startswith(m) for m in magic_list):
-            return JSONResponse(status_code=400, content={"status": "error", "message": f"File '{file.filename}' tampaknya rusak atau ekstensinya dipalsukan."})
-    await file.seek(0)
+        # REQ-01: Validasi magic bytes — cegah file palsu (rename ekstensi)
+        MAGIC_BYTES = {
+            ".pdf":  [b"%PDF"],
+            ".docx": [b"PK\x03\x04"],  # ZIP header (OOXML)
+            ".pptx": [b"PK\x03\x04"],
+            ".xlsx": [b"PK\x03\x04"],
+            ".txt":  None,  # teks plain, tidak ada magic bytes spesifik
+            ".md":   None,
+            ".doc":  [b"\xd0\xcf\x11\xe0"],  # OLE2 compound
+        }
+        ext = next((e for e in ALLOWED_EXTENSIONS if filename_lower.endswith(e)), None)
+        magic_list = MAGIC_BYTES.get(ext)
+        if magic_list:
+            if not any(file_bytes[:8].startswith(m) for m in magic_list):
+                return JSONResponse(status_code=400, content={"status": "error", "message": f"File '{file.filename}' tampaknya rusak atau ekstensinya dipalsukan."})
+        await file.seek(0)
 
-    filepath, mat_id = material_service.upload_material_sync(db, subject_id, file)
-    doc_id = f"mat_{mat_id}"
-    background_tasks.add_task(material_service.process_material_async, filepath, doc_id)
-    return JSONResponse({"status": "success", "message": "Material uploaded"})
+        filepath, mat_id = material_service.upload_material_sync(db, subject_id, file)
+        doc_id = f"mat_{mat_id}"
+        background_tasks.add_task(material_service.process_material_async, filepath, doc_id)
+        return JSONResponse({"status": "success", "message": "Material uploaded"})
+    finally:
+        await file.close()
 
 @router.post("/api/materials/{material_id}/delete")
 async def delete_material(material_id: int, db: Session = Depends(get_db)):
