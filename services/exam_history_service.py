@@ -410,11 +410,10 @@ class ExamHistoryService:
     @staticmethod
     def _save_study_plan(db: Session, history_session_id: int, plan_data: dict) -> None:
         try:
-            # Delete existing plan for this session first
+            # Delete existing plan for this session — same transaction, no commit yet
             existing = study_plan_repo.get_by_history_session(db, history_session_id)
             if existing:
                 db.delete(existing)
-                db.commit()
 
             sp_items = plan_data.get("study_plan", [])
             plan = StudyPlan(
@@ -429,7 +428,7 @@ class ExamHistoryService:
                 updated_at=datetime.datetime.utcnow(),
             )
             db.add(plan)
-            db.commit()
+            db.flush()
             db.refresh(plan)
 
             for idx, day in enumerate(sp_items):
@@ -446,8 +445,9 @@ class ExamHistoryService:
                 ))
             db.commit()
         except Exception as exc:
-            logger.warning(f"_save_study_plan failed (non-fatal): {exc}")
             db.rollback()
+            logger.error(f"Gagal simpan study plan: {exc}")
+            raise
 
 
 exam_history_service = ExamHistoryService()
