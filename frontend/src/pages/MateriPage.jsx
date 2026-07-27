@@ -192,9 +192,15 @@ export default function MateriPage() {
                     <td className="px-4 py-4 text-text-secondary">{formatDate(m.upload_date)}</td>
                     <td className="px-4 py-4">
                       <div className="space-y-2">
-                        <span className={`badge ${m.status === 'Ready' ? 'badge-success' : m.status === 'Failed' ? 'badge-danger' : 'badge-warning'}`}>
+                        <span className={`badge ${m.status === 'Ready' ? 'badge-success' : m.status === 'Failed' ? 'badge-danger' : 'badge-warning'}`}
+                              title={m.status === 'Failed' && m.failure_reason ? m.failure_reason : ''}>
                           {m.status}
                         </span>
+                        {m.status === 'Failed' && m.failure_reason && (
+                          <div className="text-[10px] text-danger leading-tight max-w-[160px] break-words" title={m.failure_reason}>
+                            {m.failure_reason}
+                          </div>
+                        )}
                         <AudioStatus materialId={m.id} />
                       </div>
                     </td>

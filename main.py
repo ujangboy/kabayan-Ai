@@ -35,6 +35,8 @@ def run_migrations():
                 cursor.execute("ALTER TABLE materials ADD COLUMN language VARCHAR")
             if "status" not in columns:
                 cursor.execute("ALTER TABLE materials ADD COLUMN status VARCHAR DEFAULT 'Ready'")
+            if "failure_reason" not in columns:
+                cursor.execute("ALTER TABLE materials ADD COLUMN failure_reason TEXT")
             if "created_at" not in columns:
                 cursor.execute("ALTER TABLE materials ADD COLUMN created_at DATETIME")
             if "updated_at" not in columns:

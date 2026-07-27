@@ -1,10 +1,13 @@
 import re
 import urllib.request
 import json
+import logging
 from typing import List, Tuple
 from youtube_transcript_api import YouTubeTranscriptApi
 from sources.base_source import BaseSource, Document
 import config
+
+logger = logging.getLogger(__name__)
 
 class YoutubeSource(BaseSource):
     def __init__(self, url: str):
@@ -64,7 +67,8 @@ class YoutubeSource(BaseSource):
                     "channel_name": data.get("author_name", ""),
                     "thumbnail_url": data.get("thumbnail_url", f"https://i.ytimg.com/vi/{self.video_id}/hqdefault.jpg")
                 }
-        except Exception:
+        except Exception as e:
+            logger.warning(f"oEmbed gagal untuk video {self.video_id}: {e}. Menggunakan metadata default.")
             return {
                 "title": f"YouTube Video {self.video_id}",
                 "channel_name": "Unknown",
@@ -124,7 +128,7 @@ class YoutubeSource(BaseSource):
             return fetched_transcript, duration, lang
 
         except Exception as e:
-            print(f"[YouTube] Transcript API gagal: {e}. Beralih ke Whisper...")
+            logger.warning(f"[YouTube] Transcript API gagal untuk {self.video_id}: {e}. Beralih ke Whisper...")
             return self._transcribe_audio_with_groq()
 
     def _transcribe_audio_with_groq(self) -> Tuple[list, int, str]:
@@ -196,6 +200,7 @@ class YoutubeSource(BaseSource):
             return result, duration, lang
 
         except Exception as e:
+            logger.error(f"Whisper/Groq fallback gagal untuk video {self.video_id}: {e}", exc_info=True)
             raise ValueError(f"Whisper fallback gagal: {str(e)}")
         finally:
             if filename and os.path.exists(filename):

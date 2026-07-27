@@ -21,6 +21,7 @@ async def get_materials_json(db: Session = Depends(get_db)):
             "filename": m.filename,
             "material_type": m.material_type,
             "status": m.status,
+            "failure_reason": m.failure_reason,
             "upload_date": m.upload_date.isoformat() if m.upload_date else None,
             "subject": {"id": m.subject.id, "name": m.subject.name} if m.subject else None
         })

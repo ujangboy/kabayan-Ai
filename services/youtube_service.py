@@ -1,3 +1,4 @@
+import logging
 from sqlalchemy.orm import Session
 from models import Material, MaterialType
 from repositories.material_repository import material_repository
@@ -8,6 +9,8 @@ from services.cache_service import cache_service
 from database import SessionLocal
 import os
 import config
+
+logger = logging.getLogger(__name__)
 
 class YoutubeService:
     @staticmethod
@@ -76,10 +79,11 @@ class YoutubeService:
             cache_service.invalidate_all(db)
 
         except Exception as e:
-            print(f"Error processing youtube: {e}")
+            logger.error(f"Error processing YouTube material {material_id}: {e}", exc_info=True)
             mat = material_repository.get(db, material_id)
             if mat:
                 mat.status = "Failed"
+                mat.failure_reason = YoutubeService._user_friendly_error(e)
                 db.commit()
         finally:
             db.close()
@@ -97,5 +101,24 @@ class YoutubeService:
                 cache_service.invalidate_all(db)
             return success
         return False
+
+    @staticmethod
+    def _user_friendly_error(exc: Exception) -> str:
+        err_str = str(exc).lower()
+        if "invalid youtube url" in err_str:
+            return "Gagal: URL YouTube tidak valid."
+        if "private" in err_str or "not available" in err_str:
+            return "Gagal: Video bersifat privat atau tidak tersedia."
+        if "transcript" in err_str and "not found" in err_str:
+            return "Gagal: Video tidak memiliki caption/transkrip."
+        if "whisper" in err_str or "groq" in err_str:
+            return "Gagal: Transkrip tidak ditemukan dan fallback Whisper gagal."
+        if "rate limit" in err_str or "429" in err_str:
+            return "Gagal: Batas permintaan API terlampaui. Coba lagi nanti."
+        if "timeout" in err_str or "timed out" in err_str:
+            return "Gagal: Waktu permintaan habis. Coba lagi nanti."
+        if "copyright" in err_str or "blocked" in err_str:
+            return "Gagal: Video diblokir atau memiliki hak cipta."
+        return f"Gagal: {str(exc)[:120]}"
 
 youtube_service = YoutubeService()

@@ -43,6 +43,7 @@ class Material(Base):
     thumbnail = Column(String, nullable=True)
     language = Column(String, nullable=True)
     status = Column(String, default="Ready") # Pending, Processing, Ready, Failed
+    failure_reason = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
     upload_date = Column(DateTime, default=datetime.datetime.utcnow)

@@ -26,7 +26,7 @@ class EdgeTTSEngine(TTSEngine):
             await communicate.save(output_path)
             return True
         except Exception as e:
-            print(f"EdgeTTS Error: {e}")
+            logger.error(f"EdgeTTS Error untuk teks sepanjang {len(text)} chars: {e}", exc_info=True)
             return False
 
 class PiperTTSEngine(TTSEngine):
@@ -75,10 +75,10 @@ class AudioService:
             
             # Strategi 1: cari di FAISS index
             context = rag_service.search("Ringkas seluruh materi penting", [doc_id], 10)
+            logger.info(f"[AudioGen] FAISS search untuk material {material_id}: context {len(context)} chars, {len(context.split())} words")
 
             # Strategi 2 (fallback): FAISS kosong → baca file langsung
             if not context:
-                import os
                 from parsers.document_parser import extract_text
                 if material.filepath and os.path.exists(material.filepath):
                     try:
@@ -99,6 +99,7 @@ class AudioService:
 
             script = ai_service.generate("summary", prompt, {"context": context}, use_cache=False)
             clean_script = self.clean_text_for_tts(script)
+            logger.info(f"[AudioGen] AI script selesai: {len(clean_script)} chars, {len(clean_script.split())} words. Akan dikirim ke TTS.")
 
             # Ensure static directory exists
             os.makedirs("static/audio", exist_ok=True)
@@ -126,11 +127,13 @@ class AudioService:
                 return
 
             if success:
+                logger.info(f"[AudioGen] Sukses: {filepath} (engine={engine_used})")
                 audio_repository.update_status(db, audio_gen.id, status="done", filepath=f"/{filepath}", engine_used=engine_used)
             else:
+                logger.error(f"[AudioGen] GAGAL: TTS engine gagal untuk material {material_id}")
                 audio_repository.update_status(db, audio_gen.id, status="failed")
         except Exception as e:
-            print(f"Error generating audio: {e}")
+            logger.error(f"[AudioGen] Error tidak terduga untuk material {material_id}: {e}", exc_info=True)
             if 'audio_gen' in locals() and audio_gen:
                 audio_repository.update_status(db, audio_gen.id, status="failed")
         finally:
