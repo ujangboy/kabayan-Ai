@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
-from models import ExamBlueprint, ExamSession
+from models import ExamBlueprint, ExamSession, ExamAttempt, StudyPlan, StudyPlanItem
 from repositories.base import BaseRepository
 from typing import List, Optional
 import datetime

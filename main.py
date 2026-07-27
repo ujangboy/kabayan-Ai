@@ -5,7 +5,7 @@ from fastapi.responses import RedirectResponse, JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 import os
 
-from routers import dashboard, subjects, materials, chat, notes, flashcards, quizzes, youtube, settings, exam_analyzer, exam_history
+from routers import dashboard, subjects, materials, chat, notes, flashcards, quizzes, youtube, settings, exam_analyzer
 from database import engine, Base, SessionLocal
 import config
 
@@ -36,8 +36,11 @@ def run_exam_unification_migration():
         cursor.execute("PRAGMA table_info(exam_sessions)")
         sess_cols = {col[1] for col in cursor.fetchall()}
         if 'status' in sess_cols:
+            # Migration already done; just ensure old table is gone
+            cursor.execute("DROP TABLE IF EXISTS exam_history_sessions")
+            conn.commit()
             conn.close()
-            return  # Already migrated
+            return
 
         # Check if source table exists
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='exam_history_sessions'")
@@ -131,6 +134,9 @@ def run_exam_unification_migration():
                         "UPDATE study_plans SET session_id = ? WHERE history_session_id = ?",
                         (new_id, old_id)
                     )
+
+            # Step 5: Drop exam_history_sessions (model removed, table no longer needed)
+            cursor.execute("DROP TABLE IF EXISTS exam_history_sessions")
 
             conn.commit()
             logger.info(f"Exam unification migration complete: {len(history_rows) if history_rows else 0} history sessions migrated.")
@@ -266,7 +272,6 @@ app.include_router(quizzes.router)
 app.include_router(youtube.router)
 app.include_router(settings.router)
 app.include_router(exam_analyzer.router)
-app.include_router(exam_history.router)
 
 @app.get("/{full_path:path}")
 async def serve_react(full_path: str):

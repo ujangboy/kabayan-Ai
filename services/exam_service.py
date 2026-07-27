@@ -7,6 +7,7 @@ import json
 import re
 import random
 import logging
+import datetime
 from typing import Optional, List
 from sqlalchemy.orm import Session
 
@@ -15,6 +16,8 @@ from services.rag_service import rag_service
 from services.assessment_engine import assemble_evaluation, generate_study_plan
 from repositories.exam_repository import exam_blueprint_repository, exam_session_repository
 from repositories.question_bank_repository import question_bank_repository
+from repositories.exam_history_repository import exam_attempt_repo, exam_review_repo, study_plan_repo, study_plan_item_repo
+from models import ExamSession, StudyPlan, StudyPlanItem
 from prompts.exam_analyzer import (
     ANALYSIS_PROMPT,
     BLUEPRINT_PROMPT,
@@ -28,6 +31,45 @@ MAX_CONTEXT_WORDS = 3000
 # Minimum questions in bank before we skip AI generation
 BANK_MIN_RATIO = 0.8   # need ≥ 80% of requested questions already in bank
 
+
+# ─── History Helpers ─────────────────────────────────────────────────────────
+
+def _calc_grade(score: int) -> str:
+    if score >= 90: return "A"
+    if score >= 80: return "B"
+    if score >= 70: return "C"
+    if score >= 60: return "D"
+    return "E"
+
+def _save_reviews(db: Session, attempt_id: int, questions_json_str: str, answers_json_str: str, eval_data: dict) -> None:
+    try:
+        questions_data = json.loads(questions_json_str) if questions_json_str else {}
+        questions = questions_data.get("questions", [])
+        answers   = json.loads(answers_json_str) if answers_json_str else {}
+        per_q_fb = {str(f["question_id"]): f for f in eval_data.get("per_question_feedback", [])}
+        rows = []
+        for q in questions:
+            qid = str(q.get("id", ""))
+            fb = per_q_fb.get(qid, {})
+            rows.append({
+                "attempt_id": attempt_id,
+                "question_number": q.get("id", 0),
+                "topic": q.get("topic", ""),
+                "question_text": q.get("question", ""),
+                "question_type": q.get("type", ""),
+                "bloom_level": q.get("bloom_level", ""),
+                "difficulty": q.get("difficulty", ""),
+                "user_answer": answers.get(qid, ""),
+                "correct_answer": fb.get("correct_answer") or q.get("answer", ""),
+                "is_correct": 1 if fb.get("is_correct") else 0,
+                "ai_explanation": fb.get("feedback") or q.get("explanation", ""),
+                "material_ref": q.get("material_reference", ""),
+                "tips": q.get("tips", ""),
+                "item_score": 100 if fb.get("is_correct") else 0,
+            })
+        exam_review_repo.bulk_create(db, rows)
+    except Exception as exc:
+        logger.warning(f"_save_reviews failed (non-fatal): {exc}")
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -526,6 +568,41 @@ class ExamService:
             total_wrong=eval_data["total_wrong"],
             evaluation_json=json.dumps(eval_data, ensure_ascii=False),
         )
+
+        # ── Auto-save history into ExamSession ──
+        grade_val = eval_data.get("grade") or _calc_grade(eval_data["score"])
+        session.status = "completed"
+        session.score = eval_data["score"]
+        session.latest_score = eval_data["score"]
+        session.best_score = eval_data["score"] if session.best_score is None else max(session.best_score, eval_data["score"])
+        session.grade = grade_val
+        session.progress = eval_data["score"]
+        session.subject_name = subject_name
+        session.title = questions_data.get("title", f"Simulasi {exam_type} - {subject_name}")
+        session.exam_type = exam_type
+        session.difficulty = questions_data.get("difficulty", "menengah")
+        session.bloom_level = questions_data.get("bloom_level", "mixed")
+        session.question_type = questions_data.get("question_type", "mixed")
+        session.total_questions = len(questions)
+        session.weak_topics_json = json.dumps(eval_data.get("weak_topics", []), ensure_ascii=False)
+        session.strong_topics_json = json.dumps(eval_data.get("strong_topics", []), ensure_ascii=False)
+        session.updated_at = datetime.datetime.utcnow()
+        db.commit()
+
+        # Create first attempt
+        attempt = exam_attempt_repo.create_attempt(
+            db=db, session_id=session_id,
+            score=eval_data["score"], grade=grade_val,
+            total_correct=eval_data["total_correct"],
+            total_wrong=eval_data["total_wrong"],
+            questions_json=session.questions_json,
+            answers_json=json.dumps(answers, ensure_ascii=False),
+            evaluation_json=json.dumps(eval_data, ensure_ascii=False),
+        )
+
+        # Save per-question reviews
+        _save_reviews(db, attempt.id, session.questions_json, json.dumps(answers, ensure_ascii=False), eval_data)
+
         return eval_data
 
 
@@ -595,7 +672,7 @@ class ExamService:
     def get_bank_stats(db: Session, subject_id: int) -> dict:
         return question_bank_repository.stats_by_subject(db, subject_id)
 
-    # ── 9. History helpers (unchanged API) ────────────────────────────────────
+    # ── 9. Unified Session Management ─────────────────────────────────────────
     @staticmethod
     def get_blueprints(db: Session, subject_id: int) -> list:
         bps = exam_blueprint_repository.get_by_subject(db, subject_id)
@@ -627,11 +704,16 @@ class ExamService:
             result.append({
                 "id":           s.id,
                 "blueprint_id": s.blueprint_id,
-                "title":        qdata.get("title", f"Sesi #{s.id}"),
-                "exam_type":    qdata.get("exam_type", ""),
+                "title":        s.title or qdata.get("title", f"Sesi #{s.id}"),
+                "exam_type":    s.exam_type or qdata.get("exam_type", ""),
                 "score":        s.score,
                 "total_correct": s.total_correct,
                 "total_wrong":  s.total_wrong,
+                "best_score":   s.best_score,
+                "latest_score": s.latest_score,
+                "grade":        s.grade,
+                "progress":     s.progress,
+                "status":       s.status or "active",
                 "submitted":    s.submitted_at is not None,
                 "started_at":   s.started_at.isoformat() if s.started_at else None,
                 "submitted_at": s.submitted_at.isoformat() if s.submitted_at else None,
@@ -646,20 +728,184 @@ class ExamService:
         questions_data = json.loads(s.questions_json) if s.questions_json else {}
         evaluation     = json.loads(s.evaluation_json) if s.evaluation_json else None
         answers        = json.loads(s.answers_json) if s.answers_json else {}
+
+        # Load attempts + reviews
+        attempts = exam_attempt_repo.get_by_session(db, session_id)
+        attempt_data = []
+        for a in attempts:
+            reviews = exam_review_repo.get_by_attempt(db, a.id)
+            attempt_data.append({
+                "id": a.id, "attempt_number": a.attempt_number,
+                "score": a.score, "grade": a.grade,
+                "total_correct": a.total_correct, "total_wrong": a.total_wrong,
+                "duration_seconds": a.duration_seconds,
+                "created_at": a.created_at.isoformat() if a.created_at else None,
+                "reviews": [
+                    {"id": r.id, "question_number": r.question_number,
+                     "topic": r.topic, "question_text": r.question_text,
+                     "question_type": r.question_type, "bloom_level": r.bloom_level,
+                     "difficulty": r.difficulty, "user_answer": r.user_answer,
+                     "correct_answer": r.correct_answer, "is_correct": bool(r.is_correct),
+                     "ai_explanation": r.ai_explanation, "material_ref": r.material_ref,
+                     "tips": r.tips, "item_score": r.item_score}
+                    for r in reviews
+                ],
+            })
+
+        # Load study plan
+        plan = study_plan_repo.get_by_session(db, session_id)
+        plan_data = None
+        if plan:
+            items = study_plan_item_repo.get_by_plan(db, plan.id)
+            plan_data = {
+                "id": plan.id, "title": plan.title,
+                "motivational_message": plan.motivational_message,
+                "priority_actions": json.loads(plan.priority_actions_json) if plan.priority_actions_json else [],
+                "total_days": plan.total_days, "completed_days": plan.completed_days,
+                "progress": plan.progress,
+                "items": [{"id": i.id, "order_number": i.order_number, "day_label": i.day_label,
+                           "topic": i.topic, "activity": i.activity, "activity_type": i.activity_type,
+                           "duration_minutes": i.duration_minutes, "resources": i.resources,
+                           "completed": bool(i.completed)} for i in items],
+            }
+
         return {
-            "id":           s.id,
-            "blueprint_id": s.blueprint_id,
-            "subject_id":   s.subject_id,
-            "score":        s.score,
-            "total_correct": s.total_correct,
-            "total_wrong":  s.total_wrong,
-            "submitted":    s.submitted_at is not None,
-            "started_at":   s.started_at.isoformat() if s.started_at else None,
+            "id": s.id, "blueprint_id": s.blueprint_id, "subject_id": s.subject_id,
+            "subject_name": s.subject_name, "title": s.title,
+            "exam_type": s.exam_type, "difficulty": s.difficulty,
+            "bloom_level": s.bloom_level, "question_type": s.question_type,
+            "total_questions": s.total_questions,
+            "score": s.score, "best_score": s.best_score, "latest_score": s.latest_score,
+            "grade": s.grade, "progress": s.progress, "status": s.status or "active",
+            "total_correct": s.total_correct, "total_wrong": s.total_wrong,
+            "weak_topics": json.loads(s.weak_topics_json) if s.weak_topics_json else [],
+            "strong_topics": json.loads(s.strong_topics_json) if s.strong_topics_json else [],
+            "overall_feedback": evaluation.get("overall_feedback", "") if evaluation else "",
+            "performance_level": evaluation.get("performance_level", "") if evaluation else "",
+            "submitted": s.submitted_at is not None,
+            "started_at": s.started_at.isoformat() if s.started_at else None,
             "submitted_at": s.submitted_at.isoformat() if s.submitted_at else None,
             **questions_data,
-            "answers":      answers,
-            "evaluation":   evaluation,
+            "answers": answers,
+            "evaluation": evaluation,
+            "attempts": attempt_data,
+            "study_plan": plan_data,
         }
+
+    @staticmethod
+    def get_unified_sessions(db: Session, subject_id: Optional[int] = None) -> list:
+        """Return all sessions (history + active), ordered by started_at desc."""
+        from sqlalchemy import desc
+        query = db.query(ExamSession).order_by(desc(ExamSession.started_at))
+        if subject_id:
+            query = query.filter(ExamSession.subject_id == subject_id)
+        sessions = query.limit(200).all()
+        result = []
+        for s in sessions:
+            attempts = exam_attempt_repo.get_by_session(db, s.id)
+            attempt_list = [
+                {"id": a.id, "attempt_number": a.attempt_number, "score": a.score,
+                 "grade": a.grade, "total_correct": a.total_correct, "total_wrong": a.total_wrong,
+                 "created_at": a.created_at.isoformat() if a.created_at else None}
+                for a in attempts
+            ]
+            plan = study_plan_repo.get_by_session(db, s.id)
+            result.append({
+                "id": s.id, "subject_id": s.subject_id,
+                "subject_name": s.subject_name,
+                "title": s.title or f"Sesi #{s.id}",
+                "exam_type": s.exam_type, "difficulty": s.difficulty,
+                "total_questions": s.total_questions,
+                "best_score": s.best_score, "latest_score": s.latest_score,
+                "grade": s.grade, "progress": s.progress, "status": s.status or "active",
+                "weak_topics": json.loads(s.weak_topics_json) if s.weak_topics_json else [],
+                "strong_topics": json.loads(s.strong_topics_json) if s.strong_topics_json else [],
+                "attempt_count": len(attempts), "attempts": attempt_list,
+                "has_study_plan": plan is not None,
+                "study_plan_progress": plan.progress if plan else 0,
+                "created_at": s.started_at.isoformat() if s.started_at else None,
+                "updated_at": s.updated_at.isoformat() if s.updated_at else None,
+            })
+        return result
+
+    @staticmethod
+    def unified_retry(db: Session, session_id: int) -> dict:
+        """Create a new session from question bank (zero AI) under the same session."""
+        session = exam_session_repository.get(db, session_id)
+        if not session:
+            raise ValueError("Sesi tidak ditemukan.")
+        if not session.blueprint_id:
+            # Attempt to find a blueprint for this subject
+            blueprint = exam_blueprint_repository.get_latest_by_subject(db, session.subject_id)
+            if not blueprint:
+                raise ValueError("Tidak ada blueprint untuk sesi ini.")
+            blueprint_id = blueprint.id
+        else:
+            blueprint_id = session.blueprint_id
+        # Reuse retry_from_bank logic
+        result = ExamService.retry_from_bank(db, blueprint_id, weak_topics=[])
+        return result
+
+    @staticmethod
+    def save_study_plan(db: Session, session_id: int, plan_data: dict) -> dict:
+        """Save/replace study plan for a session."""
+        try:
+            existing = study_plan_repo.get_by_session(db, session_id)
+            if existing:
+                db.delete(existing)
+
+            sp_items = plan_data.get("study_plan", [])
+            plan = StudyPlan(
+                session_id=session_id,
+                title=plan_data.get("title", "Rencana Belajar"),
+                motivational_message=plan_data.get("motivational_message", ""),
+                priority_actions_json=json.dumps(plan_data.get("priority_actions", []), ensure_ascii=False),
+                total_days=len(sp_items),
+                completed_days=0, progress=0,
+                created_at=datetime.datetime.utcnow(),
+                updated_at=datetime.datetime.utcnow(),
+            )
+            db.add(plan)
+            db.flush()
+            db.refresh(plan)
+            for idx, day in enumerate(sp_items):
+                db.add(StudyPlanItem(
+                    plan_id=plan.id, order_number=idx,
+                    day_label=day.get("label", f"Hari {idx+1}"),
+                    topic=day.get("topic", ""),
+                    activity=day.get("activity", ""),
+                    activity_type=day.get("type", "review"),
+                    duration_minutes=day.get("duration_minutes"),
+                    resources=day.get("resources", ""),
+                    completed=0,
+                ))
+            db.commit()
+            return {"status": "saved"}
+        except Exception as exc:
+            db.rollback()
+            logger.error(f"Gagal simpan study plan: {exc}")
+            raise
+
+    @staticmethod
+    def toggle_plan_item(db: Session, item_id: int) -> dict:
+        item = study_plan_item_repo.toggle_completed(db, item_id)
+        if not item:
+            raise ValueError("Item tidak ditemukan.")
+        plan = study_plan_repo.get(db, item.plan_id)
+        return {
+            "item_id": item.id, "completed": bool(item.completed),
+            "plan_progress": plan.progress if plan else 0,
+            "plan_completed_days": plan.completed_days if plan else 0,
+        }
+
+    @staticmethod
+    def delete_session(db: Session, session_id: int) -> bool:
+        s = exam_session_repository.get(db, session_id)
+        if not s:
+            return False
+        db.delete(s)
+        db.commit()
+        return True
 
 
 exam_service = ExamService()

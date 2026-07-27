@@ -1,6 +1,7 @@
 import json
 import logging
-from fastapi import APIRouter, Depends, Body
+from typing import Optional
+from fastapi import APIRouter, Depends, Body, Query
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from database import get_db
@@ -229,4 +230,91 @@ async def bank_stats(subject_id: int, db: Session = Depends(get_db)):
         return JSONResponse({"stats": data})
     except Exception as e:
         logger.error(f"bank_stats error: {e}", exc_info=True)
+        return JSONResponse(status_code=500, content={"detail": str(e)})
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# UNIFIED SESSION MANAGEMENT (consolidated from exam_history.py)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@router.get("/sessions")
+async def list_unified_sessions(
+    subject_id: Optional[int] = Query(None),
+    db: Session = Depends(get_db),
+):
+    """List all exam sessions (active & completed), ordered by started_at desc."""
+    try:
+        data = exam_service.get_unified_sessions(db, subject_id)
+        return JSONResponse({"sessions": data})
+    except Exception as e:
+        logger.error(f"list_sessions error: {e}", exc_info=True)
+        return JSONResponse(status_code=500, content={"detail": str(e)})
+
+
+@router.get("/sessions/{session_id}")
+async def get_detail_session(session_id: int, db: Session = Depends(get_db)):
+    """Full detail of one session with attempts, reviews, study plan."""
+    try:
+        data = exam_service.get_session_detail(db, session_id)
+        return JSONResponse(data)
+    except ValueError as e:
+        return JSONResponse(status_code=404, content={"detail": str(e)})
+    except Exception as e:
+        logger.error(f"get_session_detail error: {e}", exc_info=True)
+        return JSONResponse(status_code=500, content={"detail": str(e)})
+
+
+@router.post("/sessions/{session_id}/retry")
+async def retry_session(
+    session_id: int,
+    payload: dict = Body(default={}),
+    db: Session = Depends(get_db),
+):
+    """Create a new exam session from question bank (zero AI) for the same session."""
+    try:
+        data = exam_service.unified_retry(db, session_id)
+        return JSONResponse(data)
+    except ValueError as e:
+        return JSONResponse(status_code=400, content={"detail": str(e)})
+    except Exception as e:
+        logger.error(f"retry_session error: {e}", exc_info=True)
+        return JSONResponse(status_code=500, content={"detail": str(e)})
+
+
+@router.post("/sessions/{session_id}/study-plan")
+async def save_session_study_plan(
+    session_id: int,
+    payload: dict = Body(...),
+    db: Session = Depends(get_db),
+):
+    """Save or replace the study plan for a session."""
+    try:
+        result = exam_service.save_study_plan(db, session_id, payload)
+        return JSONResponse(result)
+    except Exception as e:
+        logger.error(f"save_study_plan error: {e}", exc_info=True)
+        return JSONResponse(status_code=500, content={"detail": str(e)})
+
+
+@router.post("/sessions/plan-item/{item_id}/toggle")
+async def toggle_session_plan_item(item_id: int, db: Session = Depends(get_db)):
+    try:
+        data = exam_service.toggle_plan_item(db, item_id)
+        return JSONResponse(data)
+    except ValueError as e:
+        return JSONResponse(status_code=404, content={"detail": str(e)})
+    except Exception as e:
+        logger.error(f"toggle_plan_item error: {e}", exc_info=True)
+        return JSONResponse(status_code=500, content={"detail": str(e)})
+
+
+@router.delete("/sessions/{session_id}")
+async def delete_session(session_id: int, db: Session = Depends(get_db)):
+    try:
+        success = exam_service.delete_session(db, session_id)
+        if not success:
+            return JSONResponse(status_code=404, content={"detail": "Sesi tidak ditemukan."})
+        return JSONResponse({"status": "deleted"})
+    except Exception as e:
+        logger.error(f"delete_session error: {e}", exc_info=True)
         return JSONResponse(status_code=500, content={"detail": str(e)})

@@ -207,51 +207,15 @@ class ExamSession(Base):
 
     blueprint = relationship("ExamBlueprint", back_populates="sessions")
     subject = relationship("Subject")
-
-
-# ─── Exam History Models ─────────────────────────────────────────────────────
-
-class ExamHistorySession(Base):
-    """
-    Persistent exam history entry created when user clicks "Selesai".
-    One session can have many attempts (retry).
-    """
-    __tablename__ = "exam_history_sessions"
-    id           = Column(Integer, primary_key=True, index=True)
-    subject_id   = Column(Integer, ForeignKey("subjects.id"))
-    subject_name = Column(String)                        # denormalized for display
-    title        = Column(String)                        # e.g. "UTS Machine Learning"
-    exam_type    = Column(String)                        # uts/uas/quiz/latihan/custom
-    difficulty   = Column(String)                        # pemula/menengah/sulit/campuran
-    bloom_level  = Column(String, nullable=True)
-    question_type= Column(String, nullable=True)
-    total_questions = Column(Integer, nullable=True)
-    # Latest attempt stats (updated on each retry)
-    best_score   = Column(Integer, nullable=True)
-    latest_score = Column(Integer, nullable=True)
-    grade        = Column(String, nullable=True)         # A/B/C/D/E
-    progress     = Column(Integer, default=0)            # 0-100 %
-    status       = Column(String, default="completed")   # draft/sedang_belajar/completed/mastered/archived
-    # Weak/strong topics (JSON arrays)
-    weak_topics_json   = Column(Text, nullable=True)
-    strong_topics_json = Column(Text, nullable=True)
-    # Full evaluation & questions snapshots
-    evaluation_json    = Column(Text, nullable=True)
-    questions_json     = Column(Text, nullable=True)
-    answers_json       = Column(Text, nullable=True)
-    created_at  = Column(DateTime, default=datetime.datetime.utcnow)
-    updated_at  = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
-
-    subject  = relationship("Subject")
-    attempts = relationship("ExamAttempt",   back_populates="history_session", cascade="all, delete-orphan")
-    plan     = relationship("StudyPlan",     back_populates="history_session", cascade="all, delete-orphan", uselist=False)
+    attempts = relationship("ExamAttempt", back_populates="session", cascade="all, delete-orphan")
+    plan = relationship("StudyPlan", back_populates="session", cascade="all, delete-orphan", uselist=False)
 
 
 class ExamAttempt(Base):
     """Each time a user retries, a new attempt row is added."""
     __tablename__ = "exam_attempts"
     id             = Column(Integer, primary_key=True, index=True)
-    history_session_id = Column(Integer, ForeignKey("exam_history_sessions.id"))
+    session_id     = Column(Integer, ForeignKey("exam_sessions.id"))
     attempt_number = Column(Integer, default=1)
     score          = Column(Integer, nullable=True)
     grade          = Column(String, nullable=True)
@@ -263,8 +227,8 @@ class ExamAttempt(Base):
     evaluation_json= Column(Text, nullable=True)   # full AI evaluation
     created_at     = Column(DateTime, default=datetime.datetime.utcnow)
 
-    history_session = relationship("ExamHistorySession", back_populates="attempts")
-    reviews         = relationship("ExamReview", back_populates="attempt", cascade="all, delete-orphan")
+    session = relationship("ExamSession", back_populates="attempts")
+    reviews = relationship("ExamReview", back_populates="attempt", cascade="all, delete-orphan")
 
 
 class ExamReview(Base):
@@ -290,10 +254,10 @@ class ExamReview(Base):
 
 
 class StudyPlan(Base):
-    """AI-generated learning roadmap attached to an ExamHistorySession."""
+    """AI-generated learning roadmap attached to an ExamSession."""
     __tablename__ = "study_plans"
     id                 = Column(Integer, primary_key=True, index=True)
-    history_session_id = Column(Integer, ForeignKey("exam_history_sessions.id"))
+    session_id         = Column(Integer, ForeignKey("exam_sessions.id"))
     title              = Column(String, nullable=True)
     motivational_message = Column(Text, nullable=True)
     priority_actions_json = Column(Text, nullable=True)  # JSON list of strings
@@ -303,8 +267,8 @@ class StudyPlan(Base):
     created_at         = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at         = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
-    history_session = relationship("ExamHistorySession", back_populates="plan")
-    items           = relationship("StudyPlanItem", back_populates="plan", cascade="all, delete-orphan", order_by="StudyPlanItem.order_number")
+    session = relationship("ExamSession", back_populates="plan")
+    items   = relationship("StudyPlanItem", back_populates="plan", cascade="all, delete-orphan", order_by="StudyPlanItem.order_number")
 
 
 class StudyPlanItem(Base):
