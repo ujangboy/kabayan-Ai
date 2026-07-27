@@ -5,6 +5,8 @@ from typing import Optional
 from sqlalchemy.orm import Session
 from database import get_db
 from services.notes_service import notes_service
+from services.material_service import material_service
+from services.rag_service import rag_service
 
 router = APIRouter()
 
@@ -54,6 +56,64 @@ async def clear_notes(db: Session = Depends(get_db)):
     from repositories.note_repository import note_repository
     note_repository.delete_all(db)
     return JSONResponse({"status": "success", "message": "Notes cleared"})
+
+@router.post("/api/notes/generate")
+async def generate_notes_ai(
+    subject_id: int = Form(...),
+    title: str = Form(...),
+    material_ids: str = Form(None),
+    db: Session = Depends(get_db)
+):
+    """Generate catatan AI dari materi, dengan filter material opsional."""
+    try:
+        materials = material_service.get_by_subject(db, subject_id)
+        if material_ids:
+            ids = [int(x.strip()) for x in material_ids.split(",") if x.strip()]
+            if ids:
+                materials = [m for m in materials if m.id in ids]
+        if not materials:
+            return JSONResponse(status_code=400, content={"detail": "Tidak ada materi untuk mata kuliah ini."})
+
+        doc_ids = [f"mat_{m.id}" for m in materials]
+        context = ""
+        word_count = 0
+        for meta in rag_service.chunk_metadata:
+            if meta["doc_id"] in doc_ids:
+                context += meta["content"] + "\n\n"
+                word_count += len(meta["content"].split())
+                if word_count > 1500:
+                    break
+
+        if not context.strip():
+            from parsers.document_parser import extract_text
+            import os
+            for m in materials:
+                if m.filepath and os.path.exists(m.filepath):
+                    try:
+                        text = extract_text(m.filepath)
+                        if text:
+                            words = text.split()
+                            context += " ".join(words[:1500]) + "\n\n"
+                            word_count += min(len(words), 1500)
+                    except Exception:
+                        pass
+                if word_count >= 1500:
+                    break
+
+        if not context.strip():
+            return JSONResponse(status_code=400, content={"detail": "Tidak ada konten materi yang dapat dibaca."})
+
+        note = notes_service.generate_notes(db, subject_id, title, context)
+        return JSONResponse({
+            "status": "success",
+            "id": note.id,
+            "title": note.title,
+            "content": note.content
+        })
+    except ValueError as e:
+        return JSONResponse(status_code=422, content={"detail": str(e)})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"detail": str(e)})
 
 # REQ-PRD: Endpoint Direct-to-Notebook dari tombol chat
 class NotebookGenerateRequest(BaseModel):

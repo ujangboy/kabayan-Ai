@@ -5,6 +5,7 @@ import { FileText, Plus, Trash2, Edit3, X, Book } from 'lucide-react';
 import { notesAPI, subjectAPI } from '@/services/api';
 import { formatDate } from '@/utils';
 import MathMarkdown from '@/components/MathMarkdown';
+import MaterialPicker from '@/components/MaterialPicker';
 
 export default function NotebookPage() {
   const queryClient = useQueryClient();
@@ -160,6 +161,7 @@ export default function NotebookPage() {
 
 function CreateNoteModal({ onClose, subjects, onSuccess }) {
   const [formData, setFormData] = useState({ title: '', content: '', subject_id: '' });
+  const [selectedMaterialIds, setSelectedMaterialIds] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [aiTopic, setAiTopic] = useState('');
@@ -172,32 +174,29 @@ function CreateNoteModal({ onClose, subjects, onSuccess }) {
       alert('Isi Judul Catatan atau kolom topik terlebih dahulu sebagai konteks untuk AI.');
       return;
     }
+    if (!formData.subject_id) {
+      alert('Pilih mata kuliah terlebih dahulu.');
+      return;
+    }
     setIsGenerating(true);
     try {
-      const res = await fetch('/api/chat', {
+      const data = new URLSearchParams();
+      data.append('subject_id', formData.subject_id);
+      data.append('title', topic.slice(0, 60));
+      if (selectedMaterialIds.length > 0) {
+        data.append('material_ids', selectedMaterialIds.join(','));
+      }
+      const res = await fetch('/api/notes/generate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: `Buatkan catatan kuliah yang lengkap dan terstruktur dalam format Markdown tentang topik: "${topic}". Gunakan heading, bullet point, dan contoh jika perlu. Langsung tulis catatan tanpa kalimat pembuka.`,
-          history: [],
-          documents: [],
-        }),
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: data.toString(),
       });
-      if (!res.ok) throw new Error('Server error');
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let result = '';
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-        result += decoder.decode(value, { stream: true });
-        // update live
-        setFormData(p => ({ ...p, content: result }));
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.detail || 'Gagal generate catatan');
       }
-      // auto-set judul jika masih kosong
-      if (!formData.title.trim()) {
-        setFormData(p => ({ ...p, title: topic.slice(0, 60) }));
-      }
+      const result = await res.json();
+      setFormData(p => ({ ...p, title: result.title || topic.slice(0, 60), content: result.content }));
     } catch (err) {
       alert('Gagal generate AI: ' + err.message);
     } finally {
@@ -257,7 +256,7 @@ function CreateNoteModal({ onClose, subjects, onSuccess }) {
             />
             <select
               value={formData.subject_id}
-              onChange={(e) => setFormData(p => ({ ...p, subject_id: e.target.value }))}
+              onChange={(e) => { setFormData(p => ({ ...p, subject_id: e.target.value })); setSelectedMaterialIds([]); }}
               className="w-1/3 px-3 py-2 bg-background border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary transition-colors"
             >
               <option value="">-- Mata Kuliah --</option>
@@ -266,6 +265,12 @@ function CreateNoteModal({ onClose, subjects, onSuccess }) {
               ))}
             </select>
           </div>
+
+          <MaterialPicker
+            subjectId={formData.subject_id}
+            selectedMaterialIds={selectedMaterialIds}
+            onSelectionChange={setSelectedMaterialIds}
+          />
 
           {/* Panel Generate AI */}
           <div className="shrink-0">
@@ -305,7 +310,7 @@ function CreateNoteModal({ onClose, subjects, onSuccess }) {
                       </button>
                     </div>
                     {isGenerating && (
-                      <p className="text-[10px] text-primary animate-pulse">AI sedang menulis catatan... Konten akan muncul di bawah secara real-time.</p>
+                      <p className="text-[10px] text-primary animate-pulse">AI sedang menulis catatan...</p>
                     )}
                   </div>
                 </motion.div>

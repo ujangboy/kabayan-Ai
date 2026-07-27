@@ -61,6 +61,7 @@ async def generate_blueprint(
             focus_material=payload["focus_material"],
             duration_minutes=payload.get("duration_minutes"),
             analysis_json=payload.get("analysis_json"),
+            material_ids=payload.get("material_ids"),
         )
         return JSONResponse(data)
     except ValueError as e:

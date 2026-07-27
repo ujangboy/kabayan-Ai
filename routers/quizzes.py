@@ -60,10 +60,15 @@ async def get_quiz_questions(quiz_id: int, db: Session = Depends(get_db)):
 async def generate_quiz(
     subject_id: int = Form(...),
     mcq_count: int = Form(5),
+    material_ids: str = Form(None),
     db: Session = Depends(get_db)
 ):
     try:
         materials = material_service.get_by_subject(db, subject_id)
+        if material_ids:
+            ids = [int(x.strip()) for x in material_ids.split(",") if x.strip()]
+            if ids:
+                materials = [m for m in materials if m.id in ids]
         if not materials:
             return JSONResponse(status_code=400, content={"detail": "Tidak ada materi untuk mata kuliah ini."})
 

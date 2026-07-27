@@ -194,6 +194,7 @@ class ExamService:
         duration_minutes: Optional[int],
         analysis_json: Optional[str] = None,
         subject_ids: Optional[List[int]] = None,  # multi-subject
+        material_ids: Optional[str] = None,
     ) -> dict:
         from services.subject_service import subject_service as subj_svc
 
@@ -231,6 +232,8 @@ class ExamService:
         # Attach multi-subject metadata if provided
         if subject_ids:
             blueprint_data["subject_ids"] = subject_ids
+        if material_ids:
+            blueprint_data["material_ids"] = material_ids
 
         record = exam_blueprint_repository.create_blueprint(
             db=db,
@@ -293,6 +296,11 @@ class ExamService:
 
             # ── Not enough in bank — call AI ──
             materials = material_service.get_by_subject(db, blueprint.subject_id)
+            blueprint_material_ids = blueprint_data.get("material_ids")
+            if blueprint_material_ids:
+                ids = [int(x.strip()) for x in blueprint_material_ids.split(",") if x.strip()]
+                if ids:
+                    materials = [m for m in materials if m.id in ids]
             full_ctx  = _gather_context(db, blueprint.subject_id, materials)
             context   = " ".join(full_ctx.split()[:1500])
 

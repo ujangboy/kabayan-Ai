@@ -14,6 +14,7 @@ import { examHistoryAPI } from '@/services/api';
 import { cn } from '@/utils';
 import { useLocation, useNavigate } from 'react-router-dom';
 import MathMarkdown from '@/components/MathMarkdown';
+import MaterialPicker from '@/components/MaterialPicker';
 
 // ─── View constants ─────────────────────────────────────────────────────────
 const VIEW = {
@@ -437,6 +438,7 @@ function ConfigView({ subjectId, analysis, onDone }) {
     focus_material: 'Semua Materi',
     duration: DURATIONS[2],
   });
+  const [selectedMaterialIds, setSelectedMaterialIds] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -460,6 +462,7 @@ function ConfigView({ subjectId, analysis, onDone }) {
         focus_material: form.focus_material,
         duration_minutes: form.duration.value,
         analysis_json: analysis ? JSON.stringify(analysis) : undefined,
+        material_ids: selectedMaterialIds.length > 0 ? selectedMaterialIds.join(',') : undefined,
       };
       const r = await examAPI.generateBlueprint(payload);
       if (r.data?.detail) throw new Error(r.data.detail);
@@ -519,6 +522,12 @@ function ConfigView({ subjectId, analysis, onDone }) {
       <OptionGroup label="Fokus Materi" options={FOCUSES} field="focus_material" />
       <OptionGroup label="Waktu Pengerjaan" options={DURATIONS} field="duration"
         renderLabel={d => d.label} />
+
+      <MaterialPicker
+        subjectId={subjectId}
+        selectedMaterialIds={selectedMaterialIds}
+        onSelectionChange={setSelectedMaterialIds}
+      />
 
       {error && <p className="text-danger text-sm">{error}</p>}
 

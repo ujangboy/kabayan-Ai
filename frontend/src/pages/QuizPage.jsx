@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { HelpCircle, Play, X, Zap, Trophy, Book, Trash2, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { quizAPI, subjectAPI } from '@/services/api';
 import MathMarkdown from '@/components/MathMarkdown';
+import MaterialPicker from '@/components/MaterialPicker';
 
 export default function QuizPage() {
   const queryClient = useQueryClient();
@@ -180,6 +181,7 @@ export default function QuizPage() {
 function GenerateQuizModal({ onClose, subjects, onSuccess }) {
   const [subjectId, setSubjectId] = useState('');
   const [mcqCount, setMcqCount] = useState(5);
+  const [selectedMaterialIds, setSelectedMaterialIds] = useState([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState('');
 
@@ -189,7 +191,11 @@ function GenerateQuizModal({ onClose, subjects, onSuccess }) {
     setError('');
     setIsGenerating(true);
     try {
-      const result = await quizAPI.generate({ subject_id: subjectId, mcq_count: mcqCount });
+      const result = await quizAPI.generate({
+        subject_id: subjectId,
+        mcq_count: mcqCount,
+        material_ids: selectedMaterialIds.length > 0 ? selectedMaterialIds.join(',') : '',
+      });
       if (result.detail) throw new Error(result.detail);
       if (!result.id) throw new Error('Quiz ID tidak ditemukan di response.');
       onSuccess(result.id);
@@ -227,7 +233,7 @@ function GenerateQuizModal({ onClose, subjects, onSuccess }) {
             <select
               required
               value={subjectId}
-              onChange={(e) => setSubjectId(e.target.value)}
+              onChange={(e) => { setSubjectId(e.target.value); setSelectedMaterialIds([]); }}
               disabled={isGenerating}
               className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary transition-colors disabled:opacity-60"
             >
@@ -237,6 +243,11 @@ function GenerateQuizModal({ onClose, subjects, onSuccess }) {
               ))}
             </select>
           </div>
+          <MaterialPicker
+            subjectId={subjectId}
+            selectedMaterialIds={selectedMaterialIds}
+            onSelectionChange={setSelectedMaterialIds}
+          />
           <div>
             <label className="block text-xs font-medium text-text-secondary mb-1">Jumlah Soal (Pilihan Ganda)</label>
             <input
