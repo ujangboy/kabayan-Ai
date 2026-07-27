@@ -9,7 +9,8 @@ class NotesService:
         response = ai_service.generate(
             capability="reasoning",
             prompt_template=NOTES_PROMPT,
-            input_variables={"context": context}
+            input_variables={"context": context},
+            use_cache=False
         )
         note = note_repository.create(db, {
             "subject_id": subject_id,
@@ -46,7 +47,7 @@ class NotesService:
         if action == 'rapikan':
             from langchain_core.prompts import PromptTemplate
             prompt = PromptTemplate.from_template("Rapikan format dan bahasa dari catatan berikut tanpa mengubah makna aslinya:\n\n{context}")
-            new_content = ai_service.generate("reasoning", prompt, {"context": note.content})
+            new_content = ai_service.generate("reasoning", prompt, {"context": note.content}, use_cache=False)
             note_repository.update(db, note, {"content": new_content})
             updated_content = new_content
             
@@ -59,7 +60,7 @@ class NotesService:
         elif action == 'jelaskan':
             from langchain_core.prompts import PromptTemplate
             prompt = PromptTemplate.from_template("Jelaskan catatan berikut dengan bahasa yang lebih sederhana dan mudah dipahami:\n\n{context}")
-            explanation = ai_service.generate("reasoning", prompt, {"context": note.content})
+            explanation = ai_service.generate("reasoning", prompt, {"context": note.content}, use_cache=False)
             new_content = note.content + "\n\n--- PENJELASAN AI ---\n" + explanation
             note_repository.update(db, note, {"content": new_content})
             updated_content = new_content

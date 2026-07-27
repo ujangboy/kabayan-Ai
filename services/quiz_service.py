@@ -35,7 +35,8 @@ class QuizService:
         response = ai_service.generate(
             capability="quiz",
             prompt_template=QUIZ_PROMPT,
-            input_variables={"context": context, "mcq_count": mcq_count, "essay_count": essay_count}
+            input_variables={"context": context, "mcq_count": mcq_count, "essay_count": essay_count},
+            use_cache=False
         )
 
         try:

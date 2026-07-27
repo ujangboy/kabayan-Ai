@@ -12,7 +12,8 @@ class FlashcardService:
         response = ai_service.generate(
             capability="flashcard",
             prompt_template=FLASHCARD_PROMPT,
-            input_variables={"context": context}
+            input_variables={"context": context},
+            use_cache=False
         )
 
         try:
