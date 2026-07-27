@@ -148,11 +148,10 @@ def _gather_context(db: Session, subject_id: int, materials) -> str:
 
 def _bank_row_to_question(row, global_id: int) -> dict:
     """Convert a QuestionBank ORM row to the question dict format used by sessions."""
-    import json as _json
     choices = {}
     if row.choices_json:
         try:
-            choices = _json.loads(row.choices_json)
+            choices = json.loads(row.choices_json)
         except Exception:
             pass
     options_list = [f"{k}. {v}" for k, v in choices.items()] if choices else []
@@ -195,11 +194,7 @@ class ExamService:
         quiz_count      = db.query(Quiz).filter(Quiz.subject_id == subject_id).count()
         bank_count      = question_bank_repository.count_by_topic(
             db, subject_id, topic="", difficulty=""
-        ) if False else db.query(
-            __import__("models").QuestionBank
-        ).filter(
-            __import__("models").QuestionBank.subject_id == subject_id
-        ).count()
+        )
 
         context = _gather_context(db, subject_id, materials)
         if not context.strip():
