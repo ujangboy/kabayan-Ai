@@ -17,4 +17,9 @@ numpy
 python-pptx
 yt-dlp
 
+# Dev
+pytest
+pytest-asyncio
+httpx
+
 
