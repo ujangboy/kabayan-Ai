@@ -1,11 +1,17 @@
 import json
 import logging
 from typing import Optional
-from fastapi import APIRouter, Depends, Body, Query
+from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from database import get_db
 from services.exam_service import exam_service
+from schemas.exam import (
+    BlueprintRequest,
+    SubmitAnswersRequest,
+    RetryRequest,
+    StudyPlanRequest,
+)
 
 router = APIRouter(prefix="/api/exam", tags=["Exam Analyzer"])
 logger = logging.getLogger(__name__)
@@ -32,42 +38,33 @@ async def analyze_subject(subject_id: int, db: Session = Depends(get_db)):
 
 @router.post("/blueprint")
 async def generate_blueprint(
-    payload: dict = Body(...),
+    payload: BlueprintRequest,
     db: Session = Depends(get_db),
 ):
     """
     Generate and persist an exam blueprint.
-    Body fields: subject_id, exam_type, total_questions, difficulty,
-                 bloom_level, question_type, focus_material,
-                 duration_minutes (optional), analysis_json (optional).
     """
     try:
-        required = ["subject_id", "exam_type", "total_questions", "difficulty",
-                    "bloom_level", "question_type", "focus_material"]
-        for field in required:
-            if field not in payload:
-                return JSONResponse(
-                    status_code=422,
-                    content={"detail": f"Field wajib tidak ada: {field}"}
-                )
-
         data = exam_service.generate_blueprint(
             db=db,
-            subject_id=int(payload["subject_id"]),
-            exam_type=payload["exam_type"],
-            total_questions=int(payload["total_questions"]),
-            difficulty=payload["difficulty"],
-            bloom_level=payload["bloom_level"],
-            question_type=payload["question_type"],
-            focus_material=payload["focus_material"],
-            duration_minutes=payload.get("duration_minutes"),
-            analysis_json=payload.get("analysis_json"),
-            material_ids=payload.get("material_ids"),
+            subject_id=payload.subject_id,
+            exam_type=payload.exam_type,
+            total_questions=payload.total_questions,
+            difficulty=payload.difficulty,
+            bloom_level=payload.bloom_level,
+            question_type=payload.question_type,
+            focus_material=payload.focus_material,
+            duration_minutes=payload.duration_minutes,
+            analysis_json=payload.analysis_json,
+            material_ids=payload.material_ids,
         )
         return JSONResponse(data)
     except ValueError as e:
         return JSONResponse(status_code=400, content={"detail": str(e)})
     except Exception as e:
+        from fastapi import HTTPException as _HTTPException
+        if isinstance(e, _HTTPException):
+            raise
         logger.error(f"blueprint error: {e}", exc_info=True)
         return JSONResponse(status_code=500, content={"detail": str(e)})
 
@@ -132,21 +129,14 @@ async def get_sessions(subject_id: int, db: Session = Depends(get_db)):
 @router.post("/submit/{session_id}")
 async def submit_exam(
     session_id: int,
-    payload: dict = Body(...),
+    payload: SubmitAnswersRequest,
     db: Session = Depends(get_db),
 ):
     """
-    Submit user answers and trigger AI evaluation.
-    Body: { "answers": { "1": "A", "2": "B", ... } }
+    Submit user answers and trigger evaluation.
     """
     try:
-        answers = payload.get("answers", {})
-        if not isinstance(answers, dict):
-            return JSONResponse(
-                status_code=422,
-                content={"detail": "Field 'answers' harus berupa object {question_id: answer}."}
-            )
-        data = exam_service.submit_and_evaluate(db, session_id, answers)
+        data = exam_service.submit_and_evaluate(db, session_id, payload.answers)
         return JSONResponse(data)
     except ValueError as e:
         return JSONResponse(status_code=400, content={"detail": str(e)})
@@ -278,7 +268,7 @@ async def get_detail_session(session_id: int, db: Session = Depends(get_db)):
 @router.post("/sessions/{session_id}/retry")
 async def retry_session(
     session_id: int,
-    payload: dict = Body(default={}),
+    payload: RetryRequest = RetryRequest(),
     db: Session = Depends(get_db),
 ):
     """Create a new exam session from question bank (zero AI) for the same session."""
@@ -298,12 +288,12 @@ async def retry_session(
 @router.post("/sessions/{session_id}/study-plan")
 async def save_session_study_plan(
     session_id: int,
-    payload: dict = Body(...),
+    payload: StudyPlanRequest,
     db: Session = Depends(get_db),
 ):
     """Save or replace the study plan for a session."""
     try:
-        result = exam_service.save_study_plan(db, session_id, payload)
+        result = exam_service.save_study_plan(db, session_id, payload.model_dump())
         return JSONResponse(result)
     except Exception as e:
         from fastapi import HTTPException as _HTTPException
