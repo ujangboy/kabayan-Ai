@@ -8,6 +8,7 @@ import os
 from routers import dashboard, subjects, materials, chat, notes, flashcards, quizzes, youtube, settings, exam_analyzer
 from database import engine, Base, SessionLocal
 import config
+from exceptions import add_exception_handlers
 
 # Global Logging Setup
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -237,6 +238,7 @@ run_exam_unification_migration()
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Kabayan AI Study Workspace")
+add_exception_handlers(app)
 
 from fastapi.middleware.cors import CORSMiddleware
 app.add_middleware(
