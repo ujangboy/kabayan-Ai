@@ -88,7 +88,10 @@ class ExamHistoryService:
         study_plan_data: Optional[dict] = None,
         duration_seconds: Optional[int] = None,
     ) -> dict:
-        eval_data  = json.loads(evaluation_json_str) if evaluation_json_str else {}
+        try:
+            eval_data  = json.loads(evaluation_json_str) if evaluation_json_str else {}
+        except json.JSONDecodeError:
+            raise ValueError("Format data ujian tidak valid: evaluation_json bukan JSON valid")
         grade      = eval_data.get("grade") or _calc_grade(score)
         status     = "mastered" if score >= 90 else "completed"
         weak_json  = json.dumps(eval_data.get("weak_topics", []),   ensure_ascii=False)
@@ -161,7 +164,10 @@ class ExamHistoryService:
         if not hs:
             raise ValueError("History session tidak ditemukan.")
 
-        eval_data = json.loads(evaluation_json_str) if evaluation_json_str else {}
+        try:
+            eval_data = json.loads(evaluation_json_str) if evaluation_json_str else {}
+        except json.JSONDecodeError:
+            raise ValueError("Format data ujian tidak valid: evaluation_json bukan JSON valid")
         grade     = eval_data.get("grade") or _calc_grade(score)
 
         attempt = exam_attempt_repo.create_attempt(
