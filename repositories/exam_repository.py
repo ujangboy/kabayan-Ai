@@ -54,7 +54,7 @@ class ExamBlueprintRepository(BaseRepository[ExamBlueprint]):
             created_at=datetime.datetime.utcnow(),
         )
         db.add(obj)
-        db.commit()
+        db.flush()
         db.refresh(obj)
         return obj
 
@@ -93,7 +93,7 @@ class ExamSessionRepository(BaseRepository[ExamSession]):
             started_at=datetime.datetime.utcnow(),
         )
         db.add(obj)
-        db.commit()
+        db.flush()
         db.refresh(obj)
         return obj
 
@@ -116,7 +116,7 @@ class ExamSessionRepository(BaseRepository[ExamSession]):
         obj.total_wrong = total_wrong
         obj.evaluation_json = evaluation_json
         obj.submitted_at = datetime.datetime.utcnow()
-        db.commit()
+        db.flush()
         db.refresh(obj)
         return obj
 

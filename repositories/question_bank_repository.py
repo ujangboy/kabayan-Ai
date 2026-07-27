@@ -161,7 +161,7 @@ class QuestionBankRepository(BaseRepository[QuestionBank]):
             )
             db.add(row)
             count += 1
-        db.commit()
+        db.flush()
         return count
 
     def increment_used(self, db: Session, question_ids: List[int]) -> None:
@@ -173,7 +173,7 @@ class QuestionBankRepository(BaseRepository[QuestionBank]):
                 QuestionBank.id.in_(question_ids)
             ).update({QuestionBank.used_count: QuestionBank.used_count + 1},
                      synchronize_session=False)
-            db.commit()
+            db.flush()
         except Exception:
             db.rollback()
 
@@ -184,7 +184,7 @@ class QuestionBankRepository(BaseRepository[QuestionBank]):
         q = self.get(db, question_id)
         if q:
             q.explanation = explanation
-            db.commit()
+            db.flush()
             db.refresh(q)
         return q
 
@@ -194,7 +194,7 @@ class QuestionBankRepository(BaseRepository[QuestionBank]):
             .filter(QuestionBank.subject_id == subject_id)
             .delete()
         )
-        db.commit()
+        db.flush()
         return n
 
     def delete_by_blueprint(self, db: Session, blueprint_id: int) -> int:
@@ -203,7 +203,7 @@ class QuestionBankRepository(BaseRepository[QuestionBank]):
             .filter(QuestionBank.blueprint_id == blueprint_id)
             .delete()
         )
-        db.commit()
+        db.flush()
         return n
 
     def stats_by_subject(self, db: Session, subject_id: int) -> dict:

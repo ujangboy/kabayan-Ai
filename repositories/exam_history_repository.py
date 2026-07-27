@@ -58,7 +58,7 @@ class ExamAttemptRepository(BaseRepository[ExamAttempt]):
             created_at=datetime.datetime.utcnow(),
         )
         db.add(obj)
-        db.commit()
+        db.flush()
         db.refresh(obj)
         return obj
 
@@ -78,7 +78,7 @@ class ExamReviewRepository(BaseRepository[ExamReview]):
     def bulk_create(self, db: Session, rows: List[dict]) -> None:
         for row in rows:
             db.add(ExamReview(**row))
-        db.commit()
+        db.flush()
 
 
 class StudyPlanRepository(BaseRepository[StudyPlan]):
@@ -110,7 +110,7 @@ class StudyPlanItemRepository(BaseRepository[StudyPlanItem]):
         if not obj:
             return None
         obj.completed = 0 if obj.completed else 1
-        db.commit()
+        db.flush()
         db.refresh(obj)
         # Recalculate plan progress
         plan = db.query(StudyPlan).filter(StudyPlan.id == obj.plan_id).first()
@@ -120,7 +120,7 @@ class StudyPlanItemRepository(BaseRepository[StudyPlanItem]):
             plan.completed_days = done
             plan.progress = int((done / len(items)) * 100) if items else 0
             plan.updated_at = datetime.datetime.utcnow()
-            db.commit()
+            db.flush()
         return obj
 
 
