@@ -10,6 +10,8 @@ import logging
 import datetime
 from typing import Optional, List
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import SQLAlchemyError
+from fastapi import HTTPException, status
 
 from services.ai_service import ai_service
 from services.rag_service import rag_service
@@ -17,7 +19,7 @@ from services.assessment_engine import assemble_evaluation, generate_study_plan
 from repositories.exam_repository import exam_blueprint_repository, exam_session_repository
 from repositories.question_bank_repository import question_bank_repository
 from repositories.exam_history_repository import exam_attempt_repo, exam_review_repo, study_plan_repo, study_plan_item_repo
-from models import ExamSession, StudyPlan, StudyPlanItem
+from models import ExamSession, ExamAttempt, ExamReview, StudyPlan, StudyPlanItem
 from prompts.exam_analyzer import (
     ANALYSIS_PROMPT,
     BLUEPRINT_PROMPT,
@@ -497,111 +499,150 @@ class ExamService:
     ) -> dict:
         from services.subject_service import subject_service as subj_svc
 
-        session = exam_session_repository.get(db, session_id)
-        if not session:
-            raise ValueError("Sesi ujian tidak ditemukan.")
-        if session.submitted_at:
-            return json.loads(session.evaluation_json)
-
-        questions_data = json.loads(session.questions_json)
-        questions      = questions_data.get("questions", [])
-        exam_type      = questions_data.get("exam_type", "simulasi")
-        subject        = subj_svc.get_by_id(db, session.subject_id)
-        subject_name   = subject.name if subject else "Mata Kuliah"
-
-        # Separate subjective questions for AI batch
-        subjective_lines = []
-        for q in questions:
-            qid   = str(q.get("id", ""))
-            qtype = q.get("type", "mcq")
-            if qtype not in ("mcq", "truefalse"):
-                user_ans = (answers.get(qid) or "").strip()
-                correct  = q.get("answer", "")
-                if user_ans and len(subjective_lines) < 8:
-                    subjective_lines.append(
-                        f"No.{qid} [{qtype}]\nTopik: {q.get('topic','')}\n"
-                        f"Soal: {q.get('question','')[:200]}\n"
-                        f"Jawaban User: {user_ans[:300]}\n"
-                        f"Jawaban Ideal: {correct[:200]}"
+        try:
+            with db.begin():
+                if not (session := exam_session_repository.get(db, session_id)):
+                    raise HTTPException(
+                        status_code=status.HTTP_404_NOT_FOUND,
+                        detail=f"Sesi ujian ID {session_id} tidak ditemukan",
                     )
+                if session.submitted_at:
+                    return json.loads(session.evaluation_json)
 
-        # AI batch evaluation for subjective only
-        ai_subjective: dict = {}
-        BATCH = 5
-        for start in range(0, len(subjective_lines), BATCH):
-            batch = subjective_lines[start: start + BATCH]
-            try:
-                resp = ai_service.generate(
-                    capability="reasoning",
-                    prompt_template=EVALUATION_PROMPT,
-                    input_variables={
-                        "subject_name": subject_name,
-                        "exam_type":    exam_type,
-                        "qa_pairs":     "\n---\n".join(batch),
-                    },
-                    use_cache=False,
+                questions_data = json.loads(session.questions_json)
+                questions      = questions_data.get("questions", [])
+                exam_type      = questions_data.get("exam_type", "simulasi")
+                subject        = subj_svc.get_by_id(db, session.subject_id)
+                subject_name   = subject.name if subject else "Mata Kuliah"
+
+                subjective_lines = []
+                for q in questions:
+                    qid   = str(q.get("id", ""))
+                    qtype = q.get("type", "mcq")
+                    if qtype not in ("mcq", "truefalse"):
+                        user_ans = (answers.get(qid) or "").strip()
+                        correct  = q.get("answer", "")
+                        if user_ans and len(subjective_lines) < 8:
+                            subjective_lines.append(
+                                f"No.{qid} [{qtype}]\nTopik: {q.get('topic','')}\n"
+                                f"Soal: {q.get('question','')[:200]}\n"
+                                f"Jawaban User: {user_ans[:300]}\n"
+                                f"Jawaban Ideal: {correct[:200]}"
+                            )
+
+                ai_subjective: dict = {}
+                BATCH = 5
+                for start in range(0, len(subjective_lines), BATCH):
+                    batch = subjective_lines[start: start + BATCH]
+                    try:
+                        resp = ai_service.generate(
+                            capability="reasoning",
+                            prompt_template=EVALUATION_PROMPT,
+                            input_variables={
+                                "subject_name": subject_name,
+                                "exam_type":    exam_type,
+                                "qa_pairs":     "\n---\n".join(batch),
+                            },
+                            use_cache=False,
+                        )
+                        data = _parse_json_response(resp, f"Eval batch {start//BATCH+1}")
+                        for fb in data.get("per_question_feedback", []):
+                            ai_subjective[str(fb.get("question_id", ""))] = fb
+                    except Exception as exc:
+                        logger.warning(f"Subjective eval batch failed: {exc}")
+                        for line in batch:
+                            m = re.match(r'No\.(\d+)', line)
+                            if m:
+                                ai_subjective[m.group(1)] = {
+                                    "is_correct": False, "score": 0,
+                                    "feedback": "Evaluasi tidak tersedia.", "explanation": "",
+                                }
+
+                eval_data = assemble_evaluation(
+                    questions, answers, subject_name, exam_type, ai_subjective
                 )
-                data = _parse_json_response(resp, f"Eval batch {start//BATCH+1}")
-                for fb in data.get("per_question_feedback", []):
-                    ai_subjective[str(fb.get("question_id", ""))] = fb
-            except Exception as exc:
-                logger.warning(f"Subjective eval batch failed: {exc}")
-                for line in batch:
-                    m = re.match(r'No\.(\d+)', line)
-                    if m:
-                        ai_subjective[m.group(1)] = {
-                            "is_correct": False, "score": 0,
-                            "feedback": "Evaluasi tidak tersedia.", "explanation": "",
-                        }
 
-        # Python assessment engine assembles everything
-        eval_data = assemble_evaluation(
-            questions, answers, subject_name, exam_type, ai_subjective
-        )
+                session.answers_json         = json.dumps(answers, ensure_ascii=False)
+                session.score                = eval_data["score"]
+                session.total_correct        = eval_data["total_correct"]
+                session.total_wrong          = eval_data["total_wrong"]
+                session.evaluation_json      = json.dumps(eval_data, ensure_ascii=False)
+                session.submitted_at         = datetime.datetime.utcnow()
 
-        exam_session_repository.submit_session(
-            db=db,
-            session_id=session_id,
-            answers_json=json.dumps(answers, ensure_ascii=False),
-            score=eval_data["score"],
-            total_correct=eval_data["total_correct"],
-            total_wrong=eval_data["total_wrong"],
-            evaluation_json=json.dumps(eval_data, ensure_ascii=False),
-        )
+                grade_val = eval_data.get("grade") or _calc_grade(eval_data["score"])
+                session.status               = "completed"
+                session.latest_score         = eval_data["score"]
+                session.best_score           = eval_data["score"] if session.best_score is None else max(session.best_score, eval_data["score"])
+                session.grade                = grade_val
+                session.progress             = eval_data["score"]
+                session.subject_name         = subject_name
+                session.title                = questions_data.get("title", f"Simulasi {exam_type} - {subject_name}")
+                session.exam_type            = exam_type
+                session.difficulty           = questions_data.get("difficulty", "menengah")
+                session.bloom_level          = questions_data.get("bloom_level", "mixed")
+                session.question_type        = questions_data.get("question_type", "mixed")
+                session.total_questions      = len(questions)
+                session.weak_topics_json     = json.dumps(eval_data.get("weak_topics", []), ensure_ascii=False)
+                session.strong_topics_json   = json.dumps(eval_data.get("strong_topics", []), ensure_ascii=False)
+                session.updated_at           = datetime.datetime.utcnow()
 
-        # ── Auto-save history into ExamSession ──
-        grade_val = eval_data.get("grade") or _calc_grade(eval_data["score"])
-        session.status = "completed"
-        session.score = eval_data["score"]
-        session.latest_score = eval_data["score"]
-        session.best_score = eval_data["score"] if session.best_score is None else max(session.best_score, eval_data["score"])
-        session.grade = grade_val
-        session.progress = eval_data["score"]
-        session.subject_name = subject_name
-        session.title = questions_data.get("title", f"Simulasi {exam_type} - {subject_name}")
-        session.exam_type = exam_type
-        session.difficulty = questions_data.get("difficulty", "menengah")
-        session.bloom_level = questions_data.get("bloom_level", "mixed")
-        session.question_type = questions_data.get("question_type", "mixed")
-        session.total_questions = len(questions)
-        session.weak_topics_json = json.dumps(eval_data.get("weak_topics", []), ensure_ascii=False)
-        session.strong_topics_json = json.dumps(eval_data.get("strong_topics", []), ensure_ascii=False)
-        session.updated_at = datetime.datetime.utcnow()
-        db.commit()
+                attempt = ExamAttempt(
+                    session_id=session_id,
+                    attempt_number=exam_attempt_repo.next_attempt_number(db, session_id),
+                    score=eval_data["score"],
+                    grade=grade_val,
+                    total_correct=eval_data["total_correct"],
+                    total_wrong=eval_data["total_wrong"],
+                    questions_json=session.questions_json,
+                    answers_json=json.dumps(answers, ensure_ascii=False),
+                    evaluation_json=json.dumps(eval_data, ensure_ascii=False),
+                    created_at=datetime.datetime.utcnow(),
+                )
+                db.add(attempt)
+                db.flush()
 
-        # Create first attempt
-        attempt = exam_attempt_repo.create_attempt(
-            db=db, session_id=session_id,
-            score=eval_data["score"], grade=grade_val,
-            total_correct=eval_data["total_correct"],
-            total_wrong=eval_data["total_wrong"],
-            questions_json=session.questions_json,
-            answers_json=json.dumps(answers, ensure_ascii=False),
-            evaluation_json=json.dumps(eval_data, ensure_ascii=False),
-        )
+                questions_data_local = json.loads(session.questions_json) if session.questions_json else {}
+                qs = questions_data_local.get("questions", [])
+                answers_local = json.loads(session.answers_json) if session.answers_json else {}
+                per_q_fb = {str(f["question_id"]): f for f in eval_data.get("per_question_feedback", [])}
+                review_rows = []
+                for q in qs:
+                    qid     = str(q.get("id", ""))
+                    fb      = per_q_fb.get(qid, {})
+                    user_ans = answers_local.get(qid, "")
+                    review_rows.append({
+                        "attempt_id": attempt.id,
+                        "question_number": q.get("id", 0),
+                        "topic": q.get("topic", ""),
+                        "question_text": q.get("question", ""),
+                        "question_type": q.get("type", ""),
+                        "bloom_level": q.get("bloom_level", ""),
+                        "difficulty": q.get("difficulty", ""),
+                        "user_answer": user_ans,
+                        "correct_answer": fb.get("correct_answer") or q.get("answer", ""),
+                        "is_correct": 1 if fb.get("is_correct") else 0,
+                        "ai_explanation": fb.get("feedback") or q.get("explanation", ""),
+                        "material_ref": q.get("material_reference", ""),
+                        "tips": q.get("tips", ""),
+                        "item_score": 100 if fb.get("is_correct") else 0,
+                    })
+                for row in review_rows:
+                    db.add(ExamReview(**row))
 
-        # Save per-question reviews
-        _save_reviews(db, attempt.id, session.questions_json, json.dumps(answers, ensure_ascii=False), eval_data)
+        except HTTPException:
+            raise
+        except SQLAlchemyError as err:
+            logger.error(f"submit_and_evaluate DB error: {err}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Gagal memproses data ujian karena kendala database.",
+            )
+        except Exception as exc:
+            logger.error(f"submit_and_evaluate unexpected error: {exc}", exc_info=True)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Gagal menyimpan hasil ujian.",
+            )
 
         return eval_data
 
@@ -831,66 +872,92 @@ class ExamService:
     @staticmethod
     def unified_retry(db: Session, session_id: int) -> dict:
         """Create a new session from question bank (zero AI) under the same session."""
-        session = exam_session_repository.get(db, session_id)
-        if not session:
-            raise ValueError("Sesi tidak ditemukan.")
-        if not session.blueprint_id:
-            # Attempt to find a blueprint for this subject
-            blueprint = exam_blueprint_repository.get_latest_by_subject(db, session.subject_id)
-            if not blueprint:
-                raise ValueError("Tidak ada blueprint untuk sesi ini.")
-            blueprint_id = blueprint.id
-        else:
+        try:
+            if not (session := exam_session_repository.get(db, session_id)):
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Sesi ujian ID {session_id} tidak ditemukan.",
+                )
             blueprint_id = session.blueprint_id
-        # Reuse retry_from_bank logic
-        result = ExamService.retry_from_bank(db, blueprint_id, weak_topics=[])
-        return result
+            if not blueprint_id:
+                if not (blueprint := exam_blueprint_repository.get_latest_by_subject(db, session.subject_id)):
+                    raise HTTPException(
+                        status_code=status.HTTP_404_NOT_FOUND,
+                        detail="Tidak ada blueprint untuk subjek ini.",
+                    )
+                blueprint_id = blueprint.id
+
+            with db.begin():
+                result = ExamService.retry_from_bank(db, blueprint_id, weak_topics=[])
+            return result
+
+        except HTTPException:
+            raise
+        except SQLAlchemyError as err:
+            logger.error(f"unified_retry DB error: {err}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Gagal memulai latihan ulang.",
+            )
 
     @staticmethod
     def save_study_plan(db: Session, session_id: int, plan_data: dict) -> dict:
         """Save/replace study plan for a session."""
         try:
-            existing = study_plan_repo.get_by_session(db, session_id)
-            if existing:
-                db.delete(existing)
+            with db.begin():
+                existing = study_plan_repo.get_by_session(db, session_id)
+                if existing:
+                    db.delete(existing)
 
-            sp_items = plan_data.get("study_plan", [])
-            plan = StudyPlan(
-                session_id=session_id,
-                title=plan_data.get("title", "Rencana Belajar"),
-                motivational_message=plan_data.get("motivational_message", ""),
-                priority_actions_json=json.dumps(plan_data.get("priority_actions", []), ensure_ascii=False),
-                total_days=len(sp_items),
-                completed_days=0, progress=0,
-                created_at=datetime.datetime.utcnow(),
-                updated_at=datetime.datetime.utcnow(),
-            )
-            db.add(plan)
-            db.flush()
-            db.refresh(plan)
-            for idx, day in enumerate(sp_items):
-                db.add(StudyPlanItem(
-                    plan_id=plan.id, order_number=idx,
-                    day_label=day.get("label", f"Hari {idx+1}"),
-                    topic=day.get("topic", ""),
-                    activity=day.get("activity", ""),
-                    activity_type=day.get("type", "review"),
-                    duration_minutes=day.get("duration_minutes"),
-                    resources=day.get("resources", ""),
-                    completed=0,
-                ))
-            db.commit()
+                sp_items = plan_data.get("study_plan", [])
+                plan = StudyPlan(
+                    session_id=session_id,
+                    title=plan_data.get("title", "Rencana Belajar"),
+                    motivational_message=plan_data.get("motivational_message", ""),
+                    priority_actions_json=json.dumps(plan_data.get("priority_actions", []), ensure_ascii=False),
+                    total_days=len(sp_items),
+                    completed_days=0, progress=0,
+                    created_at=datetime.datetime.utcnow(),
+                    updated_at=datetime.datetime.utcnow(),
+                )
+                db.add(plan)
+                db.flush()
+                for idx, day in enumerate(sp_items):
+                    db.add(StudyPlanItem(
+                        plan_id=plan.id, order_number=idx,
+                        day_label=day.get("label", f"Hari {idx+1}"),
+                        topic=day.get("topic", ""),
+                        activity=day.get("activity", ""),
+                        activity_type=day.get("type", "review"),
+                        duration_minutes=day.get("duration_minutes"),
+                        resources=day.get("resources", ""),
+                        completed=0,
+                    ))
+
             return {"status": "saved"}
-        except Exception as exc:
-            db.rollback()
-            logger.error(f"Gagal simpan study plan: {exc}")
+        except HTTPException:
             raise
+        except SQLAlchemyError as err:
+            logger.error(f"save_study_plan DB error: {err}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Gagal menyimpan rencana belajar.",
+            )
+        except Exception as exc:
+            logger.error(f"save_study_plan error: {exc}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Gagal menyimpan rencana belajar.",
+            )
 
     @staticmethod
     def toggle_plan_item(db: Session, item_id: int) -> dict:
         item = study_plan_item_repo.toggle_completed(db, item_id)
         if not item:
-            raise ValueError("Item tidak ditemukan.")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Item tidak ditemukan.",
+            )
         plan = study_plan_repo.get(db, item.plan_id)
         return {
             "item_id": item.id, "completed": bool(item.completed),
@@ -900,12 +967,20 @@ class ExamService:
 
     @staticmethod
     def delete_session(db: Session, session_id: int) -> bool:
-        s = exam_session_repository.get(db, session_id)
-        if not s:
-            return False
-        db.delete(s)
-        db.commit()
-        return True
+        try:
+            with db.begin():
+                if not (session := exam_session_repository.get(db, session_id)):
+                    return False
+                db.delete(session)
+            return True
+        except HTTPException:
+            raise
+        except SQLAlchemyError as err:
+            logger.error(f"delete_session DB error: {err}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Gagal menghapus sesi.",
+            )
 
 
 exam_service = ExamService()

@@ -151,6 +151,9 @@ async def submit_exam(
     except ValueError as e:
         return JSONResponse(status_code=400, content={"detail": str(e)})
     except Exception as e:
+        from fastapi import HTTPException as _HTTPException
+        if isinstance(e, _HTTPException):
+            raise
         logger.error(f"submit_exam error: {e}", exc_info=True)
         return JSONResponse(status_code=500, content={"detail": str(e)})
 
@@ -246,7 +249,12 @@ async def list_unified_sessions(
     try:
         data = exam_service.get_unified_sessions(db, subject_id)
         return JSONResponse({"sessions": data})
+    except ValueError as e:
+        return JSONResponse(status_code=404, content={"detail": str(e)})
     except Exception as e:
+        from fastapi import HTTPException as _HTTPException
+        if isinstance(e, _HTTPException):
+            raise
         logger.error(f"list_sessions error: {e}", exc_info=True)
         return JSONResponse(status_code=500, content={"detail": str(e)})
 
@@ -260,6 +268,9 @@ async def get_detail_session(session_id: int, db: Session = Depends(get_db)):
     except ValueError as e:
         return JSONResponse(status_code=404, content={"detail": str(e)})
     except Exception as e:
+        from fastapi import HTTPException as _HTTPException
+        if isinstance(e, _HTTPException):
+            raise
         logger.error(f"get_session_detail error: {e}", exc_info=True)
         return JSONResponse(status_code=500, content={"detail": str(e)})
 
@@ -277,6 +288,9 @@ async def retry_session(
     except ValueError as e:
         return JSONResponse(status_code=400, content={"detail": str(e)})
     except Exception as e:
+        from fastapi import HTTPException as _HTTPException
+        if isinstance(e, _HTTPException):
+            raise
         logger.error(f"retry_session error: {e}", exc_info=True)
         return JSONResponse(status_code=500, content={"detail": str(e)})
 
@@ -292,6 +306,9 @@ async def save_session_study_plan(
         result = exam_service.save_study_plan(db, session_id, payload)
         return JSONResponse(result)
     except Exception as e:
+        from fastapi import HTTPException as _HTTPException
+        if isinstance(e, _HTTPException):
+            raise
         logger.error(f"save_study_plan error: {e}", exc_info=True)
         return JSONResponse(status_code=500, content={"detail": str(e)})
 
@@ -301,9 +318,10 @@ async def toggle_session_plan_item(item_id: int, db: Session = Depends(get_db)):
     try:
         data = exam_service.toggle_plan_item(db, item_id)
         return JSONResponse(data)
-    except ValueError as e:
-        return JSONResponse(status_code=404, content={"detail": str(e)})
     except Exception as e:
+        from fastapi import HTTPException as _HTTPException
+        if isinstance(e, _HTTPException):
+            raise
         logger.error(f"toggle_plan_item error: {e}", exc_info=True)
         return JSONResponse(status_code=500, content={"detail": str(e)})
 
@@ -316,5 +334,8 @@ async def delete_session(session_id: int, db: Session = Depends(get_db)):
             return JSONResponse(status_code=404, content={"detail": "Sesi tidak ditemukan."})
         return JSONResponse({"status": "deleted"})
     except Exception as e:
+        from fastapi import HTTPException as _HTTPException
+        if isinstance(e, _HTTPException):
+            raise
         logger.error(f"delete_session error: {e}", exc_info=True)
         return JSONResponse(status_code=500, content={"detail": str(e)})
