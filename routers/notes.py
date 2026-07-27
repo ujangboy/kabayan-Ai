@@ -63,8 +63,10 @@ async def delete_note(note_id: int, db: Session = Depends(get_db)):
 
 @router.post("/api/notes/{note_id}/action")
 async def note_action(note_id: int, action: str = Form(...), db: Session = Depends(get_db)):
-    notes_service.process_action(db, note_id, action)
-    return JSONResponse({"status": "success", "message": "Note action processed"})
+    success, updated_content = notes_service.process_action(db, note_id, action)
+    if not success:
+        return JSONResponse(status_code=404, content={"status": "error", "message": "Note not found"})
+    return JSONResponse({"status": "success", "content": updated_content})
 
 @router.post("/api/notes/clear")
 async def clear_notes(db: Session = Depends(get_db)):

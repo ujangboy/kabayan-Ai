@@ -41,30 +41,37 @@ class NotesService:
         from services.summary_service import summary_service
         
         note = note_repository.get(db, note_id)
-        if not note: return False
+        if not note: return (False, None)
         
         if action == 'rapikan':
             from langchain_core.prompts import PromptTemplate
             prompt = PromptTemplate.from_template("Rapikan format dan bahasa dari catatan berikut tanpa mengubah makna aslinya:\n\n{context}")
             new_content = ai_service.generate("reasoning", prompt, {"context": note.content})
             note_repository.update(db, note, {"content": new_content})
+            updated_content = new_content
             
         elif action == 'ringkas':
             summary = summary_service.generate_summary(note.content, "Ringkas poin-poin penting.")
-            note_repository.update(db, note, {"content": note.content + "\n\n--- RINGKASAN AI ---\n" + summary})
+            new_content = note.content + "\n\n--- RINGKASAN AI ---\n" + summary
+            note_repository.update(db, note, {"content": new_content})
+            updated_content = new_content
             
         elif action == 'jelaskan':
             from langchain_core.prompts import PromptTemplate
             prompt = PromptTemplate.from_template("Jelaskan catatan berikut dengan bahasa yang lebih sederhana dan mudah dipahami:\n\n{context}")
             explanation = ai_service.generate("reasoning", prompt, {"context": note.content})
-            note_repository.update(db, note, {"content": note.content + "\n\n--- PENJELASAN AI ---\n" + explanation})
+            new_content = note.content + "\n\n--- PENJELASAN AI ---\n" + explanation
+            note_repository.update(db, note, {"content": new_content})
+            updated_content = new_content
             
         elif action == 'flashcard':
             flashcard_service.generate_flashcards(db, note.subject_id, note.content)
+            updated_content = note.content
             
         elif action == 'quiz':
             quiz_service.generate_quiz(db, note.subject_id, note.content)
+            updated_content = note.content
             
-        return True
+        return (True, updated_content)
 
 notes_service = NotesService()
