@@ -87,6 +87,8 @@ async def chat_endpoint(request: ChatRequest, db: Session = Depends(get_db)):
                 context = ""
 
         return StreamingResponse(ai_service.achat_stream(hist_dicts, context, request.message), media_type="text/plain")
+    except ValueError as e:
+        return JSONResponse(status_code=400, content={"detail": str(e)})
     except Exception as e:
         return JSONResponse(status_code=500, content={"detail": str(e)})
 

@@ -66,6 +66,15 @@ class RAGService:
 
         emb_matrix = np.array(embeddings).astype('float32')
         
+        if self.index is not None and emb_matrix.shape[1] != self.index.d:
+            raise ValueError(
+                f"Model embedding saat ini menghasilkan dimensi "
+                f"{emb_matrix.shape[1]}, tapi index FAISS dibuat dengan "
+                f"dimensi {self.index.d}. Kemungkinan Anda mengganti model "
+                f"embedding setelah materi sudah di-index. Silakan hapus dan "
+                f"upload ulang semua materi setelah ganti model embedding."
+            )
+
         if self.index is None:
             self.dimension = emb_matrix.shape[1]
             self.index = faiss.IndexFlatL2(self.dimension)
@@ -98,6 +107,15 @@ class RAGService:
         query_emb = embedder.embed_query(query)
         q_matrix = np.array([query_emb]).astype('float32')
         
+        if self.index is not None and q_matrix.shape[1] != self.index.d:
+            raise ValueError(
+                f"Model embedding saat ini menghasilkan dimensi "
+                f"{q_matrix.shape[1]}, tapi index FAISS dibuat dengan "
+                f"dimensi {self.index.d}. Kemungkinan Anda mengganti model "
+                f"embedding setelah materi sudah di-index. Silakan hapus dan "
+                f"upload ulang semua materi setelah ganti model embedding."
+            )
+
         fetch_k = self.index.ntotal if active_doc_ids else min(self.index.ntotal, top_k)
         fetch_k = max(1, fetch_k)
         
