@@ -144,12 +144,3 @@ async def clear_quizzes(db: Session = Depends(get_db)):
     return JSONResponse({"status": "success", "message": "Semua quiz dihapus."})
 
 
-# Legacy endpoint — tetap ada agar tidak breaking
-@router.post("/api/quizzes")
-async def save_quiz_score_legacy(
-    subject_id: int = Form(...),
-    score: int = Form(...),
-    db: Session = Depends(get_db)
-):
-    quiz_repository.create(db, {"subject_id": subject_id, "score": score})
-    return JSONResponse({"status": "success", "score": score})
