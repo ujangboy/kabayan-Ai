@@ -169,7 +169,11 @@ export default function MateriPage() {
                         type="checkbox"
                         checked={selectedDocs.includes(`mat_${m.id}`)}
                         onChange={() => toggleSelection(m.id)}
-                        className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+                        className="h-4 w-4 rounded appearance-none cursor-pointer
+                          bg-slate-800 border-2 border-slate-500
+                          checked:bg-primary checked:border-primary
+                          focus:outline-none focus:ring-2 focus:ring-primary/50
+                          transition-colors"
                       />
                     </td>
                     <td className="px-4 py-4 text-text-muted">{idx + 1}</td>
