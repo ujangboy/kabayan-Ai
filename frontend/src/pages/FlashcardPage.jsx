@@ -8,6 +8,7 @@ import {
 import { flashcardAPI, subjectAPI } from '@/services/api';
 import { useToast } from '@/components/Toast';
 import { extractErrorMessage } from '@/utils/errors';
+import MaterialPicker from '@/components/MaterialPicker';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Main Page
@@ -427,6 +428,7 @@ function FlashcardSession({ cards, subjectName, onClose }) {
 function GenerateAIModal({ subjects, onClose, onSuccess }) {
   const [subjectId, setSubjectId] = useState('');
   const [count, setCount] = useState(10);
+  const [selectedMaterialIds, setSelectedMaterialIds] = useState([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState('');
 
@@ -436,7 +438,11 @@ function GenerateAIModal({ subjects, onClose, onSuccess }) {
     setError('');
     setIsGenerating(true);
     try {
-      const result = await flashcardAPI.generate({ subject_id: subjectId, count });
+      const result = await flashcardAPI.generate({
+        subject_id: subjectId,
+        count,
+        material_ids: selectedMaterialIds.length > 0 ? selectedMaterialIds.join(',') : '',
+      });
       if (result.detail) throw new Error(result.detail);
       onSuccess(Number(subjectId));
     } catch (err) {
@@ -473,7 +479,7 @@ function GenerateAIModal({ subjects, onClose, onSuccess }) {
             <select
               required
               value={subjectId}
-              onChange={(e) => setSubjectId(e.target.value)}
+              onChange={(e) => { setSubjectId(e.target.value); setSelectedMaterialIds([]); }}
               disabled={isGenerating}
               className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary transition-colors disabled:opacity-60"
             >
@@ -486,6 +492,11 @@ function GenerateAIModal({ subjects, onClose, onSuccess }) {
               Pastikan materi sudah diupload dan status <span className="text-success">Ready</span>.
             </p>
           </div>
+          <MaterialPicker
+            subjectId={subjectId}
+            selectedMaterialIds={selectedMaterialIds}
+            onSelectionChange={setSelectedMaterialIds}
+          />
           <div>
             <label className="block text-xs font-medium text-text-secondary mb-1">Jumlah Flashcard</label>
             <input

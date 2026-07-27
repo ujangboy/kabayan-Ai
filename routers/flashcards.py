@@ -52,11 +52,16 @@ async def clear_flashcards(db: Session = Depends(get_db)):
 async def generate_flashcards(
     subject_id: int = Form(...),
     count: int = Form(10),
+    material_ids: str = Form(None),
     db: Session = Depends(get_db)
 ):
     """Generate flashcards dari materi subject menggunakan AI + RAG."""
     try:
         materials = material_service.get_by_subject(db, subject_id)
+        if material_ids:
+            ids = [int(x.strip()) for x in material_ids.split(",") if x.strip()]
+            if ids:
+                materials = [m for m in materials if m.id in ids]
         if not materials:
             return JSONResponse(
                 status_code=400,
