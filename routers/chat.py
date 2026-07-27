@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Request, Depends, BackgroundTasks
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 from sqlalchemy.orm import Session
 from database import get_db
 from services.chat_service import chat_service
@@ -94,6 +94,7 @@ async def chat_endpoint(request: ChatRequest, db: Session = Depends(get_db)):
 
 class ExportRequest(BaseModel):
     content: str
+    subject_id: Optional[int] = None
 
 @router.post("/api/export/note")
 async def export_note(request: ExportRequest, db: Session = Depends(get_db)):
@@ -113,7 +114,7 @@ async def export_note(request: ExportRequest, db: Session = Depends(get_db)):
 @router.post("/api/export/flashcards")
 async def export_flashcards(request: ExportRequest, db: Session = Depends(get_db)):
     try:
-        count = flashcard_service.generate_flashcards(db, None, request.content)
+        count = flashcard_service.generate_flashcards(db, request.subject_id, request.content)
         return {"status": "success", "message": f"{count} Flashcard berhasil dibuat"}
     except Exception as e:
         return JSONResponse(status_code=500, content={"detail": f"Gagal mengekstrak flashcard: {str(e)}"})
