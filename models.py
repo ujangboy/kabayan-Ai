@@ -171,11 +171,15 @@ class ExamBlueprint(Base):
 
 
 class ExamSession(Base):
-    """Satu sesi pengerjaan simulasi ujian."""
+    """
+    Satu sesi pengerjaan simulasi ujian (unified: active + history).
+    Setelah migrasi, semua data histori disimpan di sini.
+    """
     __tablename__ = "exam_sessions"
     id = Column(Integer, primary_key=True, index=True)
     blueprint_id = Column(Integer, ForeignKey("exam_blueprints.id"))
     subject_id = Column(Integer, ForeignKey("subjects.id"))
+    # --- Active session fields (original) ---
     questions_json = Column(Text)                 # JSON: list soal lengkap + kunci + pembahasan
     answers_json = Column(Text, nullable=True)    # JSON: jawaban user per soal
     score = Column(Integer, nullable=True)        # null = belum submit
@@ -184,6 +188,22 @@ class ExamSession(Base):
     evaluation_json = Column(Text, nullable=True) # JSON: topik lemah, topik kuat, rekomendasi
     started_at = Column(DateTime, default=datetime.datetime.utcnow)
     submitted_at = Column(DateTime, nullable=True)
+    # --- History fields (from ExamHistorySession, added by migration) ---
+    subject_name = Column(String, nullable=True)
+    title = Column(String, nullable=True)
+    exam_type = Column(String, nullable=True)
+    difficulty = Column(String, nullable=True)
+    bloom_level = Column(String, nullable=True)
+    question_type = Column(String, nullable=True)
+    total_questions = Column(Integer, nullable=True)
+    best_score = Column(Integer, nullable=True)
+    latest_score = Column(Integer, nullable=True)
+    grade = Column(String, nullable=True)
+    progress = Column(Integer, default=0)
+    status = Column(String, default='active')     # active / completed / archived / mastered
+    weak_topics_json = Column(Text, nullable=True)
+    strong_topics_json = Column(Text, nullable=True)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
     blueprint = relationship("ExamBlueprint", back_populates="sessions")
     subject = relationship("Subject")
