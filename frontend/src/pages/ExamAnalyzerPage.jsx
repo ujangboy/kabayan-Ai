@@ -10,7 +10,7 @@ import {
   Lightbulb, AlertCircle, Check,
 } from 'lucide-react';
 import { examAPI, subjectAPI } from '@/services/api';
-import { examHistoryAPI } from '@/services/api';
+import { sessionsAPI } from '@/services/api';
 import { cn } from '@/utils';
 import { useLocation, useNavigate } from 'react-router-dom';
 import MathMarkdown from '@/components/MathMarkdown';
@@ -695,21 +695,6 @@ function QuizView({ sessionData, onDone }) {
       if (r.data?.detail) throw new Error(r.data.detail);
       const evalResult = r.data;
 
-      // If this is a retry from Exam History, also persist the new attempt
-      const historyId = sessionData?._retry_history_id;
-      if (historyId) {
-        try {
-          await examHistoryAPI.retry(historyId, {
-            score:            evalResult.score ?? 0,
-            total_correct:    evalResult.total_correct ?? 0,
-            total_wrong:      evalResult.total_wrong ?? 0,
-            evaluation_json:  JSON.stringify(evalResult),
-            questions_json:   JSON.stringify({ title: sessionData.title, questions: questions }),
-            answers_json:     JSON.stringify(answers),
-          });
-        } catch (_) {}
-      }
-
       onDone(evalResult, answers);
     } catch (e) {
       setError(e.response?.data?.detail || e.message || 'Gagal submit.');
@@ -879,65 +864,24 @@ function ResultView({ evalData, sessionData, onReview, onRecommend, sessionId, s
 
   const handleSelesai = async () => {
     if (saved) {
-      // Already saved — navigate to history
       window.location.href = '/exam-history';
       return;
     }
     setSaveError(''); setSaving(true);
     try {
-      // Get subject info
-      const subjectId   = selectedSubjectId || sessionData?.subject_id || sessionData?.questions?.[0]?.subject_id || '';
-      const subjectObj  = (subjects || []).find(s => String(s.id) === String(subjectId));
-      const subjectName = subjectObj?.name || sessionData?.subject_name || 'Mata Kuliah';
-      const title       = sessionData?.title || `${sessionData?.exam_type?.toUpperCase() || 'Simulasi'} ${subjectName}`;
-
-      // Fetch recommendation first (we need it for study_plan_data)
+      // Save study plan if recommendation available
       let studyPlanData = null;
       try {
         const rr = await examAPI.getRecommendation(sessionId);
         if (rr.data && !rr.data.detail) studyPlanData = rr.data;
       } catch (_) {}
 
-      if (sessionData?._retry_history_id) {
-        const retryPayload = {
-          score,
-          total_correct,
-          total_wrong,
-          evaluation_json: JSON.stringify(evalData),
-          questions_json: JSON.stringify({ title, questions: sessionData?.questions || [] }),
-          answers_json: JSON.stringify(sessionData?.answers || {}),
-        };
-        const r = await examHistoryAPI.retry(sessionData._retry_history_id, retryPayload);
-        if (r.data?.detail) throw new Error(r.data.detail);
-        setSaved(true);
-        setSavedHistoryId(sessionData._retry_history_id);
-        setTimeout(() => { window.location.href = '/exam-history'; }, 1200);
-        return;
+      if (studyPlanData) {
+        await sessionsAPI.saveStudyPlan(sessionId, studyPlanData);
       }
 
-      const payload = {
-        subject_id:       subjectId,
-        subject_name:     subjectName,
-        title,
-        exam_type:        sessionData?.exam_type || 'simulasi',
-        difficulty:       sessionData?.difficulty || 'menengah',
-        bloom_level:      sessionData?.bloom_level || 'mixed',
-        question_type:    sessionData?.question_type || 'mixed',
-        total_questions:  (sessionData?.questions || []).length,
-        score,
-        total_correct,
-        total_wrong,
-        evaluation_json:  JSON.stringify(evalData),
-        questions_json:   JSON.stringify({ title, questions: sessionData?.questions || [] }),
-        answers_json:     JSON.stringify(sessionData?.answers || {}),
-        study_plan_data:  studyPlanData,
-      };
-
-      const r = await examHistoryAPI.save(payload);
-      if (r.data?.detail) throw new Error(r.data.detail);
       setSaved(true);
-      setSavedHistoryId(r.data?.history_session_id);
-      // Brief pause then redirect
+      setSavedHistoryId(sessionId);
       setTimeout(() => { window.location.href = '/exam-history'; }, 1200);
     } catch (e) {
       setSaveError(e.response?.data?.detail || e.message || 'Gagal menyimpan hasil.');

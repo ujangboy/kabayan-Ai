@@ -8,7 +8,7 @@ import {
   BarChart2, Brain, Star, Check, Loader2, ArrowLeft,
   FileText, BookMarked, X, ChevronLeft,
 } from 'lucide-react';
-import { examHistoryAPI, examAPI, subjectAPI } from '@/services/api';
+import { sessionsAPI, examAPI, subjectAPI } from '@/services/api';
 import { cn } from '@/utils';
 import { useNavigate } from 'react-router-dom';
 import MathMarkdown from '@/components/MathMarkdown';
@@ -84,14 +84,14 @@ export default function ExamHistoryPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: ['exam-history'],
-    queryFn:  () => examHistoryAPI.list().then(r => r.data),
+    queryFn:  () => sessionsAPI.list().then(r => r.data),
     refetchOnWindowFocus: true,
   });
 
   const sessions = data?.sessions || [];
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => examHistoryAPI.delete(id),
+    mutationFn: (id) => sessionsAPI.delete(id),
     onSuccess:  () => queryClient.invalidateQueries(['exam-history']),
   });
 
@@ -374,11 +374,11 @@ function DetailModal({ historySessionId, onClose }) {
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['exam-history-detail', historySessionId],
-    queryFn:  () => examHistoryAPI.detail(historySessionId).then(r => r.data),
+    queryFn:  () => sessionsAPI.detail(historySessionId).then(r => r.data),
   });
 
   const toggleMutation = useMutation({
-    mutationFn: (itemId) => examHistoryAPI.togglePlanItem(itemId),
+    mutationFn: (itemId) => sessionsAPI.togglePlanItem(itemId),
     onSuccess: () => { refetch(); queryClient.invalidateQueries(['exam-history']); },
   });
 

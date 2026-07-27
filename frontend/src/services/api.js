@@ -126,22 +126,17 @@ export const examAPI = {
   getBankStats: (subjectId) => api.get(`/exam/bank/stats/${subjectId}`),
 };
 
-// --- EXAM HISTORY ---
-export const examHistoryAPI = {
-  // Save full result when user clicks "Selesai"
-  save: (payload) => api.post('/history/save', payload, { timeout: 30000 }),
-  // Save retry attempt result
-  retry: (historySessionId, payload) => api.post(`/history/retry/${historySessionId}`, payload, { timeout: 30000 }),
-  // List all history (optional ?subject_id= filter)
-  list: (subjectId) => api.get('/history/list', { params: subjectId ? { subject_id: subjectId } : {} }),
-  // Full detail of one history session
-  detail: (historySessionId) => api.get(`/history/detail/${historySessionId}`),
-  // Save / replace study plan on a history session
-  saveStudyPlan: (historySessionId, planData) => api.post(`/history/study-plan/${historySessionId}`, planData),
-  // Toggle one study plan item completed
-  togglePlanItem: (itemId) => api.post(`/history/plan-item/${itemId}/toggle`),
-  // Delete history session
-  delete: (historySessionId) => api.delete(`/history/delete/${historySessionId}`),
+// --- UNIFIED SESSIONS (replaces exam history) ---
+export const sessionsAPI = {
+  list: (subjectId) => api.get('/exam/sessions', { params: subjectId ? { subject_id: subjectId } : {} }),
+  detail: (sessionId) => api.get(`/exam/sessions/${sessionId}`),
+  retry: (sessionId, payload) => api.post(`/exam/sessions/${sessionId}/retry`, payload || {}, { timeout: 30000 }),
+  saveStudyPlan: (sessionId, planData) => api.post(`/exam/sessions/${sessionId}/study-plan`, planData),
+  togglePlanItem: (itemId) => api.post(`/exam/sessions/plan-item/${itemId}/toggle`),
+  delete: (sessionId) => api.delete(`/exam/sessions/${sessionId}`),
 };
+
+// Legacy alias for backward compatibility during migration
+export const examHistoryAPI = sessionsAPI;
 
 export default api;
