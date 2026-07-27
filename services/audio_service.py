@@ -1,5 +1,6 @@
 import os
 import asyncio
+import logging
 from abc import ABC, abstractmethod
 import edge_tts
 from database import SessionLocal
@@ -9,6 +10,8 @@ from services.rag_service import rag_service
 from services.ai_service import ai_service
 from langchain_core.prompts import PromptTemplate
 import re
+
+logger = logging.getLogger(__name__)
 
 class TTSEngine(ABC):
     @abstractmethod
@@ -109,6 +112,18 @@ class AudioService:
             if not success:
                 success = await self.fallback_engine.synthesize(clean_script, output_path)
                 engine_used = "piper"
+
+            # Re-check material — bisa saja dihapus user selama AI/TTS berjalan
+            material = material_repository.get(db, material_id)
+            if not material:
+                logger.warning(f"Material {material_id} sudah dihapus saat audio sedang diproses, membatalkan penyimpanan hasil")
+                if os.path.exists(output_path):
+                    try:
+                        os.remove(output_path)
+                        logger.info(f"File audio sampah dihapus: {output_path}")
+                    except Exception as e:
+                        logger.warning(f"Gagal hapus file audio sampah: {e}")
+                return
 
             if success:
                 audio_repository.update_status(db, audio_gen.id, status="done", filepath=f"/{filepath}", engine_used=engine_used)

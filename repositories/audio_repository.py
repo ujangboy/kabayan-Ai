@@ -1,7 +1,10 @@
+import logging
 from sqlalchemy.orm import Session
 from models import AudioGeneration
 from repositories.base import BaseRepository
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 class AudioRepository(BaseRepository[AudioGeneration]):
     def __init__(self):
@@ -20,6 +23,8 @@ class AudioRepository(BaseRepository[AudioGeneration]):
                 obj.engine_used = engine_used
             db.commit()
             db.refresh(obj)
+        else:
+            logger.warning(f"AudioGeneration row {id} sudah tidak ada (mungkin cascade-delete), status {status} tidak dapat disimpan")
         return obj
 
 audio_repository = AudioRepository()
