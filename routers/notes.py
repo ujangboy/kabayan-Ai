@@ -1,31 +1,12 @@
-from fastapi import APIRouter, Request, Depends, Form
-from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
-from fastapi.templating import Jinja2Templates
+from fastapi import APIRouter, Depends, Form
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from typing import Optional
 from sqlalchemy.orm import Session
 from database import get_db
 from services.notes_service import notes_service
-from services.subject_service import subject_service
 
 router = APIRouter()
-templates = Jinja2Templates(directory="templates")
-
-@router.get("/notes", response_class=HTMLResponse)
-async def get_notes(request: Request, db: Session = Depends(get_db)):
-    notes = notes_service.get_all(db)
-    subjects = subject_service.get_all(db)
-    return templates.TemplateResponse(
-        request=request,
-        name="notes.html",
-        context={
-            "active_page": "notes",
-            "notes": notes,
-            "subjects": subjects
-        }
-    )
-
-from fastapi.responses import JSONResponse
 
 @router.get("/api/notes")
 async def get_notes_json(db: Session = Depends(get_db)):

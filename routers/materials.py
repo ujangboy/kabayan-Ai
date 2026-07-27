@@ -1,31 +1,14 @@
-from fastapi import APIRouter, Request, Depends, UploadFile, File, Form, BackgroundTasks
-from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
-from fastapi.templating import Jinja2Templates
+from fastapi import APIRouter, Depends, UploadFile, File, Form, BackgroundTasks
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
 from database import get_db
 import models
 from services.material_service import material_service
-from services.subject_service import subject_service
 from services.audio_service import audio_service
 from repositories.material_repository import material_repository
 
 router = APIRouter()
-templates = Jinja2Templates(directory="templates")
-
-@router.get("/materials", response_class=HTMLResponse)
-async def get_materials(request: Request, db: Session = Depends(get_db)):
-    materials = db.query(models.Material).all() # Could use service, but sticking to basic query for view if fine, or use service
-    subjects = subject_service.get_all(db)
-    return templates.TemplateResponse(
-        request=request,
-        name="materials.html",
-        context={
-            "active_page": "materials",
-            "materials": materials,
-            "subjects": subjects
-        }
-    )
 
 @router.get("/api/materials")
 async def get_materials_json(db: Session = Depends(get_db)):

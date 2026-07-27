@@ -11,9 +11,6 @@ SERVER_PORT = 7860
 # --- API Configurations ---
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 
-# We use Groq for Chat/Generate
-MODEL_NAME = "openai/gpt-oss-20b"
-
 # We use sentence-transformers locally for embeddings
 EMBEDDING_MODEL = "all-MiniLM-L6-v2"
 TEMPERATURE = 0.2

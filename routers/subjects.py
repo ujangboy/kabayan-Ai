@@ -1,26 +1,11 @@
-from fastapi import APIRouter, Request, Depends, Form
-from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
+from fastapi import APIRouter, Depends, Form
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from database import get_db
 from services.subject_service import subject_service
 
 router = APIRouter()
-templates = Jinja2Templates(directory="templates")
 
-@router.get("/subjects", response_class=HTMLResponse)
-async def get_subjects(request: Request, db: Session = Depends(get_db)):
-    subjects = subject_service.get_all(db)
-    return templates.TemplateResponse(
-        request=request,
-        name="subjects.html",
-        context={
-            "active_page": "subjects",
-            "subjects": subjects
-        }
-    )
-
-from fastapi.responses import JSONResponse
 @router.get("/api/subjects")
 async def get_subjects_json(db: Session = Depends(get_db)):
     subjects = subject_service.get_all(db)
@@ -34,20 +19,6 @@ async def get_subjects_json(db: Session = Depends(get_db)):
             "description": s.description
         })
     return JSONResponse({"subjects": results})
-
-@router.get("/subjects/{subject_id}", response_class=HTMLResponse)
-async def get_subject_detail(subject_id: int, request: Request, db: Session = Depends(get_db)):
-    subject = subject_service.get_by_id(db, subject_id)
-    if not subject:
-        return RedirectResponse(url="/subjects", status_code=303)
-    return templates.TemplateResponse(
-        request=request,
-        name="subject_detail.html",
-        context={
-            "active_page": "subjects",
-            "subject": subject
-        }
-    )
 
 @router.get("/api/subjects/{subject_id}")
 async def get_subject_by_id(subject_id: int, db: Session = Depends(get_db)):

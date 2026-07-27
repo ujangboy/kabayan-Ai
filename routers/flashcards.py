@@ -1,32 +1,13 @@
-from fastapi import APIRouter, Request, Depends, Form
-from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
+from fastapi import APIRouter, Depends, Form
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from database import get_db
 from repositories.flashcard_repository import flashcard_repository
-from services.subject_service import subject_service
 from services.flashcard_service import flashcard_service
 from services.material_service import material_service
 from services.rag_service import rag_service
 
 router = APIRouter()
-templates = Jinja2Templates(directory="templates")
-
-@router.get("/flashcards", response_class=HTMLResponse)
-async def get_flashcards(request: Request, db: Session = Depends(get_db)):
-    flashcards = flashcard_repository.get_all(db)
-    subjects = subject_service.get_all(db)
-    return templates.TemplateResponse(
-        request=request,
-        name="flashcards.html",
-        context={
-            "active_page": "flashcards",
-            "flashcards": flashcards,
-            "subjects": subjects
-        }
-    )
-
-from fastapi.responses import JSONResponse
 
 @router.get("/api/flashcards")
 async def get_flashcards_json(db: Session = Depends(get_db)):
