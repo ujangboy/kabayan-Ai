@@ -29,6 +29,26 @@ class QuizService:
         return answer
 
     @staticmethod
+    def _sanitize_json_str(s: str) -> str:
+        """Fix common AI JSON issues: unescaped backslashes, trailing commas."""
+        # Fix unescaped backslashes that aren't valid JSON escapes
+        # Valid escapes: \", \\, \/, \b, \f, \n, \r, \t, \uXXXX
+        valid_escapes = set('"\bfnrtu/')
+        result = []
+        i = 0
+        while i < len(s):
+            if s[i] == '\\' and i + 1 < len(s) and s[i+1] not in valid_escapes and s[i+1] != '\n':
+                # Invalid escape - escape the backslash itself
+                result.append('\\\\')
+            else:
+                result.append(s[i])
+            i += 1
+        s = ''.join(result)
+        # Remove trailing commas before } or ]
+        s = re.sub(r',\s*([}\]])', r'\1', s)
+        return s
+
+    @staticmethod
     def generate_quiz(db: Session, subject_id: int, context: str,
                       mcq_count: int = 5, essay_count: int = 0, title: str = None):
         """Generate quiz dari context, simpan soal ke DB sebagai questions_json, return quiz ID + data."""
@@ -47,7 +67,7 @@ class QuizService:
             else:
                 json_match = re.search(r'\{.*\}', response, re.DOTALL)
                 json_str = json_match.group(0) if json_match else response
-            data = json.loads(json_str.strip())
+            data = json.loads(QuizService._sanitize_json_str(json_str.strip()))
 
             if not data.get("mcq"):
                 raise ValueError("AI tidak menghasilkan soal MCQ.")
