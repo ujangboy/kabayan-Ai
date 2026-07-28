@@ -225,6 +225,28 @@ def run_migrations():
                     cursor.execute(ddl)
                 except Exception:
                     pass
+            
+            # Create indexes for performance
+            for idx_ddl in [
+                "CREATE INDEX IF NOT EXISTS idx_materials_subject_id ON materials (subject_id)",
+                "CREATE INDEX IF NOT EXISTS idx_materials_status ON materials (status)",
+                "CREATE INDEX IF NOT EXISTS idx_exam_sessions_subject_id ON exam_sessions (subject_id)",
+                "CREATE INDEX IF NOT EXISTS idx_exam_sessions_status ON exam_sessions (status)",
+                "CREATE INDEX IF NOT EXISTS idx_exam_attempts_session_id ON exam_attempts (session_id)",
+                "CREATE INDEX IF NOT EXISTS idx_exam_reviews_attempt_id ON exam_reviews (attempt_id)",
+                "CREATE INDEX IF NOT EXISTS idx_study_plans_session_id ON study_plans (session_id)",
+                "CREATE INDEX IF NOT EXISTS idx_study_plan_items_plan_id ON study_plan_items (plan_id)",
+                "CREATE INDEX IF NOT EXISTS idx_question_bank_subject_id ON question_bank (subject_id)",
+                "CREATE INDEX IF NOT EXISTS idx_notes_subject_id ON notes (subject_id)",
+                "CREATE INDEX IF NOT EXISTS idx_flashcards_subject_id ON flashcards (subject_id)",
+                "CREATE INDEX IF NOT EXISTS idx_quizzes_subject_id ON quizzes (subject_id)",
+                "CREATE INDEX IF NOT EXISTS idx_messages_chat_id ON messages (chat_id)",
+            ]:
+                try:
+                    cursor.execute(idx_ddl)
+                except Exception:
+                    pass
+            
             conn.commit()
             conn.close()
             logger.info("Database migration check passed.")
@@ -233,6 +255,32 @@ def run_migrations():
 
 run_migrations()
 run_exam_unification_migration()
+
+# ─── Startup: Fix materials stuck on "Processing" ──────────────────────────────
+def fix_stuck_materials():
+    """Recover materials stuck on 'Processing' from dead background tasks."""
+    import models
+    from services.rag_service import rag_service as _rag
+    try:
+        db = SessionLocal()
+        stuck = db.query(models.Material).filter(models.Material.status == "Processing").all()
+        for mat in stuck:
+            doc_id = f"mat_{mat.id}"
+            has_chunks = any(m.get("doc_id") == doc_id for m in _rag.chunk_metadata)
+            if has_chunks:
+                mat.status = "Ready"
+                mat.failure_reason = None
+                logger.info(f"Recovered stuck material {mat.id} -> Ready (FAISS chunks found)")
+            else:
+                mat.status = "Failed"
+                mat.failure_reason = "Background processing died before completion."
+                logger.warning(f"Material {mat.id} marked Failed (no FAISS chunks)")
+        db.commit()
+        db.close()
+    except Exception as e:
+        logger.error(f"fix_stuck_materials error: {e}")
+
+fix_stuck_materials()
 
 # Initialize Database
 Base.metadata.create_all(bind=engine)
