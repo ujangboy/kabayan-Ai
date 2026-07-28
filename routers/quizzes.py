@@ -5,7 +5,7 @@ from database import get_db
 from repositories.quiz_repository import quiz_repository
 from services.quiz_service import quiz_service
 from services.material_service import material_service
-from services.rag_service import rag_service
+from services.rag_context_service import rag_context_service
 import json
 
 router = APIRouter()
@@ -79,34 +79,12 @@ async def generate_quiz(
                 return JSONResponse(status_code=400, content={"detail": "Materi masih diproses (Processing). Tunggu beberapa saat lalu coba lagi."})
             return JSONResponse(status_code=400, content={"detail": "Tidak ada materi yang siap. Pastikan upload materi berhasil (status: Ready)."})
 
-        doc_ids = [f"mat_{m.id}" for m in materials]
-
-        # Strategi 1: Ambil dari FAISS chunk_metadata (jika sudah di-index)
-        context = ""
-        word_count = 0
-        for meta in rag_service.chunk_metadata:
-            if meta["doc_id"] in doc_ids:
-                context += meta["content"] + "\n\n"
-                word_count += len(meta["content"].split())
-                if word_count > 2000:
-                    break
-
-        # Strategi 2 (fallback): Baca langsung dari file jika context kosong
-        if not context:
-            from parsers.document_parser import extract_text
-            for m in materials:
-                if m.filepath and __import__('os').path.exists(m.filepath):
-                    try:
-                        text = extract_text(m.filepath)
-                        if text:
-                            # Ambil max 2000 kata
-                            words = text.split()
-                            context += " ".join(words[:2000]) + "\n\n"
-                            word_count += min(len(words), 2000)
-                    except Exception:
-                        pass
-                if word_count >= 2000:
-                    break
+        query = None
+        if len(materials) == 1:
+            query = materials[0].filename
+        context = rag_context_service.gather_context(
+            materials, max_words=2000, query=query
+        )
 
         if not context.strip():
             return JSONResponse(status_code=400, content={"detail": "Tidak ada konten materi yang dapat dibaca. Pastikan file PDF dapat diproses."})

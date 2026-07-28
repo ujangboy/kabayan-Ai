@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from database import get_db
 from services.notes_service import notes_service
 from services.material_service import material_service
-from services.rag_service import rag_service
+from services.rag_context_service import rag_context_service
 
 router = APIRouter()
 
@@ -82,31 +82,12 @@ async def generate_notes_ai(
                 return JSONResponse(status_code=400, content={"detail": "Materi masih diproses (Processing). Tunggu beberapa saat lalu coba lagi."})
             return JSONResponse(status_code=400, content={"detail": "Tidak ada materi yang siap. Pastikan upload materi berhasil (status: Ready)."})   
 
-        doc_ids = [f"mat_{m.id}" for m in materials]
-        context = ""
-        word_count = 0
-        for meta in rag_service.chunk_metadata:
-            if meta["doc_id"] in doc_ids:
-                context += meta["content"] + "\n\n"
-                word_count += len(meta["content"].split())
-                if word_count > 1500:
-                    break
-
-        if not context.strip():
-            from parsers.document_parser import extract_text
-            import os
-            for m in materials:
-                if m.filepath and os.path.exists(m.filepath):
-                    try:
-                        text = extract_text(m.filepath)
-                        if text:
-                            words = text.split()
-                            context += " ".join(words[:1500]) + "\n\n"
-                            word_count += min(len(words), 1500)
-                    except Exception:
-                        pass
-                if word_count >= 1500:
-                    break
+        query = None
+        if len(materials) == 1:
+            query = materials[0].filename
+        context = rag_context_service.gather_context(
+            materials, max_words=1500, query=query
+        )
 
         if not context.strip():
             return JSONResponse(status_code=400, content={"detail": "Tidak ada konten materi yang dapat dibaca."})

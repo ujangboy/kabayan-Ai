@@ -1,6 +1,7 @@
 from services.ai_service import ai_service
 from prompts.flashcard import FLASHCARD_PROMPT
 from repositories.flashcard_repository import flashcard_repository
+from schemas.ai_output import FlashcardOutput
 from sqlalchemy.orm import Session
 import json
 import re
@@ -8,35 +9,39 @@ import re
 class FlashcardService:
     @staticmethod
     def generate_flashcards(db: Session, subject_id, context: str, title: str = None):
-        """Generate flashcards dari context, simpan ke DB, return jumlah yang dibuat."""
-        response = ai_service.generate(
+        import models
+        import datetime
+
+        result = ai_service.generate(
             capability="flashcard",
             prompt_template=FLASHCARD_PROMPT,
             input_variables={"context": context},
-            use_cache=False
+            use_cache=False,
+            output_schema=FlashcardOutput,
         )
 
         try:
-            # Proteksi Output Parsing (JSON Guard)
-            match = re.search(r'```json\s*([\s\S]*?)\s*```', response)
-            if match:
-                json_str = match.group(1)
+            if isinstance(result, dict) and "flashcards" in result:
+                items = result["flashcards"]
             else:
-                json_match = re.search(r'\[.*\]', response, re.DOTALL)
-                json_str = json_match.group(0) if json_match else response
-            data = json.loads(json_str.strip())
+                match = re.search(r'```json\s*([\s\S]*?)\s*```', result)
+                if match:
+                    json_str = match.group(1)
+                else:
+                    json_match = re.search(r'\[.*\]', result, re.DOTALL)
+                    json_str = json_match.group(0) if json_match else result
+                items = json.loads(json_str.strip())
+                if isinstance(items, dict) and "flashcards" in items:
+                    items = items["flashcards"]
 
-            if not data:
+            if not items:
                 raise ValueError("AI tidak menghasilkan flashcard. Coba lagi.")
 
-            # Bulk insert — tambahkan semua ke session dulu, baru commit sekali
-            import models
-            import datetime
-            for item in data:
-                question = item.get("question", "").strip()
-                answer = item.get("answer", "").strip()
+            for item in items:
+                question = (item.get("question") or "").strip()
+                answer = (item.get("answer") or "").strip()
                 if not question or not answer:
-                    continue  # skip item kosong
+                    continue
                 fc = models.Flashcard(
                     subject_id=subject_id,
                     title=title,
@@ -47,10 +52,10 @@ class FlashcardService:
                 db.add(fc)
 
             db.flush()
-            return len(data)
+            return len(items)
 
         except json.JSONDecodeError as e:
-            raise ValueError(f"AI tidak mengembalikan JSON yang valid: {str(e)}\nResponse: {response[:300]}")
+            raise ValueError(f"AI tidak mengembalikan JSON yang valid: {str(e)}\nResponse: {result[:300]}")
         except Exception as e:
             raise ValueError(f"Gagal menyimpan flashcard: {str(e)}")
 

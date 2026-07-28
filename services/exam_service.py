@@ -14,12 +14,12 @@ from sqlalchemy.exc import SQLAlchemyError
 from fastapi import HTTPException, status
 
 from services.ai_service import ai_service
-from services.rag_service import rag_service
 from services.assessment_engine import assemble_evaluation, generate_study_plan
 from repositories.exam_repository import exam_blueprint_repository, exam_session_repository
 from repositories.question_bank_repository import question_bank_repository
 from repositories.exam_history_repository import exam_attempt_repo, exam_review_repo, study_plan_repo, study_plan_item_repo
 from models import ExamSession, ExamAttempt, ExamReview, StudyPlan, StudyPlanItem
+from schemas.ai_output import ExamQuestionOutput
 from prompts.exam_analyzer import (
     ANALYSIS_PROMPT,
     BLUEPRINT_PROMPT,
@@ -91,59 +91,40 @@ def _parse_json_response(response: str, label: str = "AI") -> dict:
 
 
 def _gather_context(db: Session, subject_id: int, materials) -> str:
-    from parsers.document_parser import extract_text
-    import os
+    from services.rag_context_service import rag_context_service
+    from models import Note, Flashcard
 
-    doc_ids = [f"mat_{m.id}" for m in materials]
-    context_parts = []
-    word_count = 0
-
-    if rag_service.index is not None and rag_service.index.ntotal > 0:
-        for meta in rag_service.chunk_metadata:
-            if meta["doc_id"] in doc_ids:
-                content = meta["content"]
-                context_parts.append(content)
-                word_count += len(content.split())
-                if word_count >= MAX_CONTEXT_WORDS:
-                    break
-
-    if word_count < 500:
-        for m in materials:
-            if m.filepath and os.path.exists(m.filepath):
-                try:
-                    text = extract_text(m.filepath)
-                    if text:
-                        words = text.split()
-                        take = words[:MAX_CONTEXT_WORDS - word_count]
-                        context_parts.append(" ".join(take))
-                        word_count += len(take)
-                except Exception as exc:
-                    logger.warning(f"Failed to read {m.filepath}: {exc}")
-            if word_count >= MAX_CONTEXT_WORDS:
-                break
+    subject_name = ""
+    if materials:
+        subject_name = getattr(materials[0], "filename", "")
+    context = rag_context_service.gather_context(
+        materials, max_words=MAX_CONTEXT_WORDS, query=subject_name or f"materi kuliah"
+    )
+    word_count = len(context.split())
 
     if word_count < MAX_CONTEXT_WORDS:
-        from models import Note
+        extras = []
         for note in db.query(Note).filter(Note.subject_id == subject_id).all():
             if note.content:
                 snippet = f"[Catatan: {note.title}]\n{note.content}"
-                context_parts.append(snippet)
+                extras.append(snippet)
                 word_count += len(snippet.split())
             if word_count >= MAX_CONTEXT_WORDS:
                 break
 
-    if word_count < MAX_CONTEXT_WORDS:
-        from models import Flashcard
         for card in db.query(Flashcard).filter(
             Flashcard.subject_id == subject_id
         ).limit(30).all():
             snippet = f"Q: {card.question}\nA: {card.answer}"
-            context_parts.append(snippet)
+            extras.append(snippet)
             word_count += len(snippet.split())
             if word_count >= MAX_CONTEXT_WORDS:
                 break
 
-    return "\n\n---\n\n".join(context_parts)
+        if extras:
+            context = context + "\n\n---\n\n" + "\n\n".join(extras) if context else "\n\n".join(extras)
+
+    return context
 
 
 def _bank_row_to_question(row, global_id: int) -> dict:
@@ -368,8 +349,12 @@ class ExamService:
                         "key_concepts":   concepts,
                     },
                     use_cache=False,
+                    output_schema=ExamQuestionOutput,
                 )
-                q_data    = _parse_json_response(response, f"QuestionGen[{topic}]")
+                if isinstance(response, dict) and "questions" in response:
+                    q_data = response
+                else:
+                    q_data = _parse_json_response(response, f"QuestionGen[{topic}]")
                 new_qs    = q_data.get("questions", [])
 
                 # Save to bank for future reuse

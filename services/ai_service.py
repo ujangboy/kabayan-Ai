@@ -1,13 +1,17 @@
 import time
 import re
+import logging
 from langchain_groq import ChatGroq
 from langchain_core.prompts import PromptTemplate
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
-from typing import Dict, Any, List
+from pydantic import BaseModel
+from typing import Dict, Any, List, Optional as Opt, Type
 import config
 from database import SessionLocal
 from services.cache_service import cache_service
 from services.settings_service import settings_service
+
+logger = logging.getLogger(__name__)
 
 # ─── REQ-04: Token Context Guard ────────────────────────────────────────────
 MAX_CONTEXT_CHARS = 6000 * 4   # ~6000 token estimasi (1 token ≈ 4 char)
@@ -126,8 +130,8 @@ class AIService:
         prompt_template: PromptTemplate,
         input_variables: Dict[str, Any],
         use_cache: bool = True,
-    ) -> str:
-        # REQ-04: truncate context
+        output_schema: Opt[Type[BaseModel]] = None,
+    ) -> str | dict | list:
         if "context" in input_variables:
             input_variables = {
                 **input_variables,
@@ -145,9 +149,23 @@ class AIService:
                 return cached
 
         llm = AIService._get_llm(capability)
+
+        # If output_schema provided, try structured output first
+        if output_schema:
+            try:
+                structured_llm = llm.with_structured_output(output_schema)
+                result = _retry_with_backoff(lambda: structured_llm.invoke(input_variables))
+                if use_cache:
+                    cache_service.set_cache(db, prompt_str, "", setting_hash, str(result))
+                db.close()
+                if isinstance(result, BaseModel):
+                    return result.model_dump()
+                return result
+            except Exception as exc:
+                logger.warning("Structured output failed for %s, falling back to text: %s", capability, exc)
+
         chain = prompt_template | llm
 
-        # REQ-03: retry with backoff
         response = _retry_with_backoff(lambda: chain.invoke(input_variables))
         response_text = response.content
 
