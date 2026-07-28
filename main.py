@@ -232,6 +232,7 @@ def run_migrations():
                 "CREATE INDEX IF NOT EXISTS idx_materials_status ON materials (status)",
                 "CREATE INDEX IF NOT EXISTS idx_exam_sessions_subject_id ON exam_sessions (subject_id)",
                 "CREATE INDEX IF NOT EXISTS idx_exam_sessions_status ON exam_sessions (status)",
+                "CREATE INDEX IF NOT EXISTS idx_exam_sessions_subject_status_started ON exam_sessions (subject_id, status, started_at)",
                 "CREATE INDEX IF NOT EXISTS idx_exam_attempts_session_id ON exam_attempts (session_id)",
                 "CREATE INDEX IF NOT EXISTS idx_exam_reviews_attempt_id ON exam_reviews (attempt_id)",
                 "CREATE INDEX IF NOT EXISTS idx_study_plans_session_id ON study_plans (session_id)",
@@ -239,7 +240,9 @@ def run_migrations():
                 "CREATE INDEX IF NOT EXISTS idx_question_bank_subject_id ON question_bank (subject_id)",
                 "CREATE INDEX IF NOT EXISTS idx_notes_subject_id ON notes (subject_id)",
                 "CREATE INDEX IF NOT EXISTS idx_flashcards_subject_id ON flashcards (subject_id)",
+                "CREATE INDEX IF NOT EXISTS idx_flashcards_subject_created ON flashcards (subject_id, created_at)",
                 "CREATE INDEX IF NOT EXISTS idx_quizzes_subject_id ON quizzes (subject_id)",
+                "CREATE INDEX IF NOT EXISTS idx_quizzes_subject_created ON quizzes (subject_id, created_at)",
                 "CREATE INDEX IF NOT EXISTS idx_messages_chat_id ON messages (chat_id)",
             ]:
                 try:

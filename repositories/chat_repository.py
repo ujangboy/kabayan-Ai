@@ -13,7 +13,7 @@ class ChatRepository(BaseRepository[Chat]):
     def add_message(self, db: Session, chat_id: int, role: str, content: str) -> Message:
         msg = Message(chat_id=chat_id, role=role, content=content)
         db.add(msg)
-        db.commit()
+        db.flush()
         db.refresh(msg)
         return msg
 

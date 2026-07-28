@@ -27,7 +27,7 @@ api.interceptors.response.use(
   }
 );
 
-// --- CHAT ---
+// --- CHAT (streaming — must use raw fetch, not axios) ---
 export const chatAPI = {
   send: (data) => fetch('/api/chat', {
     method: 'POST',
@@ -62,27 +62,24 @@ export const flashcardAPI = {
   getAll: () => api.get('/flashcards'),
   delete: (id) => api.post(`/flashcards/${id}/delete`),
   clear: () => api.post('/flashcards/clear'),
-  generate: (formData) => fetch('/api/flashcards/generate', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams(formData).toString(),
-  }).then(r => r.json()),
+  generate: (formData) => api.post('/flashcards/generate',
+    new URLSearchParams(formData).toString(),
+    { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+  ).then(r => r.data),
 };
 
 // --- QUIZ ---
 export const quizAPI = {
   getAll: () => api.get('/quizzes'),
   getQuestions: (id) => api.get(`/quizzes/${id}/questions`),
-  generate: (formData) => fetch('/api/quizzes/generate', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams(formData).toString(),
-  }).then(r => r.json()),
-  saveScore: (id, score) => fetch(`/api/quizzes/${id}/score`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ score }).toString(),
-  }).then(r => r.json()),
+  generate: (formData) => api.post('/quizzes/generate',
+    new URLSearchParams(formData).toString(),
+    { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+  ).then(r => r.data),
+  saveScore: (id, score) => api.post(`/quizzes/${id}/score`,
+    new URLSearchParams({ score: String(score) }).toString(),
+    { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+  ).then(r => r.data),
   delete: (id) => api.delete(`/quizzes/${id}`),
   clear: () => api.post('/quizzes/clear'),
 };

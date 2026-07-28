@@ -18,7 +18,7 @@ class BaseRepository(Generic[ModelType]):
         obj_data = obj_in
         db_obj = self.model(**obj_data)
         db.add(db_obj)
-        db.commit()
+        db.flush()
         db.refresh(db_obj)
         return db_obj
 
@@ -26,7 +26,7 @@ class BaseRepository(Generic[ModelType]):
         for field in obj_in:
             if hasattr(db_obj, field):
                 setattr(db_obj, field, obj_in[field])
-        db.commit()
+        db.flush()
         db.refresh(db_obj)
         return db_obj
 
@@ -34,16 +34,15 @@ class BaseRepository(Generic[ModelType]):
         obj = db.query(self.model).filter(self.model.id == id).first()
         if obj:
             db.delete(obj)
-            db.commit()
+            db.flush()
             return True
         return False
 
     def delete_all(self, db: Session) -> bool:
         try:
             db.query(self.model).delete()
-            db.commit()
+            db.flush()
             return True
-        except Exception as e:
-            db.rollback()
+        except Exception:
             return False
 

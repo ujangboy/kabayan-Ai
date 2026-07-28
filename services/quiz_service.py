@@ -89,7 +89,7 @@ class QuizService:
                 created_at=datetime.datetime.utcnow(),
             )
             db.add(quiz_record)
-            db.commit()
+            db.flush()
             db.refresh(quiz_record)
 
             # Return data lengkap + id untuk frontend
@@ -98,7 +98,6 @@ class QuizService:
         except json.JSONDecodeError as e:
             raise ValueError(f"AI tidak mengembalikan JSON yang valid: {str(e)}\nResponse: {response[:300]}")
         except Exception as e:
-            db.rollback()
             raise ValueError(f"Gagal menyimpan quiz: {str(e)}")
 
     @staticmethod
@@ -107,7 +106,7 @@ class QuizService:
         quiz = quiz_repository.get(db, quiz_id)
         if quiz:
             quiz.score = score
-            db.commit()
+            db.flush()
             db.refresh(quiz)
         return quiz
 

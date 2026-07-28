@@ -18,6 +18,6 @@ class CacheRepository(BaseRepository[Cache]):
 
     def invalidate_all(self, db: Session):
         db.query(self.model).update({self.model.expired_at: datetime.datetime.utcnow()})
-        db.commit()
+        db.flush()
 
 cache_repository = CacheRepository()

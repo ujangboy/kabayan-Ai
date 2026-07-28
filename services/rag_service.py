@@ -104,50 +104,50 @@ class RAGService:
             self.save_index()
 
     def search(self, query: str, active_doc_ids: list = None, top_k: int = 5) -> str:
-        if self.index is None or self.index.ntotal == 0:
-            return ""
+        with self._lock:
+            if self.index is None or self.index.ntotal == 0:
+                return ""
+                
+            embedder = self._get_embedder()
+            query_emb = embedder.embed_query(query)
+            q_matrix = np.array([query_emb]).astype('float32')
             
-        embedder = self._get_embedder()
-        query_emb = embedder.embed_query(query)
-        q_matrix = np.array([query_emb]).astype('float32')
-        
-        if self.index is not None and q_matrix.shape[1] != self.index.d:
-            raise ValueError(
-                f"Model embedding saat ini menghasilkan dimensi "
-                f"{q_matrix.shape[1]}, tapi index FAISS dibuat dengan "
-                f"dimensi {self.index.d}. Kemungkinan Anda mengganti model "
-                f"embedding setelah materi sudah di-index. Silakan hapus dan "
-                f"upload ulang semua materi setelah ganti model embedding."
-            )
+            if self.index is not None and q_matrix.shape[1] != self.index.d:
+                raise ValueError(
+                    f"Model embedding saat ini menghasilkan dimensi "
+                    f"{q_matrix.shape[1]}, tapi index FAISS dibuat dengan "
+                    f"dimensi {self.index.d}. Kemungkinan Anda mengganti model "
+                    f"embedding setelah materi sudah di-index. Silakan hapus dan "
+                    f"upload ulang semua materi setelah ganti model embedding."
+                )
 
-        fetch_k = self.index.ntotal if active_doc_ids else min(self.index.ntotal, top_k)
-        fetch_k = max(1, fetch_k)
-        
-        distances, indices = self.index.search(q_matrix, fetch_k)
-        
-        results = []
-        for idx in indices[0]:
-            if idx < 0 or idx >= len(self.chunk_metadata):
-                continue
-            meta = self.chunk_metadata[idx]
-            if active_doc_ids and meta["doc_id"] not in active_doc_ids:
-                continue
-                
-            content = meta["content"]
-            ts_start = meta.get("timestamp_start")
+            fetch_k = self.index.ntotal if active_doc_ids else min(self.index.ntotal, top_k)
+            fetch_k = max(1, fetch_k)
             
-            if ts_start is not None:
-                # format timestamp to mm:ss or hh:mm:ss
-                mins, secs = divmod(ts_start, 60)
-                hours, mins = divmod(mins, 60)
-                ts_str = f"{hours:02d}:{mins:02d}:{secs:02d}" if hours > 0 else f"{mins:02d}:{secs:02d}"
-                content = f"[Timestamp: {ts_str}]\n{content}"
+            distances, indices = self.index.search(q_matrix, fetch_k)
+        
+            results = []
+            for idx in indices[0]:
+                if idx < 0 or idx >= len(self.chunk_metadata):
+                    continue
+                meta = self.chunk_metadata[idx]
+                if active_doc_ids and meta["doc_id"] not in active_doc_ids:
+                    continue
+                    
+                content = meta["content"]
+                ts_start = meta.get("timestamp_start")
                 
-            results.append(content)
-            if len(results) >= top_k:
-                break
-                
-        return "\n\n---\n\n".join(results)
+                if ts_start is not None:
+                    mins, secs = divmod(ts_start, 60)
+                    hours, mins = divmod(mins, 60)
+                    ts_str = f"{hours:02d}:{mins:02d}:{secs:02d}" if hours > 0 else f"{mins:02d}:{secs:02d}"
+                    content = f"[Timestamp: {ts_str}]\n{content}"
+                    
+                results.append(content)
+                if len(results) >= top_k:
+                    break
+                    
+            return "\n\n---\n\n".join(results)
 
     def delete_document_chunks(self, doc_id: str):
         with self._lock:

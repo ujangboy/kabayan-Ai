@@ -16,7 +16,7 @@ class SettingRepository(BaseRepository[Setting]):
             setting.value = value
             if description:
                 setting.description = description
-            db.commit()
+            db.flush()
             db.refresh(setting)
             return setting
         else:

@@ -21,7 +21,7 @@ class AudioRepository(BaseRepository[AudioGeneration]):
                 obj.filepath = filepath
             if engine_used:
                 obj.engine_used = engine_used
-            db.commit()
+            db.flush()
             db.refresh(obj)
         else:
             logger.warning(f"AudioGeneration row {id} sudah tidak ada (mungkin cascade-delete), status {status} tidak dapat disimpan")

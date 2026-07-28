@@ -37,7 +37,7 @@ class CacheService:
                 setting_hash=setting_hash,
                 response=response
             ))
-        db.commit()
+        db.flush()
 
     @staticmethod
     def invalidate_all(db: Session):

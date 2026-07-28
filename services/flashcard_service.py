@@ -46,13 +46,12 @@ class FlashcardService:
                 )
                 db.add(fc)
 
-            db.commit()  # satu commit untuk semua
+            db.flush()
             return len(data)
 
         except json.JSONDecodeError as e:
             raise ValueError(f"AI tidak mengembalikan JSON yang valid: {str(e)}\nResponse: {response[:300]}")
         except Exception as e:
-            db.rollback()
             raise ValueError(f"Gagal menyimpan flashcard: {str(e)}")
 
     @staticmethod
