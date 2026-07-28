@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, UploadFile, File, Form, BackgroundTasks
+from fastapi import APIRouter, Depends, UploadFile, File, Form, BackgroundTasks, Query
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
@@ -11,9 +11,8 @@ from repositories.material_repository import material_repository
 router = APIRouter()
 
 @router.get("/api/materials")
-async def get_materials_json(db: Session = Depends(get_db)):
-    materials = material_repository.get_all(db)
-    # Serialize to dict manually or use Pydantic models (we will use simple dict for now)
+async def get_materials_json(db: Session = Depends(get_db), skip: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=200)):
+    materials = material_repository.get_all(db, skip=skip, limit=limit)
     results = []
     for m in materials:
         results.append({
@@ -25,7 +24,7 @@ async def get_materials_json(db: Session = Depends(get_db)):
             "upload_date": m.upload_date.isoformat() if m.upload_date else None,
             "subject": {"id": m.subject.id, "name": m.subject.name} if m.subject else None
         })
-    return JSONResponse({"materials": results})
+    return JSONResponse({"materials": results, "skip": skip, "limit": limit})
 
 @router.post("/api/materials")
 async def upload_material(
@@ -67,7 +66,7 @@ async def upload_material(
 
         filepath, mat_id = material_service.upload_material_sync(db, subject_id, file)
         doc_id = f"mat_{mat_id}"
-        background_tasks.add_task(material_service.process_material_async, filepath, doc_id)
+        background_tasks.add_task(material_service.process_material_async, filepath, doc_id, mat_id)
         return JSONResponse({"status": "success", "message": "Material uploaded"})
     finally:
         await file.close()

@@ -16,8 +16,8 @@ const NAV = [
   { to: '/notebook',      icon: BookMarked,      label: 'Notebook' },
   { to: '/flashcard',     icon: CreditCard,      label: 'Flashcard' },
   { to: '/quiz',          icon: HelpCircle,      label: 'Quiz' },
-  { to: '/exam-analyzer', icon: Brain,           label: 'Exam Analyzer' },
-  { to: '/exam-history',  icon: History,         label: 'Exam History' },
+  { to: '/exam-analyzer', icon: Brain,           label: 'Ujian Simulasi' },
+
   { to: '/analytics',     icon: BarChart2,       label: 'Analytics' },
 ];
 

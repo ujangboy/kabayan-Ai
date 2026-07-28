@@ -34,7 +34,7 @@ class Subject(Base):
 class Material(Base):
     __tablename__ = "materials"
     id = Column(Integer, primary_key=True, index=True)
-    subject_id = Column(Integer, ForeignKey("subjects.id"))
+    subject_id = Column(Integer, ForeignKey("subjects.id", ondelete="CASCADE"), index=True)
     filename = Column(String)
     filepath = Column(String)
     material_type = Column(Enum(MaterialType), default=MaterialType.PDF)
@@ -42,7 +42,7 @@ class Material(Base):
     external_id = Column(String, nullable=True)
     thumbnail = Column(String, nullable=True)
     language = Column(String, nullable=True)
-    status = Column(String, default="Ready") # Pending, Processing, Ready, Failed
+    status = Column(String, default="Ready", index=True) # Pending, Processing, Ready, Failed
     failure_reason = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
@@ -53,7 +53,7 @@ class Material(Base):
 class Note(Base):
     __tablename__ = "notes"
     id = Column(Integer, primary_key=True, index=True)
-    subject_id = Column(Integer, ForeignKey("subjects.id"))
+    subject_id = Column(Integer, ForeignKey("subjects.id", ondelete="CASCADE"), index=True)
     title = Column(String)
     content = Column(Text)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
@@ -63,7 +63,7 @@ class Note(Base):
 class Flashcard(Base):
     __tablename__ = "flashcards"
     id = Column(Integer, primary_key=True, index=True)
-    subject_id = Column(Integer, ForeignKey("subjects.id"))
+    subject_id = Column(Integer, ForeignKey("subjects.id", ondelete="CASCADE"), index=True)
     title = Column(String, nullable=True)          # nama set flashcard (opsional)
     question = Column(Text)
     answer = Column(Text)
@@ -74,7 +74,7 @@ class Flashcard(Base):
 class Quiz(Base):
     __tablename__ = "quizzes"
     id = Column(Integer, primary_key=True, index=True)
-    subject_id = Column(Integer, ForeignKey("subjects.id"))
+    subject_id = Column(Integer, ForeignKey("subjects.id", ondelete="CASCADE"), index=True)
     title = Column(String, nullable=True)          # judul quiz (opsional)
     score = Column(Integer, nullable=True)         # null = belum dimainkan
     questions_json = Column(Text, nullable=True)   # JSON string hasil generate AI
@@ -93,7 +93,7 @@ class Chat(Base):
 class Message(Base):
     __tablename__ = "messages"
     id = Column(Integer, primary_key=True, index=True)
-    chat_id = Column(Integer, ForeignKey("chats.id"))
+    chat_id = Column(Integer, ForeignKey("chats.id", ondelete="CASCADE"), index=True)
     role = Column(String) # user or assistant
     content = Column(Text)
     timestamp = Column(DateTime, default=datetime.datetime.utcnow)
@@ -154,7 +154,7 @@ class ExamBlueprint(Base):
     """Blueprint ujian yang di-generate AI sebelum soal dibuat."""
     __tablename__ = "exam_blueprints"
     id = Column(Integer, primary_key=True, index=True)
-    subject_id = Column(Integer, ForeignKey("subjects.id"))
+    subject_id = Column(Integer, ForeignKey("subjects.id", ondelete="CASCADE"), index=True)
     title = Column(String)                        # mis. "Blueprint UAS Struktur Data"
     exam_type = Column(String)                    # latihan/kuis/uts/uas/custom
     difficulty = Column(String)                   # pemula/menengah/sulit/campuran
@@ -177,8 +177,8 @@ class ExamSession(Base):
     """
     __tablename__ = "exam_sessions"
     id = Column(Integer, primary_key=True, index=True)
-    blueprint_id = Column(Integer, ForeignKey("exam_blueprints.id"))
-    subject_id = Column(Integer, ForeignKey("subjects.id"))
+    blueprint_id = Column(Integer, ForeignKey("exam_blueprints.id", ondelete="SET NULL"))
+    subject_id = Column(Integer, ForeignKey("subjects.id", ondelete="CASCADE"), index=True)
     # --- Active session fields (original) ---
     questions_json = Column(Text)                 # JSON: list soal lengkap + kunci + pembahasan
     answers_json = Column(Text, nullable=True)    # JSON: jawaban user per soal
@@ -200,7 +200,7 @@ class ExamSession(Base):
     latest_score = Column(Integer, nullable=True)
     grade = Column(String, nullable=True)
     progress = Column(Integer, default=0)
-    status = Column(String, default='active')     # active / completed / archived / mastered
+    status = Column(String, default='active', index=True)     # active / completed / archived / mastered
     weak_topics_json = Column(Text, nullable=True)
     strong_topics_json = Column(Text, nullable=True)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
@@ -215,7 +215,7 @@ class ExamAttempt(Base):
     """Each time a user retries, a new attempt row is added."""
     __tablename__ = "exam_attempts"
     id             = Column(Integer, primary_key=True, index=True)
-    session_id     = Column(Integer, ForeignKey("exam_sessions.id"))
+    session_id     = Column(Integer, ForeignKey("exam_sessions.id", ondelete="CASCADE"), index=True)
     attempt_number = Column(Integer, default=1)
     score          = Column(Integer, nullable=True)
     grade          = Column(String, nullable=True)
@@ -235,7 +235,7 @@ class ExamReview(Base):
     """Per-question review data for each attempt."""
     __tablename__ = "exam_reviews"
     id             = Column(Integer, primary_key=True, index=True)
-    attempt_id     = Column(Integer, ForeignKey("exam_attempts.id"))
+    attempt_id     = Column(Integer, ForeignKey("exam_attempts.id", ondelete="CASCADE"), index=True)
     question_number= Column(Integer)
     topic          = Column(String, nullable=True)
     question_text  = Column(Text)
@@ -257,7 +257,7 @@ class StudyPlan(Base):
     """AI-generated learning roadmap attached to an ExamSession."""
     __tablename__ = "study_plans"
     id                 = Column(Integer, primary_key=True, index=True)
-    session_id         = Column(Integer, ForeignKey("exam_sessions.id"))
+    session_id         = Column(Integer, ForeignKey("exam_sessions.id", ondelete="CASCADE"), index=True)
     title              = Column(String, nullable=True)
     motivational_message = Column(Text, nullable=True)
     priority_actions_json = Column(Text, nullable=True)  # JSON list of strings
@@ -275,7 +275,7 @@ class StudyPlanItem(Base):
     """One day/step in a StudyPlan."""
     __tablename__ = "study_plan_items"
     id             = Column(Integer, primary_key=True, index=True)
-    plan_id        = Column(Integer, ForeignKey("study_plans.id"))
+    plan_id        = Column(Integer, ForeignKey("study_plans.id", ondelete="CASCADE"), index=True)
     order_number   = Column(Integer, default=0)
     day_label      = Column(String, nullable=True)       # "Hari 1"
     topic          = Column(String)
@@ -297,8 +297,8 @@ class QuestionBank(Base):
     """
     __tablename__ = "question_bank"
     id             = Column(Integer, primary_key=True, index=True)
-    subject_id     = Column(Integer, ForeignKey("subjects.id"), index=True)
-    blueprint_id   = Column(Integer, ForeignKey("exam_blueprints.id"), nullable=True, index=True)
+    subject_id     = Column(Integer, ForeignKey("subjects.id", ondelete="CASCADE"), index=True)
+    blueprint_id   = Column(Integer, ForeignKey("exam_blueprints.id", ondelete="SET NULL"), nullable=True, index=True)
     # Taxonomy
     chapter        = Column(String, nullable=True)   # optional bab/chapter label
     topic          = Column(String, index=True)

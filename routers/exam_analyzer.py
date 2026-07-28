@@ -1,7 +1,7 @@
 import json
 import logging
 from typing import Optional
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Body
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from database import get_db

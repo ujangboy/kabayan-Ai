@@ -11,7 +11,7 @@ class BaseRepository(Generic[ModelType]):
     def get(self, db: Session, id: int) -> Optional[ModelType]:
         return db.query(self.model).filter(self.model.id == id).first()
 
-    def get_all(self, db: Session, skip: int = 0, limit: int = 10000) -> List[ModelType]:
+    def get_all(self, db: Session, skip: int = 0, limit: int = 50) -> List[ModelType]:
         return db.query(self.model).offset(skip).limit(limit).all()
 
     def create(self, db: Session, obj_in: dict) -> ModelType:

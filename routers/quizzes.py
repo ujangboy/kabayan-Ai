@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Form
+from fastapi import APIRouter, Depends, Form, Query
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from database import get_db
@@ -12,12 +12,11 @@ router = APIRouter()
 
 
 @router.get("/api/quizzes")
-async def get_quizzes_json(db: Session = Depends(get_db)):
-    quizzes = quiz_repository.get_all(db)
+async def get_quizzes_json(db: Session = Depends(get_db), skip: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=200)):
+    quizzes = quiz_repository.get_all(db, skip=skip, limit=limit)
     quizzes = sorted(quizzes, key=lambda x: x.created_at, reverse=True)
     results = []
     for q in quizzes:
-        # Hitung jumlah soal dari questions_json jika ada
         question_count = 0
         if q.questions_json:
             try:
@@ -33,7 +32,7 @@ async def get_quizzes_json(db: Session = Depends(get_db)):
             "created_at": q.created_at.isoformat() if q.created_at else None,
             "subject": {"id": q.subject.id, "name": q.subject.name} if q.subject else None,
         })
-    return JSONResponse({"quizzes": results})
+    return JSONResponse({"quizzes": results, "skip": skip, "limit": limit})
 
 
 @router.get("/api/quizzes/{quiz_id}/questions")
@@ -64,13 +63,21 @@ async def generate_quiz(
     db: Session = Depends(get_db)
 ):
     try:
-        materials = material_service.get_by_subject(db, subject_id)
+        # Gunakan hanya materi yang sudah Ready (terindeks di RAG)
+        all_materials = material_service.get_by_subject(db, subject_id)
         if material_ids:
             ids = [int(x.strip()) for x in material_ids.split(",") if x.strip()]
             if ids:
-                materials = [m for m in materials if m.id in ids]
-        if not materials:
+                all_materials = [m for m in all_materials if m.id in ids]
+        if not all_materials:
             return JSONResponse(status_code=400, content={"detail": "Tidak ada materi untuk mata kuliah ini."})
+
+        materials = [m for m in all_materials if m.status == "Ready"]
+        if not materials:
+            processing = [m for m in all_materials if m.status == "Processing"]
+            if processing:
+                return JSONResponse(status_code=400, content={"detail": "Materi masih diproses (Processing). Tunggu beberapa saat lalu coba lagi."})
+            return JSONResponse(status_code=400, content={"detail": "Tidak ada materi yang siap. Pastikan upload materi berhasil (status: Ready)."})
 
         doc_ids = [f"mat_{m.id}" for m in materials]
 

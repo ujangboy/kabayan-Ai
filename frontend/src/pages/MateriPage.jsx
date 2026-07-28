@@ -168,11 +168,14 @@ export default function MateriPage() {
                       <input
                         type="checkbox"
                         checked={selectedDocs.includes(`mat_${m.id}`)}
-                        onChange={() => toggleSelection(m.id)}
+                        onChange={() => m.status === 'Ready' && toggleSelection(m.id)}
+                        disabled={m.status !== 'Ready'}
+                        title={m.status !== 'Ready' ? `Materi belum siap digunakan (${m.status})` : 'Aktifkan sebagai sumber RAG untuk Chat AI'}
                         className="h-4 w-4 rounded appearance-none cursor-pointer
                           bg-slate-800 border-2 border-slate-500
                           checked:bg-primary checked:border-primary
                           focus:outline-none focus:ring-2 focus:ring-primary/50
+                          disabled:opacity-30 disabled:cursor-not-allowed
                           transition-colors"
                       />
                     </td>

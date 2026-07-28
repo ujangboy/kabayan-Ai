@@ -9,7 +9,7 @@ import random
 import logging
 import datetime
 from typing import Optional, List
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 from sqlalchemy.exc import SQLAlchemyError
 from fastapi import HTTPException, status
 
@@ -29,7 +29,7 @@ from prompts.exam_analyzer import (
 )
 
 logger = logging.getLogger(__name__)
-MAX_CONTEXT_WORDS = 3000
+MAX_CONTEXT_WORDS = 1500
 # Minimum questions in bank before we skip AI generation
 BANK_MIN_RATIO = 0.8   # need ≥ 80% of requested questions already in bank
 
@@ -189,6 +189,10 @@ class ExamService:
 
         materials = material_service.get_by_subject(db, subject_id)
         material_count  = len(materials)
+
+        # Hanya gunakan materi yang sudah Ready untuk context AI
+        ready_materials = [m for m in materials if m.status == "Ready"]
+
         note_count      = db.query(Note).filter(Note.subject_id == subject_id).count()
         flashcard_count = db.query(Flashcard).filter(Flashcard.subject_id == subject_id).count()
         quiz_count      = db.query(Quiz).filter(Quiz.subject_id == subject_id).count()
@@ -196,10 +200,16 @@ class ExamService:
             db, subject_id, topic="", difficulty=""
         )
 
-        context = _gather_context(db, subject_id, materials)
+        context = _gather_context(db, subject_id, ready_materials)
         if not context.strip():
+            processing = [m for m in materials if m.status == "Processing"]
+            if processing:
+                raise ValueError(
+                    f"Ada {len(processing)} materi yang masih diproses (Processing). "
+                    "Tunggu beberapa saat hingga status berubah menjadi 'Ready', lalu coba lagi."
+                )
             raise ValueError(
-                "Tidak ada konten materi. Pastikan sudah mengunggah materi."
+                "Tidak ada konten materi. Pastikan sudah mengunggah materi dan statusnya Ready."
             )
 
         response = ai_service.generate(
@@ -711,7 +721,14 @@ class ExamService:
     # ── 9. Unified Session Management ─────────────────────────────────────────
     @staticmethod
     def get_blueprints(db: Session, subject_id: int) -> list:
-        bps = exam_blueprint_repository.get_by_subject(db, subject_id)
+        from sqlalchemy import desc
+        bps = (
+            db.query(ExamBlueprint)
+            .options(selectinload(ExamBlueprint.sessions))
+            .filter(ExamBlueprint.subject_id == subject_id)
+            .order_by(desc(ExamBlueprint.created_at))
+            .all()
+        )
         return [
             {
                 "id":               bp.id,
@@ -758,18 +775,23 @@ class ExamService:
 
     @staticmethod
     def get_session_detail(db: Session, session_id: int) -> dict:
-        s = exam_session_repository.get(db, session_id)
+        s = (
+            db.query(ExamSession)
+            .options(
+                selectinload(ExamSession.attempts).selectinload(ExamAttempt.reviews),
+                selectinload(ExamSession.plan).selectinload(StudyPlan.items),
+            )
+            .filter(ExamSession.id == session_id)
+            .first()
+        )
         if not s:
             raise ValueError("Sesi tidak ditemukan.")
         questions_data = json.loads(s.questions_json) if s.questions_json else {}
         evaluation     = json.loads(s.evaluation_json) if s.evaluation_json else None
         answers        = json.loads(s.answers_json) if s.answers_json else {}
 
-        # Load attempts + reviews
-        attempts = exam_attempt_repo.get_by_session(db, session_id)
         attempt_data = []
-        for a in attempts:
-            reviews = exam_review_repo.get_by_attempt(db, a.id)
+        for a in s.attempts:
             attempt_data.append({
                 "id": a.id, "attempt_number": a.attempt_number,
                 "score": a.score, "grade": a.grade,
@@ -784,25 +806,22 @@ class ExamService:
                      "correct_answer": r.correct_answer, "is_correct": bool(r.is_correct),
                      "ai_explanation": r.ai_explanation, "material_ref": r.material_ref,
                      "tips": r.tips, "item_score": r.item_score}
-                    for r in reviews
+                    for r in a.reviews
                 ],
             })
 
-        # Load study plan
-        plan = study_plan_repo.get_by_session(db, session_id)
         plan_data = None
-        if plan:
-            items = study_plan_item_repo.get_by_plan(db, plan.id)
+        if s.plan:
             plan_data = {
-                "id": plan.id, "title": plan.title,
-                "motivational_message": plan.motivational_message,
-                "priority_actions": json.loads(plan.priority_actions_json) if plan.priority_actions_json else [],
-                "total_days": plan.total_days, "completed_days": plan.completed_days,
-                "progress": plan.progress,
+                "id": s.plan.id, "title": s.plan.title,
+                "motivational_message": s.plan.motivational_message,
+                "priority_actions": json.loads(s.plan.priority_actions_json) if s.plan.priority_actions_json else [],
+                "total_days": s.plan.total_days, "completed_days": s.plan.completed_days,
+                "progress": s.plan.progress,
                 "items": [{"id": i.id, "order_number": i.order_number, "day_label": i.day_label,
                            "topic": i.topic, "activity": i.activity, "activity_type": i.activity_type,
                            "duration_minutes": i.duration_minutes, "resources": i.resources,
-                           "completed": bool(i.completed)} for i in items],
+                           "completed": bool(i.completed)} for i in s.plan.items],
             }
 
         return {
@@ -832,7 +851,14 @@ class ExamService:
     def get_unified_sessions(db: Session, subject_id: Optional[int] = None) -> list:
         """Return all sessions (history + active), ordered by started_at desc."""
         from sqlalchemy import desc
-        query = db.query(ExamSession).order_by(desc(ExamSession.started_at))
+        query = (
+            db.query(ExamSession)
+            .options(
+                selectinload(ExamSession.attempts),
+                selectinload(ExamSession.plan),
+            )
+            .order_by(desc(ExamSession.started_at))
+        )
         if subject_id:
             query = query.filter(ExamSession.subject_id == subject_id)
         sessions = query.limit(200).all()

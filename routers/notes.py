@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Form
+from fastapi import APIRouter, Depends, Form, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from typing import Optional
@@ -11,8 +11,8 @@ from services.rag_service import rag_service
 router = APIRouter()
 
 @router.get("/api/notes")
-async def get_notes_json(db: Session = Depends(get_db)):
-    notes = notes_service.get_all(db)
+async def get_notes_json(db: Session = Depends(get_db), skip: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=200)):
+    notes = notes_service.get_all(db, skip=skip, limit=limit)
     results = []
     for n in notes:
         results.append({
@@ -22,7 +22,7 @@ async def get_notes_json(db: Session = Depends(get_db)):
             "created_at": n.created_at.isoformat() if n.created_at else None,
             "subject": {"id": n.subject.id, "name": n.subject.name} if n.subject else None
         })
-    return JSONResponse({"notes": results})
+    return JSONResponse({"notes": results, "skip": skip, "limit": limit})
 
 @router.post("/api/notes")
 async def create_note(
@@ -66,13 +66,21 @@ async def generate_notes_ai(
 ):
     """Generate catatan AI dari materi, dengan filter material opsional."""
     try:
-        materials = material_service.get_by_subject(db, subject_id)
+        # Gunakan hanya materi yang sudah Ready (terindeks di RAG)
+        all_materials = material_service.get_by_subject(db, subject_id)
         if material_ids:
             ids = [int(x.strip()) for x in material_ids.split(",") if x.strip()]
             if ids:
-                materials = [m for m in materials if m.id in ids]
-        if not materials:
+                all_materials = [m for m in all_materials if m.id in ids]
+        if not all_materials:
             return JSONResponse(status_code=400, content={"detail": "Tidak ada materi untuk mata kuliah ini."})
+
+        materials = [m for m in all_materials if m.status == "Ready"]
+        if not materials:
+            processing = [m for m in all_materials if m.status == "Processing"]
+            if processing:
+                return JSONResponse(status_code=400, content={"detail": "Materi masih diproses (Processing). Tunggu beberapa saat lalu coba lagi."})
+            return JSONResponse(status_code=400, content={"detail": "Tidak ada materi yang siap. Pastikan upload materi berhasil (status: Ready)."})   
 
         doc_ids = [f"mat_{m.id}" for m in materials]
         context = ""

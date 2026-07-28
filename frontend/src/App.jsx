@@ -10,7 +10,6 @@ import NotebookPage from './pages/NotebookPage';
 import FlashcardPage from './pages/FlashcardPage';
 import QuizPage from './pages/QuizPage';
 import ExamAnalyzerPage from './pages/ExamAnalyzerPage';
-import ExamHistoryPage from './pages/ExamHistoryPage';
 
 // Placeholders for other pages
 const AnalyticsPage = () => <div className="p-10 text-text">Analytics Page (WIP)</div>;
@@ -32,7 +31,6 @@ export default function App() {
             <Route path="flashcard" element={<FlashcardPage />} />
             <Route path="quiz" element={<QuizPage />} />
             <Route path="exam-analyzer" element={<ExamAnalyzerPage />} />
-            <Route path="exam-history"  element={<ExamHistoryPage />} />
             <Route path="analytics" element={<AnalyticsPage />} />
             <Route path="settings" element={<SettingsPage />} />
           </Route>

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Form
+from fastapi import APIRouter, Depends, Form, Query
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from database import get_db
@@ -10,8 +10,8 @@ from services.rag_service import rag_service
 router = APIRouter()
 
 @router.get("/api/flashcards")
-async def get_flashcards_json(db: Session = Depends(get_db)):
-    flashcards = flashcard_repository.get_all(db)
+async def get_flashcards_json(db: Session = Depends(get_db), skip: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=200)):
+    flashcards = flashcard_repository.get_all(db, skip=skip, limit=limit)
     results = []
     for f in flashcards:
         results.append({
@@ -21,7 +21,7 @@ async def get_flashcards_json(db: Session = Depends(get_db)):
             "created_at": f.created_at.isoformat() if f.created_at else None,
             "subject": {"id": f.subject.id, "name": f.subject.name} if f.subject else None
         })
-    return JSONResponse({"flashcards": results})
+    return JSONResponse({"flashcards": results, "skip": skip, "limit": limit})
 
 @router.post("/api/flashcards")
 async def create_flashcard(
