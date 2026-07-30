@@ -7,7 +7,7 @@
 > Kejadian yang melatarbelakangi dokumen ini: agent pernah mengerjakan 3
 > batch task sekaligus (padahal instruksi eksplisit bilang "satu-satu,
 > lapor dulu sebelum lanjut"), termasuk mengeksekusi perubahan berisiko
-> tinggi (rewrite logic FAISS index) yang BELUM disetujui user. Ini
+> tinggi (rewrite logic vector index) yang BELUM disetujui user. Ini
 > menyebabkan regresi yang sulit dilacak karena banyak perubahan numpuk
 > tanpa checkpoint.
 
@@ -45,7 +45,7 @@ menghapus perubahan lain yang sudah benar.
 
 Kategori "berisiko tinggi" (bukan daftar final, gunakan penilaian yang
 sama untuk kasus serupa):
-- Mengubah struktur data yang sudah berjalan (index FAISS, schema
+- Mengubah struktur data yang sudah berjalan (index LanceDB, schema
   database, format JSON yang tersimpan)
 - Migration script yang mengubah/menghapus data
 - Menghapus file/kode yang statusnya belum 100% pasti tidak terpakai

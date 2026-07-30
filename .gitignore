@@ -23,12 +23,11 @@ ENV/
 *.db
 *.sqlite3
 
+# Runtime storage (database, uploads, vector store, cache, sessions)
+storage/
+
 # Uploads (file materi user)
 uploads/
-
-# FAISS index (di-generate otomatis saat startup)
-faiss_index/
-*.index
 
 # Logs
 *.log

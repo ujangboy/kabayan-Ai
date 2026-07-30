@@ -1,4 +1,4 @@
-﻿faiss-cpu
+﻿lancedb
 requests
 pymupdf
 python-docx

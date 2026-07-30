@@ -2,48 +2,61 @@ import os
 import json
 import hashlib
 import numpy as np
-import faiss
+import lancedb
 import threading
 import datetime
+import pandas as pd
 from langchain_huggingface import HuggingFaceEmbeddings
 import config
 from services.settings_service import settings_service
 from database import SessionLocal
 
+TABLE_NAME = "chunks"
+
 
 def _embedding_model_version(model_name: str) -> str:
-    """Derive a short version string from model name + dimension."""
     h = hashlib.md5(model_name.encode()).hexdigest()[:8]
     return f"{model_name.replace('/', '_')}-{h}"
 
 
+def _is_deleted(meta: dict) -> bool:
+    return meta.get("deleted", False)
+
+
+def _nan_to_none(val):
+    if val is None:
+        return None
+    try:
+        return None if pd.isna(val) else val
+    except Exception:
+        return val
+
+
 class RAGService:
-    """RAG Service dengan lazy deletion (O(1)) + model versioning.
+    """RAG Service dengan LanceDB sebagai vector store persisten.
 
     Key features:
-    - delete_document_chunks() O(1) — metadata update only, no FAISS rebuild
-    - rebuild_index() for manual/on-demand compaction
-    - Search skips deleted documents automatically
-    - Model versioning per chunk for compatibility checking
+    - LanceDB persistent storage (no in-memory vector index)
+    - Lazy deletion (metadata flag, no rebuild needed)
+    - rebuild_index() untuk kompaksi manual
+    - Search skip deleted documents via WHERE clause
+    - Model versioning per chunk
     - Thread-safe operations
+    - 0 token LLM untuk indexing (hanya embedding)
     """
 
     def __init__(self):
         self.dimension = 384
         self.chunk_metadata = []
-        self.index = None
-        self.index_path = os.path.join(config.FAISS_INDEX_DIR, "main.index")
-        self.metadata_path = os.path.join(config.FAISS_INDEX_DIR, "metadata.json")
-        self.doc_index_path = os.path.join(config.FAISS_INDEX_DIR, "doc_index.json")
-
         self.doc_to_chunk_indices = {}
         self._deleted_doc_ids = set()
         self._rebuild_threshold = 0.3
         self._dirty = False
-
         self._cached_embedder = None
         self._cached_model_name = None
         self._lock = threading.RLock()
+        self._db = None
+        self._table = None
         self._load_index()
 
     # ── Embedder ──────────────────────────────────────────────────────
@@ -60,19 +73,12 @@ class RAGService:
         return self._cached_embedder
 
     def get_embedding_model_name(self) -> str:
-        """Return the currently active embedding model name."""
         return self._cached_model_name or settings_service.get_embedding_model(SessionLocal())
 
     def get_embedding_model_version(self) -> str:
-        """Return version string for the active model."""
         return _embedding_model_version(self.get_embedding_model_name())
 
     def check_model_compatibility(self) -> dict:
-        """Check if all indexed chunks are compatible with the current model.
-
-        Returns:
-            dict with status, current_model, index_model, chunk_count
-        """
         current_model = self.get_embedding_model_name()
         current_ver = self.get_embedding_model_version()
         index_models = set()
@@ -94,47 +100,68 @@ class RAGService:
             "needs_reindex": not all_compatible,
         }
 
-    # ── Persistence ───────────────────────────────────────────────────
+    # ── Persistence (LanceDB) ────────────────────────────────────────
 
     def _load_index(self):
         with self._lock:
-            if os.path.exists(self.index_path):
-                self.index = faiss.read_index(self.index_path)
-                with open(self.metadata_path, 'r', encoding='utf-8') as f:
-                    self.chunk_metadata = json.load(f)
-                self.dimension = self.index.d
-            else:
-                self.index = None
-                self.chunk_metadata = []
+            self._db = lancedb.connect(config.LANCEDB_DIR)
+            try:
+                self._table = self._db.open_table(TABLE_NAME)
+                df = self._table.to_pandas()
+                if df.empty:
+                    self.chunk_metadata = []
+                    self.doc_to_chunk_indices = {}
+                    return
 
-            if os.path.exists(self.doc_index_path):
-                with open(self.doc_index_path, 'r', encoding='utf-8') as f:
-                    self.doc_to_chunk_indices = json.load(f)
+                self.chunk_metadata = []
+                self.doc_to_chunk_indices = {}
+
+                for _, row in df.iterrows():
+                    meta = {
+                        "id": int(row["id"]),
+                        "doc_id": str(row["doc_id"]),
+                        "content": str(row["content"]),
+                        "deleted": bool(row["deleted"]),
+                        "timestamp_start": _nan_to_none(row.get("timestamp_start")),
+                        "timestamp_end": _nan_to_none(row.get("timestamp_end")),
+                        "model_name": str(row.get("model_name", "") or ""),
+                        "model_version": str(row.get("model_version", "") or ""),
+                        "indexed_at": str(row.get("indexed_at", "") or ""),
+                        "extra_metadata": _nan_to_none(row.get("extra_metadata")),
+                    }
+                    self.chunk_metadata.append(meta)
+
+                    doc_id = meta["doc_id"]
+                    if doc_id not in self.doc_to_chunk_indices:
+                        self.doc_to_chunk_indices[doc_id] = []
+                    self.doc_to_chunk_indices[doc_id].append(meta["id"])
+                    if meta["deleted"]:
+                        self._deleted_doc_ids.add(doc_id)
+
+                vec_col = df.iloc[0]["vector"]
+                if hasattr(vec_col, "__len__"):
+                    self.dimension = len(vec_col)
+
+            except Exception:
+                self._table = None
+                self.chunk_metadata = []
+                self.doc_to_chunk_indices = {}
+
+    def _next_id(self) -> int:
+        if not self.chunk_metadata:
+            return 0
+        return max(m["id"] for m in self.chunk_metadata) + 1
 
     def save_index(self):
         with self._lock:
-            os.makedirs(config.FAISS_INDEX_DIR, exist_ok=True)
-            if self.index is not None:
-                faiss.write_index(self.index, self.index_path)
-            with open(self.metadata_path, 'w', encoding='utf-8') as f:
-                json.dump(self.chunk_metadata, f, ensure_ascii=False)
-            with open(self.doc_index_path, 'w', encoding='utf-8') as f:
-                json.dump(self.doc_to_chunk_indices, f, ensure_ascii=False)
             self._dirty = False
 
-    # ── Index Document (with model tracking) ─────────────────────────
+    # ── Index Document ───────────────────────────────────────────────
 
     def index_document(self, doc_id: str, chunks: list):
-        """Index document baru. O(k) dimana k = jumlah chunks.
-
-        Each chunk's metadata includes model_name and model_version
-        so we can detect drift when the embedding model changes.
-        """
         if not chunks:
             return
 
-        # Pastikan hapus chunk lama (jika ada) untuk menghindari ghost chunks 
-        # dari ID yang sama jika database di-reset.
         self.delete_document_chunks(doc_id)
 
         embedder = self._get_embedder()
@@ -174,150 +201,149 @@ class RAGService:
 
         emb_matrix = np.array(embeddings).astype('float32')
 
-        if self.index is not None and emb_matrix.shape[1] != self.index.d:
+        if emb_matrix.shape[1] != self.dimension and self.chunk_metadata:
             raise ValueError(
                 f"Model embedding saat ini menghasilkan dimensi "
-                f"{emb_matrix.shape[1]}, tapi index FAISS dibuat dengan "
-                f"dimensi {self.index.d}. Kemungkinan Anda mengganti model "
+                f"{emb_matrix.shape[1]}, tapi index dibuat dengan "
+                f"dimensi {self.dimension}. Kemungkinan Anda mengganti model "
                 f"embedding setelah materi sudah di-index. Silakan hapus dan "
                 f"upload ulang semua materi setelah ganti model embedding."
             )
 
         with self._lock:
-            if self.index is None:
-                self.dimension = emb_matrix.shape[1]
-                self.index = faiss.IndexFlatL2(self.dimension)
+            self.dimension = emb_matrix.shape[1]
+            records = []
+            ids = []
+            for i, (emb, meta) in enumerate(zip(emb_matrix, metadata_entries)):
+                row_id = self._next_id() + i
+                extra = meta.get("extra_metadata", {})
+                records.append({
+                    "id": row_id,
+                    "vector": emb,
+                    "doc_id": meta["doc_id"],
+                    "content": meta["content"],
+                    "deleted": False,
+                    "timestamp_start": meta.get("timestamp_start"),
+                    "timestamp_end": meta.get("timestamp_end"),
+                    "model_name": model_name,
+                    "model_version": model_version,
+                    "indexed_at": meta["indexed_at"],
+                    "extra_metadata": json.dumps(extra, ensure_ascii=False) if extra else None,
+                })
+                ids.append(row_id)
 
-            start_idx = self.index.ntotal
-            self.index.add(emb_matrix)
-            end_idx = self.index.ntotal
+            if self._table is None:
+                self._table = self._db.create_table(TABLE_NAME, records, mode="overwrite")
+            else:
+                self._table.add(records)
 
-            self.doc_to_chunk_indices[doc_id] = list(range(start_idx, end_idx))
-            self.chunk_metadata.extend(metadata_entries)
+            self.doc_to_chunk_indices[doc_id] = ids
+            for meta, rid in zip(metadata_entries, ids):
+                meta["id"] = rid
+                self.chunk_metadata.append(meta)
 
             self._dirty = True
-            self.save_index()
 
-    # ── Delete Document (O(1) — lazy) ───────────────────────────────
+    # ── Delete (lazy) ────────────────────────────────────────────────
 
     def delete_document_chunks(self, doc_id: str):
-        """Hapus document dari search results tanpa rebuild index.
-
-        O(1): cukup update metadata, tidak sentuh FAISS index.
-        """
         with self._lock:
             if doc_id not in self.doc_to_chunk_indices:
                 return
 
-            chunk_indices = self.doc_to_chunk_indices.pop(doc_id)
+            ids = self.doc_to_chunk_indices.pop(doc_id)
+            if self._table is not None:
+                ids_str = ", ".join(str(i) for i in ids)
+                self._table.update(
+                    where=f"id IN ({ids_str})",
+                    values={"deleted": True}
+                )
 
-            for idx in chunk_indices:
-                if idx < len(self.chunk_metadata):
-                    self.chunk_metadata[idx]["deleted"] = True
-                    self.chunk_metadata[idx]["deleted_at"] = datetime.datetime.utcnow().isoformat()
+            for meta in self.chunk_metadata:
+                if meta["doc_id"] == doc_id:
+                    meta["deleted"] = True
+                    meta["deleted_at"] = datetime.datetime.utcnow().isoformat()
 
             self._deleted_doc_ids.add(doc_id)
             self._dirty = True
-            self.save_index()
 
-    # ── Search (skip deleted) ────────────────────────────────────────
+    # ── Search ───────────────────────────────────────────────────────
 
     def search(self, query: str, active_doc_ids: list = None, top_k: int = 5) -> str:
-        """Search dengan skip deleted documents.
-
-        Args:
-            query: Search query text
-            active_doc_ids: Jika None, search semua non-deleted docs.
-                            Jika list, filter ke docs tersebut.
-            top_k: Jumlah hasil maksimal
-
-        Returns:
-            String dengan top-k chunks dipisah separator
-        """
         with self._lock:
-            if self.index is None or self.index.ntotal == 0:
+            if self._table is None or not self.chunk_metadata:
                 return ""
 
             embedder = self._get_embedder()
-            query_emb = embedder.embed_query(query)
-            q_matrix = np.array([query_emb]).astype('float32')
+            query_vec = np.array(embedder.embed_query(query)).astype('float32')
 
-            if self.index is not None and q_matrix.shape[1] != self.index.d:
-                raise ValueError(
-                    f"Model embedding saat ini menghasilkan dimensi "
-                    f"{q_matrix.shape[1]}, tapi index FAISS dibuat dengan "
-                    f"dimensi {self.index.d}. Kemungkinan Anda mengganti model "
-                    f"embedding setelah materi sudah di-index. Silakan hapus dan "
-                    f"upload ulang semua materi setelah ganti model embedding."
-                )
+            filters = ["deleted = false"]
+            if active_doc_ids:
+                ids_str = ", ".join(f"'{d}'" for d in active_doc_ids)
+                filters.append(f"doc_id IN ({ids_str})")
+            where_clause = " AND ".join(filters)
 
-            fetch_k = min(self.index.ntotal, top_k * 3)
-            fetch_k = max(1, fetch_k)
+            fetch_k = max(1, top_k * 3)
 
-            distances, indices = self.index.search(q_matrix, fetch_k)
+            try:
+                results = self._table.search(query_vec).where(where_clause).limit(fetch_k).to_list()
+            except Exception:
+                return ""
 
-            results = []
-            for idx in indices[0]:
-                if idx < 0 or idx >= len(self.chunk_metadata):
+            out = []
+            for r in results:
+                ts_start = _nan_to_none(r.get("timestamp_start"))
+                content = r.get("content", "")
+                if not content:
                     continue
-                meta = self.chunk_metadata[idx]
-
-                if meta.get("deleted", False):
-                    continue
-
-                if active_doc_ids and meta["doc_id"] not in active_doc_ids:
-                    continue
-
-                content = meta["content"]
-                ts_start = meta.get("timestamp_start")
 
                 if ts_start is not None:
-                    mins, secs = divmod(ts_start, 60)
-                    hours, mins = divmod(mins, 60)
-                    ts_str = f"{hours:02d}:{mins:02d}:{secs:02d}" if hours > 0 else f"{mins:02d}:{secs:02d}"
+                    mins, secs = divmod(int(ts_start), 60)
+                    hours, mins_rem = divmod(mins, 60)
+                    ts_str = f"{hours:02d}:{mins_rem:02d}:{secs:02d}" if hours > 0 else f"{mins:02d}:{secs:02d}"
                     content = f"[Timestamp: {ts_str}]\n{content}"
 
-                results.append(content)
-                if len(results) >= top_k:
+                out.append(content)
+                if len(out) >= top_k:
                     break
 
-            return "\n\n---\n\n".join(results)
+            return "\n\n---\n\n".join(out)
 
     # ── Rebuild Index ────────────────────────────────────────────────
 
     def _should_rebuild(self):
-        """Cek apakah perlu rebuild berdasarkan ratio deleted chunks."""
         if not self.chunk_metadata:
             return False
-        deleted_count = sum(1 for m in self.chunk_metadata if m.get("deleted", False))
+        deleted_count = sum(1 for m in self.chunk_metadata if _is_deleted(m))
         ratio = deleted_count / len(self.chunk_metadata)
         return ratio >= self._rebuild_threshold
 
     def rebuild_index(self):
-        """Rebuild FAISS index, hanya untuk non-deleted documents.
-
-        O(n) — panggil manual atau via schedule, bukan otomatis saat delete.
-        Sets model_name + model_version on all rebuilt chunks.
-        """
         with self._lock:
             if not self.chunk_metadata:
-                self.index = None
-                self.doc_to_chunk_indices = {}
-                self._deleted_doc_ids = set()
-                self.save_index()
-                return
-
-            active_chunks = [m for m in self.chunk_metadata if not m.get("deleted", False)]
-            if not active_chunks:
-                self.index = None
                 self.chunk_metadata = []
                 self.doc_to_chunk_indices = {}
                 self._deleted_doc_ids = set()
-                self.save_index()
+                try:
+                    self._db.drop_table(TABLE_NAME)
+                except Exception:
+                    pass
+                self._table = None
+                return
+
+            active_chunks = [m for m in self.chunk_metadata if not _is_deleted(m)]
+            if not active_chunks:
+                self.chunk_metadata = []
+                self.doc_to_chunk_indices = {}
+                self._deleted_doc_ids = set()
+                try:
+                    self._db.drop_table(TABLE_NAME)
+                except Exception:
+                    pass
+                self._table = None
                 return
 
             texts = [m["content"] for m in active_chunks]
-
             embedder = self._get_embedder()
             model_name = self.get_embedding_model_name()
             model_version = self.get_embedding_model_version()
@@ -325,32 +351,53 @@ class RAGService:
             embeddings = embedder.embed_documents(texts)
             emb_matrix = np.array(embeddings).astype('float32')
 
-            new_index = faiss.IndexFlatL2(emb_matrix.shape[1])
-            new_index.add(emb_matrix)
-
+            records = []
+            new_metadata = []
             new_doc_map = {}
-            for idx, meta in enumerate(active_chunks):
+            for idx, (meta, emb) in enumerate(zip(active_chunks, emb_matrix)):
+                meta["id"] = idx
+                meta["model_name"] = model_name
+                meta["model_version"] = model_version
                 doc_id = meta["doc_id"]
+
                 if doc_id not in new_doc_map:
                     new_doc_map[doc_id] = []
                 new_doc_map[doc_id].append(idx)
-                meta["model_name"] = model_name
-                meta["model_version"] = model_version
 
-            self.index = new_index
-            self.dimension = emb_matrix.shape[1]
-            self.chunk_metadata = active_chunks
+                extra = meta.get("extra_metadata", {})
+                records.append({
+                    "id": idx,
+                    "vector": emb,
+                    "doc_id": doc_id,
+                    "content": meta["content"],
+                    "deleted": False,
+                    "timestamp_start": meta.get("timestamp_start"),
+                    "timestamp_end": meta.get("timestamp_end"),
+                    "model_name": model_name,
+                    "model_version": model_version,
+                    "indexed_at": meta.get("indexed_at", datetime.datetime.utcnow().isoformat()),
+                    "extra_metadata": json.dumps(extra, ensure_ascii=False) if extra else None,
+                })
+                new_metadata.append(meta)
+
+            try:
+                self._db.drop_table(TABLE_NAME)
+            except Exception:
+                pass
+            self._table = self._db.create_table(TABLE_NAME, records, mode="overwrite")
+
+            self.chunk_metadata = new_metadata
             self.doc_to_chunk_indices = new_doc_map
             self._deleted_doc_ids = set()
-
+            self.dimension = emb_matrix.shape[1]
             self._dirty = True
-            self.save_index()
+
+    # ── Stats ────────────────────────────────────────────────────────
 
     def get_stats(self):
-        """Return statistik index untuk monitoring."""
         with self._lock:
             total = len(self.chunk_metadata)
-            deleted = sum(1 for m in self.chunk_metadata if m.get("deleted", False))
+            deleted = sum(1 for m in self.chunk_metadata if _is_deleted(m))
             active = total - deleted
 
             index_models = set()
@@ -373,6 +420,7 @@ class RAGService:
                 "model": self._cached_model_name,
                 "index_model_versions": list(index_models),
                 "compatibility": compatibility["status"],
+                "storage_engine": "lancedb",
             }
 
 

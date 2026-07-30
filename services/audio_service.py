@@ -73,11 +73,11 @@ class AudioService:
 
             doc_id = f"mat_{material.id}"
             
-            # Strategi 1: cari di FAISS index
+            # Strategi 1: cari di LanceDB index
             context = rag_service.search("Ringkas seluruh materi penting", [doc_id], 10)
-            logger.info(f"[AudioGen] FAISS search untuk material {material_id}: context {len(context)} chars, {len(context.split())} words")
+            logger.info(f"[AudioGen] RAG search untuk material {material_id}: context {len(context)} chars, {len(context.split())} words")
 
-            # Strategi 2 (fallback): FAISS kosong → baca file langsung
+            # Strategi 2 (fallback): RAG kosong → baca file langsung
             if not context:
                 from parsers.document_parser import extract_text
                 if material.filepath and os.path.exists(material.filepath):

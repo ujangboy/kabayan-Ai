@@ -15,20 +15,20 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 EMBEDDING_MODEL = "all-MiniLM-L6-v2"
 TEMPERATURE = 0.2
 
-# --- FAISS Chunking Constants ---
+# --- Chunking Constants ---
 CHUNK_SIZE = 300 # words
 CHUNK_OVERLAP = 50 # words
 
 # --- Paths Configuration ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STORAGE_DIR = os.path.join(BASE_DIR, "storage")
-FAISS_INDEX_DIR = os.path.join(STORAGE_DIR, "faiss_index")
+LANCEDB_DIR = os.path.join(STORAGE_DIR, "lancedb")
 TEXT_CACHE_DIR = os.path.join(STORAGE_DIR, "text_cache")
 UPLOADS_DIR = os.path.join(STORAGE_DIR, "uploads")
 SESSION_DIR = os.path.join(STORAGE_DIR, "sessions")
 
 # Ensure directories exist
-for path in [FAISS_INDEX_DIR, TEXT_CACHE_DIR, UPLOADS_DIR, SESSION_DIR]:
+for path in [LANCEDB_DIR, TEXT_CACHE_DIR, UPLOADS_DIR, SESSION_DIR]:
     os.makedirs(path, exist_ok=True)
 
 # --- File Organizer Settings (Legacy) ---

@@ -8,7 +8,7 @@
 ## 1. Lingkungan Sistem & Koridor Kerja
 *   **Mode Aplikasi:** Lokal / Personal Hybrid AI (Single User).
 *   **LLM Engine:** Groq API (Gunakan hanya untuk penalaran, ringkasan, dan ekstraksi akhir).
-*   **Penyimpanan & Knowledge Base:** Lokal (Gunakan *Vector Index* FAISS atau pembacaan file langsung via path terindeks).
+*   **Penyimpanan & Knowledge Base:** Lokal (Gunakan *Vector Index* LanceDB atau pembacaan file langsung via path terindeks).
 
 ---
 
@@ -18,7 +18,7 @@ Agar hemat token, langsung tuju file/folder spesifik berdasarkan kebutuhan tugas
 *   **Konfigurasi & API Key:** `kabayan_agent/.env` (Jangan pernah dibaca ulang kecuali inisialisasi awal).
 *   **Routing API Backend:** `routers/` atau `main.py` (Tempat mendaftarkan endpoint FastAPI).
 *   **Logika Bisnis & Fitur AI:** `services/` (Tempat pemrosesan materi, pembuatan kuis/flashcard).
-*   **Akses Database & FAISS:** `repositories/` (Tempat menyimpan/mengambil data lokal & indeks vektor).
+*   **Akses Database & RAG:** `services/rag_service.py` (LanceDB vector store + similarity search).
 *   **Penyimpanan Dokumen User:** `storage/` atau `materials/` (Folder lokal tempat file PDF/DOCX kuliah disimpan).
 
 ---
@@ -28,7 +28,7 @@ Agar hemat token, langsung tuju file/folder spesifik berdasarkan kebutuhan tugas
 AI Agent **WAJIB** mematuhi aturan pencarian berikut untuk mencegah pembengkakan biaya API Groq dan *load* RAM lokal:
 
 ### A. Aturan Pencarian File (Search Strategy)
-1.  **Gunakan Indeks Vektor (FAISS) Terlebih Dahulu:** Jika user menanyakan isi materi kuliah, **dilarang** membaca seluruh isi file PDF/DOCX mentah secara langsung ke prompt Groq. Lakukan *similarity search* via repository lokal, ambil maksimal **3-5 chunk paling relevan**, lalu kirim hanya chunk tersebut ke Groq.
+1.  **Gunakan RAG (LanceDB) Terlebih Dahulu:** Jika user menanyakan isi materi kuliah, **dilarang** membaca seluruh isi file PDF/DOCX mentah secara langsung ke prompt Groq. Lakukan *similarity search* via `rag_service.search()`, ambil maksimal **3-5 chunk paling relevan**, lalu kirim hanya chunk tersebut ke Groq.
 2.  **Pencarian Berdasarkan Path Langsung:** Jika user meminta modifikasi kode, minta user menentukan nama filenya atau tebak berdasarkan *Peta Folder (Section 2)*. Jangan lakukan *looping* `os.walk()` yang mengirimkan isi direktori ke LLM.
 
 ### B. Pembatasan Konteks & Token Guard
@@ -49,7 +49,7 @@ AI Agent **WAJIB** mematuhi aturan pencarian berikut untuk mencegah pembengkakan
 [Chunking & Embedding] -> Text dipecah per 500-1000 karakter lokal
        │
        ▼
-[Simpan ke FAISS/DB] -> Data tersimpan rapi di lokal Anda
+[Simpan ke LanceDB/DB] -> Data tersimpan rapi di lokal Anda
        │
        ▼
 [Query User] -> AI hanya mengambil chunk relevan -> Kirim ke Groq (Hemat Token!)

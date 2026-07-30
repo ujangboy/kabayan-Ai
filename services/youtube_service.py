@@ -67,7 +67,7 @@ class YoutubeService:
                 mat.filepath = transcript_path
                 db.commit()
 
-            # Index into RAG (FAISS)
+            # Index into RAG (LanceDB)
             doc_id = f"mat_{mat.id}"
             rag_service.index_document(doc_id, chunks)
 
