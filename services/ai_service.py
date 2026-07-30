@@ -111,7 +111,7 @@ class CapabilityRouter:
 class AIService:
 
     @staticmethod
-    def _get_llm(capability: str) -> ChatGroq:
+    def _get_llm(capability: str, temperature: float = None) -> ChatGroq:
         global_rate_limiter.check_limit()
         # Exam-related capabilities need longer timeout (multi-topic generation)
         exam_caps = {"exam_analysis", "exam_blueprint", "exam_question", "exam_evaluate", "reasoning", "quiz"}
@@ -119,7 +119,7 @@ class AIService:
         return ChatGroq(
             api_key=config.GROQ_API_KEY,
             model_name=CapabilityRouter.get_model(capability),
-            temperature=config.TEMPERATURE,
+            temperature=temperature if temperature is not None else config.TEMPERATURE,
             max_retries=2,
             timeout=timeout,
         )
@@ -131,6 +131,7 @@ class AIService:
         input_variables: Dict[str, Any],
         use_cache: bool = True,
         output_schema: Opt[Type[BaseModel]] = None,
+        temperature: float = None,
     ) -> str | dict | list:
         if "context" in input_variables:
             input_variables = {
@@ -148,7 +149,7 @@ class AIService:
                 db.close()
                 return cached
 
-        llm = AIService._get_llm(capability)
+        llm = AIService._get_llm(capability, temperature=temperature)
 
         # If output_schema provided, try structured output first
         if output_schema:

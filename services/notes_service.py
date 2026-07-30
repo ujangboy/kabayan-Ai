@@ -10,7 +10,8 @@ class NotesService:
             capability="reasoning",
             prompt_template=NOTES_PROMPT,
             input_variables={"context": context},
-            use_cache=False
+            use_cache=False,
+            temperature=0.7,
         )
         note = note_repository.create(db, {
             "subject_id": subject_id,

@@ -379,19 +379,19 @@ function QuizSession({ quizId, onClose }) {
                   </div>
                   <div className="flex-1">
                     <p className="text-sm font-semibold text-text-secondary mb-1">Soal {idx + 1}</p>
-                    <p className="text-text font-medium mb-3">{q.question}</p>
+                    <MathMarkdown className="text-text font-medium mb-3">{q.question}</MathMarkdown>
 
                     <div className="space-y-2 text-sm">
                       <div>
                         <span className="text-text-secondary">Jawaban Anda: </span>
                         <span className={isCorrect ? 'text-success font-medium' : 'text-danger font-medium'}>
-                          {userAnswer || '(Tidak dijawab)'}
+                          {userAnswer ? <MathMarkdown className="inline">{userAnswer}</MathMarkdown> : '(Tidak dijawab)'}
                         </span>
                       </div>
                       {!isCorrect && (
                         <div>
                           <span className="text-text-secondary">Jawaban Benar: </span>
-                          <span className="text-success font-medium">{q.answer}</span>
+                          <span className="text-success font-medium"><MathMarkdown className="inline">{q.answer}</MathMarkdown></span>
                         </div>
                       )}
                       {q.explanation && (
@@ -471,7 +471,7 @@ function QuizSession({ quizId, onClose }) {
                     : 'bg-card border-border text-text hover:border-primary/50'
                 }`}
               >
-                {opt}
+                <MathMarkdown>{opt}</MathMarkdown>
               </button>
             );
           })}

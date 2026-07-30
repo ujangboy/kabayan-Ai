@@ -8,6 +8,7 @@ import {
 import { flashcardAPI, subjectAPI } from '@/services/api';
 import { useToast } from '@/components/Toast';
 import { extractErrorMessage } from '@/utils/errors';
+import MathMarkdown from '@/components/MathMarkdown';
 import MaterialPicker from '@/components/MaterialPicker';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -200,7 +201,7 @@ function SubjectFlashcardCard({ group, onStart, onDeleteAll }) {
       {/* Mini preview of first card */}
       {cards[0] && (
         <div className="bg-background rounded-lg p-3 mb-4 border border-border text-xs text-text-secondary line-clamp-2">
-          {cards[0].question}
+          <MathMarkdown>{cards[0].question}</MathMarkdown>
         </div>
       )}
 
@@ -355,7 +356,7 @@ function FlashcardSession({ cards, subjectName, onClose }) {
             {/* Front */}
             <div className="absolute inset-0 backface-hidden card-base flex flex-col items-center justify-center p-8 text-center border-t-4 border-t-primary shadow-xl">
               <span className="text-xs font-semibold text-text-secondary uppercase tracking-widest mb-4">Pertanyaan</span>
-              <p className="text-xl font-bold text-text leading-snug">{currentCard.question}</p>
+              <MathMarkdown className="text-xl font-bold text-text leading-snug text-center">{currentCard.question}</MathMarkdown>
               <p className="absolute bottom-4 text-[11px] text-text-muted">Klik untuk lihat jawaban</p>
             </div>
             {/* Back */}
@@ -364,7 +365,7 @@ function FlashcardSession({ cards, subjectName, onClose }) {
               style={{ transform: 'rotateY(180deg)' }}
             >
               <span className="text-xs font-semibold text-text-secondary uppercase tracking-widest mb-4">Jawaban</span>
-              <p className="text-lg text-text leading-relaxed">{currentCard.answer}</p>
+              <MathMarkdown className="text-lg text-text leading-relaxed text-center">{currentCard.answer}</MathMarkdown>
             </div>
           </motion.div>
         </div>

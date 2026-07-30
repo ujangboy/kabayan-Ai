@@ -268,6 +268,7 @@ class ExamService:
                 "topic_priority_json": topic_priority_str,
             },
             use_cache=False,
+            temperature=0.5,
         )
         blueprint_data = _parse_json_response(response, "Blueprint AI")
         # Gracefully handle AI returning an array instead of an object
@@ -375,6 +376,7 @@ class ExamService:
                         "key_concepts":   concepts,
                     },
                     use_cache=False,
+                    temperature=0.7,
                 )
                 if not response or not str(response).strip():
                     logger.warning(f"Empty AI response for topic '{topic}' — using bank")

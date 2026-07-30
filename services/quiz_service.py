@@ -35,6 +35,7 @@ class QuizService:
             prompt_template=QUIZ_PROMPT,
             input_variables={"context": context, "mcq_count": mcq_count, "essay_count": essay_count},
             use_cache=False,
+            temperature=0.7,
         )
 
         try:

@@ -16,6 +16,7 @@ class FlashcardService:
             prompt_template=FLASHCARD_PROMPT,
             input_variables={"context": context, "count": count},
             use_cache=False,
+            temperature=0.7,
         )
 
         try:
