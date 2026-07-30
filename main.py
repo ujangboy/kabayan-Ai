@@ -147,117 +147,8 @@ def run_exam_unification_migration():
             raise
         finally:
             conn.close()
-    except Exception as e:
+except Exception as e:
         logger.error(f"Exam unification migration error: {e}")
-
-# Run Database Migrations for drift
-def run_migrations():
-    import sqlite3
-    db_path = os.path.join(config.STORAGE_DIR, "kabayan.db")
-    if os.path.exists(db_path):
-        try:
-            conn = sqlite3.connect(db_path)
-            cursor = conn.cursor()
-            cursor.execute("PRAGMA table_info(materials)")
-            columns = [col[1] for col in cursor.fetchall()]
-            
-            if "material_type" not in columns:
-                cursor.execute("ALTER TABLE materials ADD COLUMN material_type VARCHAR DEFAULT 'PDF'")
-            if "source_url" not in columns:
-                cursor.execute("ALTER TABLE materials ADD COLUMN source_url VARCHAR")
-            if "external_id" not in columns:
-                cursor.execute("ALTER TABLE materials ADD COLUMN external_id VARCHAR")
-            if "thumbnail" not in columns:
-                cursor.execute("ALTER TABLE materials ADD COLUMN thumbnail VARCHAR")
-            if "language" not in columns:
-                cursor.execute("ALTER TABLE materials ADD COLUMN language VARCHAR")
-            if "status" not in columns:
-                cursor.execute("ALTER TABLE materials ADD COLUMN status VARCHAR DEFAULT 'Ready'")
-            if "failure_reason" not in columns:
-                cursor.execute("ALTER TABLE materials ADD COLUMN failure_reason TEXT")
-            if "created_at" not in columns:
-                cursor.execute("ALTER TABLE materials ADD COLUMN created_at DATETIME")
-            if "updated_at" not in columns:
-                cursor.execute("ALTER TABLE materials ADD COLUMN updated_at DATETIME")
-            # Exam Analyzer tables (auto-created via SQLAlchemy, no ALTER needed)
-            # Exam History: safe to ignore errors if tables already exist
-            for ddl in [
-                """CREATE TABLE IF NOT EXISTS exam_history_sessions (
-                    id INTEGER PRIMARY KEY, subject_id INTEGER, subject_name VARCHAR,
-                    title VARCHAR, exam_type VARCHAR, difficulty VARCHAR,
-                    bloom_level VARCHAR, question_type VARCHAR, total_questions INTEGER,
-                    best_score INTEGER, latest_score INTEGER, grade VARCHAR,
-                    progress INTEGER DEFAULT 0, status VARCHAR DEFAULT 'completed',
-                    weak_topics_json TEXT, strong_topics_json TEXT,
-                    evaluation_json TEXT, questions_json TEXT, answers_json TEXT,
-                    created_at DATETIME, updated_at DATETIME)""",
-                """CREATE TABLE IF NOT EXISTS exam_attempts (
-                    id INTEGER PRIMARY KEY, history_session_id INTEGER,
-                    attempt_number INTEGER DEFAULT 1, score INTEGER, grade VARCHAR,
-                    total_correct INTEGER, total_wrong INTEGER, duration_seconds INTEGER,
-                    questions_json TEXT, answers_json TEXT, evaluation_json TEXT,
-                    created_at DATETIME)""",
-                """CREATE TABLE IF NOT EXISTS exam_reviews (
-                    id INTEGER PRIMARY KEY, attempt_id INTEGER,
-                    question_number INTEGER, topic VARCHAR, question_text TEXT,
-                    question_type VARCHAR, bloom_level VARCHAR, difficulty VARCHAR,
-                    user_answer TEXT, correct_answer TEXT, is_correct INTEGER DEFAULT 0,
-                    ai_explanation TEXT, material_ref VARCHAR, tips VARCHAR,
-                    item_score INTEGER)""",
-                """CREATE TABLE IF NOT EXISTS study_plans (
-                    id INTEGER PRIMARY KEY, history_session_id INTEGER,
-                    title VARCHAR, motivational_message TEXT, priority_actions_json TEXT,
-                    total_days INTEGER DEFAULT 7, completed_days INTEGER DEFAULT 0,
-                    progress INTEGER DEFAULT 0, created_at DATETIME, updated_at DATETIME)""",
-                """CREATE TABLE IF NOT EXISTS study_plan_items (
-                    id INTEGER PRIMARY KEY, plan_id INTEGER, order_number INTEGER DEFAULT 0,
-                    day_label VARCHAR, topic VARCHAR, activity TEXT, activity_type VARCHAR,
-                    duration_minutes INTEGER, resources TEXT, completed INTEGER DEFAULT 0)""",
-                """CREATE TABLE IF NOT EXISTS question_bank (
-                    id INTEGER PRIMARY KEY, subject_id INTEGER, blueprint_id INTEGER,
-                    chapter VARCHAR, topic VARCHAR, difficulty VARCHAR, bloom_level VARCHAR,
-                    question_type VARCHAR, question TEXT, choices_json TEXT,
-                    correct_answer VARCHAR, explanation TEXT, material_ref VARCHAR,
-                    tips VARCHAR, created_by_ai INTEGER DEFAULT 1,
-                    used_count INTEGER DEFAULT 0, created_at DATETIME)""",
-            ]:
-                try:
-                    cursor.execute(ddl)
-                except Exception:
-                    pass
-            
-            # Create indexes for performance
-            for idx_ddl in [
-                "CREATE INDEX IF NOT EXISTS idx_materials_subject_id ON materials (subject_id)",
-                "CREATE INDEX IF NOT EXISTS idx_materials_status ON materials (status)",
-                "CREATE INDEX IF NOT EXISTS idx_exam_sessions_subject_id ON exam_sessions (subject_id)",
-                "CREATE INDEX IF NOT EXISTS idx_exam_sessions_status ON exam_sessions (status)",
-                "CREATE INDEX IF NOT EXISTS idx_exam_sessions_subject_status_started ON exam_sessions (subject_id, status, started_at)",
-                "CREATE INDEX IF NOT EXISTS idx_exam_attempts_session_id ON exam_attempts (session_id)",
-                "CREATE INDEX IF NOT EXISTS idx_exam_reviews_attempt_id ON exam_reviews (attempt_id)",
-                "CREATE INDEX IF NOT EXISTS idx_study_plans_session_id ON study_plans (session_id)",
-                "CREATE INDEX IF NOT EXISTS idx_study_plan_items_plan_id ON study_plan_items (plan_id)",
-                "CREATE INDEX IF NOT EXISTS idx_question_bank_subject_id ON question_bank (subject_id)",
-                "CREATE INDEX IF NOT EXISTS idx_notes_subject_id ON notes (subject_id)",
-                "CREATE INDEX IF NOT EXISTS idx_flashcards_subject_id ON flashcards (subject_id)",
-                "CREATE INDEX IF NOT EXISTS idx_flashcards_subject_created ON flashcards (subject_id, created_at)",
-                "CREATE INDEX IF NOT EXISTS idx_quizzes_subject_id ON quizzes (subject_id)",
-                "CREATE INDEX IF NOT EXISTS idx_quizzes_subject_created ON quizzes (subject_id, created_at)",
-                "CREATE INDEX IF NOT EXISTS idx_messages_chat_id ON messages (chat_id)",
-            ]:
-                try:
-                    cursor.execute(idx_ddl)
-                except Exception:
-                    pass
-            
-            conn.commit()
-            conn.close()
-            logger.info("Database migration check passed.")
-        except Exception as e:
-            logger.error(f"Migration error: {e}")
-
-run_migrations()
-run_exam_unification_migration()
 
 # ─── Startup: Fix materials stuck on "Processing" ──────────────────────────────
 def fix_stuck_materials():
@@ -285,8 +176,17 @@ def fix_stuck_materials():
 
 fix_stuck_materials()
 
-# Initialize Database
+# Initialize Database (Alembic is source of truth for schema)
 Base.metadata.create_all(bind=engine)
+
+# Stamp with Alembic head so future migrations detect this as "current"
+try:
+    from alembic.config import Config
+    from alembic import command
+    alembic_cfg = Config(os.path.join(os.path.dirname(__file__), "alembic.ini"))
+    command.stamp(alembic_cfg, "head")
+except Exception as e:
+    logger.warning(f"Alembic stamp skipped (first run?): {e}")
 
 app = FastAPI(title="Kabayan AI Study Workspace")
 register_all_handlers(app)

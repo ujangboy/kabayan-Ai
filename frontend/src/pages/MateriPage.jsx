@@ -108,11 +108,17 @@ export default function MateriPage() {
           <div>
             <h1 className="text-2xl font-bold text-text">Materi Belajar</h1>
             <p className="text-text-secondary text-sm mt-1">Kelola dokumen, PDF, dan video YouTube sebagai sumber belajar AI.</p>
-            {selectedDocs.length > 0 && (
-              <div className="mt-2 inline-flex items-center gap-2">
-                <span className="badge badge-primary text-[11px]">RAG Aktif ({selectedDocs.length} materi)</span>
-              </div>
-            )}
+            {(() => {
+              const activeCount = selectedDocs.filter(docId => materials.some(m => `mat_${m.id}` === docId && m.status === 'Ready')).length;
+              if (activeCount > 0) {
+                return (
+                  <div className="mt-2 inline-flex items-center gap-2">
+                    <span className="badge badge-primary text-[11px]">RAG Aktif ({activeCount} materi)</span>
+                  </div>
+                );
+              }
+              return null;
+            })()}
           </div>
           <div className="flex items-center gap-3">
             <button
