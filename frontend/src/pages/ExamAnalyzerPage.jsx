@@ -446,6 +446,7 @@ function ConfigView({ subjectId, analysis, onDone }) {
 
   const handleSubmit = async () => {
     if (!subjectId) return setError('Pilih mata kuliah terlebih dahulu.');
+    if (selectedMaterialIds.length === 0) return setError('Harap pilih materi terlebih dahulu.');
     setError(''); setIsLoading(true);
     try {
       const totalQ = form.total_questions === 'custom'
@@ -532,7 +533,7 @@ function ConfigView({ subjectId, analysis, onDone }) {
       {error && <p className="text-danger text-sm">{error}</p>}
 
       <div className="flex justify-end pt-2">
-        <button onClick={handleSubmit} disabled={isLoading} className="btn-primary">
+        <button onClick={handleSubmit} disabled={isLoading || selectedMaterialIds.length === 0} className="btn-primary">
           {isLoading
             ? <><Loader2 size={14} className="animate-spin" /> Membuat Blueprint...</>
             : <><Brain size={14} /> Generate Blueprint</>}

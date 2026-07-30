@@ -178,6 +178,10 @@ function CreateNoteModal({ onClose, subjects, onSuccess }) {
       alert('Pilih mata kuliah terlebih dahulu.');
       return;
     }
+    if (selectedMaterialIds.length === 0) {
+      alert('Harap pilih materi terlebih dahulu.');
+      return;
+    }
     setIsGenerating(true);
     try {
       const payload = {
@@ -305,7 +309,7 @@ function CreateNoteModal({ onClose, subjects, onSuccess }) {
                       <button
                         type="button"
                         onClick={handleGenerateAI}
-                        disabled={isGenerating}
+                        disabled={isGenerating || selectedMaterialIds.length === 0}
                         className="px-3 py-2 bg-primary text-white rounded-lg text-xs font-medium hover:bg-primary/80 disabled:opacity-50 transition-all whitespace-nowrap"
                       >
                         {isGenerating ? '⏳ Generating...' : '✨ Generate'}

@@ -188,6 +188,7 @@ function GenerateQuizModal({ onClose, subjects, onSuccess }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!subjectId) return setError('Pilih mata kuliah terlebih dahulu');
+    if (selectedMaterialIds.length === 0) return setError('Harap pilih materi terlebih dahulu.');
     setError('');
     setIsGenerating(true);
     try {
@@ -270,7 +271,7 @@ function GenerateQuizModal({ onClose, subjects, onSuccess }) {
             <button type="button" onClick={onClose} disabled={isGenerating} className="btn-ghost disabled:opacity-40">
               Batal
             </button>
-            <button type="submit" disabled={isGenerating || !subjectId} className="btn-primary disabled:opacity-40">
+            <button type="submit" disabled={isGenerating || !subjectId || selectedMaterialIds.length === 0} className="btn-primary disabled:opacity-40">
               {isGenerating ? 'Generating...' : 'Generate'}
             </button>
           </div>

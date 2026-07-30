@@ -59,7 +59,7 @@ export default function MaterialPicker({ subjectId, selectedMaterialIds, onSelec
     <div className="mt-3">
       <div className="flex items-center justify-between mb-1.5">
         <label className="text-xs font-medium text-text-secondary">
-          Sumber Materi (Opsional)
+          Sumber Materi *
         </label>
         <button
           type="button"
@@ -75,7 +75,7 @@ export default function MaterialPicker({ subjectId, selectedMaterialIds, onSelec
           {selectedMaterialIds.length > 0 ? "Batalkan Pilihan" : "Pilih Semua Materi"}
         </button>
       </div>
-      <p className="text-[10px] text-text-muted mb-2">Jika dibiarkan kosong, AI akan otomatis membaca seluruh materi mata kuliah ini.</p>
+      <p className="text-[10px] text-text-muted mb-2">Pilih minimal satu materi untuk generate.</p>
       <div className="max-h-40 overflow-y-auto space-y-1.5 rounded-xl bg-background border border-border p-2">
         {materials.map((m) => {
           const isReady = m.status === 'Ready';
