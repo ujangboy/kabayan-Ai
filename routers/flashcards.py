@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, Form, Query
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from database import get_db
 from repositories.flashcard_repository import flashcard_repository
 from services.flashcard_service import flashcard_service
@@ -42,8 +43,11 @@ async def delete_flashcard(flashcard_id: int, db: Session = Depends(get_db)):
     try:
         found = flashcard_repository.delete(db, flashcard_id)
         if not found:
-            return JSONResponse(status_code=404, content={"status": "not_found", "message": f"Flashcard #{flashcard_id} tidak ditemukan."})
+            return JSONResponse(status_code=404, content={"status": "not_found", "message": f"Flashcard #{flashcard_id} tidak ditemukan atau sudah dihapus."})
         return JSONResponse({"status": "success", "message": "Flashcard deleted"})
+    except IntegrityError as e:
+        db.rollback()
+        return JSONResponse(status_code=409, content={"detail": "Flashcard tidak bisa dihapus karena masih terhubung dengan data lain."})
     except Exception as e:
         return JSONResponse(status_code=500, content={"detail": str(e)})
 
