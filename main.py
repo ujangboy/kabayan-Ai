@@ -147,7 +147,7 @@ def run_exam_unification_migration():
             raise
         finally:
             conn.close()
-except Exception as e:
+    except Exception as e:
         logger.error(f"Exam unification migration error: {e}")
 
 # ─── Startup: Fix materials stuck on "Processing" ──────────────────────────────
@@ -160,15 +160,15 @@ def fix_stuck_materials():
         stuck = db.query(models.Material).filter(models.Material.status == "Processing").all()
         for mat in stuck:
             doc_id = f"mat_{mat.id}"
-    has_chunks = any(m.get("doc_id") == doc_id for m in _rag.chunk_metadata)
-    if has_chunks:
-        mat.status = "Ready"
-        mat.failure_reason = None
-        logger.info(f"Recovered stuck material {mat.id} -> Ready (LanceDB chunks found)")
-    else:
-        mat.status = "Failed"
-        mat.failure_reason = "Background processing died before completion."
-        logger.warning(f"Material {mat.id} marked Failed (no chunks in LanceDB)")
+            has_chunks = any(m.get("doc_id") == doc_id for m in _rag.chunk_metadata)
+            if has_chunks:
+                mat.status = "Ready"
+                mat.failure_reason = None
+                logger.info(f"Recovered stuck material {mat.id} -> Ready (LanceDB chunks found)")
+            else:
+                mat.status = "Failed"
+                mat.failure_reason = "Background processing died before completion."
+                logger.warning(f"Material {mat.id} marked Failed (no chunks in LanceDB)")
         db.commit()
         db.close()
     except Exception as e:
