@@ -24,7 +24,7 @@ class MaterialService:
             "subject_id": subject_id,
             "filename": original_filename,
             "filepath": filepath,
-            "status": "Processing"
+            "status": "Pending"
         })
         
         return filepath, mat.id

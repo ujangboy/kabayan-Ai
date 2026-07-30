@@ -65,9 +65,7 @@ async def upload_material(
         await file.seek(0)
 
         filepath, mat_id = material_service.upload_material_sync(db, subject_id, file)
-        doc_id = f"mat_{mat_id}"
-        background_tasks.add_task(material_service.process_material_async, filepath, doc_id, mat_id)
-        return JSONResponse({"status": "success", "message": "Material uploaded"})
+        return JSONResponse({"status": "success", "message": "Material uploaded, waiting for processing"})
     finally:
         await file.close()
 

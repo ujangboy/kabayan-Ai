@@ -154,6 +154,7 @@ def run_exam_unification_migration():
 def fix_stuck_materials():
     """Recover materials stuck on 'Processing' from dead background tasks."""
     import models
+    import os
     from services.rag_service import rag_service as _rag
     try:
         db = SessionLocal()
@@ -164,17 +165,23 @@ def fix_stuck_materials():
             if has_chunks:
                 mat.status = "Ready"
                 mat.failure_reason = None
-                logger.info(f"Recovered stuck material {mat.id} -> Ready (LanceDB chunks found)")
+                logger.info(f"Recovered stuck material {mat.id} -> Ready (FAISS chunks found)")
             else:
-                mat.status = "Failed"
-                mat.failure_reason = "Background processing died before completion."
-                logger.warning(f"Material {mat.id} marked Failed (no chunks in LanceDB)")
+                if mat.filepath and os.path.exists(mat.filepath):
+                    mat.status = "Pending"
+                    mat.failure_reason = None
+                    logger.info(f"Recovered stuck material {mat.id} -> Pending (Re-queueing)")
+                else:
+                    mat.status = "Failed"
+                    mat.failure_reason = "Background processing died and file is missing."
+                    logger.warning(f"Material {mat.id} marked Failed (missing file)")
         db.commit()
         db.close()
     except Exception as e:
         logger.error(f"fix_stuck_materials error: {e}")
 
 fix_stuck_materials()
+
 
 # Initialize Database (Alembic is source of truth for schema)
 Base.metadata.create_all(bind=engine)
@@ -190,6 +197,40 @@ except Exception as e:
 
 app = FastAPI(title="Kabayan AI Study Workspace")
 register_all_handlers(app)
+
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
+
+material_executor = ThreadPoolExecutor(max_workers=2)
+
+async def material_worker():
+    """Background worker loop to process pending materials."""
+    import models
+    from services.material_service import material_service
+    while True:
+        try:
+            db = SessionLocal()
+            mat = db.query(models.Material).filter(models.Material.status == "Pending").first()
+            if mat:
+                mat.status = "Processing"
+                db.commit()
+                filepath = mat.filepath
+                mat_id = mat.id
+                db.close()
+                
+                logger.info(f"Worker picked up material {mat_id} for processing.")
+                loop = asyncio.get_running_loop()
+                await loop.run_in_executor(material_executor, material_service.process_material_async, filepath, f"mat_{mat_id}", mat_id)
+            else:
+                db.close()
+                await asyncio.sleep(2)
+        except Exception as e:
+            logger.error(f"material_worker error: {e}")
+            await asyncio.sleep(5)
+
+@app.on_event("startup")
+async def startup_event():
+    asyncio.create_task(material_worker())
 
 from fastapi.middleware.cors import CORSMiddleware
 app.add_middleware(
