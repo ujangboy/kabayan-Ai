@@ -1,36 +1,10 @@
 from services.ai_service import ai_service
 from prompts.quiz import QUIZ_PROMPT
 from repositories.quiz_repository import quiz_repository
+from services.json_utils import parse_ai_json
 from sqlalchemy.orm import Session
 import json
-import re
 import datetime
-
-
-def _sanitize_json_str(s: str) -> str:
-    s = re.sub(r'\\([^"\\bfnrtu/])', r'\\\\\1', s)
-    s = re.sub(r',\s*([}\]])', r'\1', s)
-    return s
-
-
-def _extract_json(raw: str) -> str:
-    s = raw.strip()
-    for pat in [r'```json\s*([\s\S]*?)\s*```', r'```\s*([\s\S]*?)\s*```']:
-        m = re.search(pat, s)
-        if m:
-            return m.group(1).strip()
-    start = s.find('{')
-    if start >= 0:
-        depth, end = 0, start
-        for i, ch in enumerate(s[start:], start):
-            if ch == '{': depth += 1
-            elif ch == '}': depth -= 1
-            if depth == 0:
-                end = i + 1
-                break
-        if end > start:
-            return s[start:end]
-    return s
 
 
 class QuizService:
@@ -64,9 +38,7 @@ class QuizService:
         )
 
         try:
-            json_str = _extract_json(str(result))
-            json_str = _sanitize_json_str(json_str)
-            data = json.loads(json_str)
+            data = parse_ai_json(result, "Quiz AI")
             if isinstance(data, list):
                 data = {"mcq": data}
 
@@ -93,7 +65,7 @@ class QuizService:
 
             return {"id": quiz_record.id, **data}
 
-        except (json.JSONDecodeError, Exception) as e:
+        except (ValueError, Exception) as e:
             snippet = str(result)[:300] if result else ""
             raise ValueError(f"AI gagal: {e}\nResponse: {snippet}")
 

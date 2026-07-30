@@ -76,17 +76,12 @@ def _save_reviews(db: Session, attempt_id: int, questions_json_str: str, answers
 # ─── Helpers ─────────────────────────────────────────────────────────────────
 
 def _parse_json_response(response: str, label: str = "AI") -> dict:
-    match = re.search(r'```json\s*([\s\S]*?)\s*```', response)
-    if match:
-        json_str = match.group(1)
-    else:
-        json_match = re.search(r'\{[\s\S]*\}', response)
-        json_str = json_match.group(0) if json_match else response
+    from services.json_utils import parse_ai_json
     try:
-        return json.loads(json_str.strip())
+        return parse_ai_json(response, label)
     except json.JSONDecodeError as e:
         raise ValueError(
-            f"{label} tidak mengembalikan JSON valid: {e}\nResponse: {response[:400]}"
+            f"{label} tidak mengembalikan JSON valid: {e}\nResponse: {str(response)[:400]}"
         )
 
 
@@ -349,12 +344,8 @@ class ExamService:
                         "key_concepts":   concepts,
                     },
                     use_cache=False,
-                    output_schema=ExamQuestionOutput,
                 )
-                if isinstance(response, dict) and "questions" in response:
-                    q_data = response
-                else:
-                    q_data = _parse_json_response(response, f"QuestionGen[{topic}]")
+                q_data = _parse_json_response(response, f"QuestionGen[{topic}]")
                 new_qs    = q_data.get("questions", [])
 
                 # Save to bank for future reuse
