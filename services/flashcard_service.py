@@ -8,14 +8,14 @@ import re
 
 class FlashcardService:
     @staticmethod
-    def generate_flashcards(db: Session, subject_id, context: str, title: str = None):
+    def generate_flashcards(db: Session, subject_id, context: str, count: int = 10, title: str = None):
         import models
         import datetime
 
         result = ai_service.generate(
             capability="flashcard",
             prompt_template=FLASHCARD_PROMPT,
-            input_variables={"context": context},
+            input_variables={"context": context, "count": count},
             use_cache=False,
             output_schema=FlashcardOutput,
         )
