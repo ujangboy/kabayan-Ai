@@ -254,10 +254,14 @@ class RAGService:
             ids = self.doc_to_chunk_indices.pop(doc_id)
             if self._table is not None:
                 ids_str = ", ".join(str(i) for i in ids)
-                self._table.update(
-                    where=f"id IN ({ids_str})",
-                    values={"deleted": True}
-                )
+                # Physical delete in LanceDB
+                try:
+                    self._table.delete(f"id IN ({ids_str})")
+                    self._table.compact_files()
+                    self._table.cleanup_old_versions()
+                except Exception as e:
+                    import logging
+                    logging.warning(f"LanceDB delete/compact failed: {e}")
 
             for meta in self.chunk_metadata:
                 if meta["doc_id"] == doc_id:

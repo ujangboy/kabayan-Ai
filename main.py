@@ -230,6 +230,17 @@ async def material_worker():
 
 @app.on_event("startup")
 async def startup_event():
+    # Cleanup LanceDB orphaned locks
+    if os.path.exists(config.LANCEDB_DIR):
+        for root, dirs, files in os.walk(config.LANCEDB_DIR):
+            for file in files:
+                if file.endswith(".lck"):
+                    try:
+                        os.remove(os.path.join(root, file))
+                        logger.info(f"Cleaned up orphaned lock file: {file}")
+                    except Exception as e:
+                        logger.warning(f"Failed to remove lock file {file}: {e}")
+                        
     asyncio.create_task(material_worker())
 
 from fastapi.middleware.cors import CORSMiddleware
