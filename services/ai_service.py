@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 # ─── REQ-04: Token Context Guard ────────────────────────────────────────────
 MAX_CONTEXT_CHARS = 6000 * 4   # ~6000 token estimasi (1 token ≈ 4 char)
-MAX_HISTORY_TURNS = 6          # simpan 6 turn terakhir saja
+MAX_HISTORY_TURNS = 20         # simpan 20 turn terakhir
 
 # ─── Math Delimiter Normalization ────────────────────────────────────────────
 def _normalize_math(text: str) -> str:
@@ -241,11 +241,16 @@ class AIService:
         messages.append(HumanMessage(content=user_input))
 
         full_response = ""
+        last_yield = time.time()
         try:
             async for chunk in llm.astream(messages):
                 if chunk.content:
                     full_response += chunk.content
                     yield chunk.content
+                    last_yield = time.time()
+                elif time.time() - last_yield > 8:
+                    yield ""
+                    last_yield = time.time()
         except Exception as e:
             err_str = str(e).lower()
             # REQ-03: graceful stream error — beri tahu user, jangan crash

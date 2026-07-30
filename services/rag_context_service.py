@@ -14,8 +14,9 @@ class RAGContextService:
         context = ""
 
         # Strategy 1: vector search if query provided (semantic ranking)
-        if query and rag_service.index is not None and rag_service.index.ntotal > 0:
-            retrieved = rag_service.search(query, doc_ids, top_k=20)
+        if query and rag_service._table is not None and len(rag_service.chunk_metadata) > 0:
+            result = rag_service.search(query, doc_ids, top_k=20)
+            retrieved = result.get("text", "")
             if retrieved:
                 word_count = len(retrieved.split())
                 if word_count >= max_words * 0.5:

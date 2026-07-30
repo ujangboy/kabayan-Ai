@@ -57,6 +57,7 @@ class RAGService:
         self._lock = threading.RLock()
         self._db = None
         self._table = None
+        self._query_embed_cache = {}
         self._load_index()
 
     # ── Embedder ──────────────────────────────────────────────────────
@@ -273,13 +274,19 @@ class RAGService:
 
     # ── Search ───────────────────────────────────────────────────────
 
-    def search(self, query: str, active_doc_ids: list = None, top_k: int = 5) -> str:
+    def search(self, query: str, active_doc_ids: list = None, top_k: int = 5) -> dict:
         with self._lock:
             if self._table is None or not self.chunk_metadata:
-                return ""
+                return {"text": "", "sources": []}
 
             embedder = self._get_embedder()
-            query_vec = np.array(embedder.embed_query(query)).astype('float32')
+            if query in self._query_embed_cache:
+                query_vec = self._query_embed_cache[query]
+            else:
+                query_vec = np.array(embedder.embed_query(query)).astype('float32')
+                if len(self._query_embed_cache) > 100:
+                    self._query_embed_cache.clear()
+                self._query_embed_cache[query] = query_vec
 
             filters = ["deleted = false"]
             if active_doc_ids:
@@ -292,12 +299,14 @@ class RAGService:
             try:
                 results = self._table.search(query_vec).where(where_clause).limit(fetch_k).to_list()
             except Exception:
-                return ""
+                return {"text": "", "sources": []}
 
             out = []
+            sources = []
             for r in results:
                 ts_start = _nan_to_none(r.get("timestamp_start"))
                 content = r.get("content", "")
+                doc_id = str(r.get("doc_id", ""))
                 if not content:
                     continue
 
@@ -305,13 +314,15 @@ class RAGService:
                     mins, secs = divmod(int(ts_start), 60)
                     hours, mins_rem = divmod(mins, 60)
                     ts_str = f"{hours:02d}:{mins_rem:02d}:{secs:02d}" if hours > 0 else f"{mins:02d}:{secs:02d}"
-                    content = f"[Timestamp: {ts_str}]\n{content}"
+                    content = f"[{ts_str}] {content}"
 
-                out.append(content)
+                out.append(f"[Sumber: {doc_id}] {content}")
+                sources.append({"doc_id": doc_id, "content": content[:200]})
                 if len(out) >= top_k:
                     break
 
-            return "\n\n---\n\n".join(out)
+            text = "\n\n---\n\n".join(out)
+            return {"text": text, "sources": sources}
 
     # ── Rebuild Index ────────────────────────────────────────────────
 

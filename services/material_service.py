@@ -45,6 +45,7 @@ class MaterialService:
             current_chunk = []
             current_word_count = 0
             target_words = config.CHUNK_SIZE
+            overlap_words = config.CHUNK_OVERLAP
 
             for para in paragraphs:
                 para = para.strip()
@@ -53,8 +54,14 @@ class MaterialService:
                 word_count = len(para.split())
                 if current_word_count + word_count > target_words and current_chunk:
                     chunks.append("\n\n".join(current_chunk))
-                    current_chunk = [para]
-                    current_word_count = word_count
+                    # Overlap: keep last `overlap_words` words for next chunk
+                    overlap_text = " ".join(current_chunk).split()
+                    if overlap_words > 0 and len(overlap_text) > overlap_words:
+                        current_chunk = [" ".join(overlap_text[-overlap_words:]) + " " + para]
+                        current_word_count = overlap_words + word_count
+                    else:
+                        current_chunk = [para]
+                        current_word_count = word_count
                 else:
                     current_chunk.append(para)
                     current_word_count += word_count
@@ -85,6 +92,9 @@ class MaterialService:
         if mat:
             doc_id = f"mat_{mat.id}"
             rag_service.delete_document_chunks(doc_id)
+            if rag_service._should_rebuild():
+                import threading
+                threading.Thread(target=rag_service.rebuild_index, daemon=True).start()
             if os.path.exists(mat.filepath):
                 try:
                     os.remove(mat.filepath)

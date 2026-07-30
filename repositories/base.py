@@ -1,6 +1,8 @@
+import time
 from sqlalchemy.orm import Session
 from typing import TypeVar, Generic, Type, List, Optional
 from database import Base
+from sqlalchemy.exc import OperationalError
 
 ModelType = TypeVar("ModelType", bound=Base)
 
@@ -31,18 +33,35 @@ class BaseRepository(Generic[ModelType]):
         return db_obj
 
     def delete(self, db: Session, id: int) -> bool:
-        obj = db.query(self.model).filter(self.model.id == id).first()
-        if obj:
-            db.delete(obj)
-            db.flush()
-            return True
-        return False
+        retries = 3
+        for attempt in range(retries):
+            try:
+                obj = db.query(self.model).filter(self.model.id == id).first()
+                if obj:
+                    db.delete(obj)
+                    db.flush()
+                    return True
+                return False
+            except OperationalError:
+                if attempt < retries - 1:
+                    db.rollback()
+                    time.sleep(0.1 * (2 ** attempt))
+                    continue
+                raise
 
     def delete_all(self, db: Session) -> bool:
-        try:
-            db.query(self.model).delete()
-            db.flush()
-            return True
-        except Exception:
-            return False
+        retries = 3
+        for attempt in range(retries):
+            try:
+                db.query(self.model).delete()
+                db.flush()
+                return True
+            except OperationalError:
+                if attempt < retries - 1:
+                    db.rollback()
+                    time.sleep(0.1 * (2 ** attempt))
+                    continue
+                raise
+            except Exception:
+                return False
 

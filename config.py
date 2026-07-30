@@ -16,7 +16,7 @@ EMBEDDING_MODEL = "all-MiniLM-L6-v2"
 TEMPERATURE = 0.2
 
 # --- Chunking Constants ---
-CHUNK_SIZE = 300 # words
+CHUNK_SIZE = 200 # words (max 256 token embedder all-MiniLM-L6-v2)
 CHUNK_OVERLAP = 50 # words
 
 # --- Paths Configuration ---

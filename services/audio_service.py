@@ -74,7 +74,8 @@ class AudioService:
             doc_id = f"mat_{material.id}"
             
             # Strategi 1: cari di LanceDB index
-            context = rag_service.search("Ringkas seluruh materi penting", [doc_id], 10)
+            result = rag_service.search("Ringkas seluruh materi penting", [doc_id], 10)
+            context = result.get("text", "")
             logger.info(f"[AudioGen] RAG search untuk material {material_id}: context {len(context)} chars, {len(context.split())} words")
 
             # Strategi 2 (fallback): RAG kosong → baca file langsung

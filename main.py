@@ -182,6 +182,19 @@ def fix_stuck_materials():
 
 fix_stuck_materials()
 
+# Clean stale LanceDB lock files from unexpected shutdowns
+try:
+    for fname in os.listdir(config.LANCEDB_DIR):
+        if fname.endswith(".lck"):
+            fpath = os.path.join(config.LANCEDB_DIR, fname)
+            try:
+                os.remove(fpath)
+                logger.warning(f"Cleaned stale LanceDB lock file: {fname}")
+            except Exception:
+                pass
+except Exception:
+    pass
+
 
 # Initialize Database (Alembic is source of truth for schema)
 Base.metadata.create_all(bind=engine)

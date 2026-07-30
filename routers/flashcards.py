@@ -67,13 +67,23 @@ async def delete_flashcard(flashcard_id: int, db: Session = Depends(get_db)):
             return JSONResponse(status_code=404, content={"status": "not_found", "message": f"Flashcard #{flashcard_id} tidak ditemukan atau sudah dihapus."})
         return JSONResponse({"status": "success", "message": "Flashcard deleted"})
     except IntegrityError as e:
-        db.rollback()
+        try:
+            db.rollback()
+        except Exception:
+            pass
         return JSONResponse(status_code=409, content={"detail": "Flashcard tidak bisa dihapus karena masih terhubung dengan data lain."})
     except OperationalError as e:
-        db.rollback()
-        logger.warning(f"Delete flashcard {flashcard_id} locked, retrying: {e}")
-        return JSONResponse(status_code=409, content={"detail": "Database sibuk, coba lagi."})
+        try:
+            db.rollback()
+        except Exception:
+            pass
+        logger.warning(f"Delete flashcard {flashcard_id} still locked after retries: {e}")
+        return JSONResponse(status_code=503, content={"detail": "Database sibuk, coba lagi nanti."})
     except Exception as e:
+        try:
+            db.rollback()
+        except Exception:
+            pass
         logger.error(f"Delete flashcard {flashcard_id} error: {e}")
         return JSONResponse(status_code=500, content={"detail": str(e)})
 

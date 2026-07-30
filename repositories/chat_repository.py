@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from models import Chat, Message
 from repositories.base import BaseRepository
-from typing import List
+from typing import List, Optional
 
 class ChatRepository(BaseRepository[Chat]):
     def __init__(self):
@@ -9,7 +9,17 @@ class ChatRepository(BaseRepository[Chat]):
 
     def get_messages(self, db: Session, chat_id: int) -> List[Message]:
         return db.query(Message).filter(Message.chat_id == chat_id).order_by(Message.timestamp).all()
-        
+
+    def get_or_create_by_uuid(self, db: Session, session_uuid: str) -> Chat:
+        chat = db.query(Chat).filter(Chat.session_uuid == session_uuid).first()
+        if chat:
+            return chat
+        chat = Chat(session_uuid=session_uuid, title="Chat Baru")
+        db.add(chat)
+        db.flush()
+        db.refresh(chat)
+        return chat
+
     def add_message(self, db: Session, chat_id: int, role: str, content: str) -> Message:
         msg = Message(chat_id=chat_id, role=role, content=content)
         db.add(msg)

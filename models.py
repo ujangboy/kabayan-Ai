@@ -85,6 +85,7 @@ class Quiz(Base):
 class Chat(Base):
     __tablename__ = "chats"
     id = Column(Integer, primary_key=True, index=True)
+    session_uuid = Column(String, unique=True, nullable=True, index=True)
     title = Column(String)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     

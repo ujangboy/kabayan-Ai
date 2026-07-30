@@ -147,6 +147,7 @@ export default function ChatPage() {
           history: chat?.messages?.slice(0, -1)?.map(m => ({ role: m.role, content: m.content })) || [],
           documents: selectedDocs,
           web_search: false,
+          session_id: String(currentChatId || ''),
         }),
       });
 
