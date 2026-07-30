@@ -93,19 +93,19 @@ async def clear_flashcards(db: Session = Depends(get_db)):
     return JSONResponse({"status": "success", "message": "Flashcards cleared"})
 
 
+from schemas.generate import GenerateFlashcardRequest
+
 @router.post("/api/flashcards/generate")
 async def generate_flashcards(
-    subject_id: int = Form(...),
-    count: int = Form(10),
-    material_ids: str = Form(None),
+    req: GenerateFlashcardRequest,
     db: Session = Depends(get_db)
 ):
     """Generate flashcards dari materi subject menggunakan AI + RAG."""
     try:
         # Gunakan hanya materi yang sudah Ready (terindeks di RAG)
-        all_materials = material_service.get_by_subject(db, subject_id)
-        if material_ids:
-            ids = [int(x.strip()) for x in material_ids.split(",") if x.strip()]
+        all_materials = material_service.get_by_subject(db, req.subject_id)
+        if req.material_ids:
+            ids = [int(x.strip()) for x in req.material_ids.split(",") if x.strip()]
             if ids:
                 all_materials = [m for m in all_materials if m.id in ids]
         if not all_materials:
@@ -131,11 +131,14 @@ async def generate_flashcards(
                 content={"detail": "Tidak ada konten materi yang dapat dibaca. Pastikan file PDF dapat diproses."}
             )
 
-        generated_count = flashcard_service.generate_flashcards(db, subject_id, context)
+        data = flashcard_service.generate_flashcards(
+            db, req.subject_id, context,
+            count=req.count
+        )
         return JSONResponse({
             "status": "success",
-            "count": generated_count,
-            "message": f"{generated_count} flashcard berhasil dibuat oleh AI."
+            "count": data,
+            "message": f"{data} flashcard berhasil dibuat oleh AI."
         })
     except ValueError as e:
         return JSONResponse(status_code=422, content={"detail": str(e)})

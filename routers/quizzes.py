@@ -55,18 +55,18 @@ async def get_quiz_questions(quiz_id: int, db: Session = Depends(get_db)):
         return JSONResponse(status_code=500, content={"detail": f"Gagal memuat soal: {str(e)}"})
 
 
+from schemas.generate import GenerateQuizRequest
+
 @router.post("/api/quizzes/generate")
 async def generate_quiz(
-    subject_id: int = Form(...),
-    mcq_count: int = Form(5),
-    material_ids: str = Form(None),
+    req: GenerateQuizRequest,
     db: Session = Depends(get_db)
 ):
     try:
         # Gunakan hanya materi yang sudah Ready (terindeks di RAG)
-        all_materials = material_service.get_by_subject(db, subject_id)
-        if material_ids:
-            ids = [int(x.strip()) for x in material_ids.split(",") if x.strip()]
+        all_materials = material_service.get_by_subject(db, req.subject_id)
+        if req.material_ids:
+            ids = [int(x.strip()) for x in req.material_ids.split(",") if x.strip()]
             if ids:
                 all_materials = [m for m in all_materials if m.id in ids]
         if not all_materials:
@@ -91,12 +91,12 @@ async def generate_quiz(
 
         # Ambil nama subject untuk judul quiz
         from services.subject_service import subject_service as svc
-        subject = svc.get_by_id(db, subject_id)
-        title = f"Quiz {subject.name}" if subject else f"Quiz #{subject_id}"
+        subject = svc.get_by_id(db, req.subject_id)
+        title = f"Quiz {subject.name}" if subject else f"Quiz #{req.subject_id}"
 
         data = quiz_service.generate_quiz(
-            db, subject_id, context,
-            mcq_count=mcq_count, essay_count=0,
+            db, req.subject_id, context,
+            mcq_count=req.mcq_count, essay_count=0,
             title=title
         )
         return JSONResponse(data)

@@ -63,20 +63,14 @@ export const flashcardAPI = {
   delete: (id) => api.post(`/flashcards/${id}/delete`),
   batchDelete: (ids) => api.post('/flashcards/batch-delete', { ids }).then(r => r.data),
   clear: () => api.post('/flashcards/clear'),
-  generate: (formData) => api.post('/flashcards/generate',
-    new URLSearchParams(formData).toString(),
-    { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
-  ).then(r => r.data),
+  generate: (payload) => api.post('/flashcards/generate', payload).then(r => r.data),
 };
 
 // --- QUIZ ---
 export const quizAPI = {
   getAll: () => api.get('/quizzes'),
   getQuestions: (id) => api.get(`/quizzes/${id}/questions`),
-  generate: (formData) => api.post('/quizzes/generate',
-    new URLSearchParams(formData).toString(),
-    { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
-  ).then(r => r.data),
+  generate: (payload) => api.post('/quizzes/generate', payload).then(r => r.data),
   saveScore: (id, score) => api.post(`/quizzes/${id}/score`,
     new URLSearchParams({ score: String(score) }).toString(),
     { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
