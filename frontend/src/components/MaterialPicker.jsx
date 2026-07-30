@@ -23,10 +23,9 @@ export default function MaterialPicker({ subjectId, selectedMaterialIds, onSelec
   }, [subjectId]);
 
   const toggle = (id) => {
-    const key = `mat_${id}`;
-    const next = selectedMaterialIds.includes(key)
-      ? selectedMaterialIds.filter((k) => k !== key)
-      : [...selectedMaterialIds, key];
+    const next = selectedMaterialIds.includes(String(id))
+      ? selectedMaterialIds.filter((k) => k !== String(id))
+      : [...selectedMaterialIds, String(id)];
     onSelectionChange(next);
   };
 
@@ -58,13 +57,29 @@ export default function MaterialPicker({ subjectId, selectedMaterialIds, onSelec
 
   return (
     <div className="mt-3">
-      <label className="block text-xs font-medium text-text-secondary mb-1.5">
-        Pilih Materi Spesifik (opsional — kosong = pakai semua)
-      </label>
+      <div className="flex items-center justify-between mb-1.5">
+        <label className="text-xs font-medium text-text-secondary">
+          Sumber Materi (Opsional)
+        </label>
+        <button
+          type="button"
+          onClick={() => {
+            if (selectedMaterialIds.length === materials.filter(m => m.status === 'Ready').length) {
+              onSelectionChange([]);
+            } else {
+              onSelectionChange(materials.filter(m => m.status === 'Ready').map(m => String(m.id)));
+            }
+          }}
+          className="text-[10px] font-medium text-primary hover:text-primary-focus transition-colors"
+        >
+          {selectedMaterialIds.length > 0 ? "Batalkan Pilihan" : "Pilih Semua Materi"}
+        </button>
+      </div>
+      <p className="text-[10px] text-text-muted mb-2">Jika dibiarkan kosong, AI akan otomatis membaca seluruh materi mata kuliah ini.</p>
       <div className="max-h-40 overflow-y-auto space-y-1.5 rounded-xl bg-background border border-border p-2">
         {materials.map((m) => {
           const isReady = m.status === 'Ready';
-          const checked = selectedMaterialIds.includes(`mat_${m.id}`);
+          const checked = selectedMaterialIds.includes(String(m.id));
           return (
             <label
               key={m.id}
