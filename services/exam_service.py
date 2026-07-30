@@ -253,6 +253,12 @@ class ExamService:
             use_cache=False,
         )
         blueprint_data = _parse_json_response(response, "Blueprint AI")
+        # Gracefully handle AI returning an array instead of an object
+        if isinstance(blueprint_data, list):
+            logger.warning("Blueprint AI returned a list — wrapping in blueprint_items")
+            blueprint_data = {"blueprint_items": blueprint_data}
+        if "title" not in blueprint_data:
+            blueprint_data["title"] = f"Blueprint {exam_type.upper()} - {subject.name}"
 
         # Attach multi-subject metadata if provided
         if subject_ids:
@@ -331,6 +337,14 @@ class ExamService:
 
             capped = min(needed, 8)
             try:
+                if not context.strip():
+                    logger.warning(f"Empty context for topic '{topic}' — skipping AI, using bank")
+                    for row in bank_rows:
+                        q = _bank_row_to_question(row, question_id_offset)
+                        all_questions.append(q)
+                        question_id_offset += 1
+                    continue
+
                 response = ai_service.generate(
                     capability="quiz",
                     prompt_template=QUESTION_GEN_PROMPT,
@@ -345,8 +359,28 @@ class ExamService:
                     },
                     use_cache=False,
                 )
+                if not response or not str(response).strip():
+                    logger.warning(f"Empty AI response for topic '{topic}' — using bank")
+                    for row in bank_rows:
+                        q = _bank_row_to_question(row, question_id_offset)
+                        all_questions.append(q)
+                        question_id_offset += 1
+                    continue
+
                 q_data = _parse_json_response(response, f"QuestionGen[{topic}]")
-                new_qs    = q_data.get("questions", [])
+                # AI might return a list directly instead of {"questions": [...]}
+                if isinstance(q_data, list):
+                    new_qs = q_data
+                else:
+                    new_qs = q_data.get("questions", [])
+
+                if not new_qs:
+                    logger.warning(f"AI returned no questions for topic '{topic}' — using bank")
+                    for row in bank_rows:
+                        q = _bank_row_to_question(row, question_id_offset)
+                        all_questions.append(q)
+                        question_id_offset += 1
+                    continue
 
                 # Save to bank for future reuse
                 question_bank_repository.bulk_insert(
