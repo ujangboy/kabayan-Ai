@@ -1,11 +1,37 @@
 from services.ai_service import ai_service
 from prompts.quiz import QUIZ_PROMPT
 from repositories.quiz_repository import quiz_repository
-from schemas.ai_output import QuizOutput
 from sqlalchemy.orm import Session
 import json
 import re
 import datetime
+
+
+def _sanitize_json_str(s: str) -> str:
+    s = re.sub(r'\\([^"\\bfnrtu/])', r'\\\\\1', s)
+    s = re.sub(r',\s*([}\]])', r'\1', s)
+    return s
+
+
+def _extract_json(raw: str) -> str:
+    s = raw.strip()
+    for pat in [r'```json\s*([\s\S]*?)\s*```', r'```\s*([\s\S]*?)\s*```']:
+        m = re.search(pat, s)
+        if m:
+            return m.group(1).strip()
+    start = s.find('{')
+    if start >= 0:
+        depth, end = 0, start
+        for i, ch in enumerate(s[start:], start):
+            if ch == '{': depth += 1
+            elif ch == '}': depth -= 1
+            if depth == 0:
+                end = i + 1
+                break
+        if end > start:
+            return s[start:end]
+    return s
+
 
 class QuizService:
     @staticmethod
@@ -28,21 +54,6 @@ class QuizService:
         return answer
 
     @staticmethod
-    def _sanitize_json_str(s: str) -> str:
-        valid_escapes = set('"\bfnrtu/')
-        result = []
-        i = 0
-        while i < len(s):
-            if s[i] == '\\' and i + 1 < len(s) and s[i+1] not in valid_escapes and s[i+1] != '\n':
-                result.append('\\\\')
-            else:
-                result.append(s[i])
-            i += 1
-        s = ''.join(result)
-        s = re.sub(r',\s*([}\]])', r'\1', s)
-        return s
-
-    @staticmethod
     def generate_quiz(db: Session, subject_id: int, context: str,
                       mcq_count: int = 5, essay_count: int = 0, title: str = None):
         result = ai_service.generate(
@@ -50,20 +61,14 @@ class QuizService:
             prompt_template=QUIZ_PROMPT,
             input_variables={"context": context, "mcq_count": mcq_count, "essay_count": essay_count},
             use_cache=False,
-            output_schema=QuizOutput,
         )
 
         try:
-            if isinstance(result, dict) and "mcq" in result:
-                data = result
-            else:
-                match = re.search(r'```json\s*([\s\S]*?)\s*```', result)
-                if match:
-                    json_str = match.group(1)
-                else:
-                    json_match = re.search(r'\{.*\}', result, re.DOTALL)
-                    json_str = json_match.group(0) if json_match else result
-                data = json.loads(QuizService._sanitize_json_str(json_str.strip()))
+            json_str = _extract_json(str(result))
+            json_str = _sanitize_json_str(json_str)
+            data = json.loads(json_str)
+            if isinstance(data, list):
+                data = {"mcq": data}
 
             if not data.get("mcq"):
                 raise ValueError("AI tidak menghasilkan soal MCQ.")
@@ -74,7 +79,6 @@ class QuizService:
                 q["options"] = normalized_opts
                 q["answer"] = normalized_ans
 
-            # Simpan quiz ke DB — score null sampai user selesai bermain
             import models
             quiz_record = models.Quiz(
                 subject_id=subject_id,
@@ -87,13 +91,11 @@ class QuizService:
             db.flush()
             db.refresh(quiz_record)
 
-            # Return data lengkap + id untuk frontend
             return {"id": quiz_record.id, **data}
 
-        except json.JSONDecodeError as e:
-            raise ValueError(f"AI tidak mengembalikan JSON yang valid: {str(e)}\nResponse: {response[:300]}")
-        except Exception as e:
-            raise ValueError(f"Gagal menyimpan quiz: {str(e)}")
+        except (json.JSONDecodeError, Exception) as e:
+            snippet = str(result)[:300] if result else ""
+            raise ValueError(f"AI gagal: {e}\nResponse: {snippet}")
 
     @staticmethod
     def save_score(db: Session, quiz_id: int, score: int):

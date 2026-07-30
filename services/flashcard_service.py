@@ -1,10 +1,49 @@
 from services.ai_service import ai_service
 from prompts.flashcard import FLASHCARD_PROMPT
 from repositories.flashcard_repository import flashcard_repository
-from schemas.ai_output import FlashcardOutput
 from sqlalchemy.orm import Session
 import json
 import re
+
+
+def _sanitize_json_str(s: str) -> str:
+    """Fix invalid LaTeX backslash escapes in AI-generated JSON strings."""
+    s = re.sub(r'\\([^"\\bfnrtu/])', r'\\\\\1', s)
+    s = re.sub(r',\s*([}\]])', r'\1', s)
+    return s
+
+
+def _extract_json(raw: str) -> str:
+    """Extract JSON array or object from AI response using multiple strategies."""
+    s = raw.strip()
+    for pat in [r'```json\s*([\s\S]*?)\s*```', r'```\s*([\s\S]*?)\s*```']:
+        m = re.search(pat, s)
+        if m:
+            return m.group(1).strip()
+    start = s.find('[')
+    if start >= 0:
+        depth, end = 0, start
+        for i, ch in enumerate(s[start:], start):
+            if ch == '[': depth += 1
+            elif ch == ']': depth -= 1
+            if depth == 0:
+                end = i + 1
+                break
+        if end > start:
+            return s[start:end]
+    start = s.find('{')
+    if start >= 0:
+        depth, end = 0, start
+        for i, ch in enumerate(s[start:], start):
+            if ch == '{': depth += 1
+            elif ch == '}': depth -= 1
+            if depth == 0:
+                end = i + 1
+                break
+        if end > start:
+            return s[start:end]
+    return s
+
 
 class FlashcardService:
     @staticmethod
@@ -17,26 +56,19 @@ class FlashcardService:
             prompt_template=FLASHCARD_PROMPT,
             input_variables={"context": context, "count": count},
             use_cache=False,
-            output_schema=FlashcardOutput,
         )
 
         try:
-            if isinstance(result, dict) and "flashcards" in result:
-                items = result["flashcards"]
-            else:
-                match = re.search(r'```json\s*([\s\S]*?)\s*```', result)
-                if match:
-                    json_str = match.group(1)
-                else:
-                    json_match = re.search(r'\[.*\]', result, re.DOTALL)
-                    json_str = json_match.group(0) if json_match else result
-                items = json.loads(json_str.strip())
-                if isinstance(items, dict) and "flashcards" in items:
-                    items = items["flashcards"]
+            json_str = _extract_json(str(result))
+            json_str = _sanitize_json_str(json_str)
+            items = json.loads(json_str)
+            if isinstance(items, dict):
+                items = items.get("flashcards", items.get("items", [items]))
 
             if not items:
                 raise ValueError("AI tidak menghasilkan flashcard. Coba lagi.")
 
+            count_created = 0
             for item in items:
                 question = (item.get("question") or "").strip()
                 answer = (item.get("answer") or "").strip()
@@ -50,14 +82,14 @@ class FlashcardService:
                     created_at=datetime.datetime.utcnow(),
                 )
                 db.add(fc)
+                count_created += 1
 
             db.flush()
-            return len(items)
+            return count_created
 
-        except json.JSONDecodeError as e:
-            raise ValueError(f"AI tidak mengembalikan JSON yang valid: {str(e)}\nResponse: {result[:300]}")
-        except Exception as e:
-            raise ValueError(f"Gagal menyimpan flashcard: {str(e)}")
+        except (json.JSONDecodeError, Exception) as e:
+            snippet = str(result)[:300] if result else ""
+            raise ValueError(f"AI gagal: {e}\nResponse: {snippet}")
 
     @staticmethod
     def get_by_subject(db: Session, subject_id: int):
