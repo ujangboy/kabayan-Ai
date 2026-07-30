@@ -37,6 +37,7 @@ class MaterialService:
             if not text:
                 if material_id:
                     material_repository.update(db, material_repository.get(db, material_id), {"status": "Failed", "failure_reason": "Tidak dapat mengekstrak teks dari file."})
+                    db.commit()
                 return
                 
             paragraphs = text.split('\n\n')
@@ -67,10 +68,12 @@ class MaterialService:
                 material_repository.update(db, material_repository.get(db, material_id), {"status": "Ready"})
 
             cache_service.invalidate_all(db)
+            db.commit()
         except Exception as e:
             if material_id:
                 try:
                     material_repository.update(db, material_repository.get(db, material_id), {"status": "Failed", "failure_reason": str(e)})
+                    db.commit()
                 except Exception:
                     pass
         finally:
