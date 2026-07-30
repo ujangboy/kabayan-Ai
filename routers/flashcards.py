@@ -1,12 +1,17 @@
+import logging
 from fastapi import APIRouter, Depends, Form, Query
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel
+from typing import List
 from sqlalchemy.orm import Session
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, OperationalError
 from database import get_db
 from repositories.flashcard_repository import flashcard_repository
 from services.flashcard_service import flashcard_service
 from services.material_service import material_service
 from services.rag_context_service import rag_context_service
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -38,6 +43,22 @@ async def create_flashcard(
     })
     return JSONResponse({"status": "success", "message": "Flashcard created"})
 
+class BatchDeleteRequest(BaseModel):
+    ids: List[int]
+
+@router.post("/api/flashcards/batch-delete")
+async def batch_delete_flashcards(req: BatchDeleteRequest, db: Session = Depends(get_db)):
+    """Hapus banyak flashcard dalam SATU transaksi — hindari race condition SQLite."""
+    try:
+        deleted = 0
+        for fid in req.ids:
+            if flashcard_repository.delete(db, fid):
+                deleted += 1
+        return JSONResponse({"status": "success", "deleted": deleted, "total": len(req.ids)})
+    except Exception as e:
+        logger.error(f"Batch delete error: {e}")
+        return JSONResponse(status_code=500, content={"detail": str(e)})
+
 @router.post("/api/flashcards/{flashcard_id}/delete")
 async def delete_flashcard(flashcard_id: int, db: Session = Depends(get_db)):
     try:
@@ -48,7 +69,12 @@ async def delete_flashcard(flashcard_id: int, db: Session = Depends(get_db)):
     except IntegrityError as e:
         db.rollback()
         return JSONResponse(status_code=409, content={"detail": "Flashcard tidak bisa dihapus karena masih terhubung dengan data lain."})
+    except OperationalError as e:
+        db.rollback()
+        logger.warning(f"Delete flashcard {flashcard_id} locked, retrying: {e}")
+        return JSONResponse(status_code=409, content={"detail": "Database sibuk, coba lagi."})
     except Exception as e:
+        logger.error(f"Delete flashcard {flashcard_id} error: {e}")
         return JSONResponse(status_code=500, content={"detail": str(e)})
 
 @router.post("/api/flashcards/clear")

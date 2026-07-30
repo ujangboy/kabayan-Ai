@@ -61,6 +61,7 @@ export const notesAPI = {
 export const flashcardAPI = {
   getAll: () => api.get('/flashcards'),
   delete: (id) => api.post(`/flashcards/${id}/delete`),
+  batchDelete: (ids) => api.post('/flashcards/batch-delete', { ids }).then(r => r.data),
   clear: () => api.post('/flashcards/clear'),
   generate: (formData) => api.post('/flashcards/generate',
     new URLSearchParams(formData).toString(),
