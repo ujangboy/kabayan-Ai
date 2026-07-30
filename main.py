@@ -1,6 +1,6 @@
 import logging
 import datetime
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.responses import RedirectResponse, JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 import os
@@ -8,7 +8,7 @@ import os
 from routers import dashboard, subjects, materials, chat, notes, flashcards, quizzes, youtube, settings, exam_analyzer
 from database import engine, Base, SessionLocal
 import config
-from exceptions import add_exception_handlers
+from services.error_handler import register_all_handlers
 
 # Global Logging Setup
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -289,7 +289,7 @@ fix_stuck_materials()
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Kabayan AI Study Workspace")
-add_exception_handlers(app)
+register_all_handlers(app)
 
 from fastapi.middleware.cors import CORSMiddleware
 app.add_middleware(
@@ -299,12 +299,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Exception Handler
-@app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
-    from services.error_handler import safe_json_response
-    return safe_json_response(exc, context=f"global [{request.method} {request.url.path}]")
 
 # Mount static folders
 os.makedirs("static", exist_ok=True)

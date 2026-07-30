@@ -1,15 +1,25 @@
 """
-Centralized Error Handler — Kabayan AI
-Maps any internal exception to a safe, user-friendly response.
-No traceback, no file paths, no SQL, no regex errors ever reach the frontend.
+Centralized Error Handler — Kabayan AI.
+
+Unified error handling system that:
+1. Handles AppError (from exceptions.py) with its specific status/message
+2. Pattern-matches unknown exceptions to safe user-friendly messages
+3. Logs everything to terminal, never leaks internals to frontend
+4. Provides register_all_handlers(app) for one-call setup
 """
+
 import logging
 from typing import Tuple
 
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
+
+from exceptions import AppError
+
 logger = logging.getLogger(__name__)
 
-
-# ─── Safe message map ─────────────────────────────────────────────────────────
+# ─── Safe message map (for non-AppError exceptions) ──────────────────
 # Keyed on lowercase fragments found in str(exception).
 # Order matters: more specific patterns first.
 
@@ -40,8 +50,13 @@ _PATTERNS: list[Tuple[list[str], int, str, str]] = [
      500, "DB_ERROR",
      "Gagal memproses data. Silakan muat ulang halaman."),
 
+    # Not found
+    (["not found", "does not exist", "no such file", "404"],
+     404, "NOT_FOUND",
+     "Data tidak ditemukan."),
+
     # File / upload
-    (["file not found", "no such file", "permission denied", "oserror"],
+    (["permission denied", "oserror"],
      500, "FILE_ERROR",
      "Gagal memproses file. Periksa kembali file yang diunggah."),
 
@@ -60,7 +75,7 @@ _PATTERNS: list[Tuple[list[str], int, str, str]] = [
      404, "NOT_FOUND",
      "Data tidak ditemukan."),
 
-    # Auth (not currently used but future-proof)
+    # Auth
     (["unauthorized", "401", "forbidden", "403"],
      401, "UNAUTHORIZED",
      "Silakan login kembali."),
@@ -73,7 +88,13 @@ def classify(exc: Exception) -> Tuple[int, str, str]:
     """
     Return (http_status, error_code, safe_user_message).
     Never leaks internal details.
+
+    If exc is AppError, use its own status_code and message.
+    Otherwise, pattern-match against _PATTERNS.
     """
+    if isinstance(exc, AppError):
+        return exc.status_code, "APP_ERROR", exc.message
+
     raw = str(exc).lower()
 
     for fragments, status, code, msg in _PATTERNS:
@@ -83,29 +104,54 @@ def classify(exc: Exception) -> Tuple[int, str, str]:
     return _FALLBACK
 
 
-def safe_response(exc: Exception, context: str = "") -> dict:
+def safe_response(exc: Exception, context: str = "") -> Tuple[dict, int]:
     """
     Build the standardized error response body.
     Log the real exception to terminal; return only safe fields.
     """
     status, code, message = classify(exc)
-    # Full details go to terminal only
+
     logger.error(
         f"[{code}] {context or 'error'}: {repr(exc)}",
-        exc_info=True,
+        exc_info=not isinstance(exc, AppError),
     )
-    return {
-        "success": False,
-        "code":    code,
-        "message": message,
-    }, status
+
+    body: dict = {"detail": message}
+    if isinstance(exc, AppError):
+        body["detail"] = exc.message
+        body["code"] = code
+        if exc.detail is not None:
+            body["data"] = exc.detail
+
+    return body, status
 
 
 def safe_json_response(exc: Exception, context: str = ""):
-    """
-    Convenience wrapper — returns a FastAPI JSONResponse directly.
-    Import lazily to avoid circular imports at module load time.
-    """
-    from fastapi.responses import JSONResponse
+    """Return a FastAPI JSONResponse directly."""
     body, status = safe_response(exc, context)
     return JSONResponse(status_code=status, content=body)
+
+
+# ─── Exception handlers for FastAPI app ─────────────────────────────
+
+def register_all_handlers(app: FastAPI) -> None:
+    """Register all exception handlers on a FastAPI app in one call."""
+
+    @app.exception_handler(AppError)
+    async def _app_error_handler(request: Request, exc: AppError):
+        return safe_json_response(exc, context=f"AppError [{request.method} {request.url.path}]")
+
+    @app.exception_handler(ValueError)
+    async def _value_error_handler(request: Request, exc: ValueError):
+        return safe_json_response(exc, context=f"ValueError [{request.method} {request.url.path}]")
+
+    @app.exception_handler(StarletteHTTPException)
+    async def _http_exception_handler(request: Request, exc: StarletteHTTPException):
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={"detail": exc.detail},
+        )
+
+    @app.exception_handler(Exception)
+    async def _generic_error_handler(request: Request, exc: Exception):
+        return safe_json_response(exc, context=f"global [{request.method} {request.url.path}]")
