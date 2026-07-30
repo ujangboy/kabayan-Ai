@@ -69,7 +69,7 @@ def _retry_with_backoff(fn, max_attempts: int = 3, base_delay: float = 2.0):
 
 # ─── REQ-06: Internal Rate Limiter (Loop Guard) ──────────────────────────────
 class InternalRateLimiter:
-    def __init__(self, max_requests: int = 25, window_seconds: int = 60):
+    def __init__(self, max_requests: int = 100, window_seconds: int = 60):
         self.max_requests = max_requests
         self.window_seconds = window_seconds
         self.timestamps: List[float] = []
@@ -80,7 +80,7 @@ class InternalRateLimiter:
         if len(self.timestamps) >= self.max_requests:
             raise Exception(
                 "RATE_LIMIT_LOCAL: Internal Loop Guard aktif. "
-                "Limit eksekusi AI maksimal 25 per menit."
+                "Limit eksekusi AI maksimal 100 per menit."
             )
         self.timestamps.append(now)
 
