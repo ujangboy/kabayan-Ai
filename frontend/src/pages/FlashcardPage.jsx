@@ -121,8 +121,8 @@ export default function FlashcardPage() {
                 onStart={() => setActiveSubjectId(group.subject.id)}
                 onDeleteAll={() => {
                   if (confirm(`Hapus semua flashcard untuk ${group.subject.name}?`)) {
-                    // delete each card in this group
-                    Promise.all(group.cards.map(c => flashcardAPI.delete(c.id)))
+                    // allSettled: lanjutkan meski ada yg sudah terhapus (race condition)
+                    Promise.allSettled(group.cards.map(c => flashcardAPI.delete(c.id)))
                       .then(() => queryClient.invalidateQueries(['flashcards']));
                   }
                 }}

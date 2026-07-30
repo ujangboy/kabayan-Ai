@@ -133,6 +133,10 @@ class RAGService:
         if not chunks:
             return
 
+        # Pastikan hapus chunk lama (jika ada) untuk menghindari ghost chunks 
+        # dari ID yang sama jika database di-reset.
+        self.delete_document_chunks(doc_id)
+
         embedder = self._get_embedder()
         model_name = self.get_embedding_model_name()
         model_version = self.get_embedding_model_version()

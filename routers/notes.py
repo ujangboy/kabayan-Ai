@@ -60,7 +60,7 @@ async def clear_notes(db: Session = Depends(get_db)):
 @router.post("/api/notes/generate")
 async def generate_notes_ai(
     subject_id: int = Form(...),
-    title: str = Form(...),
+    title: str = Form(None),    # opsional — akan di-auto-generate jika kosong
     material_ids: str = Form(None),
     db: Session = Depends(get_db)
 ):
@@ -91,6 +91,13 @@ async def generate_notes_ai(
 
         if not context.strip():
             return JSONResponse(status_code=400, content={"detail": "Tidak ada konten materi yang dapat dibaca."})
+
+        # Auto-generate judul jika kosong
+        if not title or not title.strip():
+            from services.subject_service import subject_service as svc
+            subject = svc.get_by_id(db, subject_id)
+            subject_name = subject.name if subject else f"Subject #{subject_id}"
+            title = f"Catatan {subject_name}"
 
         note = notes_service.generate_notes(db, subject_id, title, context)
         return JSONResponse({

@@ -39,8 +39,13 @@ async def create_flashcard(
 
 @router.post("/api/flashcards/{flashcard_id}/delete")
 async def delete_flashcard(flashcard_id: int, db: Session = Depends(get_db)):
-    flashcard_repository.delete(db, flashcard_id)
-    return JSONResponse({"status": "success", "message": "Flashcard deleted"})
+    try:
+        found = flashcard_repository.delete(db, flashcard_id)
+        if not found:
+            return JSONResponse(status_code=404, content={"status": "not_found", "message": f"Flashcard #{flashcard_id} tidak ditemukan."})
+        return JSONResponse({"status": "success", "message": "Flashcard deleted"})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"detail": str(e)})
 
 @router.post("/api/flashcards/clear")
 async def clear_flashcards(db: Session = Depends(get_db)):
@@ -57,16 +62,21 @@ async def generate_flashcards(
 ):
     """Generate flashcards dari materi subject menggunakan AI + RAG."""
     try:
-        materials = material_service.get_by_subject(db, subject_id)
+        # Gunakan hanya materi yang sudah Ready (terindeks di RAG)
+        all_materials = material_service.get_by_subject(db, subject_id)
         if material_ids:
             ids = [int(x.strip()) for x in material_ids.split(",") if x.strip()]
             if ids:
-                materials = [m for m in materials if m.id in ids]
+                all_materials = [m for m in all_materials if m.id in ids]
+        if not all_materials:
+            return JSONResponse(status_code=400, content={"detail": "Tidak ada materi untuk mata kuliah ini."})
+
+        materials = [m for m in all_materials if m.status == "Ready"]
         if not materials:
-            return JSONResponse(
-                status_code=400,
-                content={"detail": "Tidak ada materi untuk mata kuliah ini. Upload materi terlebih dahulu."}
-            )
+            processing = [m for m in all_materials if m.status == "Processing"]
+            if processing:
+                return JSONResponse(status_code=400, content={"detail": "Materi masih diproses (Processing). Tunggu beberapa saat lalu coba lagi."})
+            return JSONResponse(status_code=400, content={"detail": "Tidak ada materi yang siap. Pastikan upload materi berhasil (status: Ready)."})
 
         query = None
         if len(materials) == 1:

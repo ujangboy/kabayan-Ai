@@ -182,7 +182,9 @@ function CreateNoteModal({ onClose, subjects, onSuccess }) {
     try {
       const data = new URLSearchParams();
       data.append('subject_id', formData.subject_id);
-      data.append('title', topic.slice(0, 60));
+      // Hanya kirim title jika tidak kosong — backend akan auto-generate jika tidak ada
+      const titleValue = topic.slice(0, 60).trim();
+      if (titleValue) data.append('title', titleValue);
       if (selectedMaterialIds.length > 0) {
         data.append('material_ids', selectedMaterialIds.join(','));
       }

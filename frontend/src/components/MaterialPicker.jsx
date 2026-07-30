@@ -63,25 +63,35 @@ export default function MaterialPicker({ subjectId, selectedMaterialIds, onSelec
       </label>
       <div className="max-h-40 overflow-y-auto space-y-1.5 rounded-xl bg-background border border-border p-2">
         {materials.map((m) => {
+          const isReady = m.status === 'Ready';
           const checked = selectedMaterialIds.includes(`mat_${m.id}`);
           return (
             <label
               key={m.id}
-              className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg cursor-pointer transition-colors ${
-                checked ? 'bg-primary/10' : 'hover:bg-card'
+              className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg transition-colors ${
+                !isReady ? 'opacity-60 cursor-not-allowed bg-card/50' : 
+                checked ? 'bg-primary/10 cursor-pointer' : 'hover:bg-card cursor-pointer'
               }`}
+              title={!isReady ? `Materi ini masih ${m.status}` : ''}
             >
               <input
                 type="checkbox"
                 checked={checked}
-                onChange={() => toggle(m.id)}
+                onChange={() => isReady && toggle(m.id)}
+                disabled={!isReady}
                 className="h-4 w-4 rounded appearance-none cursor-pointer
                   bg-slate-800 border-2 border-slate-500
                   checked:bg-primary checked:border-primary
                   focus:outline-none focus:ring-2 focus:ring-primary/50
+                  disabled:opacity-30 disabled:cursor-not-allowed
                   transition-colors shrink-0"
               />
-              <span className="text-xs text-text truncate">{m.filename}</span>
+              <div className="flex flex-col overflow-hidden">
+                <span className="text-xs text-text truncate">{m.filename}</span>
+                {!isReady && (
+                  <span className="text-[9px] text-warning mt-0.5">{m.status}</span>
+                )}
+              </div>
             </label>
           );
         })}
