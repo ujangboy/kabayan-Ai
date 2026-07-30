@@ -180,18 +180,18 @@ function CreateNoteModal({ onClose, subjects, onSuccess }) {
     }
     setIsGenerating(true);
     try {
-      const data = new URLSearchParams();
-      data.append('subject_id', formData.subject_id);
-      // Hanya kirim title jika tidak kosong — backend akan auto-generate jika tidak ada
+      const payload = {
+        subject_id: Number(formData.subject_id),
+      };
       const titleValue = topic.slice(0, 60).trim();
-      if (titleValue) data.append('title', titleValue);
+      if (titleValue) payload.title = titleValue;
       if (selectedMaterialIds.length > 0) {
-        data.append('material_ids', selectedMaterialIds.join(','));
+        payload.material_ids = selectedMaterialIds.join(',');
       }
       const res = await fetch('/api/notes/generate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: data.toString(),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
       });
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
