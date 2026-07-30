@@ -71,8 +71,9 @@ export function extractErrorMessage(error) {
         return data.message;
       }
       // Legacy FastAPI { detail }
-      if (data.detail && typeof data.detail === 'string' && data.detail.length < 200) {
-        return _sanitizeDetail(data.detail);
+      if (data.detail && typeof data.detail === 'string') {
+        const detailStr = data.detail.length > 200 ? data.detail.substring(0, 200) + '...' : data.detail;
+        return _sanitizeDetail(detailStr);
       }
     }
 
