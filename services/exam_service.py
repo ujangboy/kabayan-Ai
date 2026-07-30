@@ -195,6 +195,23 @@ class ExamService:
             use_cache=True,
         )
         data = _parse_json_response(response, "Analysis AI")
+        if isinstance(data, list):
+            logger.warning("Analysis AI returned a list, wrapping or unpacking it.")
+            if len(data) > 0 and isinstance(data[0], dict) and "overview" in data[0]:
+                data = data[0]
+            else:
+                data = {
+                    "overview": {
+                        "total_topics": len(data),
+                        "estimated_study_hours": 2,
+                        "complexity_level": "Menengah",
+                        "summary": "Analisis AI dikonversi dari array list."
+                    },
+                    "topic_priority": data,
+                    "knowledge_map": [],
+                    "weakness_indicators": []
+                }
+        
         data["stats"] = {
             "material_count": material_count,
             "note_count":     note_count,
