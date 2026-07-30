@@ -8,6 +8,12 @@ from services.notes_service import notes_service
 from services.material_service import material_service
 from services.rag_context_service import rag_context_service
 
+
+class NotesGenerateRequest(BaseModel):
+    subject_id: int
+    title: Optional[str] = None
+    material_ids: Optional[str] = None
+
 router = APIRouter()
 
 @router.get("/api/notes")
@@ -59,17 +65,13 @@ async def clear_notes(db: Session = Depends(get_db)):
 
 @router.post("/api/notes/generate")
 async def generate_notes_ai(
-    subject_id: int = Form(...),
-    title: str = Form(None),    # opsional — akan di-auto-generate jika kosong
-    material_ids: str = Form(None),
+    req: NotesGenerateRequest,
     db: Session = Depends(get_db)
 ):
-    """Generate catatan AI dari materi, dengan filter material opsional."""
     try:
-        # Gunakan hanya materi yang sudah Ready (terindeks di RAG)
-        all_materials = material_service.get_by_subject(db, subject_id)
-        if material_ids:
-            ids = [int(x.strip()) for x in material_ids.split(",") if x.strip()]
+        all_materials = material_service.get_by_subject(db, req.subject_id)
+        if req.material_ids:
+            ids = [int(x.strip()) for x in req.material_ids.split(",") if x.strip()]
             if ids:
                 all_materials = [m for m in all_materials if m.id in ids]
         if not all_materials:
@@ -80,7 +82,7 @@ async def generate_notes_ai(
             processing = [m for m in all_materials if m.status == "Processing"]
             if processing:
                 return JSONResponse(status_code=400, content={"detail": "Materi masih diproses (Processing). Tunggu beberapa saat lalu coba lagi."})
-            return JSONResponse(status_code=400, content={"detail": "Tidak ada materi yang siap. Pastikan upload materi berhasil (status: Ready)."})   
+            return JSONResponse(status_code=400, content={"detail": "Tidak ada materi yang siap. Pastikan upload materi berhasil (status: Ready)."})
 
         query = None
         if len(materials) == 1:
@@ -92,14 +94,13 @@ async def generate_notes_ai(
         if not context.strip():
             return JSONResponse(status_code=400, content={"detail": "Tidak ada konten materi yang dapat dibaca."})
 
-        # Auto-generate judul jika kosong
-        if not title or not title.strip():
+        if not req.title or not req.title.strip():
             from services.subject_service import subject_service as svc
-            subject = svc.get_by_id(db, subject_id)
-            subject_name = subject.name if subject else f"Subject #{subject_id}"
-            title = f"Catatan {subject_name}"
+            subject = svc.get_by_id(db, req.subject_id)
+            subject_name = subject.name if subject else f"Subject #{req.subject_id}"
+            req.title = f"Catatan {subject_name}"
 
-        note = notes_service.generate_notes(db, subject_id, title, context)
+        note = notes_service.generate_notes(db, req.subject_id, req.title, context)
         return JSONResponse({
             "status": "success",
             "id": note.id,
