@@ -9,7 +9,7 @@ import {
   BookMarked, X, ChevronLeft, Info, TrendingUp, Award,
   Lightbulb, AlertCircle, Check, Search, Filter, Trash2, History
 } from 'lucide-react';
-import { examAPI, subjectAPI } from '@/services/api';
+import { examAPI, subjectAPI, materiAPI } from '@/services/api';
 import { sessionsAPI } from '@/services/api';
 import { cn } from '@/utils';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -156,6 +156,7 @@ export default function ExamAnalyzerPage() {
   const handleRecommendDone = (data) => { setRecommend(data); go(VIEW.RECOMMEND); };
 
   const resetToConfig = () => { setBlueprint(null); setSessionData(null); setEvalData(null); setRecommend(null); go(VIEW.CONFIG); };
+  const startConfigFor = (id) => { setSubjectId(id); setAnalysis(null); setBlueprint(null); setSessionData(null); setEvalData(null); setRecommend(null); go(VIEW.CONFIG); };
 
   return (
     <div className="flex-1 overflow-y-auto p-6 md:p-10">
@@ -224,7 +225,7 @@ export default function ExamAnalyzerPage() {
             {view === VIEW.RESULT     && <ResultView evalData={evalData} sessionData={sessionData} onReview={() => go(VIEW.REVIEW)} onRecommend={(d) => handleRecommendDone(d)} onFinish={() => go(VIEW.HISTORY)} sessionId={sessionData?.session_id} subjects={subjects} selectedSubjectId={subjectId} />}
             {view === VIEW.REVIEW     && <ReviewView sessionData={sessionData} evalData={evalData} />}
             {view === VIEW.RECOMMEND  && <RecommendView recommend={recommend} />}
-            {view === VIEW.HISTORY    && <HistoryView subjectId={subjectId} onResume={(sd) => { setSessionData(sd); go(VIEW.QUIZ); }} />}
+            {view === VIEW.HISTORY    && <HistoryView subjectId={subjectId} subjects={subjects} onSelectSubject={(id) => { setSubjectId(id); go(VIEW.HISTORY); }} onStartConfig={startConfigFor} onResume={(sd) => { setSessionData(sd); go(VIEW.QUIZ); }} />}
           </motion.div>
         </AnimatePresence>
 
@@ -1221,7 +1222,62 @@ function RecommendView({ recommend }) {
 
 
 // ─── History View ─────────────────────────────────────────────────────────────
-function HistoryView({ subjectId, onResume }) {
+// ─── Subject picker (shown when no subject selected) ──────────────────────────
+function SubjectPicker({ subjects, materials, onSelectSubject, onStartConfig }) {
+  const navigate = useNavigate();
+
+  if (!subjects.length) {
+    return (
+      <div className="card-base p-16 text-center">
+        <BookOpen size={48} className="mx-auto mb-4 text-primary opacity-40" />
+        <h3 className="text-lg font-semibold text-text mb-2">Belum ada mata kuliah</h3>
+        <p className="text-text-muted text-sm max-w-md mx-auto mb-5">
+          Tambahkan mata kuliah dan materi terlebih dahulu untuk membuat simulasi ujian.
+        </p>
+        <button onClick={() => navigate('/materi')} className="btn-primary text-sm">
+          <BookOpen size={14} /> Tambah Materi
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <h2 className="text-lg font-semibold text-text mb-1">Pilih Mata Kuliah</h2>
+      <p className="text-text-muted text-sm mb-5">
+        Pilih mata kuliah untuk melihat riwayat simulasi atau langsung buat simulasi baru.
+      </p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {subjects.map(s => {
+          const materialCount = materials.filter(m => String(m.subject_id) === String(s.id)).length;
+          return (
+            <div key={s.id} className="card-base p-5 flex flex-col gap-4 hover:border-primary/40 transition-colors">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                  <BookOpen size={18} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-text truncate">{s.name}</h3>
+                  <p className="text-xs text-text-muted">{materialCount} materi</p>
+                </div>
+              </div>
+              <div className="flex gap-2 mt-auto">
+                <button onClick={() => onSelectSubject(s.id)} className="flex-1 px-3 py-2 rounded-lg border border-border bg-card text-text text-xs font-medium hover:border-primary/40 transition-colors">
+                  <History size={12} className="inline mr-1 -mt-0.5" /> Riwayat
+                </button>
+                <button onClick={() => onStartConfig(s.id)} className="flex-1 px-3 py-2 rounded-lg bg-primary text-white text-xs font-medium hover:opacity-90 transition-opacity">
+                  <Zap size={12} className="inline mr-1 -mt-0.5" /> Simulasi
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function HistoryView({ subjectId, subjects, onSelectSubject, onStartConfig, onResume }) {
   const navigate      = useNavigate();
   const queryClient   = useQueryClient();
   const [search,    setSearch]    = useState('');
@@ -1229,6 +1285,12 @@ function HistoryView({ subjectId, onResume }) {
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortBy,    setSortBy]    = useState('newest');
   const [detailId,  setDetailId]  = useState(null);
+
+  const { data: materialData } = useQuery({
+    queryKey: ['materials'],
+    queryFn:  () => materiAPI.getAll().then(r => r.data),
+  });
+  const materials = materialData?.materials || [];
 
   const { data, isLoading } = useQuery({
     queryKey: ['exam-sessions', subjectId],
@@ -1265,6 +1327,10 @@ function HistoryView({ subjectId, onResume }) {
     return list;
   }, [sessions, search, typeFilter, statusFilter, sortBy]);
 
+  if (!subjectId) {
+    return <SubjectPicker subjects={subjects} materials={materials} onSelectSubject={onSelectSubject} onStartConfig={onStartConfig} />;
+  }
+
   const handleDelete = (id) => {
     if (!confirm('Hapus riwayat ujian ini beserta semua data attempt-nya?')) return;
     deleteMutation.mutate(id);
@@ -1278,7 +1344,15 @@ function HistoryView({ subjectId, onResume }) {
     return (
       <div className="card-base p-16 text-center">
         <BarChart2 size={48} className="mx-auto mb-4 text-text-muted opacity-40" />
-        <p className="text-text-muted">Belum ada riwayat simulasi untuk mata kuliah ini.</p>
+        <p className="text-text-muted text-sm mb-2">
+          Belum ada riwayat simulasi untuk mata kuliah ini.
+        </p>
+        <p className="text-text-muted text-xs mb-6">
+          Buat simulasi pertama kamu dan mulai latihan ujian berbasis AI.
+        </p>
+        <button onClick={() => onStartConfig(subjectId)} className="btn-primary text-sm">
+          <Zap size={14} /> Buat Simulasi
+        </button>
       </div>
     );
   }

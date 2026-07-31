@@ -467,12 +467,28 @@ class ExamService:
 
         weak_set = set(weak_topics or [])
 
+        # Blueprint difficulty (pemula/menengah/sulit) vs bank difficulty (mudah/menengah/sulit)
+        diff_map = {
+            "pemula": "mudah",
+            "sedang": "menengah",
+            "menengah": "menengah",
+            "ahli": "sulit",
+            "sulit": "sulit",
+        }
+        mapped_diff = diff_map.get(blueprint.difficulty) if blueprint.difficulty != "campuran" else None
+
         # Pull all available questions from bank
         all_rows = question_bank_repository.get_by_subject(
             db, blueprint.subject_id,
-            difficulty=blueprint.difficulty if blueprint.difficulty != "campuran" else None,
+            difficulty=mapped_diff,
             limit=total_needed * 5,
         )
+
+        # Fallback: bank may not have questions with that difficulty, use any
+        if not all_rows:
+            all_rows = question_bank_repository.get_by_subject(
+                db, blueprint.subject_id, limit=total_needed * 5,
+            )
 
         if not all_rows:
             raise ValueError(
@@ -534,134 +550,133 @@ class ExamService:
         from services.subject_service import subject_service as subj_svc
 
         try:
-            with db.begin():
-                if not (session := exam_session_repository.get(db, session_id)):
-                    raise HTTPException(
-                        status_code=status.HTTP_404_NOT_FOUND,
-                        detail=f"Sesi ujian ID {session_id} tidak ditemukan",
-                    )
-                if session.submitted_at:
-                    return json.loads(session.evaluation_json)
+            if not (session := exam_session_repository.get(db, session_id)):
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Sesi ujian ID {session_id} tidak ditemukan",
+                )
+            if session.submitted_at:
+                return json.loads(session.evaluation_json)
 
-                questions_data = json.loads(session.questions_json)
-                questions      = questions_data.get("questions", [])
-                exam_type      = questions_data.get("exam_type", "simulasi")
-                subject        = subj_svc.get_by_id(db, session.subject_id)
-                subject_name   = subject.name if subject else "Mata Kuliah"
+            questions_data = json.loads(session.questions_json)
+            questions      = questions_data.get("questions", [])
+            exam_type      = questions_data.get("exam_type", "simulasi")
+            subject        = subj_svc.get_by_id(db, session.subject_id)
+            subject_name   = subject.name if subject else "Mata Kuliah"
 
-                subjective_lines = []
-                for q in questions:
-                    qid   = str(q.get("id", ""))
-                    qtype = q.get("type", "mcq")
-                    if qtype not in ("mcq", "truefalse"):
-                        user_ans = (answers.get(qid) or "").strip()
-                        correct  = q.get("answer", "")
-                        if user_ans and len(subjective_lines) < 8:
-                            subjective_lines.append(
-                                f"No.{qid} [{qtype}]\nTopik: {q.get('topic','')}\n"
-                                f"Soal: {q.get('question','')[:200]}\n"
-                                f"Jawaban User: {user_ans[:300]}\n"
-                                f"Jawaban Ideal: {correct[:200]}"
-                            )
-
-                ai_subjective: dict = {}
-                BATCH = 5
-                for start in range(0, len(subjective_lines), BATCH):
-                    batch = subjective_lines[start: start + BATCH]
-                    try:
-                        resp = ai_service.generate(
-                            capability="reasoning",
-                            prompt_template=EVALUATION_PROMPT,
-                            input_variables={
-                                "subject_name": subject_name,
-                                "exam_type":    exam_type,
-                                "qa_pairs":     "\n---\n".join(batch),
-                            },
-                            use_cache=False,
+            subjective_lines = []
+            for q in questions:
+                qid   = str(q.get("id", ""))
+                qtype = q.get("type", "mcq")
+                if qtype not in ("mcq", "truefalse"):
+                    user_ans = (answers.get(qid) or "").strip()
+                    correct  = q.get("answer", "")
+                    if user_ans and len(subjective_lines) < 8:
+                        subjective_lines.append(
+                            f"No.{qid} [{qtype}]\nTopik: {q.get('topic','')}\n"
+                            f"Soal: {q.get('question','')[:200]}\n"
+                            f"Jawaban User: {user_ans[:300]}\n"
+                            f"Jawaban Ideal: {correct[:200]}"
                         )
-                        data = _parse_json_response(resp, f"Eval batch {start//BATCH+1}")
-                        for fb in data.get("per_question_feedback", []):
-                            ai_subjective[str(fb.get("question_id", ""))] = fb
-                    except Exception as exc:
-                        logger.warning(f"Subjective eval batch failed: {exc}")
-                        for line in batch:
-                            m = re.match(r'No\.(\d+)', line)
-                            if m:
-                                ai_subjective[m.group(1)] = {
-                                    "is_correct": False, "score": 0,
-                                    "feedback": "Evaluasi tidak tersedia.", "explanation": "",
-                                }
 
-                eval_data = assemble_evaluation(
-                    questions, answers, subject_name, exam_type, ai_subjective
-                )
+            ai_subjective: dict = {}
+            BATCH = 5
+            for start in range(0, len(subjective_lines), BATCH):
+                batch = subjective_lines[start: start + BATCH]
+                try:
+                    resp = ai_service.generate(
+                        capability="reasoning",
+                        prompt_template=EVALUATION_PROMPT,
+                        input_variables={
+                            "subject_name": subject_name,
+                            "exam_type":    exam_type,
+                            "qa_pairs":     "\n---\n".join(batch),
+                        },
+                        use_cache=False,
+                    )
+                    data = _parse_json_response(resp, f"Eval batch {start//BATCH+1}")
+                    for fb in data.get("per_question_feedback", []):
+                        ai_subjective[str(fb.get("question_id", ""))] = fb
+                except Exception as exc:
+                    logger.warning(f"Subjective eval batch failed: {exc}")
+                    for line in batch:
+                        m = re.match(r'No\.(\d+)', line)
+                        if m:
+                            ai_subjective[m.group(1)] = {
+                                "is_correct": False, "score": 0,
+                                "feedback": "Evaluasi tidak tersedia.", "explanation": "",
+                            }
 
-                session.answers_json         = json.dumps(answers, ensure_ascii=False)
-                session.score                = eval_data["score"]
-                session.total_correct        = eval_data["total_correct"]
-                session.total_wrong          = eval_data["total_wrong"]
-                session.evaluation_json      = json.dumps(eval_data, ensure_ascii=False)
-                session.submitted_at         = datetime.datetime.utcnow()
+            eval_data = assemble_evaluation(
+                questions, answers, subject_name, exam_type, ai_subjective
+            )
 
-                grade_val = eval_data.get("grade") or _calc_grade(eval_data["score"])
-                session.status               = "completed"
-                session.latest_score         = eval_data["score"]
-                session.best_score           = eval_data["score"] if session.best_score is None else max(session.best_score, eval_data["score"])
-                session.grade                = grade_val
-                session.progress             = eval_data["score"]
-                session.subject_name         = subject_name
-                session.title                = questions_data.get("title", f"Simulasi {exam_type} - {subject_name}")
-                session.exam_type            = exam_type
-                session.difficulty           = questions_data.get("difficulty", "menengah")
-                session.bloom_level          = questions_data.get("bloom_level", "mixed")
-                session.question_type        = questions_data.get("question_type", "mixed")
-                session.total_questions      = len(questions)
-                session.weak_topics_json     = json.dumps(eval_data.get("weak_topics", []), ensure_ascii=False)
-                session.strong_topics_json   = json.dumps(eval_data.get("strong_topics", []), ensure_ascii=False)
-                session.updated_at           = datetime.datetime.utcnow()
+            session.answers_json         = json.dumps(answers, ensure_ascii=False)
+            session.score                = eval_data["score"]
+            session.total_correct        = eval_data["total_correct"]
+            session.total_wrong          = eval_data["total_wrong"]
+            session.evaluation_json      = json.dumps(eval_data, ensure_ascii=False)
+            session.submitted_at         = datetime.datetime.utcnow()
 
-                attempt = ExamAttempt(
-                    session_id=session_id,
-                    attempt_number=exam_attempt_repo.next_attempt_number(db, session_id),
-                    score=eval_data["score"],
-                    grade=grade_val,
-                    total_correct=eval_data["total_correct"],
-                    total_wrong=eval_data["total_wrong"],
-                    questions_json=session.questions_json,
-                    answers_json=json.dumps(answers, ensure_ascii=False),
-                    evaluation_json=json.dumps(eval_data, ensure_ascii=False),
-                    created_at=datetime.datetime.utcnow(),
-                )
-                db.add(attempt)
-                db.flush()
+            grade_val = eval_data.get("grade") or _calc_grade(eval_data["score"])
+            session.status               = "completed"
+            session.latest_score         = eval_data["score"]
+            session.best_score           = eval_data["score"] if session.best_score is None else max(session.best_score, eval_data["score"])
+            session.grade                = grade_val
+            session.progress             = eval_data["score"]
+            session.subject_name         = subject_name
+            session.title                = questions_data.get("title", f"Simulasi {exam_type} - {subject_name}")
+            session.exam_type            = exam_type
+            session.difficulty           = questions_data.get("difficulty", "menengah")
+            session.bloom_level          = questions_data.get("bloom_level", "mixed")
+            session.question_type        = questions_data.get("question_type", "mixed")
+            session.total_questions      = len(questions)
+            session.weak_topics_json     = json.dumps(eval_data.get("weak_topics", []), ensure_ascii=False)
+            session.strong_topics_json   = json.dumps(eval_data.get("strong_topics", []), ensure_ascii=False)
+            session.updated_at           = datetime.datetime.utcnow()
 
-                questions_data_local = json.loads(session.questions_json) if session.questions_json else {}
-                qs = questions_data_local.get("questions", [])
-                answers_local = json.loads(session.answers_json) if session.answers_json else {}
-                per_q_fb = {str(f["question_id"]): f for f in eval_data.get("per_question_feedback", [])}
-                review_rows = []
-                for q in qs:
-                    qid     = str(q.get("id", ""))
-                    fb      = per_q_fb.get(qid, {})
-                    user_ans = answers_local.get(qid, "")
-                    review_rows.append({
-                        "attempt_id": attempt.id,
-                        "question_number": q.get("id", 0),
-                        "topic": q.get("topic", ""),
-                        "question_text": q.get("question", ""),
-                        "question_type": q.get("type", ""),
-                        "bloom_level": q.get("bloom_level", ""),
-                        "difficulty": q.get("difficulty", ""),
-                        "user_answer": user_ans,
-                        "correct_answer": fb.get("correct_answer") or q.get("answer", ""),
-                        "is_correct": 1 if fb.get("is_correct") else 0,
-                        "ai_explanation": fb.get("feedback") or q.get("explanation", ""),
-                        "material_ref": q.get("material_reference", ""),
-                        "tips": q.get("tips", ""),
-                        "item_score": 100 if fb.get("is_correct") else 0,
-                    })
-                for row in review_rows:
-                    db.add(ExamReview(**row))
+            attempt = ExamAttempt(
+                session_id=session_id,
+                attempt_number=exam_attempt_repo.next_attempt_number(db, session_id),
+                score=eval_data["score"],
+                grade=grade_val,
+                total_correct=eval_data["total_correct"],
+                total_wrong=eval_data["total_wrong"],
+                questions_json=session.questions_json,
+                answers_json=json.dumps(answers, ensure_ascii=False),
+                evaluation_json=json.dumps(eval_data, ensure_ascii=False),
+                created_at=datetime.datetime.utcnow(),
+            )
+            db.add(attempt)
+            db.flush()
+
+            questions_data_local = json.loads(session.questions_json) if session.questions_json else {}
+            qs = questions_data_local.get("questions", [])
+            answers_local = json.loads(session.answers_json) if session.answers_json else {}
+            per_q_fb = {str(f["question_id"]): f for f in eval_data.get("per_question_feedback", [])}
+            review_rows = []
+            for q in qs:
+                qid     = str(q.get("id", ""))
+                fb      = per_q_fb.get(qid, {})
+                user_ans = answers_local.get(qid, "")
+                review_rows.append({
+                    "attempt_id": attempt.id,
+                    "question_number": q.get("id", 0),
+                    "topic": q.get("topic", ""),
+                    "question_text": q.get("question", ""),
+                    "question_type": q.get("type", ""),
+                    "bloom_level": q.get("bloom_level", ""),
+                    "difficulty": q.get("difficulty", ""),
+                    "user_answer": user_ans,
+                    "correct_answer": fb.get("correct_answer") or q.get("answer", ""),
+                    "is_correct": 1 if fb.get("is_correct") else 0,
+                    "ai_explanation": fb.get("feedback") or q.get("explanation", ""),
+                    "material_ref": q.get("material_reference", ""),
+                    "tips": q.get("tips", ""),
+                    "item_score": 100 if fb.get("is_correct") else 0,
+                })
+            for row in review_rows:
+                db.add(ExamReview(**row))
 
         except HTTPException:
             raise
@@ -937,9 +952,14 @@ class ExamService:
                     )
                 blueprint_id = blueprint.id
 
-            with db.begin():
-                result = ExamService.retry_from_bank(db, blueprint_id, weak_topics=[])
+            result = ExamService.retry_from_bank(db, blueprint_id, weak_topics=[])
             return result
+
+        except ValueError as err:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=str(err),
+            )
 
         except HTTPException:
             raise
@@ -954,35 +974,34 @@ class ExamService:
     def save_study_plan(db: Session, session_id: int, plan_data: dict) -> dict:
         """Save/replace study plan for a session."""
         try:
-            with db.begin():
-                existing = study_plan_repo.get_by_session(db, session_id)
-                if existing:
-                    db.delete(existing)
+            existing = study_plan_repo.get_by_session(db, session_id)
+            if existing:
+                db.delete(existing)
 
-                sp_items = plan_data.get("study_plan", [])
-                plan = StudyPlan(
-                    session_id=session_id,
-                    title=plan_data.get("title", "Rencana Belajar"),
-                    motivational_message=plan_data.get("motivational_message", ""),
-                    priority_actions_json=json.dumps(plan_data.get("priority_actions", []), ensure_ascii=False),
-                    total_days=len(sp_items),
-                    completed_days=0, progress=0,
-                    created_at=datetime.datetime.utcnow(),
-                    updated_at=datetime.datetime.utcnow(),
-                )
-                db.add(plan)
-                db.flush()
-                for idx, day in enumerate(sp_items):
-                    db.add(StudyPlanItem(
-                        plan_id=plan.id, order_number=idx,
-                        day_label=day.get("label", f"Hari {idx+1}"),
-                        topic=day.get("topic", ""),
-                        activity=day.get("activity", ""),
-                        activity_type=day.get("type", "review"),
-                        duration_minutes=day.get("duration_minutes"),
-                        resources=day.get("resources", ""),
-                        completed=0,
-                    ))
+            sp_items = plan_data.get("study_plan", [])
+            plan = StudyPlan(
+                session_id=session_id,
+                title=plan_data.get("title", "Rencana Belajar"),
+                motivational_message=plan_data.get("motivational_message", ""),
+                priority_actions_json=json.dumps(plan_data.get("priority_actions", []), ensure_ascii=False),
+                total_days=len(sp_items),
+                completed_days=0, progress=0,
+                created_at=datetime.datetime.utcnow(),
+                updated_at=datetime.datetime.utcnow(),
+            )
+            db.add(plan)
+            db.flush()
+            for idx, day in enumerate(sp_items):
+                db.add(StudyPlanItem(
+                    plan_id=plan.id, order_number=idx,
+                    day_label=day.get("label", f"Hari {idx+1}"),
+                    topic=day.get("topic", ""),
+                    activity=day.get("activity", ""),
+                    activity_type=day.get("type", "review"),
+                    duration_minutes=day.get("duration_minutes"),
+                    resources=day.get("resources", ""),
+                    completed=0,
+                ))
 
             return {"status": "saved"}
         except HTTPException:
@@ -1018,10 +1037,9 @@ class ExamService:
     @staticmethod
     def delete_session(db: Session, session_id: int) -> bool:
         try:
-            with db.begin():
-                if not (session := exam_session_repository.get(db, session_id)):
-                    return False
-                db.delete(session)
+            if not (session := exam_session_repository.get(db, session_id)):
+                return False
+            db.delete(session)
             return True
         except HTTPException:
             raise
