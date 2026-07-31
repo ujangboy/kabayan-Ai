@@ -88,8 +88,7 @@ BLUEPRINT_PROMPT = PromptTemplate(
 )
 
 # ─── 3. Question Generator Prompt ────────────────────────────────────────────
-QUESTION_GEN_PROMPT_TEMPLATE = """Kamu adalah AI pembuat soal ujian akademik berkualitas tinggi.
-Buat soal ujian sesuai blueprint berikut berdasarkan materi yang diberikan.
+QUESTION_GEN_PROMPT_TEMPLATE = """Kamu adalah dosen yang hangat dan komunikatif. Buatlah soal ujian sesuai blueprint berikut berdasarkan materi yang diberikan.
 
 Materi Referensi:
 {context}
@@ -101,6 +100,17 @@ Blueprint Item:
 - Level Bloom: {bloom_level}
 - Tingkat Kesulitan: {difficulty}
 - Konsep Kunci: {key_concepts}
+
+GAYA PENULISAN — WAJIB:
+1. Tulis soal dengan bahasa sehari-hari yang natural dan mengalir, seolah-olah dosen sedang bertanya langsung di kelas — JANGAN kaku atau berbentuk perintah katalog.
+2. Kontekskan soal pada situasi nyata bila memungkinkan (contoh: "Di sebuah perusahaan, kamu diminta menganalisis data penjualan...").
+3. Penjelasan jawaban (explanation) ditulis naratif bertahap, bukan satu kalimat datar:
+   - Mulai dengan "Kunci jawabannya adalah X, karena..."
+   - Uraikan alasan secara bertahap dengan kata penghubung (Pertama, Lalu, Oleh karena itu...)
+   - Tebalkan kata kunci penting dengan **bold**.
+   - Akhiri dengan kesimpulan singkat atau tips cepat ("Ingat: ...").
+4. Tips ditulis dengan bahasa hangat dan memotivasi — bukan perintah kaku.
+5. JANGAN gunakan simbol aneh, escape sequence, atau karakter kontrol. Tulis teks bersih dan rapi.
 
 Aturan format matematika:
 - Rumus inline: $...$ — contoh: $F = ma$
@@ -116,12 +126,12 @@ Hasilkan JSON valid (tanpa teks tambahan) dengan struktur:
       "type": "<mcq|essay|truefalse|short_answer|case_study|calculation|analysis>",
       "bloom_level": "<level bloom>",
       "difficulty": "<mudah|menengah|sulit>",
-      "question": "<teks pertanyaan lengkap>",
+      "question": "<teks pertanyaan ditulis secara natural>",
       "options": {{"A": "<opsi A>", "B": "<opsi B>", "C": "<opsi C>", "D": "<opsi D>"}},
       "answer": "<jawaban benar — huruf untuk MCQ/TrueFalse, teks untuk essay/short_answer>",
-      "explanation": "<penjelasan mengapa jawaban ini benar>",
+      "explanation": "Kunci jawabannya X karena... Pertama, ... Lalu, ... Oleh karena itu... Ingat: ...",
       "material_reference": "<referensi materi, mis. Pertemuan 3, Halaman 24>",
-      "tips": "<tips mengingat atau memahami konsep ini>"
+      "tips": "<tips hangat dan memotivasi>"
     }}
   ]
 }}
@@ -143,14 +153,20 @@ QUESTION_GEN_PROMPT = PromptTemplate(
 # ─── 4. Subjective Evaluation Prompt ─────────────────────────────────────────
 # AI only evaluates essay/short_answer/case_study/analysis/calculation.
 # All scoring math (total, grade, %) is done in Python — NOT by AI.
-EVALUATION_PROMPT_TEMPLATE = """Kamu adalah AI evaluator akademik.
-Tugas kamu: nilai setiap jawaban subjektif berikut dan berikan feedback singkat.
+EVALUATION_PROMPT_TEMPLATE = """Kamu adalah evaluator akademik yang hangat dan membangun.
+Tugas kamu: nilai setiap jawaban subjektif berikut dan berikan feedback yang membantu.
 
 Mata Kuliah: {subject_name}
 Jenis Ujian: {exam_type}
 
 Soal yang perlu dinilai:
 {qa_pairs}
+
+GAYA FEEDBACK — WAJIB:
+1. Tulis feedback dengan bahasa yang membangun dan memotivasi — bukan kaku atau menghakimi.
+2. Gunakan **bold** untuk kata kunci penting di feedback dan penjelasan.
+3. Jika benar: apresiasi singkat ("Bagus! Pemahamanmu tepat karena...").
+4. Jika salah: jelaskan dengan sabar ("Sebenarnya, jawaban yang tepat adalah X karena...").
 
 Kembalikan HANYA JSON valid berikut (tanpa teks tambahan, tanpa markdown):
 {{
@@ -159,8 +175,8 @@ Kembalikan HANYA JSON valid berikut (tanpa teks tambahan, tanpa markdown):
       "question_id": <integer — sama persis dengan nomor di atas>,
       "is_correct": <true jika jawaban pada dasarnya benar, false jika salah>,
       "score": <integer 0-100 untuk soal ini saja>,
-      "feedback": "<feedback singkat, maks 2 kalimat>",
-      "explanation": "<penjelasan jawaban yang benar, maks 2 kalimat>"
+      "feedback": "<feedback singkat dan membangun, maks 2 kalimat>",
+      "explanation": "<penjelasan jawaban yang benar dengan bold kata kunci, maks 2 kalimat>"
     }}
   ]
 }}
@@ -177,7 +193,7 @@ EVALUATION_PROMPT = PromptTemplate(
 
 # ─── 5. Learning Recommendation Prompt ───────────────────────────────────────
 # Receives ONLY metadata (topic name strings), never full eval JSON.
-RECOMMENDATION_PROMPT_TEMPLATE = """Kamu adalah AI konselor belajar.
+RECOMMENDATION_PROMPT_TEMPLATE = """Kamu adalah konselor belajar yang hangat dan suportif.
 Buat rencana belajar 7 hari yang dipersonalisasi berdasarkan data berikut.
 
 Mata Kuliah: {subject_name}
@@ -185,6 +201,11 @@ Jenis Ujian: {exam_type}
 Nilai Terakhir: {score}
 Topik yang masih lemah: {weak_topic_names}
 Topik yang sudah dikuasai: {strong_topic_names}
+
+GAYA PENULISAN — WAJIB:
+1. Tulis pesan motivasi dengan hangat dan memotivasi — bukan kaku.
+2. Aktivitas belajar ditulis dengan jelas dan actionable ("Kerjakan 10 soal tentang X", "Baca materi halaman Y tentang Z").
+3. Gunakan **bold** untuk kata kunci aktivitas.
 
 Kembalikan HANYA JSON valid berikut (tanpa teks tambahan, tanpa markdown):
 {{
