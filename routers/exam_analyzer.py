@@ -91,16 +91,6 @@ async def get_session(session_id: int, db: Session = Depends(get_db)):
         raise AppError(str(e), status_code=500)
 
 
-@router.get("/sessions/{subject_id}")
-async def get_sessions(subject_id: int, db: Session = Depends(get_db)):
-    try:
-        data = exam_service.get_sessions(db, subject_id)
-        return JSONResponse({"sessions": data})
-    except Exception as e:
-        logger.error(f"get_sessions error: {e}", exc_info=True)
-        raise AppError(str(e), status_code=500)
-
-
 @router.post("/submit/{session_id}")
 async def submit_exam(
     session_id: int,

@@ -99,7 +99,7 @@ export const examAPI = {
 
   // Sessions
   getSession: (sessionId) => api.get(`/exam/session/${sessionId}`),
-  getSessions: (subjectId) => api.get(`/exam/sessions/${subjectId}`),
+  getSessions: (subjectId) => api.get('/exam/sessions', { params: subjectId ? { subject_id: subjectId } : {} }),
 
   // Submit & evaluate
   submit: (sessionId, answers) => api.post(`/exam/submit/${sessionId}`, { answers }, { timeout: 120000 }),

@@ -107,7 +107,7 @@ function SectionHeader({ icon: Icon, title, subtitle, action }) {
 export default function ExamAnalyzerPage() {
   const location  = useLocation();
   const navigate  = useNavigate();
-  const [view, setView]               = useState(VIEW.DASHBOARD);
+  const [view, setView]               = useState(VIEW.HISTORY);
   const [subjectId, setSubjectId]     = useState('');
   const [analysis, setAnalysis]       = useState(null);
   const [blueprint, setBlueprint]     = useState(null);
@@ -173,7 +173,7 @@ export default function ExamAnalyzerPage() {
                   [VIEW.RESULT]:     VIEW.QUIZ,
                   [VIEW.REVIEW]:     VIEW.RESULT,
                   [VIEW.RECOMMEND]:  VIEW.RESULT,
-                  [VIEW.HISTORY]:    VIEW.DASHBOARD,
+                  [VIEW.HISTORY]:    VIEW.HISTORY,
                 }[view] || VIEW.DASHBOARD;
                 go(back);
               }} className="p-1.5 rounded-lg hover:bg-card text-text-secondary transition-colors">
@@ -194,13 +194,13 @@ export default function ExamAnalyzerPage() {
           <div className="flex items-center gap-2">
             <select
               value={subjectId}
-              onChange={e => { setSubjectId(e.target.value); setAnalysis(null); setBlueprint(null); setSessionData(null); setEvalData(null); setRecommend(null); go(VIEW.DASHBOARD); }}
+              onChange={e => { setSubjectId(e.target.value); setAnalysis(null); setBlueprint(null); setSessionData(null); setEvalData(null); setRecommend(null); go(VIEW.HISTORY); }}
               className="px-3 py-2 bg-card border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary"
             >
               <option value="">-- Pilih Mata Kuliah --</option>
               {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
-            {view === VIEW.DASHBOARD && subjectId && (
+            {(view === VIEW.DASHBOARD || view === VIEW.HISTORY) && subjectId && (
               <button onClick={resetToConfig} className="btn-primary text-xs">
                 <Zap size={13} /> Buat Simulasi
               </button>
@@ -1381,7 +1381,7 @@ function HistoryView({ subjectId, onResume }) {
       {/* Detail modal */}
       <AnimatePresence>
         {detailId && (
-          <DetailModal historySessionId={detailId} onClose={() => setDetailId(null)} />
+          <DetailModal historySessionId={detailId} onClose={() => setDetailId(null)} onResume={onResume} />
         )}
       </AnimatePresence>
     </div>
@@ -1470,7 +1470,7 @@ function HistoryCard({ session: s, onDetail, onDelete }) {
 
 
 // ─── Detail Modal ─────────────────────────────────────────────────────────────
-function DetailModal({ historySessionId, onClose }) {
+function DetailModal({ historySessionId, onClose, onResume }) {
   const queryClient = useQueryClient();
   const [tab, setTab] = useState('overview');
 
@@ -1542,7 +1542,7 @@ function DetailModal({ historySessionId, onClose }) {
       </div>
 
       <div className="p-4 border-t border-border shrink-0 flex gap-2 flex-wrap">
-        <RetryButton historySessionId={historySessionId} sessionData={data} onClose={onClose} />
+        <RetryButton historySessionId={historySessionId} sessionData={data} onClose={onClose} onResume={onResume} />
         <button onClick={onClose} className="btn-ghost text-sm border border-border ml-auto">
           Tutup
         </button>
@@ -1886,39 +1886,18 @@ function AttemptsTab({ attempts }) {
   );
 }
 
-function RetryButton({ historySessionId, sessionData, onClose }) {
+function RetryButton({ historySessionId, sessionData, onClose, onResume }) {
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState('');
 
   const handleRetry = async () => {
     setError(''); setLoading(true);
     try {
-      const weakTopics = sessionData.weak_topics || [];
-      const topicFocusStr = weakTopics.length
-        ? weakTopics.map(t => typeof t === 'string' ? t : t.topic || '').join(', ')
-        : 'Semua Materi';
-
-      const bpPayload = {
-        subject_id:      sessionData.subject_id,
-        exam_type:       sessionData.exam_type || 'latihan_harian',
-        total_questions: Math.min(sessionData.total_questions || 10, 15),
-        difficulty:      sessionData.difficulty || 'menengah',
-        bloom_level:     sessionData.bloom_level || 'mixed',
-        question_type:   sessionData.question_type || 'mixed',
-        focus_material:  topicFocusStr,
-        duration_minutes: 30,
-      };
-      const bpRes = await examAPI.generateBlueprint(bpPayload);
-      if (bpRes.data?.detail) throw new Error(bpRes.data.detail);
-
-      const blueprintId = bpRes.data?.blueprint_id;
-      if (!blueprintId) throw new Error('Blueprint ID tidak ditemukan.');
-
-      const qRes = await examAPI.generateQuestions(blueprintId);
-      if (qRes.data?.detail) throw new Error(qRes.data.detail);
-
+      const r = await sessionsAPI.retry(historySessionId);
+      if (r.data?.detail) throw new Error(r.data.detail);
+      if (!r.data?.session_id) throw new Error('Sesi latihan gagal dibuat.');
       onClose();
-      onResume({ ...qRes.data, subject_id: sessionData.subject_id, subject_name: sessionData.subject_name });
+      onResume({ ...r.data, subject_id: sessionData.subject_id, subject_name: sessionData.subject_name });
     } catch (e) {
       setError(e.response?.data?.detail || e.message || 'Gagal memulai latihan ulang.');
     } finally { setLoading(false); }
