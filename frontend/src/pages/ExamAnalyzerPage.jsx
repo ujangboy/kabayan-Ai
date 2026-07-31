@@ -170,16 +170,16 @@ export default function ExamAnalyzerPage() {
                 if (view === VIEW.GENERATING) return;
                 if (view === VIEW.QUIZ) {
                   if (!confirm('Yakin ingin keluar? Progres ujian ini akan hilang.')) return;
-                  setSessionData(null); go(VIEW.HISTORY); return;
+                  setSubjectId(''); setSessionData(null); go(VIEW.HISTORY); return;
                 }
                 const back = {
-                  [VIEW.CONFIG]:     VIEW.DASHBOARD,
+                  [VIEW.CONFIG]:     null,
                   [VIEW.BLUEPRINT]:  VIEW.CONFIG,
-                  [VIEW.RESULT]:     VIEW.QUIZ,
+                  [VIEW.RESULT]:     VIEW.HISTORY,
                   [VIEW.REVIEW]:     VIEW.RESULT,
                   [VIEW.RECOMMEND]:  VIEW.RESULT,
                   [VIEW.HISTORY]:    null,
-                }[view] || VIEW.DASHBOARD;
+                }[view] || null;
                 if (back === null) { setSubjectId(''); go(VIEW.HISTORY); return; }
                 go(back);
               }} className="p-1.5 rounded-lg hover:bg-card text-text-secondary transition-colors">
