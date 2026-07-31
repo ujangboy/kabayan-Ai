@@ -19,11 +19,6 @@ export function formatTime(dateStr) {
   });
 }
 
-export function truncate(str, n = 40) {
-  if (!str) return '';
-  return str.length > n ? str.slice(0, n) + '…' : str;
-}
-
 export function fileIcon(type) {
   const t = (type || '').toUpperCase();
   if (t.includes('YOUTUBE')) return '🎬';

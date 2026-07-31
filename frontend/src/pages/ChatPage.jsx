@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Paperclip, X, BookOpen, Trash2, Bot, User, Copy, Check, Mic, Pin, Edit3 } from 'lucide-react';
+import { Send, X, BookOpen, Trash2, Bot, User, Copy, Check, Pin, Edit3 } from 'lucide-react';
 import MathMarkdown from '@/components/MathMarkdown';
 import { useChatStore } from '@/store';
 import { cn } from '@/utils';

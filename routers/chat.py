@@ -3,8 +3,6 @@ from pydantic import BaseModel
 from typing import List, Optional
 from sqlalchemy.orm import Session
 from database import get_db
-from services.chat_service import chat_service
-from services.notes_service import notes_service
 from services.flashcard_service import flashcard_service
 from services.quiz_service import quiz_service
 from repositories.chat_repository import chat_repository

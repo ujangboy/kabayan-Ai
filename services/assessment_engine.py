@@ -364,22 +364,4 @@ def generate_study_plan(
     }
 
 
-# ─── Progress calculator ─────────────────────────────────────────────────────
 
-def calc_progress(attempt_scores: List[int]) -> int:
-    """
-    Progress percentage across multiple attempts.
-    First attempt = baseline. Progress = improvement relative to baseline.
-    Capped at 100.
-    """
-    if not attempt_scores:
-        return 0
-    if len(attempt_scores) == 1:
-        return min(attempt_scores[0], 100)
-    first  = attempt_scores[0]
-    latest = attempt_scores[-1]
-    if latest >= 90:
-        return 100
-    improvement = max(0, latest - first)
-    # 40-point swing = 100% progress
-    return min(100, int((improvement / 40) * 100) + int(first * 0.4))

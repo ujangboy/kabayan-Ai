@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -7,7 +7,7 @@ import {
   Play, Pause, RotateCcw, CheckCircle, XCircle, Trophy,
   Calendar, ArrowRight, Clock, BarChart2, FileText,
   BookMarked, X, ChevronLeft, Info, TrendingUp, Award,
-  Lightbulb, AlertCircle, Check, Search, Filter, Trash2, History
+  Lightbulb, AlertCircle, Check, Search, Trash2, History
 } from 'lucide-react';
 import { examAPI, subjectAPI, materiAPI } from '@/services/api';
 import { sessionsAPI } from '@/services/api';

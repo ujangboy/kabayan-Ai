@@ -57,10 +57,6 @@ export const useChatStore = create(
 
       setSelectedDocs: (docs) => set({ selectedDocs: docs }),
       clearSelectedDocs: () => set({ selectedDocs: [] }),
-      // Hapus satu doc dari selectedDocs (dipanggil saat materi dihapus)
-      removeSelectedDoc: (docId) => set((s) => ({
-        selectedDocs: s.selectedDocs.filter((d) => d !== docId),
-      })),
     }),
     { name: 'kabayan-chat-store' }
   )

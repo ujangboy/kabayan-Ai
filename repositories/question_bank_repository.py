@@ -4,7 +4,6 @@ Handles persistent storage and retrieval of AI-generated questions.
 """
 import datetime
 import json
-import random
 from typing import List, Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import func
@@ -75,51 +74,6 @@ class QuestionBankRepository(BaseRepository[QuestionBank]):
             q = q.filter(QuestionBank.question_type == question_type)
         return q.limit(limit).all()
 
-    def get_multi_subject(
-        self,
-        db: Session,
-        subject_ids: List[int],
-        difficulty: Optional[str] = None,
-        question_type: Optional[str] = None,
-        limit_per_subject: int = 50,
-    ) -> List[QuestionBank]:
-        """Draw questions across multiple subjects (multi-subject exam)."""
-        results = []
-        for sid in subject_ids:
-            rows = self.get_by_subject(
-                db, sid, difficulty, question_type, limit_per_subject
-            )
-            results.extend(rows)
-        return results
-
-    def sample_for_blueprint(
-        self,
-        db: Session,
-        subject_id: int,
-        blueprint_items: List[dict],
-        randomize: bool = True,
-    ) -> List[QuestionBank]:
-        """
-        For each blueprint item {topic, question_count, difficulty, question_types},
-        draw the required number of questions from the bank.
-        Returns a flat list in blueprint order.
-        """
-        selected: List[QuestionBank] = []
-        for item in blueprint_items:
-            topic      = item.get("topic", "")
-            needed     = item.get("question_count", 1)
-            diff       = item.get("difficulty", "menengah")
-            qtypes     = item.get("question_types", [])
-            qtype      = qtypes[0] if len(qtypes) == 1 else "mixed"
-
-            rows = self.get_by_topic(
-                db, subject_id, topic, diff, qtype, limit=needed * 3
-            )
-            if randomize:
-                random.shuffle(rows)
-            selected.extend(rows[:needed])
-        return selected
-
     # ── Write ────────────────────────────────────────────────────────────────
 
     def bulk_insert(
@@ -187,24 +141,6 @@ class QuestionBankRepository(BaseRepository[QuestionBank]):
             db.flush()
             db.refresh(q)
         return q
-
-    def delete_by_subject(self, db: Session, subject_id: int) -> int:
-        n = (
-            db.query(QuestionBank)
-            .filter(QuestionBank.subject_id == subject_id)
-            .delete()
-        )
-        db.flush()
-        return n
-
-    def delete_by_blueprint(self, db: Session, blueprint_id: int) -> int:
-        n = (
-            db.query(QuestionBank)
-            .filter(QuestionBank.blueprint_id == blueprint_id)
-            .delete()
-        )
-        db.flush()
-        return n
 
     def stats_by_subject(self, db: Session, subject_id: int) -> dict:
         """Return question counts grouped by topic and difficulty."""

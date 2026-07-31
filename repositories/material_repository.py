@@ -11,12 +11,4 @@ class MaterialRepository(BaseRepository[Material]):
         """Kembalikan SEMUA materi (termasuk Processing/Failed). Gunakan untuk tampilan UI."""
         return db.query(self.model).filter(self.model.subject_id == subject_id).all()
 
-    def get_ready_by_subject(self, db: Session, subject_id: int) -> List[Material]:
-        """Kembalikan HANYA materi dengan status 'Ready'. Gunakan untuk RAG/AI generation."""
-        return (
-            db.query(self.model)
-            .filter(self.model.subject_id == subject_id, self.model.status == "Ready")
-            .all()
-        )
-
 material_repository = MaterialRepository()

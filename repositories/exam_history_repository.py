@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
 from models import (
-    ExamSession, ExamAttempt, ExamReview,
+    ExamAttempt,
     StudyPlan, StudyPlanItem
 )
 from repositories.base import BaseRepository
@@ -30,56 +30,6 @@ class ExamAttemptRepository(BaseRepository[ExamAttempt]):
         )
         return (last.attempt_number + 1) if last else 1
 
-    def create_attempt(
-        self,
-        db: Session,
-        session_id: int,
-        score: int,
-        grade: str,
-        total_correct: int,
-        total_wrong: int,
-        questions_json: str,
-        answers_json: str,
-        evaluation_json: str,
-        duration_seconds: Optional[int] = None,
-    ) -> ExamAttempt:
-        num = self.next_attempt_number(db, session_id)
-        obj = ExamAttempt(
-            session_id=session_id,
-            attempt_number=num,
-            score=score,
-            grade=grade,
-            total_correct=total_correct,
-            total_wrong=total_wrong,
-            duration_seconds=duration_seconds,
-            questions_json=questions_json,
-            answers_json=answers_json,
-            evaluation_json=evaluation_json,
-            created_at=datetime.datetime.utcnow(),
-        )
-        db.add(obj)
-        db.flush()
-        db.refresh(obj)
-        return obj
-
-
-class ExamReviewRepository(BaseRepository[ExamReview]):
-    def __init__(self):
-        super().__init__(ExamReview)
-
-    def get_by_attempt(self, db: Session, attempt_id: int) -> List[ExamReview]:
-        return (
-            db.query(self.model)
-            .filter(self.model.attempt_id == attempt_id)
-            .order_by(self.model.question_number)
-            .all()
-        )
-
-    def bulk_create(self, db: Session, rows: List[dict]) -> None:
-        for row in rows:
-            db.add(ExamReview(**row))
-        db.flush()
-
 
 class StudyPlanRepository(BaseRepository[StudyPlan]):
     def __init__(self):
@@ -96,14 +46,6 @@ class StudyPlanRepository(BaseRepository[StudyPlan]):
 class StudyPlanItemRepository(BaseRepository[StudyPlanItem]):
     def __init__(self):
         super().__init__(StudyPlanItem)
-
-    def get_by_plan(self, db: Session, plan_id: int) -> List[StudyPlanItem]:
-        return (
-            db.query(self.model)
-            .filter(self.model.plan_id == plan_id)
-            .order_by(self.model.order_number)
-            .all()
-        )
 
     def toggle_completed(self, db: Session, item_id: int) -> Optional[StudyPlanItem]:
         obj = self.get(db, item_id)
@@ -125,6 +67,5 @@ class StudyPlanItemRepository(BaseRepository[StudyPlanItem]):
 
 
 exam_attempt_repo    = ExamAttemptRepository()
-exam_review_repo     = ExamReviewRepository()
 study_plan_repo      = StudyPlanRepository()
 study_plan_item_repo = StudyPlanItemRepository()

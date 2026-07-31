@@ -153,10 +153,6 @@ class RAGService:
             return 0
         return max(m["id"] for m in self.chunk_metadata) + 1
 
-    def save_index(self):
-        with self._lock:
-            self._dirty = False
-
     # ── Index Document ───────────────────────────────────────────────
 
     def index_document(self, doc_id: str, chunks: list):

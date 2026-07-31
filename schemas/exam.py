@@ -28,26 +28,3 @@ class StudyPlanRequest(BaseModel):
     motivational_message: str = ""
     priority_actions: list[str] = Field(default_factory=list)
     study_plan: list[dict] = Field(default_factory=list)
-
-
-class ExplanationRequest(BaseModel):
-    bank_id: Optional[int] = None
-    question: str = ""
-    correct_answer: str = ""
-    topic: str = ""
-
-
-class SaveHistoryRequest(BaseModel):
-    subject_id: int = Field(..., gt=0)
-    subject_name: str = Field(..., min_length=1)
-    title: str = Field(..., min_length=1)
-    exam_type: str = Field(..., min_length=1)
-    difficulty: str = Field(..., min_length=1)
-    score: int = Field(..., ge=0, le=100)
-    total_correct: int = Field(..., ge=0)
-    total_wrong: int = Field(..., ge=0)
-    evaluation_json: str = Field(...)
-    questions_json: str = Field(...)
-    answers_json: str = Field(...)
-    study_plan_data: Optional[dict] = None
-    duration_seconds: Optional[int] = None

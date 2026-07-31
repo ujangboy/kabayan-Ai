@@ -124,17 +124,3 @@ function _sanitizeDetail(detail) {
   if (!_isSafeMessage(detail)) return FALLBACK_MESSAGE;
   return detail;
 }
-
-// ─── Convenience helpers ──────────────────────────────────────────────────────
-
-/** True if the axios error is a network/offline error (no HTTP response). */
-export function isNetworkError(error) {
-  return !!error && !error.response && (!!error.request || error.code === 'ERR_NETWORK');
-}
-
-/** True if the backend returned a rate-limit response. */
-export function isRateLimitError(error) {
-  if (!error?.response) return false;
-  const { status, data } = error.response;
-  return status === 429 || data?.code === 'AI_RATE_LIMIT' || data?.code === 'AI_LOOP_GUARD';
-}

@@ -17,7 +17,7 @@ from services.ai_service import ai_service
 from services.assessment_engine import assemble_evaluation, generate_study_plan
 from repositories.exam_repository import exam_blueprint_repository, exam_session_repository
 from repositories.question_bank_repository import question_bank_repository
-from repositories.exam_history_repository import exam_attempt_repo, exam_review_repo, study_plan_repo, study_plan_item_repo
+from repositories.exam_history_repository import exam_attempt_repo, study_plan_repo, study_plan_item_repo
 from models import ExamSession, ExamAttempt, ExamReview, StudyPlan, StudyPlanItem
 from schemas.ai_output import ExamQuestionOutput
 from prompts.exam_analyzer import (
@@ -25,7 +25,6 @@ from prompts.exam_analyzer import (
     BLUEPRINT_PROMPT,
     QUESTION_GEN_PROMPT,
     EVALUATION_PROMPT,
-    RECOMMENDATION_PROMPT,
 )
 
 logger = logging.getLogger(__name__)
@@ -43,35 +42,6 @@ def _calc_grade(score: int) -> str:
     if score >= 60: return "D"
     return "E"
 
-def _save_reviews(db: Session, attempt_id: int, questions_json_str: str, answers_json_str: str, eval_data: dict) -> None:
-    try:
-        questions_data = json.loads(questions_json_str) if questions_json_str else {}
-        questions = questions_data.get("questions", [])
-        answers   = json.loads(answers_json_str) if answers_json_str else {}
-        per_q_fb = {str(f["question_id"]): f for f in eval_data.get("per_question_feedback", [])}
-        rows = []
-        for q in questions:
-            qid = str(q.get("id", ""))
-            fb = per_q_fb.get(qid, {})
-            rows.append({
-                "attempt_id": attempt_id,
-                "question_number": q.get("id", 0),
-                "topic": q.get("topic", ""),
-                "question_text": q.get("question", ""),
-                "question_type": q.get("type", ""),
-                "bloom_level": q.get("bloom_level", ""),
-                "difficulty": q.get("difficulty", ""),
-                "user_answer": answers.get(qid, ""),
-                "correct_answer": fb.get("correct_answer") or q.get("answer", ""),
-                "is_correct": 1 if fb.get("is_correct") else 0,
-                "ai_explanation": fb.get("feedback") or q.get("explanation", ""),
-                "material_ref": q.get("material_reference", ""),
-                "tips": q.get("tips", ""),
-                "item_score": 100 if fb.get("is_correct") else 0,
-            })
-        exam_review_repo.bulk_create(db, rows)
-    except Exception as exc:
-        logger.warning(f"_save_reviews failed (non-fatal): {exc}")
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -787,35 +757,6 @@ class ExamService:
             }
             for bp in bps
         ]
-
-    @staticmethod
-    def get_sessions(db: Session, subject_id: int) -> list:
-        sessions = exam_session_repository.get_by_subject(db, subject_id)
-        result = []
-        for s in sessions:
-            qdata = {}
-            try:
-                qdata = json.loads(s.questions_json) if s.questions_json else {}
-            except Exception:
-                pass
-            result.append({
-                "id":           s.id,
-                "blueprint_id": s.blueprint_id,
-                "title":        s.title or qdata.get("title", f"Sesi #{s.id}"),
-                "exam_type":    s.exam_type or qdata.get("exam_type", ""),
-                "score":        s.score,
-                "total_correct": s.total_correct,
-                "total_wrong":  s.total_wrong,
-                "best_score":   s.best_score,
-                "latest_score": s.latest_score,
-                "grade":        s.grade,
-                "progress":     s.progress,
-                "status":       s.status or "active",
-                "submitted":    s.submitted_at is not None,
-                "started_at":   s.started_at.isoformat() if s.started_at else None,
-                "submitted_at": s.submitted_at.isoformat() if s.submitted_at else None,
-            })
-        return result
 
     @staticmethod
     def get_session_detail(db: Session, session_id: int) -> dict:

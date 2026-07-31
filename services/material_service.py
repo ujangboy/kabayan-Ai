@@ -111,9 +111,4 @@ class MaterialService:
         """Kembalikan SEMUA materi (untuk UI/listing)."""
         return material_repository.get_by_subject(db, subject_id)
 
-    @staticmethod
-    def get_ready_by_subject(db: Session, subject_id: int):
-        """Kembalikan HANYA materi Ready (untuk AI/RAG generation)."""
-        return material_repository.get_ready_by_subject(db, subject_id)
-
 material_service = MaterialService()

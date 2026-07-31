@@ -191,46 +191,6 @@ EVALUATION_PROMPT = PromptTemplate(
     template=EVALUATION_PROMPT_TEMPLATE
 )
 
-# ─── 5. Learning Recommendation Prompt ───────────────────────────────────────
-# Receives ONLY metadata (topic name strings), never full eval JSON.
-RECOMMENDATION_PROMPT_TEMPLATE = """Kamu adalah konselor belajar yang hangat dan suportif.
-Buat rencana belajar 7 hari yang dipersonalisasi berdasarkan data berikut.
-
-Mata Kuliah: {subject_name}
-Jenis Ujian: {exam_type}
-Nilai Terakhir: {score}
-Topik yang masih lemah: {weak_topic_names}
-Topik yang sudah dikuasai: {strong_topic_names}
-
-GAYA PENULISAN — WAJIB:
-1. Tulis pesan motivasi dengan hangat dan memotivasi — bukan kaku.
-2. Aktivitas belajar ditulis dengan jelas dan actionable ("Kerjakan 10 soal tentang X", "Baca materi halaman Y tentang Z").
-3. Gunakan **bold** untuk kata kunci aktivitas.
-
-Kembalikan HANYA JSON valid berikut (tanpa teks tambahan, tanpa markdown):
-{{
-  "motivational_message": "<pesan motivasi singkat>",
-  "priority_actions": ["<aksi 1>", "<aksi 2>", "<aksi 3>"],
-  "study_plan": [
-    {{
-      "day": <integer 1-7>,
-      "label": "Hari <integer>",
-      "topic": "<topik>",
-      "activity": "<aktivitas belajar>",
-      "type": "<review|practice|simulation|rest>",
-      "duration_minutes": <integer>,
-      "resources": "<sumber belajar>"
-    }}
-  ]
-}}
-
-Aturan: buat tepat 7 item di study_plan, realistis dan terstruktur."""
-
-RECOMMENDATION_PROMPT = PromptTemplate(
-    input_variables=["subject_name", "exam_type", "score", "weak_topic_names", "strong_topic_names"],
-    template=RECOMMENDATION_PROMPT_TEMPLATE
-)
-
 
 # ─── 6. Lazy Explanation Prompt ───────────────────────────────────────────────
 # Called only when user explicitly clicks "Jelaskan" — result cached in bank.

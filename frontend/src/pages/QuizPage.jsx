@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { HelpCircle, Play, X, Zap, Trophy, Book, Trash2, CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { HelpCircle, Play, X, Zap, Trophy, Trash2, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { quizAPI, subjectAPI } from '@/services/api';
 import MathMarkdown from '@/components/MathMarkdown';
 import MaterialPicker from '@/components/MaterialPicker';

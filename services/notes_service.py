@@ -23,17 +23,9 @@ class NotesService:
         return note
 
     @staticmethod
-    def get_by_subject(db: Session, subject_id: int):
-        return note_repository.get_by_subject(db, subject_id)
-        
-    @staticmethod
     def get_all(db: Session, skip: int = 0, limit: int = 50):
         return note_repository.get_all(db, skip=skip, limit=limit)
 
-    @staticmethod
-    def get(db: Session, note_id: int):
-        return note_repository.get(db, note_id)
-        
     @staticmethod
     def delete(db: Session, note_id: int):
         return note_repository.delete(db, note_id)

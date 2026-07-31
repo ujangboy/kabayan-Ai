@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAppStore, useChatStore } from '@/store';
 import {
   LayoutDashboard, MessageSquare, BookOpen, FileText,
-  BookMarked, CreditCard, HelpCircle, BarChart2,
+  BookMarked, CreditCard, HelpCircle,
   Settings, ChevronLeft, Plus, Search, Bot, Brain, History
 } from 'lucide-react';
 import { cn } from '@/utils';
@@ -17,8 +17,6 @@ const NAV = [
   { to: '/flashcard',     icon: CreditCard,      label: 'Flashcard' },
   { to: '/quiz',          icon: HelpCircle,      label: 'Quiz' },
   { to: '/exam-analyzer', icon: Brain,           label: 'Ujian Simulasi' },
-
-  { to: '/analytics',     icon: BarChart2,       label: 'Analytics' },
 ];
 
 export default function Sidebar() {
