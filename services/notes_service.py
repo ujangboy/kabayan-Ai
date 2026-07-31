@@ -1,6 +1,7 @@
 from services.ai_service import ai_service
 from prompts.notes import NOTES_PROMPT
 from repositories.note_repository import note_repository
+from services.json_utils import sanitize_output
 from sqlalchemy.orm import Session
 
 class NotesService:
@@ -13,10 +14,11 @@ class NotesService:
             use_cache=False,
             temperature=0.7,
         )
+        content = sanitize_output(response)
         note = note_repository.create(db, {
             "subject_id": subject_id,
             "title": title,
-            "content": response
+            "content": content
         })
         return note
 
@@ -48,20 +50,20 @@ class NotesService:
         if action == 'rapikan':
             from langchain_core.prompts import PromptTemplate
             prompt = PromptTemplate.from_template("Rapikan format dan bahasa dari catatan berikut tanpa mengubah makna aslinya:\n\n{context}")
-            new_content = ai_service.generate("reasoning", prompt, {"context": note.content}, use_cache=False)
+            new_content = sanitize_output(ai_service.generate("reasoning", prompt, {"context": note.content}, use_cache=False))
             note_repository.update(db, note, {"content": new_content})
             updated_content = new_content
             
         elif action == 'ringkas':
             summary = summary_service.generate_summary(note.content, "Ringkas poin-poin penting.")
-            new_content = note.content + "\n\n--- RINGKASAN AI ---\n" + summary
+            new_content = note.content + "\n\n--- RINGKASAN AI ---\n" + sanitize_output(summary)
             note_repository.update(db, note, {"content": new_content})
             updated_content = new_content
             
         elif action == 'jelaskan':
             from langchain_core.prompts import PromptTemplate
             prompt = PromptTemplate.from_template("Jelaskan catatan berikut dengan bahasa yang lebih sederhana dan mudah dipahami:\n\n{context}")
-            explanation = ai_service.generate("reasoning", prompt, {"context": note.content}, use_cache=False)
+            explanation = sanitize_output(ai_service.generate("reasoning", prompt, {"context": note.content}, use_cache=False))
             new_content = note.content + "\n\n--- PENJELASAN AI ---\n" + explanation
             note_repository.update(db, note, {"content": new_content})
             updated_content = new_content
