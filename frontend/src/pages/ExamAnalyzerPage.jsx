@@ -782,7 +782,7 @@ function QuizView({ sessionData, onDone }) {
                     className={cn('w-full text-left p-3.5 rounded-xl border text-sm transition-all',
                       sel ? 'bg-primary/10 border-primary text-primary'
                           : 'bg-card border-border text-text hover:border-primary/40')}>
-                    {opt}
+                    <MathMarkdown>{opt}</MathMarkdown>
                   </button>
                 );
               })}
