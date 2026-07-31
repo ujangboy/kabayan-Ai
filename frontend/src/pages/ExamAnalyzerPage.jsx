@@ -165,17 +165,22 @@ export default function ExamAnalyzerPage() {
         {/* ── Page Header ── */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            {view !== VIEW.DASHBOARD && (
+            {view !== VIEW.DASHBOARD && subjectId && (
               <button onClick={() => {
-                if ([VIEW.QUIZ, VIEW.GENERATING].includes(view)) return;
+                if (view === VIEW.GENERATING) return;
+                if (view === VIEW.QUIZ) {
+                  if (!confirm('Yakin ingin keluar? Progres ujian ini akan hilang.')) return;
+                  setSessionData(null); go(VIEW.HISTORY); return;
+                }
                 const back = {
                   [VIEW.CONFIG]:     VIEW.DASHBOARD,
                   [VIEW.BLUEPRINT]:  VIEW.CONFIG,
                   [VIEW.RESULT]:     VIEW.QUIZ,
                   [VIEW.REVIEW]:     VIEW.RESULT,
                   [VIEW.RECOMMEND]:  VIEW.RESULT,
-                  [VIEW.HISTORY]:    VIEW.HISTORY,
+                  [VIEW.HISTORY]:    null,
                 }[view] || VIEW.DASHBOARD;
+                if (back === null) { setSubjectId(''); go(VIEW.HISTORY); return; }
                 go(back);
               }} className="p-1.5 rounded-lg hover:bg-card text-text-secondary transition-colors">
                 <ChevronLeft size={18} />
