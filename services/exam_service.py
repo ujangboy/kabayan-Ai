@@ -966,6 +966,32 @@ class ExamService:
         if subject_id:
             query = query.filter(ExamSession.subject_id == subject_id)
         sessions = query.limit(200).all()
+
+        # Pre-load material names from blueprint_json for all sessions at once
+        blueprint_ids = list({s.blueprint_id for s in sessions if s.blueprint_id})
+        blueprint_material_map: dict = {}  # blueprint_id → list[str] of material names
+        if blueprint_ids:
+            from models import ExamBlueprint, Material
+            bps = db.query(ExamBlueprint).filter(ExamBlueprint.id.in_(blueprint_ids)).all()
+            # Collect all material ids needed
+            all_mat_ids: set = set()
+            bp_mat_ids: dict = {}  # blueprint_id → [material_id, ...]
+            for bp in bps:
+                try:
+                    bp_data = json.loads(bp.blueprint_json) if bp.blueprint_json else {}
+                    raw = bp_data.get("material_ids", "")
+                    if raw:
+                        ids = [int(x.strip()) for x in str(raw).split(",") if x.strip().isdigit()]
+                        bp_mat_ids[bp.id] = ids
+                        all_mat_ids.update(ids)
+                except Exception:
+                    pass
+            if all_mat_ids:
+                mats = db.query(Material).filter(Material.id.in_(all_mat_ids)).all()
+                mat_name_map = {m.id: m.filename or f"Materi #{m.id}" for m in mats}
+                for bp_id, ids in bp_mat_ids.items():
+                    blueprint_material_map[bp_id] = [mat_name_map[i] for i in ids if i in mat_name_map]
+
         result = []
         for s in sessions:
             attempts = exam_attempt_repo.get_by_session(db, s.id)
@@ -976,11 +1002,13 @@ class ExamService:
                 for a in attempts
             ]
             plan = study_plan_repo.get_by_session(db, s.id)
+            material_names = blueprint_material_map.get(s.blueprint_id, []) if s.blueprint_id else []
             result.append({
                 "id": s.id, "subject_id": s.subject_id,
                 "subject_name": s.subject_name,
                 "title": s.title or f"Sesi #{s.id}",
                 "exam_type": s.exam_type, "difficulty": s.difficulty,
+                "question_type": s.question_type,
                 "total_questions": s.total_questions,
                 "best_score": s.best_score, "latest_score": s.latest_score,
                 "grade": s.grade, "progress": s.progress, "status": s.status or "active",
@@ -990,6 +1018,7 @@ class ExamService:
                 "has_study_plan": plan is not None,
                 "study_plan_progress": plan.progress if plan else 0,
                 "study_plan_start_date": plan.start_date.isoformat() if (plan and plan.start_date) else None,
+                "material_names": material_names,
                 "created_at": s.started_at.isoformat() if s.started_at else None,
                 "updated_at": s.updated_at.isoformat() if s.updated_at else None,
             })

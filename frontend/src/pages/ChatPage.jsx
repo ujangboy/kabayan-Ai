@@ -277,87 +277,138 @@ export default function ChatPage() {
         </div>
 
         {/* Chat list */}
-        <div className="flex-1 overflow-y-auto p-2 space-y-1">
-          {sortedChats.map((c) => (
-            <div
-              key={c.id}
-              className={cn(
-                'group relative flex items-center rounded-lg transition-colors',
-                c.id === currentChatId ? 'bg-primary/10' : 'hover:bg-card'
-              )}
-            >
-              {/* Rename inline */}
-              {editingChatId === c.id ? (
-                <input
-                  autoFocus
-                  value={editingTitle}
-                  onChange={(e) => setEditingTitle(e.target.value)}
-                  onBlur={() => {
-                    if (editingTitle.trim()) renameChat(c.id, editingTitle.trim());
-                    setEditingChatId(null);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      if (editingTitle.trim()) renameChat(c.id, editingTitle.trim());
-                      setEditingChatId(null);
-                    }
-                    if (e.key === 'Escape') setEditingChatId(null);
-                  }}
-                  className="flex-1 px-3 py-2 text-xs bg-background border border-primary rounded-lg text-text outline-none"
-                />
-              ) : (
-                <button
-                  onClick={() => { setCurrentChat(c.id); navigate(`/chat?id=${c.id}`); }}
-                  className="flex-1 text-left px-3 py-2 text-xs truncate"
-                >
-                  <span className="flex items-center gap-1">
-                    {c.pinned && <Pin size={9} className="text-primary shrink-0" />}
-                    <span className={cn('truncate', c.id === currentChatId ? 'text-primary' : 'text-text-secondary')}>
-                      {c.title || 'Chat Baru'}
-                    </span>
-                  </span>
-                </button>
-              )}
+        <div className="flex-1 overflow-y-auto p-2 space-y-0.5">
+          {(() => {
+            // Group chats by relative time
+            const now = new Date();
+            const today = new Date(now); today.setHours(0,0,0,0);
+            const yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1);
+            const lastWeek  = new Date(today); lastWeek.setDate(lastWeek.getDate() - 7);
 
-              {/* Action buttons — show on hover */}
-              {editingChatId !== c.id && (
-                <div className="absolute right-1 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center gap-0.5 bg-card border border-border rounded-md px-0.5 py-0.5 shadow-sm">
-                  {/* Pin */}
-                  <button
-                    onClick={(e) => { e.stopPropagation(); togglePinChat(c.id); }}
-                    title={c.pinned ? 'Unpin' : 'Pin'}
-                    className={cn('p-1 rounded transition-colors', c.pinned ? 'text-primary' : 'text-text-muted hover:text-primary')}
+            const getGroup = (createdAt) => {
+              const d = new Date(createdAt || 0);
+              if (d >= today)     return 'Hari Ini';
+              if (d >= yesterday) return 'Kemarin';
+              if (d >= lastWeek)  return '7 Hari Terakhir';
+              const yr = d.getFullYear();
+              return yr === now.getFullYear()
+                ? d.toLocaleDateString('id-ID', { month: 'long' })
+                : d.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+            };
+
+            const getRelLabel = (createdAt) => {
+              const d = new Date(createdAt || 0);
+              const diffMs = now - d;
+              const diffMin = Math.floor(diffMs / 60000);
+              const diffH   = Math.floor(diffMs / 3600000);
+              const diffD   = Math.floor(diffMs / 86400000);
+              if (diffMin < 1)   return 'Baru saja';
+              if (diffMin < 60)  return `${diffMin} mnt lalu`;
+              if (diffH   < 24)  return `${diffH} jam lalu`;
+              if (diffD   < 7)   return `${diffD} hari lalu`;
+              return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+            };
+
+            // Grouped map preserving sort order
+            const groups = [];
+            const seen = new Set();
+            for (const c of sortedChats) {
+              const g = getGroup(c.createdAt);
+              if (!seen.has(g)) { seen.add(g); groups.push({ label: g, chats: [] }); }
+              groups.find(x => x.label === g).chats.push(c);
+            }
+
+            return groups.map(({ label, chats: groupChats }) => (
+              <div key={label}>
+                <p className="px-2 pt-3 pb-1 text-[10px] font-semibold text-text-muted uppercase tracking-wider select-none">
+                  {label}
+                </p>
+                {groupChats.map((c) => (
+                  <div
+                    key={c.id}
+                    className={cn(
+                      'group relative flex items-center rounded-lg transition-colors',
+                      c.id === currentChatId ? 'bg-primary/10' : 'hover:bg-card'
+                    )}
                   >
-                    <Pin size={11} />
-                  </button>
-                  {/* Rename */}
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setEditingChatId(c.id); setEditingTitle(c.title || ''); }}
-                    title="Rename"
-                    className="p-1 rounded text-text-muted hover:text-text transition-colors"
-                  >
-                    <Edit3 size={11} />
-                  </button>
-                  {/* Delete */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deleteChat(c.id);
-                      if (c.id === currentChatId) {
-                        const remaining = chats.filter(x => x.id !== c.id);
-                        if (remaining.length > 0) navigate(`/chat?id=${remaining[0].id}`);
-                        else { const newId = createChat(); navigate(`/chat?id=${newId}`); }
-                      }
-                    }}
-                    title="Hapus"
-                    className="p-1 rounded text-text-muted hover:text-danger transition-colors"
-                  >
-                    <X size={11} />
-                  </button>
-                </div>
-              )}
-            </div>
-          ))}
+                    {/* Rename inline */}
+                    {editingChatId === c.id ? (
+                      <input
+                        autoFocus
+                        value={editingTitle}
+                        onChange={(e) => setEditingTitle(e.target.value)}
+                        onBlur={() => {
+                          if (editingTitle.trim()) renameChat(c.id, editingTitle.trim());
+                          setEditingChatId(null);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            if (editingTitle.trim()) renameChat(c.id, editingTitle.trim());
+                            setEditingChatId(null);
+                          }
+                          if (e.key === 'Escape') setEditingChatId(null);
+                        }}
+                        className="flex-1 px-3 py-2 text-xs bg-background border border-primary rounded-lg text-text outline-none"
+                      />
+                    ) : (
+                      /* Normal row: title kiri, waktu relatif kanan. Hover: aksi menggantikan waktu */
+                      <button
+                        onClick={() => { setCurrentChat(c.id); navigate(`/chat?id=${c.id}`); }}
+                        className="flex-1 min-w-0 flex items-center justify-between px-2 py-1.5 text-xs"
+                      >
+                        {/* Title */}
+                        <span className="flex items-center gap-1 min-w-0 flex-1">
+                          {c.pinned && <Pin size={8} className="text-primary shrink-0" />}
+                          <span className={cn('truncate', c.id === currentChatId ? 'text-primary font-medium' : 'text-text-secondary')}>
+                            {c.title || 'Chat Baru'}
+                          </span>
+                        </span>
+                        {/* Waktu relatif — tersembunyi saat hover, diganti tombol aksi */}
+                        <span className="text-[10px] text-text-muted ml-1.5 shrink-0 group-hover:hidden whitespace-nowrap">
+                          {getRelLabel(c.createdAt)}
+                        </span>
+                      </button>
+                    )}
+
+                    {/* Action buttons — muncul saat hover, menggantikan waktu */}
+                    {editingChatId !== c.id && (
+                      <div className="absolute right-1 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center gap-0.5 bg-card border border-border rounded-md px-0.5 py-0.5 shadow-sm">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); togglePinChat(c.id); }}
+                          title={c.pinned ? 'Unpin' : 'Pin'}
+                          className={cn('p-1 rounded transition-colors', c.pinned ? 'text-primary' : 'text-text-muted hover:text-primary')}
+                        >
+                          <Pin size={11} />
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setEditingChatId(c.id); setEditingTitle(c.title || ''); }}
+                          title="Ganti Nama"
+                          className="p-1 rounded text-text-muted hover:text-text transition-colors"
+                        >
+                          <Edit3 size={11} />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteChat(c.id);
+                            if (c.id === currentChatId) {
+                              const remaining = chats.filter(x => x.id !== c.id);
+                              if (remaining.length > 0) navigate(`/chat?id=${remaining[0].id}`);
+                              else { const newId = createChat(); navigate(`/chat?id=${newId}`); }
+                            }
+                          }}
+                          title="Hapus"
+                          className="p-1 rounded text-text-muted hover:text-danger transition-colors"
+                        >
+                          <X size={11} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ));
+          })()}
         </div>
 
         {/* Bottom: hapus semua */}

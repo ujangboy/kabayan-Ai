@@ -1585,6 +1585,19 @@ function HistoryCard({ session: s, onDetail, onDelete }) {
           </div>
           <h3 className="font-bold text-text text-sm leading-snug line-clamp-2">{s.title}</h3>
           <p className="text-xs text-text-muted mt-0.5">{s.subject_name}</p>
+          {/* Nama materi yang digunakan */}
+          {(s.material_names || []).length > 0 && (
+            <div className="flex gap-1 flex-wrap mt-1.5">
+              {(s.material_names || []).slice(0, 2).map((name, i) => (
+                <span key={i} className="inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded bg-accent-blue/10 text-accent-blue border border-accent-blue/20 truncate max-w-[120px]">
+                  <FileText size={8} className="shrink-0" />{name}
+                </span>
+              ))}
+              {(s.material_names || []).length > 2 && (
+                <span className="text-[10px] text-text-muted">+{s.material_names.length - 2} lagi</span>
+              )}
+            </div>
+          )}
         </div>
         <div className="text-right shrink-0 ml-3">
           <p className={cn('text-3xl font-black', gradeC)}>{s.best_score ?? '--'}</p>
