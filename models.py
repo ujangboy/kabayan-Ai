@@ -1,5 +1,5 @@
 import enum
-from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Enum, UniqueConstraint
+from sqlalchemy import Column, Integer, String, Text, DateTime, Date, ForeignKey, Enum, UniqueConstraint
 from sqlalchemy.orm import relationship
 import datetime
 from database import Base
@@ -265,6 +265,7 @@ class StudyPlan(Base):
     total_days         = Column(Integer, default=7)
     completed_days     = Column(Integer, default=0)
     progress           = Column(Integer, default=0)      # 0-100
+    start_date         = Column(Date, nullable=True)
     created_at         = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at         = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 

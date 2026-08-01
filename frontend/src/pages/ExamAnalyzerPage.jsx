@@ -227,7 +227,7 @@ export default function ExamAnalyzerPage() {
             {view === VIEW.BLUEPRINT  && <BlueprintView blueprint={blueprint} subjectId={subjectId} onGenerate={handleSessionReady} onBack={() => go(VIEW.CONFIG)} />}
             {view === VIEW.GENERATING && <GeneratingView />}
             {view === VIEW.QUIZ       && <QuizView sessionData={sessionData} onDone={handleEvalDone} />}
-            {view === VIEW.RESULT     && <ResultView evalData={evalData} sessionData={sessionData} onReview={() => go(VIEW.REVIEW)} onRecommend={(d) => handleRecommendDone(d)} onFinish={() => go(VIEW.HISTORY)} sessionId={sessionData?.session_id} subjects={subjects} selectedSubjectId={subjectId} />}
+            {view === VIEW.RESULT     && <ResultView evalData={evalData} sessionData={sessionData} onReview={() => go(VIEW.REVIEW)} onRecommend={(d) => handleRecommendDone(d)} onFinish={() => go(VIEW.HISTORY)} sessionId={sessionData?.session_id} subjects={subjects} selectedSubjectId={subjectId} onOpenPlanTab={() => { setPendingPlanTab(true); setDetailId(sessionData?.session_id); }} />}
             {view === VIEW.REVIEW     && <ReviewView sessionData={sessionData} evalData={evalData} />}
             {view === VIEW.RECOMMEND  && <RecommendView recommend={recommend} />}
             {view === VIEW.HISTORY    && <HistoryView subjectId={subjectId} subjects={subjects} onSelectSubject={(id) => { setSubjectId(id); go(VIEW.HISTORY); }} onStartConfig={startConfigFor} onResume={(sd) => { setSessionData(sd); go(VIEW.QUIZ); }} />}
@@ -841,13 +841,16 @@ function QuizView({ sessionData, onDone }) {
 
 
 // ─── Result View ──────────────────────────────────────────────────────────────
-function ResultView({ evalData, sessionData, onReview, onRecommend, onFinish, sessionId, subjects, selectedSubjectId }) {
+function ResultView({ evalData, sessionData, onReview, onRecommend, onFinish, sessionId, subjects, selectedSubjectId, onOpenPlanTab }) {
   const [loadingRec, setLoadingRec]     = useState(false);
   const [recError, setRecError]         = useState('');
   const [saving, setSaving]             = useState(false);
   const [saved, setSaved]               = useState(false);
   const [savedHistoryId, setSavedHistoryId] = useState(null);
   const [saveError, setSaveError]       = useState('');
+  const [planSaved, setPlanSaved]       = useState(false);
+  const [loadingPlanNav, setLoadingPlanNav] = useState(false);
+  const [planNavError, setPlanNavError] = useState('');
   const navigate = typeof window !== 'undefined' ? null : null; // will use window.location
 
   if (!evalData) return null;
@@ -892,6 +895,26 @@ function ResultView({ evalData, sessionData, onReview, onRecommend, onFinish, se
     } catch (e) {
       setSaveError(e.response?.data?.detail || e.message || 'Gagal menyimpan hasil.');
     } finally { setSaving(false); }
+  };
+
+  const handleLihatRencana = async () => {
+    setPlanNavError('');
+    if (planSaved || saved) {
+      onFinish && onFinish();
+      onOpenPlanTab && onOpenPlanTab();
+      return;
+    }
+    setLoadingPlanNav(true);
+    try {
+      const rr = await examAPI.getRecommendation(sessionId);
+      if (!rr.data || rr.data.detail) throw new Error(rr.data?.detail || 'Gagal ambil rencana');
+      await sessionsAPI.saveStudyPlan(sessionId, rr.data);
+      setPlanSaved(true);
+      onFinish && onFinish();
+      onOpenPlanTab && onOpenPlanTab();
+    } catch (e) {
+      setPlanNavError(e.message || 'Gagal menyimpan rencana belajar.');
+    } finally { setLoadingPlanNav(false); }
   };
 
   return (
@@ -980,6 +1003,12 @@ function ResultView({ evalData, sessionData, onReview, onRecommend, onFinish, se
         <button onClick={fetchRecommend} disabled={loadingRec} className="btn-ghost text-sm border border-border">
           {loadingRec ? <><Loader2 size={13} className="animate-spin" /> Memuat...</> : <><Calendar size={13} /> Rencana Belajar</>}
         </button>
+        <button onClick={handleLihatRencana} disabled={loadingPlanNav} className="btn-ghost text-sm border border-border">
+          {loadingPlanNav
+            ? <><Loader2 size={13} className="animate-spin" /> Menyimpan...</>
+            : <><Calendar size={13} /> Lihat Rencana Belajar</>}
+        </button>
+        {planNavError && <p className="text-danger text-xs">{planNavError}</p>}
         <button onClick={handleSelesai} disabled={saving} className="btn-primary text-sm ml-auto">
           {saving
             ? <><Loader2 size={13} className="animate-spin" /> Menyimpan...</>
@@ -1290,6 +1319,7 @@ function HistoryView({ subjectId, subjects, onSelectSubject, onStartConfig, onRe
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortBy,    setSortBy]    = useState('newest');
   const [detailId,  setDetailId]  = useState(null);
+  const [pendingPlanTab, setPendingPlanTab] = useState(false);
 
   const { data: materialData } = useQuery({
     queryKey: ['materials'],
@@ -1531,6 +1561,18 @@ function HistoryCard({ session: s, onDetail, onDelete }) {
             <Calendar size={10} /> {s.study_plan_progress || 0}% plan
           </span>
         )}
+        {s.has_study_plan && s.study_plan_start_date && (() => {
+          const MONTHS_ID = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+          const start = new Date(s.study_plan_start_date);
+          const end = new Date(s.study_plan_start_date);
+          end.setDate(end.getDate() + 6);
+          const fmt = (d) => `${d.getDate()} ${MONTHS_ID[d.getMonth()]}`;
+          return (
+            <span className="text-[10px] text-text-muted flex items-center gap-1">
+              <Calendar size={9}/> {fmt(start)} – {fmt(end)}
+            </span>
+          );
+        })()}
       </div>
 
       <div className="mt-auto flex gap-2">
@@ -1551,7 +1593,11 @@ function HistoryCard({ session: s, onDetail, onDelete }) {
 // ─── Detail Modal ─────────────────────────────────────────────────────────────
 function DetailModal({ historySessionId, onClose, onResume }) {
   const queryClient = useQueryClient();
-  const [tab, setTab] = useState('overview');
+  const [tab, setTab] = useState(pendingPlanTab ? 'plan' : 'overview');
+
+  useEffect(() => {
+    if (pendingPlanTab && tab === 'plan') setPendingPlanTab(false);
+  }, [tab]);
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['exam-history-detail', historySessionId],
@@ -1616,7 +1662,7 @@ function DetailModal({ historySessionId, onClose, onResume }) {
       <div className="flex-1 overflow-y-auto p-5">
         {tab === 'overview'  && <OverviewTab data={data} />}
         {tab === 'review'    && <ReviewTab attempt={latestAttempt} />}
-        {tab === 'plan'      && <StudyPlanTab plan={data.study_plan} onToggle={(id) => toggleMutation.mutate(id)} />}
+        {tab === 'plan'      && <StudyPlanTab plan={data.study_plan} sessionId={historySessionId} onToggle={(id) => toggleMutation.mutate(id)} onPlanSaved={() => refetch()} />}
         {tab === 'attempts'  && <AttemptsTab attempts={data.attempts || []} />}
       </div>
 
@@ -1845,7 +1891,48 @@ function ReviewTab({ attempt }) {
   );
 }
 
-function StudyPlanTab({ plan, onToggle }) {
+function StudyPlanTab({ plan, sessionId, onToggle, onPlanSaved }) {
+  const today = new Date().toISOString().split('T')[0];
+  const [startDate, setStartDate] = useState(plan?.start_date || today);
+  const [dateSaving, setDateSaving] = useState(false);
+  const [dateError, setDateError] = useState('');
+
+  const DAYS_ID   = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+  const MONTHS_ID = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+
+  function formatItemDate(startDateStr, orderNumber) {
+    const d = new Date(startDateStr);
+    d.setDate(d.getDate() + orderNumber);
+    return `${DAYS_ID[d.getDay()]}, ${d.getDate()} ${MONTHS_ID[d.getMonth()]}`;
+  }
+
+  async function handleDateChange(newDate) {
+    const prevDate = startDate;
+    setStartDate(newDate);
+    setDateSaving(true); setDateError('');
+    try {
+      const planPayload = {
+        title: plan.title,
+        motivational_message: plan.motivational_message,
+        priority_actions: plan.priority_actions,
+        start_date: newDate,
+        study_plan: (plan.items || []).map(item => ({
+          label: item.day_label,
+          topic: item.topic,
+          activity: item.activity,
+          type: item.activity_type,
+          duration_minutes: item.duration_minutes,
+          resources: item.resources,
+        })),
+      };
+      await sessionsAPI.saveStudyPlan(sessionId, planPayload);
+      onPlanSaved && onPlanSaved();
+    } catch (e) {
+      setStartDate(prevDate);
+      setDateError('Gagal menyimpan tanggal. Coba lagi.');
+    } finally { setDateSaving(false); }
+  }
+
   if (!plan) return (
     <p className="text-text-muted text-sm py-8 text-center">
       Belum ada rencana belajar tersimpan untuk sesi ini.
@@ -1854,8 +1941,30 @@ function StudyPlanTab({ plan, onToggle }) {
 
   const typeColor = { review:'blue', practice:'purple', simulation:'warning', rest:'success' };
 
+  const completedItems = (plan.items || []).filter(i => i.completed).length;
+  const totalItems     = (plan.items || []).length;
+  const progressValue  = totalItems > 0
+    ? Math.round((completedItems / totalItems) * 100)
+    : 0;
+
   return (
     <div className="space-y-4">
+      {/* Date picker */}
+      <div className="flex items-center gap-2 mb-2">
+        <Calendar size={14} className="text-primary" />
+        <span className="text-xs font-semibold text-text-secondary">Mulai Belajar:</span>
+        <input
+          type="date"
+          value={startDate}
+          onChange={e => handleDateChange(e.target.value)}
+          disabled={dateSaving}
+          className="px-2 py-1 bg-card border border-border rounded-lg text-xs text-text
+                     focus:outline-none focus:border-primary disabled:opacity-50"
+        />
+        {dateSaving && <Loader2 size={12} className="animate-spin text-primary" />}
+      </div>
+      {dateError && <p className="text-danger text-xs mb-2">{dateError}</p>}
+
       {plan.motivational_message && (
         <div className="p-3 rounded-xl bg-primary/5 border border-primary/15 flex items-start gap-2">
           <Award size={14} className="text-primary mt-0.5 shrink-0" />
@@ -1863,11 +1972,16 @@ function StudyPlanTab({ plan, onToggle }) {
         </div>
       )}
 
+      {/* Dynamic progress bar */}
       <div className="flex justify-between text-xs text-text-muted mb-1">
         <span>Progress Rencana Belajar</span>
-        <span>{plan.completed_days}/{plan.total_days} hari · {plan.progress}%</span>
+        <span>
+          {progressValue >= 100
+            ? '🎉 Rencana Selesai!'
+            : `${completedItems}/${totalItems} hari · ${progressValue}%`}
+        </span>
       </div>
-      <ProgressBar value={plan.progress} color={plan.progress >= 100 ? 'success' : 'primary'} />
+      <ProgressBar value={progressValue} color={progressValue >= 100 ? 'success' : 'primary'} />
 
       {(plan.priority_actions || []).length > 0 && (
         <div className="p-3 rounded-xl bg-card border border-border">
@@ -1882,36 +1996,50 @@ function StudyPlanTab({ plan, onToggle }) {
       )}
 
       <div className="space-y-2">
-        {(plan.items || []).map((item) => (
-          <div key={item.id}
-            className={cn('flex items-start gap-3 p-3 rounded-xl border transition-all',
-              item.completed ? 'bg-success/5 border-success/20 opacity-80' : 'bg-card border-border')}>
-            <button onClick={() => onToggle(item.id)}
-              className={cn('w-5 h-5 rounded-md border flex items-center justify-center shrink-0 mt-0.5 transition-all',
-                item.completed ? 'bg-success border-success text-white' : 'border-border hover:border-primary')}>
-              {item.completed && <Check size={11} />}
-            </button>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-0.5">
-                <span className="text-xs font-semibold text-text-muted">{item.day_label}</span>
-                <Chip label={item.activity_type || 'review'} size="xs"
-                  color={typeColor[item.activity_type] || 'blue'} />
-                {item.duration_minutes && (
-                  <span className="text-[10px] text-text-muted flex items-center gap-0.5">
-                    <Clock size={9} />{item.duration_minutes}m
-                  </span>
+        {(plan.items || []).map((item) => {
+          const dateLabel = plan.start_date
+            ? formatItemDate(startDate, item.order_number)
+            : item.day_label;
+          return (
+            <div key={item.id}
+              className={cn('flex items-start gap-3 p-3 rounded-xl border transition-all',
+                item.completed ? 'bg-success/5 border-success/20 opacity-70' : 'bg-card border-border')}>
+              <button onClick={() => onToggle(item.id)}
+                className={cn('w-5 h-5 rounded-md border flex items-center justify-center shrink-0 mt-0.5 transition-all',
+                  item.completed ? 'bg-success border-success text-white' : 'border-border hover:border-primary')}>
+                {item.completed && <Check size={11} />}
+              </button>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <span className="text-xs font-semibold text-text-muted">{dateLabel}</span>
+                  <Chip label={item.activity_type || 'review'} size="xs"
+                    color={typeColor[item.activity_type] || 'blue'} />
+                  {item.duration_minutes && (
+                    <span className="text-[10px] text-text-muted flex items-center gap-0.5">
+                      <Clock size={9} />{item.duration_minutes}m
+                    </span>
+                  )}
+                </div>
+                <p className={cn("text-sm font-medium text-text", item.completed && "line-through")}>
+                  {item.topic}
+                </p>
+                {item.activity && <p className="text-xs text-text-secondary">{item.activity}</p>}
+                {item.resources && (
+                  <p className="text-[10px] text-primary mt-0.5 flex items-center gap-0.5">
+                    <Lightbulb size={9}/>{item.resources}
+                  </p>
                 )}
               </div>
-              <p className="text-sm font-medium text-text">{item.topic}</p>
-              {item.activity && <p className="text-xs text-text-secondary">{item.activity}</p>}
-              {item.resources && (
-                <p className="text-[10px] text-primary mt-0.5 flex items-center gap-0.5">
-                  <Lightbulb size={9}/>{item.resources}
-                </p>
+              {!item.completed && (
+                <button onClick={() => onToggle(item.id)}
+                  className="text-[10px] px-2 py-0.5 rounded border border-border text-text-muted
+                             hover:border-warning/40 hover:text-warning transition-colors shrink-0">
+                  Lewati
+                </button>
               )}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

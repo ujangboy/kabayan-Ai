@@ -686,6 +686,8 @@ class ExamService:
             strong_topics = eval_data.get("strong_topics", []),
             score         = eval_data.get("score", 0),
             subject_name  = subject_name,
+            db=db,
+            subject_id=session.subject_id,
         )
 
     # ── 7. Lazy AI explanation for one question ───────────────────────────────
@@ -803,6 +805,7 @@ class ExamService:
                 "priority_actions": json.loads(s.plan.priority_actions_json) if s.plan.priority_actions_json else [],
                 "total_days": s.plan.total_days, "completed_days": s.plan.completed_days,
                 "progress": s.plan.progress,
+                "start_date": s.plan.start_date.isoformat() if s.plan.start_date else None,
                 "items": [{"id": i.id, "order_number": i.order_number, "day_label": i.day_label,
                            "topic": i.topic, "activity": i.activity, "activity_type": i.activity_type,
                            "duration_minutes": i.duration_minutes, "resources": i.resources,
@@ -870,6 +873,7 @@ class ExamService:
                 "attempt_count": len(attempts), "attempts": attempt_list,
                 "has_study_plan": plan is not None,
                 "study_plan_progress": plan.progress if plan else 0,
+                "study_plan_start_date": plan.start_date.isoformat() if (plan and plan.start_date) else None,
                 "created_at": s.started_at.isoformat() if s.started_at else None,
                 "updated_at": s.updated_at.isoformat() if s.updated_at else None,
             })
@@ -920,6 +924,15 @@ class ExamService:
                 db.delete(existing)
 
             sp_items = plan_data.get("study_plan", [])
+
+            start_date_val = None
+            raw_date = plan_data.get("start_date")
+            if raw_date:
+                try:
+                    start_date_val = datetime.date.fromisoformat(str(raw_date)[:10])
+                except (ValueError, TypeError):
+                    start_date_val = None
+
             plan = StudyPlan(
                 session_id=session_id,
                 title=plan_data.get("title", "Rencana Belajar"),
@@ -927,6 +940,7 @@ class ExamService:
                 priority_actions_json=json.dumps(plan_data.get("priority_actions", []), ensure_ascii=False),
                 total_days=len(sp_items),
                 completed_days=0, progress=0,
+                start_date=start_date_val,
                 created_at=datetime.datetime.utcnow(),
                 updated_at=datetime.datetime.utcnow(),
             )

@@ -15,6 +15,8 @@ import json
 import datetime
 from typing import List, Dict, Optional, Tuple
 
+from models import QuestionBank, Material
+
 
 # ─── Grading helpers ─────────────────────────────────────────────────────────
 
@@ -238,22 +240,52 @@ def assemble_evaluation(
 
 # ─── Rule-based study recommendation ─────────────────────────────────────────
 
-_ACTIVITY_BY_ACCURACY = {
-    # (min_acc, max_acc): activity_type
-    (0,  40):  "intensive_review",
-    (40, 60):  "review",
-    (60, 80):  "practice",
-    (80, 101): "simulation",
-}
+# Score-tier constants: (min_acc_inclusive, max_acc_exclusive) → (days, duration_min, activity_type)
+_TIER_RULES: List[Tuple[int, int, int, int, str]] = [
+    # (lo, hi, days, duration_min, activity_type)
+    (0,  40,  4, 60, "review"),    # URGENT
+    (40, 60,  2, 45, "practice"),  # HIGH
+    (60, 80,  1, 30, "review"),    # MEDIUM
+    (80, 101, 0,  0, ""),          # LOW → skip
+]
 
-def _activity_type(acc: int) -> str:
-    for (lo, hi), atype in _ACTIVITY_BY_ACCURACY.items():
+def _classify_tier(acc: int) -> Tuple[int, int, str]:
+    """Return (days, duration_minutes, activity_type) for the given accuracy."""
+    for lo, hi, days, dur, atype in _TIER_RULES:
         if lo <= acc < hi:
-            return atype
-    return "review"
+            return days, dur, atype
+    # Fallback: treat any out-of-range as URGENT
+    return 4, 60, "review"
 
-def _duration_by_priority(priority: str) -> int:
-    return {"Tinggi": 60, "Menengah": 45, "Rendah": 30}.get(priority, 45)
+def _tier_activity_description(topic: str, activity_type: str, acc: int) -> str:
+    """Generate activity description text based on tier."""
+    if acc < 40:
+        return f"Review mendalam topik {topic} — latihan intensif soal dan konsep dasar"
+    elif acc < 60:
+        return f"Latihan soal topik {topic} — drill soal dan review kesalahan"
+    else:
+        return f"Review singkat topik {topic} — pastikan konsep sudah dipahami"
+
+
+def _get_resources(db, subject_id, topic: str, subject_name: str) -> str:
+    """Return a resources string for a study plan item."""
+    if db is None or subject_id is None:
+        return f"Materi {subject_name} — topik {topic}."
+    try:
+        count = db.query(QuestionBank).filter(
+            QuestionBank.subject_id == subject_id,
+            QuestionBank.topic == topic
+        ).count()
+        if count > 0:
+            return f"{count} soal latihan tersedia untuk topik {topic}"
+        mat_count = db.query(Material).filter(
+            Material.subject_id == subject_id
+        ).count()
+        if mat_count > 0:
+            return f"Baca materi {subject_name}"
+        return "Notebook dan Flashcard di Kabayan AI."
+    except Exception:
+        return f"Materi {subject_name} — topik {topic}."
 
 
 def generate_study_plan(
@@ -262,19 +294,25 @@ def generate_study_plan(
     score: int,
     subject_name: str = "Mata Kuliah",
     total_days: int = 7,
+    db=None,
+    subject_id: int = None,
 ) -> dict:
     """
     Rule-based 7-day study plan. No AI required.
 
-    Priority rules:
-      accuracy < 40  → intensive_review, 60 min
-      40–60          → review, 45 min
-      60–80          → practice, 30 min
-      80+            → simulation / rest
+    Score-tier rules (by topic accuracy):
+      accuracy < 40  → URGENT: 4 days at 60 min each, activity_type="review"
+      accuracy 40–59 → HIGH: 2 days at 45 min each, activity_type="practice"
+      accuracy 60–79 → MEDIUM: 1 day at 30 min, activity_type="review"
+      accuracy >= 80 → LOW: skip entirely
+
+    Always returns exactly 7 items in study_plan.
+    Slots 1–6 filled with weak topics (tier-based) + "Review Umum" gap-fill.
+    Slot 7 always = "Simulasi Penuh" (simulation).
 
     Motivational message is selected from a fixed table based on score.
     """
-    # Motivational messages by score band
+    # ── Motivational messages by score band ──────────────────────────────────
     if score >= 90:
         msg = f"Luar biasa! Nilai kamu {score}. Pertahankan dan siapkan diri untuk ujian asli."
     elif score >= 75:
@@ -284,7 +322,7 @@ def generate_study_plan(
     else:
         msg = f"Nilai kamu {score}. Jangan menyerah! Mulai dari topik yang paling dasar dulu."
 
-    # Priority actions
+    # ── Priority actions ─────────────────────────────────────────────────────
     priority_actions = []
     for wt in weak_topics[:3]:
         priority_actions.append(
@@ -297,65 +335,67 @@ def generate_study_plan(
             f"Topik '{strong_topics[0]['topic']}' sudah dikuasai — fokus ke topik lemah."
         )
 
-    # Build daily plan
-    plan_items = []
-    weak_queue  = list(weak_topics)  # topics needing most attention first
-    strong_queue= list(strong_topics)
+    # ── Build day slots (cap = 6; slot 7 reserved for Simulasi Penuh) ────────
+    # Sort weak_topics worst-first (lowest accuracy first); default accuracy=0 if missing
+    sorted_weak = sorted(weak_topics, key=lambda t: t.get("accuracy", 0))
 
-    for day in range(1, total_days + 1):
-        if day == total_days:
-            # Last day = full simulation
-            item = {
-                "day": day,
-                "label": f"Hari {day}",
-                "topic": "Simulasi Penuh",
-                "activity": f"Kerjakan simulasi ujian {subject_name} lengkap untuk mengukur kesiapan.",
-                "type": "simulation",
-                "duration_minutes": 60,
-                "resources": f"Gunakan fitur Exam Analyzer untuk simulasi {subject_name}.",
-            }
-        elif weak_queue:
-            wt   = weak_queue.pop(0)
-            acc  = wt.get("accuracy", 50)
-            atype = _activity_type(acc)
-            dur   = _duration_by_priority(wt.get("priority", "Menengah"))
-            desc  = (
-                f"Review mendalam topik '{wt['topic']}' (akurasi saat ini: {acc}%)."
-                if atype == "intensive_review"
-                else f"Pelajari kembali topik '{wt['topic']}' dan kerjakan latihan soal."
-            )
-            item = {
-                "day": day,
-                "label": f"Hari {day}",
-                "topic": wt["topic"],
-                "activity": desc,
+    day_slots: List[dict] = []
+
+    for wt in sorted_weak:
+        if len(day_slots) >= 6:
+            break
+        acc = wt.get("accuracy", 0)  # default to 0 (URGENT) if missing
+        days, dur, atype = _classify_tier(acc)
+
+        if days == 0:
+            # LOW tier → skip entirely
+            continue
+
+        topic = wt.get("topic", "Topik")
+        activity_desc = _tier_activity_description(topic, atype, acc)
+
+        for _ in range(days):
+            if len(day_slots) >= 6:
+                break
+            day_slots.append({
+                "topic": topic,
+                "activity": activity_desc,
                 "type": atype,
                 "duration_minutes": dur,
-                "resources": f"Materi {subject_name} — topik {wt['topic']}.",
-            }
-        elif strong_queue:
-            st   = strong_queue.pop(0)
-            item = {
-                "day": day,
-                "label": f"Hari {day}",
-                "topic": st["topic"],
-                "activity": f"Latihan soal tingkat lanjut untuk topik '{st['topic']}'.",
-                "type": "practice",
-                "duration_minutes": 30,
-                "resources": f"Soal-soal latihan {subject_name}.",
-            }
-        else:
-            # Extra day: rest or mixed review
-            item = {
-                "day": day,
-                "label": f"Hari {day}",
-                "topic": "Review Umum",
-                "activity": "Ulas kembali seluruh catatan dan flashcard.",
-                "type": "review",
-                "duration_minutes": 30,
-                "resources": "Notebook dan Flashcard di Kabayan AI.",
-            }
-        plan_items.append(item)
+                "resources": _get_resources(db, subject_id, topic, subject_name),
+            })
+
+    # ── Fill remaining slots (up to 6) with Review Umum ──────────────────────
+    while len(day_slots) < 6:
+        day_slots.append({
+            "topic": "Review Umum",
+            "activity": "Review umum seluruh materi — perkuat pemahaman topik yang sudah dipelajari",
+            "type": "review",
+            "duration_minutes": 60,
+            "resources": "",
+        })
+
+    # ── Always append Simulasi Penuh as 7th item ─────────────────────────────
+    day_slots.append({
+        "topic": "Simulasi Penuh",
+        "activity": "Simulasi ujian penuh — uji seluruh kemampuan yang sudah dipelajari",
+        "type": "simulation",
+        "duration_minutes": 60,
+        "resources": "",
+    })
+
+    # ── Label each slot ───────────────────────────────────────────────────────
+    plan_items = []
+    for i, slot in enumerate(day_slots):
+        plan_items.append({
+            "label": f"Hari {i + 1}",
+            "order_number": i,
+            "topic": slot["topic"],
+            "activity": slot["activity"],
+            "type": slot["type"],
+            "duration_minutes": slot["duration_minutes"],
+            "resources": slot["resources"],
+        })
 
     return {
         "motivational_message": msg,
