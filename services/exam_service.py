@@ -1088,6 +1088,19 @@ class ExamService:
                 i.get("question_count", 1) for i in items
             )
 
+            # Resolve material_names from blueprint's material_ids
+            material_names = []
+            raw_mat_ids = blueprint_data.get("material_ids", "")
+            if raw_mat_ids:
+                try:
+                    mat_ids = [int(x.strip()) for x in str(raw_mat_ids).split(",") if x.strip().isdigit()]
+                    if mat_ids:
+                        from models import Material
+                        mats = db.query(Material).filter(Material.id.in_(mat_ids)).all()
+                        material_names = [m.filename or f"Materi #{m.id}" for m in mats]
+                except Exception:
+                    pass
+
             diff_map = {
                 "pemula": "mudah", "sedang": "menengah",
                 "menengah": "menengah", "ahli": "sulit", "sulit": "sulit",
@@ -1151,6 +1164,7 @@ class ExamService:
                 "duration_minutes": blueprint.duration_minutes,
                 "questions":        all_questions,
                 "is_retry":         True,
+                "material_names":   material_names,
             }
 
             if create_new_session:

@@ -111,4 +111,14 @@ class MaterialService:
         """Kembalikan SEMUA materi (untuk UI/listing)."""
         return material_repository.get_by_subject(db, subject_id)
 
+    @staticmethod
+    def get_ready_materials(db: Session, subject_id: int, material_ids: str = None):
+        """Kembalikan hanya materi dengan status Ready, opsional filter by material_ids."""
+        all_materials = material_repository.get_by_subject(db, subject_id)
+        if material_ids:
+            ids = [int(x.strip()) for x in material_ids.split(",") if x.strip()]
+            if ids:
+                all_materials = [m for m in all_materials if m.id in ids]
+        return [m for m in all_materials if m.status == "Ready"]
+
 material_service = MaterialService()

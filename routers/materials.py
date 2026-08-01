@@ -11,8 +11,16 @@ from repositories.material_repository import material_repository
 router = APIRouter()
 
 @router.get("/api/materials")
-async def get_materials_json(db: Session = Depends(get_db), skip: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=200)):
-    materials = material_repository.get_all(db, skip=skip, limit=limit)
+async def get_materials_json(
+    db: Session = Depends(get_db), 
+    skip: int = Query(0, ge=0), 
+    limit: int = Query(50, ge=1, le=200),
+    subject_id: int = Query(None)
+):
+    if subject_id:
+        materials = material_repository.get_by_subject(db, subject_id)
+    else:
+        materials = material_repository.get_all(db, skip=skip, limit=limit)
     results = []
     for m in materials:
         results.append({

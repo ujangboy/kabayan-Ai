@@ -85,17 +85,16 @@ async def generate_quiz(
     db: Session = Depends(get_db)
 ):
     try:
-        # Gunakan hanya materi yang sudah Ready (terindeks di RAG)
-        all_materials = material_service.get_by_subject(db, req.subject_id)
-        if req.material_ids:
-            ids = [int(x.strip()) for x in req.material_ids.split(",") if x.strip()]
-            if ids:
-                all_materials = [m for m in all_materials if m.id in ids]
-        if not all_materials:
-            return JSONResponse(status_code=400, content={"detail": "Tidak ada materi untuk mata kuliah ini."})
-
-        materials = [m for m in all_materials if m.status == "Ready"]
+        # Gunakan shared utility untuk mendapatkan materi Ready
+        materials = material_service.get_ready_materials(db, req.subject_id, req.material_ids)
         if not materials:
+            all_materials = material_service.get_by_subject(db, req.subject_id)
+            if req.material_ids:
+                ids = [int(x.strip()) for x in req.material_ids.split(",") if x.strip()]
+                if ids:
+                    all_materials = [m for m in all_materials if m.id in ids]
+            if not all_materials:
+                return JSONResponse(status_code=400, content={"detail": "Tidak ada materi untuk mata kuliah ini."})
             processing = [m for m in all_materials if m.status == "Processing"]
             if processing:
                 return JSONResponse(status_code=400, content={"detail": "Materi masih diproses (Processing). Tunggu beberapa saat lalu coba lagi."})

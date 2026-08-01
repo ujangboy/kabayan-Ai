@@ -25,7 +25,7 @@ api.interceptors.response.use(
 
 // --- MATERI ---
 export const materiAPI = {
-  getAll: () => api.get('/materials'),
+  getAll: (subjectId) => api.get('/materials', { params: subjectId ? { subject_id: subjectId } : {} }),
   delete: (id) => api.post(`/materials/${id}/delete`),
   importYoutube: (data) => api.post('/materials/youtube', data),
 };

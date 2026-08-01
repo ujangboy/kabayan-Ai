@@ -13,10 +13,10 @@ export default function MaterialPicker({ subjectId, selectedMaterialIds, onSelec
     }
     setLoading(true);
     setError('');
-    materiAPI.getAll()
+    materiAPI.getAll(subjectId)
       .then((res) => {
         const all = res.data?.materials || [];
-        setMaterials(all.filter((m) => m.subject?.id === Number(subjectId)));
+        setMaterials(all);
       })
       .catch((err) => setError(err.message || 'Gagal memuat materi'))
       .finally(() => setLoading(false));
