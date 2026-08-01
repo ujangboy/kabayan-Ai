@@ -181,7 +181,7 @@ export default function QuizPage() {
 
                 <button
                   onClick={() => handleStartQuiz(quiz.id)}
-                  className="btn-primary w-full justify-center text-xs mt-auto"
+                  className="bg-warning text-black font-bold w-full justify-center text-xs mt-auto px-4 py-2 rounded-lg hover:bg-warning/80 transition-colors flex items-center gap-1.5"
                 >
                   <Play size={12} /> {quiz.score !== null ? 'Main Lagi' : 'Mulai'}
                 </button>
@@ -384,7 +384,6 @@ function QuizSession({ quizId, onClose }) {
     try {
       await quizAPI.saveScore(quizId, finalScore);
     } catch (err) {
-      console.error(err);
     } finally {
       setIsSaving(false);
     }

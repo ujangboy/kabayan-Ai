@@ -70,11 +70,6 @@ _PATTERNS: list[Tuple[list[str], int, str, str]] = [
      500, "PARSE_ERROR",
      "Terjadi kesalahan saat memproses respons AI. Silakan coba lagi."),
 
-    # Not found
-    (["not found", "does not exist", "404"],
-     404, "NOT_FOUND",
-     "Data tidak ditemukan."),
-
     # Auth
     (["unauthorized", "401", "forbidden", "403"],
      401, "UNAUTHORIZED",

@@ -51,8 +51,4 @@ class FlashcardService:
             snippet = str(result)[:300] if result else ""
             raise ValueError(f"AI gagal: {e}\nResponse: {snippet}")
 
-    @staticmethod
-    def get_by_subject(db: Session, subject_id: int):
-        return flashcard_repository.get_by_subject(db, subject_id)
-
 flashcard_service = FlashcardService()
