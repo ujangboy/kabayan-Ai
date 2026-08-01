@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 class FlashcardService:
     @staticmethod
-    def generate_flashcards(db: Session, subject_id, context: str, count: int = 10, title: str = None):
+    def generate_flashcards(db: Session, subject_id, context: str, count: int = 10, title: str = None, material_ids: str = None):
         import models
         import datetime
 
@@ -38,6 +38,7 @@ class FlashcardService:
                     title=title,
                     question=question,
                     answer=answer,
+                    material_ids=material_ids,
                     created_at=datetime.datetime.utcnow(),
                 )
                 db.add(fc)

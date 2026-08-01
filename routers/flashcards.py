@@ -17,15 +17,37 @@ router = APIRouter()
 
 @router.get("/api/flashcards")
 async def get_flashcards_json(db: Session = Depends(get_db), skip: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=200)):
+    from models import Material
     flashcards = flashcard_repository.get_all(db, skip=skip, limit=limit)
+
+    # Pre-load all material names
+    all_mat_ids: set = set()
+    for f in flashcards:
+        if f.material_ids:
+            for mid in f.material_ids.split(","):
+                if mid.strip().isdigit():
+                    all_mat_ids.add(int(mid.strip()))
+    mat_name_map = {}
+    if all_mat_ids:
+        mats = db.query(Material).filter(Material.id.in_(all_mat_ids)).all()
+        mat_name_map = {m.id: m.filename or f"Materi #{m.id}" for m in mats}
+
     results = []
     for f in flashcards:
+        material_names = []
+        if f.material_ids:
+            for mid in f.material_ids.split(","):
+                if mid.strip().isdigit():
+                    name = mat_name_map.get(int(mid.strip()))
+                    if name:
+                        material_names.append(name)
         results.append({
             "id": f.id,
             "question": f.question,
             "answer": f.answer,
             "created_at": f.created_at.isoformat() if f.created_at else None,
-            "subject": {"id": f.subject.id, "name": f.subject.name} if f.subject else None
+            "subject": {"id": f.subject.id, "name": f.subject.name} if f.subject else None,
+            "material_names": material_names,
         })
     return JSONResponse({"flashcards": results, "skip": skip, "limit": limit})
 
@@ -133,7 +155,8 @@ async def generate_flashcards(
 
         data = flashcard_service.generate_flashcards(
             db, req.subject_id, context,
-            count=req.count
+            count=req.count,
+            material_ids=req.material_ids or None,
         )
         return JSONResponse({
             "status": "success",

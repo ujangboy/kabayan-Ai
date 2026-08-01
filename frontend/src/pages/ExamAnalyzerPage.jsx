@@ -1339,9 +1339,10 @@ function SubjectPicker({ subjects, materials, onSelectSubject, onStartConfig }) 
       </p>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {subjects.map(s => {
-          const materialCount = materials.filter(m => String(m.subject_id) === String(s.id)).length;
+          const subjectMaterials = materials.filter(m => String(m.subject_id) === String(s.id) || String(m.subject?.id) === String(s.id));
+          const materialCount = subjectMaterials.length;
           return (
-            <div key={s.id} className="card-base p-5 flex flex-col gap-4 hover:border-primary/40 transition-colors">
+            <div key={s.id} className="card-base p-5 flex flex-col gap-3 hover:border-primary/40 transition-colors">
               <div className="flex items-start gap-3">
                 <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
                   <BookOpen size={18} />
@@ -1351,6 +1352,22 @@ function SubjectPicker({ subjects, materials, onSelectSubject, onStartConfig }) 
                   <p className="text-xs text-text-muted">{materialCount} materi</p>
                 </div>
               </div>
+
+              {/* Daftar nama materi */}
+              {subjectMaterials.length > 0 && (
+                <div className="flex gap-1 flex-wrap">
+                  {subjectMaterials.slice(0, 3).map((m, i) => (
+                    <span key={i} className="inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded bg-accent-blue/10 text-accent-blue border border-accent-blue/20 truncate max-w-[110px]">
+                      <FileText size={8} className="shrink-0" />
+                      {m.filename || `Materi #${m.id}`}
+                    </span>
+                  ))}
+                  {subjectMaterials.length > 3 && (
+                    <span className="text-[10px] text-text-muted self-center">+{subjectMaterials.length - 3} lagi</span>
+                  )}
+                </div>
+              )}
+
               <div className="flex gap-2 mt-auto">
                 <button onClick={() => onSelectSubject(s.id)} className="flex-1 px-3 py-2 rounded-lg border border-border bg-card text-text text-xs font-medium hover:border-primary/40 transition-colors">
                   <History size={12} className="inline mr-1 -mt-0.5" /> Riwayat

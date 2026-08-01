@@ -67,6 +67,7 @@ class Flashcard(Base):
     title = Column(String, nullable=True)          # nama set flashcard (opsional)
     question = Column(Text)
     answer = Column(Text)
+    material_ids = Column(String, nullable=True)   # comma-separated material IDs
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     subject = relationship("Subject", back_populates="flashcards")
@@ -78,6 +79,7 @@ class Quiz(Base):
     title = Column(String, nullable=True)          # judul quiz (opsional)
     score = Column(Integer, nullable=True)         # null = belum dimainkan
     questions_json = Column(Text, nullable=True)   # JSON string hasil generate AI
+    material_ids = Column(String, nullable=True)   # comma-separated material IDs
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     subject = relationship("Subject", back_populates="quizzes")
@@ -284,6 +286,7 @@ class StudyPlanItem(Base):
     activity       = Column(Text, nullable=True)
     activity_type  = Column(String, nullable=True)       # review/practice/simulation/rest
     duration_minutes = Column(Integer, nullable=True)
+    time_slot      = Column(String, nullable=True)       # "Pagi (08:00–09:00)"
     resources      = Column(Text, nullable=True)
     completed      = Column(Integer, default=0)          # 0/1
 

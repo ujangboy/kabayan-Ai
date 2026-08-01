@@ -13,8 +13,22 @@ router = APIRouter()
 
 @router.get("/api/quizzes")
 async def get_quizzes_json(db: Session = Depends(get_db), skip: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=200)):
+    from models import Material
     quizzes = quiz_repository.get_all(db, skip=skip, limit=limit)
     quizzes = sorted(quizzes, key=lambda x: x.created_at, reverse=True)
+
+    # Pre-load all material names needed
+    all_mat_ids: set = set()
+    for q in quizzes:
+        if q.material_ids:
+            for mid in q.material_ids.split(","):
+                if mid.strip().isdigit():
+                    all_mat_ids.add(int(mid.strip()))
+    mat_name_map = {}
+    if all_mat_ids:
+        mats = db.query(Material).filter(Material.id.in_(all_mat_ids)).all()
+        mat_name_map = {m.id: m.filename or f"Materi #{m.id}" for m in mats}
+
     results = []
     for q in quizzes:
         question_count = 0
@@ -24,6 +38,13 @@ async def get_quizzes_json(db: Session = Depends(get_db), skip: int = Query(0, g
                 question_count = len(qdata.get("mcq", []))
             except Exception:
                 pass
+        material_names = []
+        if q.material_ids:
+            for mid in q.material_ids.split(","):
+                if mid.strip().isdigit():
+                    name = mat_name_map.get(int(mid.strip()))
+                    if name:
+                        material_names.append(name)
         results.append({
             "id": q.id,
             "title": q.title,
@@ -31,6 +52,7 @@ async def get_quizzes_json(db: Session = Depends(get_db), skip: int = Query(0, g
             "question_count": question_count,
             "created_at": q.created_at.isoformat() if q.created_at else None,
             "subject": {"id": q.subject.id, "name": q.subject.name} if q.subject else None,
+            "material_names": material_names,
         })
     return JSONResponse({"quizzes": results, "skip": skip, "limit": limit})
 
@@ -97,7 +119,8 @@ async def generate_quiz(
         data = quiz_service.generate_quiz(
             db, req.subject_id, context,
             mcq_count=req.mcq_count, essay_count=0,
-            title=title
+            title=title,
+            material_ids=req.material_ids or None,
         )
         return JSONResponse(data)
 

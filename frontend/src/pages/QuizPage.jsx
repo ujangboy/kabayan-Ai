@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { HelpCircle, Play, X, Zap, Trophy, Trash2, CheckCircle, XCircle, Loader2, Clock, Calendar } from 'lucide-react';
+import { HelpCircle, Play, X, Zap, Trophy, Trash2, CheckCircle, XCircle, Loader2, Clock, Calendar, FileText } from 'lucide-react';
 import { quizAPI, subjectAPI } from '@/services/api';
 import MathMarkdown from '@/components/MathMarkdown';
 import MaterialPicker from '@/components/MaterialPicker';
@@ -150,6 +150,20 @@ export default function QuizPage() {
                     </span>
                   )}
                 </div>
+
+                {/* Nama materi yang digunakan */}
+                {(quiz.material_names || []).length > 0 && (
+                  <div className="flex gap-1 flex-wrap mb-2">
+                    {(quiz.material_names || []).slice(0, 2).map((name, i) => (
+                      <span key={i} className="inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded bg-accent-blue/10 text-accent-blue border border-accent-blue/20 truncate max-w-[120px]">
+                        <FileText size={8} className="shrink-0" />{name}
+                      </span>
+                    ))}
+                    {(quiz.material_names || []).length > 2 && (
+                      <span className="text-[10px] text-text-muted">+{quiz.material_names.length - 2} lagi</span>
+                    )}
+                  </div>
+                )}
 
                 {/* Tanggal + waktu dibuat */}
                 {quiz.created_at && (

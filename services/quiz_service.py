@@ -29,7 +29,8 @@ class QuizService:
 
     @staticmethod
     def generate_quiz(db: Session, subject_id: int, context: str,
-                      mcq_count: int = 5, essay_count: int = 0, title: str = None):
+                      mcq_count: int = 5, essay_count: int = 0, title: str = None,
+                      material_ids: str = None):
         result = ai_service.generate(
             capability="quiz",
             prompt_template=QUIZ_PROMPT,
@@ -58,6 +59,7 @@ class QuizService:
                 title=title,
                 score=None,
                 questions_json=json.dumps(data, ensure_ascii=False),
+                material_ids=material_ids,
                 created_at=datetime.datetime.utcnow(),
             )
             db.add(quiz_record)

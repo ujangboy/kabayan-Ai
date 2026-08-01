@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   CreditCard, Plus, X, Book, Zap, Loader2, Play,
-  Trash2, ChevronLeft, ChevronRight, RotateCcw, Trophy, Clock, Calendar
+  Trash2, ChevronLeft, ChevronRight, RotateCcw, Trophy, Clock, Calendar, FileText
 } from 'lucide-react';
 import { flashcardAPI, subjectAPI } from '@/services/api';
 import { useToast } from '@/components/Toast';
@@ -173,6 +173,11 @@ function SubjectFlashcardCard({ group, onStart, onDeleteAll }) {
     new Date(b.created_at || 0) > new Date(a.created_at || 0) ? b : a, cards[0]);
   const createdAt = latestCard?.created_at;
 
+  // Kumpulkan nama materi unik dari semua kartu di grup
+  const allMaterialNames = [...new Set(
+    cards.flatMap(c => c.material_names || []).filter(Boolean)
+  )];
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -206,6 +211,20 @@ function SubjectFlashcardCard({ group, onStart, onDeleteAll }) {
           Flip &amp; Recall
         </span>
       </div>
+
+      {/* Nama materi yang digunakan */}
+      {allMaterialNames.length > 0 && (
+        <div className="flex gap-1 flex-wrap mb-2">
+          {allMaterialNames.slice(0, 2).map((name, i) => (
+            <span key={i} className="inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded bg-accent-blue/10 text-accent-blue border border-accent-blue/20 truncate max-w-[120px]">
+              <FileText size={8} className="shrink-0" />{name}
+            </span>
+          ))}
+          {allMaterialNames.length > 2 && (
+            <span className="text-[10px] text-text-muted self-center">+{allMaterialNames.length - 2} lagi</span>
+          )}
+        </div>
+      )}
 
       {/* Tanggal + waktu dibuat */}
       {createdAt && (
