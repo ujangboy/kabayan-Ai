@@ -7,7 +7,7 @@ import {
   Play, Pause, RotateCcw, CheckCircle, XCircle, Trophy,
   Calendar, ArrowRight, Clock, BarChart2, FileText,
   BookMarked, X, ChevronLeft, Info, TrendingUp, Award,
-  Lightbulb, AlertCircle, Check, Search, Trash2, History
+  Lightbulb, AlertCircle, Check, Search, Trash2, History, Save
 } from 'lucide-react';
 import { examAPI, subjectAPI, materiAPI } from '@/services/api';
 import { sessionsAPI } from '@/services/api';
@@ -849,8 +849,9 @@ function ResultView({ evalData, sessionData, onReview, onRecommend, onFinish, se
   const [savedHistoryId, setSavedHistoryId] = useState(null);
   const [saveError, setSaveError]       = useState('');
   const [planSaved, setPlanSaved]       = useState(false);
-  const [loadingPlanNav, setLoadingPlanNav] = useState(false);
-  const [planNavError, setPlanNavError] = useState('');
+  const [planPreview, setPlanPreview]   = useState(null);
+  const [planSaving, setPlanSaving]     = useState(false);
+  const [planSaveError, setPlanSaveError] = useState('');
   const navigate = typeof window !== 'undefined' ? null : null; // will use window.location
 
   if (!evalData) return null;
@@ -898,23 +899,33 @@ function ResultView({ evalData, sessionData, onReview, onRecommend, onFinish, se
   };
 
   const handleLihatRencana = async () => {
-    setPlanNavError('');
-    if (planSaved || saved) {
-      onFinish && onFinish();
-      onOpenPlanTab && onOpenPlanTab();
+    setPlanSaveError('');
+    if (planPreview) {
+      setPlanPreview(null);
       return;
     }
-    setLoadingPlanNav(true);
+    setLoadingRec(true);
     try {
       const rr = await examAPI.getRecommendation(sessionId);
       if (!rr.data || rr.data.detail) throw new Error(rr.data?.detail || 'Gagal ambil rencana');
-      await sessionsAPI.saveStudyPlan(sessionId, rr.data);
+      setPlanPreview(rr.data);
+    } catch (e) {
+      setPlanSaveError(e.message || 'Gagal memuat rencana belajar.');
+    } finally { setLoadingRec(false); }
+  };
+
+  const handleSimpanRencana = async () => {
+    if (!planPreview) return;
+    setPlanSaving(true);
+    setPlanSaveError('');
+    try {
+      await sessionsAPI.saveStudyPlan(sessionId, planPreview);
       setPlanSaved(true);
       onFinish && onFinish();
       onOpenPlanTab && onOpenPlanTab();
     } catch (e) {
-      setPlanNavError(e.message || 'Gagal menyimpan rencana belajar.');
-    } finally { setLoadingPlanNav(false); }
+      setPlanSaveError(e.response?.data?.detail || e.message || 'Gagal menyimpan rencana.');
+    } finally { setPlanSaving(false); }
   };
 
   return (
@@ -984,8 +995,8 @@ function ResultView({ evalData, sessionData, onReview, onRecommend, onFinish, se
         )}
       </div>
 
-      {(recError || saveError) && (
-        <p className="text-danger text-sm">{recError || saveError}</p>
+      {(recError || saveError || planSaveError) && (
+        <p className="text-danger text-sm">{recError || saveError || planSaveError}</p>
       )}
 
       {/* Saved confirmation */}
@@ -995,20 +1006,53 @@ function ResultView({ evalData, sessionData, onReview, onRecommend, onFinish, se
         </div>
       )}
 
+      {/* Plan preview inline */}
+      {planPreview && (
+        <div className="card-base p-5 border border-primary/20">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold text-text flex items-center gap-1.5">
+              <Calendar size={14} /> Preview Rencana Belajar
+            </h3>
+            <button onClick={() => setPlanPreview(null)} className="text-xs text-text-muted hover:text-text">Tutup</button>
+          </div>
+          <p className="text-xs text-text-secondary mb-3">{planPreview.motivational_message}</p>
+          <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
+            {(planPreview.study_plan || []).map((item, i) => (
+              <div key={i} className="flex items-start gap-2 p-2 rounded-lg bg-background/50 border border-border/50 text-xs">
+                <span className="text-text-muted font-mono shrink-0 w-12">H{i+1}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <span className="font-medium text-text">{item.topic}</span>
+                    <span className="text-[10px] text-primary">{item.time_slot}</span>
+                  </div>
+                  <p className="text-text-secondary">{item.activity}</p>
+                  {item.resources && <p className="text-primary/80 mt-0.5">{item.resources}</p>}
+                </div>
+                <span className="text-text-muted shrink-0">{item.duration_minutes}m</span>
+              </div>
+            ))}
+          </div>
+          <div className="flex gap-2 mt-3">
+            <button onClick={handleSimpanRencana} disabled={planSaving || planSaved}
+              className="btn-primary text-sm flex items-center gap-1.5">
+              {planSaving ? <><Loader2 size={13} className="animate-spin" /> Menyimpan...</>
+                : planSaved ? <><Check size={13} /> Tersimpan!</>
+                : <><Save size={13} /> Simpan Rencana</>}
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Action buttons */}
       <div className="flex gap-3 flex-wrap">
         <button onClick={onReview} className="btn-ghost text-sm border border-border">
           <BookOpen size={13} /> Review Jawaban
         </button>
-        <button onClick={fetchRecommend} disabled={loadingRec} className="btn-ghost text-sm border border-border">
-          {loadingRec ? <><Loader2 size={13} className="animate-spin" /> Memuat...</> : <><Calendar size={13} /> Rencana Belajar</>}
-        </button>
-        <button onClick={handleLihatRencana} disabled={loadingPlanNav} className="btn-ghost text-sm border border-border">
-          {loadingPlanNav
-            ? <><Loader2 size={13} className="animate-spin" /> Menyimpan...</>
+        <button onClick={handleLihatRencana} disabled={loadingRec} className="btn-ghost text-sm border border-border">
+          {loadingRec ? <><Loader2 size={13} className="animate-spin" /> Memuat...</>
+            : planPreview ? <><Calendar size={13} /> Tutup Rencana</>
             : <><Calendar size={13} /> Lihat Rencana Belajar</>}
         </button>
-        {planNavError && <p className="text-danger text-xs">{planNavError}</p>}
         <button onClick={handleSelesai} disabled={saving} className="btn-primary text-sm ml-auto">
           {saving
             ? <><Loader2 size={13} className="animate-spin" /> Menyimpan...</>
@@ -1662,7 +1706,7 @@ function DetailModal({ historySessionId, onClose, onResume, pendingPlanTab, setP
       <div className="flex-1 overflow-y-auto p-5">
         {tab === 'overview'  && <OverviewTab data={data} />}
         {tab === 'review'    && <ReviewTab attempt={latestAttempt} />}
-        {tab === 'plan'      && <StudyPlanTab plan={data.study_plan} sessionId={historySessionId} onToggle={(id) => toggleMutation.mutate(id)} onPlanSaved={() => refetch()} />}
+        {tab === 'plan'      && <StudyPlanTab plan={data.study_plan} sessionId={historySessionId} onToggle={(id) => toggleMutation.mutate(id)} onPlanSaved={() => refetch()} onResume={onResume} onClose={onClose} subjectId={data.subject_id} subjectName={data.subject_name} />}
         {tab === 'attempts'  && <AttemptsTab attempts={data.attempts || []} />}
       </div>
 
@@ -1891,11 +1935,267 @@ function ReviewTab({ attempt }) {
   );
 }
 
-function StudyPlanTab({ plan, sessionId, onToggle, onPlanSaved }) {
+function InlinePractice({ questions, onComplete, onClose, onRetryTopic }) {
+  const [idx, setIdx]             = useState(0);
+  const [answers, setAnswers]     = useState({});
+  const [results, setResults]     = useState({});
+  const [explanations, setExplanations] = useState({});
+  const [showExpl, setShowExpl]   = useState(false);
+  const [fetchingExpl, setFetchingExpl] = useState(false);
+  const [showSummary, setShowSummary] = useState(false);
+  const [retrying, setRetrying]   = useState(false);
+
+  const q = questions[idx];
+  const total = questions.length;
+  const isLast = idx === total - 1;
+  const userAnswer = answers[String(q.id)] || '';
+  const isObjective = ['mcq', 'truefalse'].includes(q.type);
+
+  const selectAnswer = (val) => {
+    if (showExpl) return;
+    setAnswers(p => ({ ...p, [String(q.id)]: val }));
+  };
+
+  const handleJawab = async () => {
+    if (!userAnswer) return;
+    const isCorrect = userAnswer === q.answer;
+    setResults(p => ({ ...p, [String(q.id)]: isCorrect }));
+    setShowExpl(true);
+    setFetchingExpl(true);
+    try {
+      const r = await examAPI.getExplanation({
+        bank_id: q.bank_id || null,
+        question: q.question,
+        correct_answer: q.answer || '',
+        topic: q.topic || '',
+      });
+      const text = r.data?.explanation || 'Penjelasan tidak tersedia.';
+      setExplanations(p => ({ ...p, [String(q.id)]: text }));
+    } catch (_) {
+      setExplanations(p => ({ ...p, [String(q.id)]: 'Penjelasan tidak tersedia.' }));
+    } finally { setFetchingExpl(false); }
+  };
+
+  const handleNext = () => {
+    if (isLast) {
+      setShowSummary(true);
+    } else {
+      setIdx(i => i + 1);
+      setShowExpl(false);
+    }
+  };
+
+  const correctCount = Object.values(results).filter(Boolean).length;
+  const wrongCount   = total - correctCount;
+  const score        = total > 0 ? Math.round((correctCount / total) * 100) : 0;
+
+  // Group wrong answers by topic for recommendations
+  const wrongByTopic = {};
+  questions.forEach((question, i) => {
+    const qid = String(question.id);
+    if (results[qid] === false) {
+      const t = question.topic || 'Umum';
+      if (!wrongByTopic[t]) wrongByTopic[t] = { count: 0, tips: question.tips || '', material: question.material_reference || '' };
+      wrongByTopic[t].count++;
+      if (!wrongByTopic[t].tips && question.tips) wrongByTopic[t].tips = question.tips;
+      if (!wrongByTopic[t].material && question.material_reference) wrongByTopic[t].material = question.material_reference;
+    }
+  });
+  const weakTopics = Object.entries(wrongByTopic).sort((a, b) => b[1].count - a[1].count);
+
+  // ── Summary View ──
+  if (showSummary) {
+    return (
+      <div className="mt-2 p-4 rounded-xl bg-background border border-primary/20 space-y-4">
+        {/* Score hero */}
+        <div className="text-center">
+          <p className="text-3xl font-black text-text">{score}%</p>
+          <p className={cn('text-sm font-semibold', score >= 80 ? 'text-success' : score >= 60 ? 'text-warning' : 'text-danger')}>
+            {correctCount} dari {total} soal benar
+          </p>
+        </div>
+
+        {/* Breakdown per soal */}
+        <div className="space-y-1">
+          <p className="text-xs font-semibold text-text-secondary uppercase tracking-wider">Detail Jawaban</p>
+          {questions.map((question, i) => {
+            const qid = String(question.id);
+            const isCorrect = results[qid];
+            return (
+              <div key={qid} className="flex items-center gap-2 text-xs py-1">
+                {isCorrect
+                  ? <CheckCircle size={11} className="text-success shrink-0" />
+                  : <XCircle size={11} className="text-danger shrink-0" />}
+                <span className="text-text-muted">Soal {i + 1}</span>
+                <span className="text-text-secondary truncate flex-1">{question.topic}</span>
+                {!isCorrect && <span className="text-danger text-[10px]">Jawaban: {question.answer}</span>}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Recommendations */}
+        {weakTopics.length > 0 && (
+          <div className="p-3 rounded-lg bg-warning/5 border border-warning/20 space-y-2">
+            <p className="text-xs font-semibold text-text-secondary flex items-center gap-1">
+              <Target size={11} /> Rekomendasi Pembelajaran
+            </p>
+            {weakTopics.map(([topic, data]) => (
+              <div key={topic} className="text-xs text-text-secondary">
+                <p className="font-medium text-text">• "{topic}" — {data.count} soal salah</p>
+                {data.tips && <p className="ml-3 text-primary/80 flex items-center gap-1"><Lightbulb size={9} /> {data.tips}</p>}
+                {data.material && <p className="ml-3 text-text-muted">📖 {data.material}</p>}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Buttons */}
+        <div className="flex gap-2">
+          {score >= 100 ? (
+            <button onClick={() => onComplete && onComplete()} className="btn-primary text-xs px-4 py-1.5 flex items-center gap-1">
+              <Check size={12} /> Selesai
+            </button>
+          ) : (
+            <button onClick={onClose} className="btn-ghost text-xs border border-border px-4 py-1.5">
+              Tutup
+            </button>
+          )}
+          {weakTopics.length > 0 && (
+            <button disabled={retrying} onClick={async () => {
+              const firstWeak = weakTopics[0][0];
+              if (!onRetryTopic || retrying) return;
+              setRetrying(true);
+              try {
+                await onRetryTopic(firstWeak);
+              } finally {
+                setRetrying(false);
+              }
+            }} className="btn-primary text-xs px-4 py-1.5 flex items-center gap-1 disabled:opacity-50">
+              {retrying ? <><Loader2 size={11} className="animate-spin" /> Memuat...</> : <><RefreshCw size={11} /> Latih Topik Lemah</>}
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // ── Quiz View ──
+  return (
+    <div className="mt-2 p-3 rounded-xl bg-background border border-primary/20 space-y-3">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold text-text">Soal {idx + 1}/{total}</span>
+          <Chip label={q.type} size="xs" color="blue" />
+          {q.bloom_level && <Chip label={q.bloom_level.toLowerCase()} size="xs" color="purple" />}
+          {q.difficulty && <Chip label={q.difficulty} size="xs" color={q.difficulty === 'sulit' ? 'danger' : q.difficulty === 'menengah' ? 'warning' : 'success'} />}
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] text-success">{correctCount}✓</span>
+          <span className="text-[10px] text-danger">{wrongCount}✗</span>
+          <button onClick={onClose} className="text-[10px] text-text-muted hover:text-text">Tutup</button>
+        </div>
+      </div>
+
+      {/* Question */}
+      <div className="text-sm text-text">
+        <MathMarkdown>{q.question}</MathMarkdown>
+      </div>
+
+      {/* Options */}
+      {isObjective ? (
+        <div className="space-y-1.5">
+          {(q.options_list || Object.entries(q.options || {}).map(([k, v]) => `${k}. ${v}`)).map((opt, i) => {
+            const key = Object.keys(q.options || {})[i] || opt;
+            const sel = userAnswer === key || userAnswer === opt;
+            const isCorrectOpt = key === q.answer || opt.startsWith(q.answer + '.');
+            return (
+              <button key={i} onClick={() => selectAnswer(key)} disabled={showExpl}
+                className={cn('w-full text-left p-2.5 rounded-lg border text-xs transition-all',
+                  showExpl && isCorrectOpt ? 'bg-success/10 border-success/30 text-success' :
+                  showExpl && sel && !isCorrectOpt ? 'bg-danger/10 border-danger/30 text-danger' :
+                  sel ? 'bg-primary/10 border-primary text-primary' :
+                  'bg-card border-border text-text hover:border-primary/40',
+                  showExpl && 'cursor-default')}>
+                <MathMarkdown>{opt}</MathMarkdown>
+              </button>
+            );
+          })}
+        </div>
+      ) : (
+        <textarea rows={3} value={userAnswer} onChange={e => selectAnswer(e.target.value)} disabled={showExpl}
+          placeholder="Tulis jawaban di sini..."
+          className="w-full px-3 py-2 bg-card border border-border rounded-lg text-xs text-text focus:outline-none focus:border-primary resize-none disabled:opacity-50" />
+      )}
+
+      {/* Jawab button */}
+      {!showExpl && (
+        <button onClick={handleJawab} disabled={!userAnswer}
+          className="btn-primary text-xs px-4 py-1.5 disabled:opacity-40">
+          Jawab
+        </button>
+      )}
+
+      {/* Enhanced Explanation */}
+      {showExpl && (
+        <div className={cn('p-3 rounded-lg border text-xs space-y-2',
+          results[String(q.id)] ? 'bg-success/5 border-success/20' : 'bg-danger/5 border-danger/20')}>
+          {/* User answer vs correct */}
+          <div className="space-y-1">
+            {!results[String(q.id)] && (
+              <p className="text-danger flex items-center gap-1.5">
+                <XCircle size={11} className="shrink-0" />
+                <span>Jawaban kamu: <strong>{userAnswer}</strong>{q.options?.[userAnswer] ? `. ${q.options[userAnswer]}` : ''}</span>
+              </p>
+            )}
+            <p className="text-success flex items-center gap-1.5">
+              <CheckCircle size={11} className="shrink-0" />
+              <span>Jawaban benar: <strong>{q.answer}</strong>{q.options?.[q.answer] ? `. ${q.options[q.answer]}` : ''}</span>
+            </p>
+          </div>
+
+          {/* Explanation */}
+          <div className="border-t border-border/50 pt-2">
+            <p className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider mb-1">📝 Penjelasan</p>
+            {fetchingExpl ? (
+              <p className="text-text-muted flex items-center gap-1"><Loader2 size={10} className="animate-spin" /> Memuat penjelasan...</p>
+            ) : explanations[String(q.id)] ? (
+              <p className="text-text-secondary leading-relaxed">{explanations[String(q.id)]}</p>
+            ) : (
+              <p className="text-text-muted italic">Penjelasan tidak tersedia.</p>
+            )}
+          </div>
+
+          {/* Tips */}
+          {q.tips && (
+            <div className="border-t border-border/50 pt-2">
+              <p className="text-primary/80 flex items-start gap-1.5">
+                <Lightbulb size={10} className="shrink-0 mt-0.5" />
+                <span>{q.tips}</span>
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Next / Selesai */}
+      {showExpl && (
+        <button onClick={handleNext}
+          className="btn-primary text-xs px-4 py-1.5 flex items-center gap-1">
+          {isLast ? <><Check size={12} /> Lihat Hasil</> : <><ArrowRight size={12} /> Soal Berikutnya</>}
+        </button>
+      )}
+    </div>
+  );
+}
+
+function StudyPlanTab({ plan, sessionId, onToggle, onPlanSaved, onResume, onClose, subjectId, subjectName }) {
   const today = new Date().toISOString().split('T')[0];
   const [startDate, setStartDate] = useState(plan?.start_date || today);
   const [dateSaving, setDateSaving] = useState(false);
   const [dateError, setDateError] = useState('');
+  const [practiceMode, setPracticeMode] = useState(null); // null | { itemId, topic, questions }
 
   const DAYS_ID   = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
   const MONTHS_ID = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
@@ -1997,45 +2297,93 @@ function StudyPlanTab({ plan, sessionId, onToggle, onPlanSaved }) {
 
       <div className="space-y-2">
         {(plan.items || []).map((item) => {
-          const dateLabel = plan.start_date
-            ? formatItemDate(startDate, item.order_number)
-            : item.day_label;
+          const dateLabel = formatItemDate(startDate, item.order_number);
+          const inPractice = practiceMode && practiceMode.itemId === item.id;
           return (
             <div key={item.id}
-              className={cn('flex items-start gap-3 p-3 rounded-xl border transition-all',
+              className={cn('rounded-xl border transition-all overflow-hidden',
+                inPractice ? 'border-primary/30 bg-primary/5' :
                 item.completed ? 'bg-success/5 border-success/20 opacity-70' : 'bg-card border-border')}>
-              <button onClick={() => onToggle(item.id)}
-                className={cn('w-5 h-5 rounded-md border flex items-center justify-center shrink-0 mt-0.5 transition-all',
-                  item.completed ? 'bg-success border-success text-white' : 'border-border hover:border-primary')}>
-                {item.completed && <Check size={11} />}
-              </button>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-0.5">
-                  <span className="text-xs font-semibold text-text-muted">{dateLabel}</span>
-                  <Chip label={item.activity_type || 'review'} size="xs"
-                    color={typeColor[item.activity_type] || 'blue'} />
-                  {item.duration_minutes && (
-                    <span className="text-[10px] text-text-muted flex items-center gap-0.5">
-                      <Clock size={9} />{item.duration_minutes}m
-                    </span>
+              <div className={cn('flex items-start gap-3 p-3', inPractice && 'border-b border-primary/10')}>
+                <button onClick={() => onToggle(item.id)}
+                  className={cn('w-5 h-5 rounded-md border flex items-center justify-center shrink-0 mt-0.5 transition-all',
+                    item.completed ? 'bg-success border-success text-white' : 'border-border hover:border-primary')}>
+                  {item.completed && <Check size={11} />}
+                </button>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <span className="text-xs font-semibold text-text-muted">{dateLabel}</span>
+                    {item.time_slot && (
+                      <span className="text-[10px] text-text-muted">{item.time_slot}</span>
+                    )}
+                    <Chip label={item.activity_type || 'review'} size="xs"
+                      color={typeColor[item.activity_type] || 'blue'} />
+                    {item.duration_minutes && (
+                      <span className="text-[10px] text-text-muted flex items-center gap-0.5">
+                        <Clock size={9} />{item.duration_minutes}m
+                      </span>
+                    )}
+                  </div>
+                  <p className={cn("text-sm font-medium text-text", item.completed && "line-through")}>
+                    {item.topic}
+                  </p>
+                  {item.activity && <p className="text-xs text-text-secondary">{item.activity}</p>}
+                  {item.resources && !inPractice && (
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <p className="text-[10px] text-primary flex items-center gap-0.5">
+                        <Lightbulb size={9}/>{item.resources}
+                      </p>
+                      {item.resources.includes('soal latihan') && !item.completed && (
+                        <button
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            try {
+                               const r = await sessionsAPI.fetchPracticeQuestions(sessionId, item.topic);
+                              if (r.data?.detail) throw new Error(r.data.detail);
+                              if (!r.data?.questions?.length) throw new Error('Tidak ada soal tersedia untuk topik ini.');
+                              setPracticeMode({ itemId: item.id, topic: item.topic, questions: r.data.questions });
+                            } catch (err) {
+                              alert(err.response?.data?.detail || err.message || 'Gagal memuat soal latihan.');
+                            }
+                          }}
+                          className="text-[10px] px-2 py-1 rounded bg-warning text-black font-bold
+                                     hover:bg-warning/80 transition-colors shrink-0 shadow-sm">
+                          Mulai Latihan →
+                        </button>
+                      )}
+                    </div>
                   )}
                 </div>
-                <p className={cn("text-sm font-medium text-text", item.completed && "line-through")}>
-                  {item.topic}
-                </p>
-                {item.activity && <p className="text-xs text-text-secondary">{item.activity}</p>}
-                {item.resources && (
-                  <p className="text-[10px] text-primary mt-0.5 flex items-center gap-0.5">
-                    <Lightbulb size={9}/>{item.resources}
-                  </p>
+                {!inPractice && !item.completed && (
+                  <button onClick={() => onToggle(item.id)}
+                    className="text-[10px] px-2 py-0.5 rounded border border-border text-text-muted
+                               hover:border-warning/40 hover:text-warning transition-colors shrink-0">
+                    Lewati
+                  </button>
                 )}
               </div>
-              {!item.completed && (
-                <button onClick={() => onToggle(item.id)}
-                  className="text-[10px] px-2 py-0.5 rounded border border-border text-text-muted
-                             hover:border-warning/40 hover:text-warning transition-colors shrink-0">
-                  Lewati
-                </button>
+
+              {/* Inline Practice */}
+              {inPractice && (
+                <InlinePractice
+                  key={practiceMode.questions[0]?.id || 'practice'}
+                  questions={practiceMode.questions}
+                  onComplete={() => {
+                    onToggle(item.id);
+                    setPracticeMode(null);
+                  }}
+                  onClose={() => setPracticeMode(null)}
+                  onRetryTopic={async (topic) => {
+                    try {
+                      const r = await sessionsAPI.fetchPracticeQuestions(sessionId, topic);
+                      if (r.data?.detail) throw new Error(r.data.detail);
+                      if (!r.data?.questions?.length) throw new Error('Tidak ada soal tersedia untuk topik ini.');
+                      setPracticeMode({ itemId: item.id, topic, questions: r.data.questions });
+                    } catch (err) {
+                      alert(err.response?.data?.detail || err.message || 'Gagal memuat soal.');
+                    }
+                  }}
+                />
               )}
             </div>
           );
