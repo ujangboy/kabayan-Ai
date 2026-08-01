@@ -43,7 +43,7 @@ class QuestionBankRepository(BaseRepository[QuestionBank]):
         db: Session,
         subject_id: int,
         topic: str,
-        difficulty: str,
+        difficulty: Optional[str] = None,
         question_type: Optional[str] = None,
         limit: int = 50,
     ) -> List[QuestionBank]:
@@ -51,13 +51,29 @@ class QuestionBankRepository(BaseRepository[QuestionBank]):
             db.query(QuestionBank)
             .filter(
                 QuestionBank.subject_id == subject_id,
-                QuestionBank.topic == topic,
-                QuestionBank.difficulty == difficulty,
+                QuestionBank.topic.ilike(topic),  # case-insensitive match
             )
         )
+        if difficulty and difficulty != "campuran":
+            q = q.filter(QuestionBank.difficulty == difficulty)
         if question_type and question_type != "mixed":
             q = q.filter(QuestionBank.question_type == question_type)
-        return q.limit(limit).all()
+        rows = q.limit(limit).all()
+        # Fallback: partial match jika exact ilike tidak menemukan hasil
+        if not rows:
+            q2 = (
+                db.query(QuestionBank)
+                .filter(
+                    QuestionBank.subject_id == subject_id,
+                    QuestionBank.topic.ilike(f"%{topic}%"),
+                )
+            )
+            if difficulty and difficulty != "campuran":
+                q2 = q2.filter(QuestionBank.difficulty == difficulty)
+            if question_type and question_type != "mixed":
+                q2 = q2.filter(QuestionBank.question_type == question_type)
+            rows = q2.limit(limit).all()
+        return rows
 
     def get_by_subject(
         self,

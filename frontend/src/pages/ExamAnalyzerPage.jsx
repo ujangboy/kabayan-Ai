@@ -1935,7 +1935,7 @@ function ReviewTab({ attempt }) {
   );
 }
 
-function InlinePractice({ questions, onComplete, onClose, onRetryTopic }) {
+function InlinePractice({ questions, topic, onComplete, onClose, onRetryTopic }) {
   const [idx, setIdx]             = useState(0);
   const [answers, setAnswers]     = useState({});
   const [results, setResults]     = useState({});
@@ -1943,7 +1943,7 @@ function InlinePractice({ questions, onComplete, onClose, onRetryTopic }) {
   const [showExpl, setShowExpl]   = useState(false);
   const [fetchingExpl, setFetchingExpl] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
-  const [retrying, setRetrying]   = useState(false);
+  const [retryingTopic, setRetryingTopic] = useState(null); // topik yang sedang di-retry
 
   const q = questions[idx];
   const total = questions.length;
@@ -2034,24 +2034,47 @@ function InlinePractice({ questions, onComplete, onClose, onRetryTopic }) {
           })}
         </div>
 
-        {/* Recommendations */}
+        {/* Recommendations — satu baris per topik lemah dengan tombol latih individual */}
         {weakTopics.length > 0 && (
           <div className="p-3 rounded-lg bg-warning/5 border border-warning/20 space-y-2">
             <p className="text-xs font-semibold text-text-secondary flex items-center gap-1">
               <Target size={11} /> Rekomendasi Pembelajaran
             </p>
-            {weakTopics.map(([topic, data]) => (
-              <div key={topic} className="text-xs text-text-secondary">
-                <p className="font-medium text-text">• "{topic}" — {data.count} soal salah</p>
-                {data.tips && <p className="ml-3 text-primary/80 flex items-center gap-1"><Lightbulb size={9} /> {data.tips}</p>}
-                {data.material && <p className="ml-3 text-text-muted">📖 {data.material}</p>}
+            {weakTopics.map(([weakTopic, data]) => (
+              <div key={weakTopic} className="text-xs text-text-secondary space-y-1">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-text truncate">• "{weakTopic}" — {data.count} soal salah</p>
+                    {data.tips && <p className="ml-3 text-primary/80 flex items-center gap-1"><Lightbulb size={9} /> {data.tips}</p>}
+                    {data.material && <p className="ml-3 text-text-muted flex items-center gap-1">📖 {data.material}</p>}
+                  </div>
+                  {onRetryTopic && (
+                    <button
+                      disabled={retryingTopic !== null}
+                      onClick={async () => {
+                        if (retryingTopic !== null) return;
+                        setRetryingTopic(weakTopic);
+                        try {
+                          await onRetryTopic(weakTopic);
+                        } finally {
+                          setRetryingTopic(null);
+                        }
+                      }}
+                      className="shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-lg bg-warning text-black text-[10px] font-bold hover:bg-warning/80 transition-colors disabled:opacity-40"
+                    >
+                      {retryingTopic === weakTopic
+                        ? <><Loader2 size={9} className="animate-spin" /> Memuat...</>
+                        : <><RefreshCw size={9} /> Latih</>}
+                    </button>
+                  )}
+                </div>
               </div>
             ))}
           </div>
         )}
 
         {/* Buttons */}
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           {score >= 100 ? (
             <button onClick={() => onComplete && onComplete()} className="btn-primary text-xs px-4 py-1.5 flex items-center gap-1">
               <Check size={12} /> Selesai
@@ -2061,18 +2084,24 @@ function InlinePractice({ questions, onComplete, onClose, onRetryTopic }) {
               Tutup
             </button>
           )}
-          {weakTopics.length > 0 && (
-            <button disabled={retrying} onClick={async () => {
-              const firstWeak = weakTopics[0][0];
-              if (!onRetryTopic || retrying) return;
-              setRetrying(true);
-              try {
-                await onRetryTopic(firstWeak);
-              } finally {
-                setRetrying(false);
-              }
-            }} className="btn-primary text-xs px-4 py-1.5 flex items-center gap-1 disabled:opacity-50">
-              {retrying ? <><Loader2 size={11} className="animate-spin" /> Memuat...</> : <><RefreshCw size={11} /> Latih Topik Lemah</>}
+          {/* Ulangi topik ini — re-fetch soal untuk topik yang sama */}
+          {topic && onRetryTopic && (
+            <button
+              disabled={retryingTopic !== null}
+              onClick={async () => {
+                if (retryingTopic !== null) return;
+                setRetryingTopic(topic);
+                try {
+                  await onRetryTopic(topic);
+                } finally {
+                  setRetryingTopic(null);
+                }
+              }}
+              className="btn-ghost text-xs border border-warning/40 text-warning px-4 py-1.5 flex items-center gap-1 disabled:opacity-40"
+            >
+              {retryingTopic === topic
+                ? <><Loader2 size={11} className="animate-spin" /> Memuat...</>
+                : <><RotateCcw size={11} /> Ulangi Topik Ini</>}
             </button>
           )}
         </div>
@@ -2366,8 +2395,9 @@ function StudyPlanTab({ plan, sessionId, onToggle, onPlanSaved, onResume, onClos
               {/* Inline Practice */}
               {inPractice && (
                 <InlinePractice
-                  key={practiceMode.questions[0]?.id || 'practice'}
+                  key={`${practiceMode.topic}-${practiceMode.questions[0]?.id || 'practice'}`}
                   questions={practiceMode.questions}
+                  topic={practiceMode.topic}
                   onComplete={() => {
                     onToggle(item.id);
                     setPracticeMode(null);

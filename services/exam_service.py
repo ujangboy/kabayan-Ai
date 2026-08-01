@@ -607,7 +607,9 @@ class ExamService:
         if not all_rows:
             raise ValueError("Question bank kosong untuk topik ini.")
 
-        selected = all_rows[:total_needed]
+        # Untuk latihan topik spesifik, batasi ke 5 soal agar tidak terlalu panjang
+        max_practice = 5 if topic_filter else total_needed
+        selected = all_rows[:max_practice]
         random.shuffle(selected)
 
         all_questions = [
