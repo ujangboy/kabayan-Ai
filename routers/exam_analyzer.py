@@ -192,6 +192,26 @@ async def get_detail_session(session_id: int, db: Session = Depends(get_db)):
         raise AppError(str(e), status_code=500)
 
 
+@router.post("/sessions/{session_id}/retry-inplace")
+async def retry_session_inplace(
+    session_id: int,
+    payload: RetryRequest = RetryRequest(),
+    db: Session = Depends(get_db),
+):
+    """Retry by resetting the SAME session — no new history row created."""
+    try:
+        data = exam_service.retry_inplace(
+            db, session_id,
+            weak_topics=payload.weak_topics,
+        )
+        return JSONResponse(data)
+    except ValueError as e:
+        raise AppError(str(e), status_code=400)
+    except Exception as e:
+        logger.error(f"retry_inplace error: {e}", exc_info=True)
+        raise AppError(str(e), status_code=500)
+
+
 @router.post("/sessions/{session_id}/retry")
 async def retry_session(
     session_id: int,
@@ -199,12 +219,34 @@ async def retry_session(
     db: Session = Depends(get_db),
 ):
     try:
-        data = exam_service.unified_retry(db, session_id)
+        data = exam_service.unified_retry(
+            db, session_id,
+            weak_topics=payload.weak_topics,
+            topic_filter=payload.topic_filter,
+        )
         return JSONResponse(data)
     except ValueError as e:
         raise AppError(str(e), status_code=400)
     except Exception as e:
         logger.error(f"retry_session error: {e}", exc_info=True)
+        raise AppError(str(e), status_code=500)
+
+
+@router.post("/sessions/{session_id}/practice-questions")
+async def fetch_practice_questions(
+    session_id: int,
+    topic_filter: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+):
+    try:
+        data = exam_service.fetch_practice_questions(
+            db, session_id, topic_filter=topic_filter,
+        )
+        return JSONResponse(data)
+    except ValueError as e:
+        raise AppError(str(e), status_code=404)
+    except Exception as e:
+        logger.error(f"fetch_practice_questions error: {e}", exc_info=True)
         raise AppError(str(e), status_code=500)
 
 

@@ -2448,9 +2448,10 @@ function RetryButton({ historySessionId, sessionData, onClose, onResume }) {
   const handleRetry = async () => {
     setError(''); setLoading(true);
     try {
-      const r = await sessionsAPI.retry(historySessionId);
+      // Use retry-inplace: resets the SAME session, no new history row
+      const r = await sessionsAPI.retryInplace(historySessionId);
       if (r.data?.detail) throw new Error(r.data.detail);
-      if (!r.data?.session_id) throw new Error('Sesi latihan gagal dibuat.');
+      if (!r.data?.session_id) throw new Error('Sesi latihan gagal disiapkan.');
       onClose();
       onResume({ ...r.data, subject_id: sessionData.subject_id, subject_name: sessionData.subject_name });
     } catch (e) {

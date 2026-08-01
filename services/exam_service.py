@@ -14,7 +14,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from fastapi import HTTPException, status
 
 from services.ai_service import ai_service
-from services.assessment_engine import assemble_evaluation, generate_study_plan
+from services.assessment_engine import assemble_evaluation, generate_study_plan, fallback_activity_description, TIME_SLOTS
 from repositories.exam_repository import exam_blueprint_repository, exam_session_repository
 from repositories.question_bank_repository import question_bank_repository
 from repositories.exam_history_repository import exam_attempt_repo, study_plan_repo, study_plan_item_repo
@@ -420,10 +420,12 @@ class ExamService:
         db: Session,
         blueprint_id: int,
         weak_topics: Optional[List[str]] = None,
+        topic_filter: Optional[str] = None,
     ) -> dict:
         """
         Create a new exam session by shuffling from the question bank.
         No AI call. Prioritizes weak topics (70% weak, 20% other, 10% strong).
+        If topic_filter is set, only pull questions from that specific topic.
         """
         blueprint = exam_blueprint_repository.get(db, blueprint_id)
         if not blueprint:
@@ -435,8 +437,6 @@ class ExamService:
             i.get("question_count", 1) for i in items
         )
 
-        weak_set = set(weak_topics or [])
-
         # Blueprint difficulty (pemula/menengah/sulit) vs bank difficulty (mudah/menengah/sulit)
         diff_map = {
             "pemula": "mudah",
@@ -447,43 +447,74 @@ class ExamService:
         }
         mapped_diff = diff_map.get(blueprint.difficulty) if blueprint.difficulty != "campuran" else None
 
-        # Pull all available questions from bank
-        all_rows = question_bank_repository.get_by_subject(
-            db, blueprint.subject_id,
-            difficulty=mapped_diff,
-            limit=total_needed * 5,
-        )
+        # Determine question_type from blueprint
+        question_type = blueprint.question_type if blueprint.question_type and blueprint.question_type != "mixed" else None
 
-        # Fallback: bank may not have questions with that difficulty, use any
-        if not all_rows:
-            all_rows = question_bank_repository.get_by_subject(
-                db, blueprint.subject_id, limit=total_needed * 5,
+        if topic_filter:
+            # Topic-specific practice: pull only from this topic
+            all_rows = question_bank_repository.get_by_topic(
+                db, blueprint.subject_id, topic_filter,
+                difficulty=mapped_diff,
+                question_type=question_type,
+                limit=total_needed * 5,
+            )
+            if not all_rows:
+                all_rows = question_bank_repository.get_by_topic(
+                    db, blueprint.subject_id, topic_filter,
+                    limit=total_needed * 5,
+                )
+            selected = all_rows[:total_needed]
+            random.shuffle(selected)
+        else:
+            # General retry: pull all, partition by weak/other
+            weak_set = set(
+                w.get("topic", w) if isinstance(w, dict) else w
+                for w in (weak_topics or [])
             )
 
-        if not all_rows:
+            all_rows = question_bank_repository.get_by_subject(
+                db, blueprint.subject_id,
+                difficulty=mapped_diff,
+                question_type=question_type,
+                limit=total_needed * 5,
+            )
+            if not all_rows:
+                all_rows = question_bank_repository.get_by_subject(
+                    db, blueprint.subject_id,
+                    question_type=question_type,
+                    limit=total_needed * 5,
+                )
+            if not all_rows:
+                all_rows = question_bank_repository.get_by_subject(
+                    db, blueprint.subject_id, limit=total_needed * 5,
+                )
+
+            if not all_rows:
+                raise ValueError(
+                    "Question bank kosong untuk blueprint ini. Generate soal terlebih dahulu."
+                )
+
+            weak_rows  = [r for r in all_rows if r.topic in weak_set]
+            other_rows = [r for r in all_rows if r.topic not in weak_set]
+
+            random.shuffle(weak_rows)
+            random.shuffle(other_rows)
+
+            n_weak  = min(len(weak_rows),  int(total_needed * 0.7)) if weak_rows else 0
+            n_other = min(len(other_rows), total_needed - n_weak)
+
+            selected = weak_rows[:n_weak] + other_rows[:n_other]
+            random.shuffle(selected)
+
+            if len(selected) < total_needed:
+                remaining = [r for r in all_rows if r not in selected]
+                random.shuffle(remaining)
+                selected += remaining[:total_needed - len(selected)]
+
+        if not selected:
             raise ValueError(
                 "Question bank kosong untuk blueprint ini. Generate soal terlebih dahulu."
             )
-
-        # Partition into weak / other
-        weak_rows  = [r for r in all_rows if r.topic in weak_set]
-        other_rows = [r for r in all_rows if r.topic not in weak_set]
-
-        random.shuffle(weak_rows)
-        random.shuffle(other_rows)
-
-        # 70% weak, 30% other (if weak available)
-        n_weak  = min(len(weak_rows),  int(total_needed * 0.7)) if weak_rows else 0
-        n_other = min(len(other_rows), total_needed - n_weak)
-
-        selected = weak_rows[:n_weak] + other_rows[:n_other]
-        random.shuffle(selected)
-
-        # Pad if still short
-        if len(selected) < total_needed:
-            remaining = [r for r in all_rows if r not in selected]
-            random.shuffle(remaining)
-            selected += remaining[:total_needed - len(selected)]
 
         question_bank_repository.increment_used(db, [r.id for r in selected])
 
@@ -509,6 +540,85 @@ class ExamService:
         )
         return {"session_id": session.id, **payload}
 
+    @staticmethod
+    def fetch_practice_questions(
+        db: Session,
+        session_id: int,
+        topic_filter: Optional[str] = None,
+    ) -> dict:
+        """
+        Fetch questions for practice WITHOUT creating a new session.
+        Used by "Latih Topik Lemah" button inside InlinePractice.
+        """
+        if not (session := exam_session_repository.get(db, session_id)):
+            raise ValueError(f"Sesi ujian ID {session_id} tidak ditemukan.")
+
+        blueprint_id = session.blueprint_id
+        if not blueprint_id:
+            if not (blueprint := exam_blueprint_repository.get_latest_by_subject(db, session.subject_id)):
+                raise ValueError("Tidak ada blueprint untuk subjek ini.")
+            blueprint_id = blueprint.id
+        else:
+            blueprint = exam_blueprint_repository.get(db, blueprint_id)
+
+        if not blueprint:
+            raise ValueError("Blueprint tidak ditemukan.")
+
+        blueprint_data = json.loads(blueprint.blueprint_json)
+        items          = blueprint_data.get("blueprint_items", [])
+        total_needed   = blueprint.total_questions or sum(
+            i.get("question_count", 1) for i in items
+        )
+
+        diff_map = {
+            "pemula": "mudah", "sedang": "menengah",
+            "menengah": "menengah", "ahli": "sulit", "sulit": "sulit",
+        }
+        mapped_diff = diff_map.get(blueprint.difficulty) if blueprint.difficulty != "campuran" else None
+        question_type = blueprint.question_type if blueprint.question_type and blueprint.question_type != "mixed" else None
+
+        if topic_filter:
+            all_rows = question_bank_repository.get_by_topic(
+                db, blueprint.subject_id, topic_filter,
+                difficulty=mapped_diff, question_type=question_type,
+                limit=total_needed * 5,
+            )
+            if not all_rows:
+                all_rows = question_bank_repository.get_by_topic(
+                    db, blueprint.subject_id, topic_filter,
+                    limit=total_needed * 5,
+                )
+        else:
+            all_rows = question_bank_repository.get_by_subject(
+                db, blueprint.subject_id,
+                difficulty=mapped_diff, question_type=question_type,
+                limit=total_needed * 5,
+            )
+            if not all_rows:
+                all_rows = question_bank_repository.get_by_subject(
+                    db, blueprint.subject_id, question_type=question_type,
+                    limit=total_needed * 5,
+                )
+            if not all_rows:
+                all_rows = question_bank_repository.get_by_subject(
+                    db, blueprint.subject_id, limit=total_needed * 5,
+                )
+
+        if not all_rows:
+            raise ValueError("Question bank kosong untuk topik ini.")
+
+        selected = all_rows[:total_needed]
+        random.shuffle(selected)
+
+        all_questions = [
+            _bank_row_to_question(row, i + 1) for i, row in enumerate(selected)
+        ]
+
+        return {
+            "title":      f"Latihan — {blueprint_data.get('title', '')}",
+            "questions":  all_questions,
+            "subject_id": blueprint.subject_id,
+        }
 
     # ── 5. Submit & Evaluate — Python engine, AI only for subjective ──────────
     @staticmethod
@@ -807,8 +917,12 @@ class ExamService:
                 "progress": s.plan.progress,
                 "start_date": s.plan.start_date.isoformat() if s.plan.start_date else None,
                 "items": [{"id": i.id, "order_number": i.order_number, "day_label": i.day_label,
-                           "topic": i.topic, "activity": i.activity, "activity_type": i.activity_type,
-                           "duration_minutes": i.duration_minutes, "resources": i.resources,
+                           "topic": i.topic,
+                           "activity": i.activity or fallback_activity_description(i.topic, i.activity_type or "review"),
+                           "activity_type": i.activity_type,
+                           "duration_minutes": i.duration_minutes,
+                           "time_slot": i.time_slot or TIME_SLOTS[i.order_number % len(TIME_SLOTS)] if i.order_number is not None else "",
+                           "resources": i.resources,
                            "completed": bool(i.completed)} for i in s.plan.items],
             }
 
@@ -880,7 +994,149 @@ class ExamService:
         return result
 
     @staticmethod
-    def unified_retry(db: Session, session_id: int) -> dict:
+    def retry_inplace(
+        db: Session,
+        session_id: int,
+        weak_topics: Optional[List[str]] = None,
+    ) -> dict:
+        """
+        Reset the SAME ExamSession with fresh questions from the bank.
+        No new session row is created — existing attempts are preserved,
+        a new attempt will be recorded when the user submits again.
+        """
+        try:
+            if not (session := exam_session_repository.get(db, session_id)):
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Sesi ujian ID {session_id} tidak ditemukan.",
+                )
+
+            blueprint_id = session.blueprint_id
+            if not blueprint_id:
+                if not (blueprint := exam_blueprint_repository.get_latest_by_subject(db, session.subject_id)):
+                    raise HTTPException(
+                        status_code=status.HTTP_404_NOT_FOUND,
+                        detail="Tidak ada blueprint untuk subjek ini.",
+                    )
+                blueprint_id = blueprint.id
+            else:
+                blueprint = exam_blueprint_repository.get(db, blueprint_id)
+
+            if not blueprint:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Blueprint tidak ditemukan.",
+                )
+
+            # Resolve weak topics: use provided, or fall back to session's evaluated weak topics
+            effective_weak = weak_topics
+            if not effective_weak:
+                try:
+                    raw = json.loads(session.weak_topics_json) if session.weak_topics_json else []
+                    effective_weak = [
+                        w.get("topic", w) if isinstance(w, dict) else w
+                        for w in raw
+                    ]
+                except (json.JSONDecodeError, TypeError):
+                    effective_weak = []
+
+            blueprint_data = json.loads(blueprint.blueprint_json)
+            items = blueprint_data.get("blueprint_items", [])
+            total_needed = blueprint.total_questions or sum(
+                i.get("question_count", 1) for i in items
+            )
+
+            diff_map = {
+                "pemula": "mudah", "sedang": "menengah",
+                "menengah": "menengah", "ahli": "sulit", "sulit": "sulit",
+            }
+            mapped_diff = diff_map.get(blueprint.difficulty) if blueprint.difficulty != "campuran" else None
+            question_type = blueprint.question_type if blueprint.question_type and blueprint.question_type != "mixed" else None
+
+            weak_set = set(effective_weak or [])
+            all_rows = question_bank_repository.get_by_subject(
+                db, blueprint.subject_id,
+                difficulty=mapped_diff,
+                question_type=question_type,
+                limit=total_needed * 5,
+            )
+            if not all_rows:
+                all_rows = question_bank_repository.get_by_subject(
+                    db, blueprint.subject_id, limit=total_needed * 5,
+                )
+            if not all_rows:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Question bank kosong. Generate soal terlebih dahulu.",
+                )
+
+            weak_rows  = [r for r in all_rows if r.topic in weak_set]
+            other_rows = [r for r in all_rows if r.topic not in weak_set]
+            random.shuffle(weak_rows)
+            random.shuffle(other_rows)
+
+            n_weak  = min(len(weak_rows),  int(total_needed * 0.7)) if weak_rows else 0
+            n_other = min(len(other_rows), total_needed - n_weak)
+            selected = weak_rows[:n_weak] + other_rows[:n_other]
+            random.shuffle(selected)
+
+            if len(selected) < total_needed:
+                remaining = [r for r in all_rows if r not in selected]
+                random.shuffle(remaining)
+                selected += remaining[:total_needed - len(selected)]
+
+            question_bank_repository.increment_used(db, [r.id for r in selected])
+
+            all_questions = [
+                _bank_row_to_question(row, i + 1) for i, row in enumerate(selected)
+            ]
+
+            new_payload = {
+                "title":            f"Latihan Ulang — {blueprint_data.get('title', '')}",
+                "exam_type":        blueprint.exam_type,
+                "difficulty":       blueprint.difficulty,
+                "bloom_level":      blueprint.bloom_level,
+                "duration_minutes": blueprint.duration_minutes,
+                "questions":        all_questions,
+                "is_retry":         True,
+            }
+
+            # Reset the SAME session (in-place) instead of creating a new one
+            session.questions_json  = json.dumps(new_payload, ensure_ascii=False)
+            session.answers_json    = None
+            session.score           = None
+            session.total_correct   = None
+            session.total_wrong     = None
+            session.evaluation_json = None
+            session.submitted_at    = None
+            session.status          = "active"
+            session.started_at      = datetime.datetime.utcnow()
+            session.updated_at      = datetime.datetime.utcnow()
+            db.flush()
+
+            return {"session_id": session.id, **new_payload}
+
+        except HTTPException:
+            raise
+        except ValueError as err:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=str(err),
+            )
+        except SQLAlchemyError as err:
+            logger.error(f"retry_inplace DB error: {err}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Gagal memulai latihan ulang.",
+            )
+
+    @staticmethod
+    def unified_retry(
+        db: Session,
+        session_id: int,
+        weak_topics: Optional[List[str]] = None,
+        topic_filter: Optional[str] = None,
+    ) -> dict:
         """Create a new session from question bank (zero AI) under the same session."""
         try:
             if not (session := exam_session_repository.get(db, session_id)):
@@ -897,7 +1153,23 @@ class ExamService:
                     )
                 blueprint_id = blueprint.id
 
-            result = ExamService.retry_from_bank(db, blueprint_id, weak_topics=[])
+            # Use provided weak_topics, or fall back to session's evaluated weak topics
+            effective_weak = weak_topics
+            if not effective_weak and not topic_filter:
+                try:
+                    raw = json.loads(session.weak_topics_json) if session.weak_topics_json else []
+                    effective_weak = [
+                        w.get("topic", w) if isinstance(w, dict) else w
+                        for w in raw
+                    ]
+                except (json.JSONDecodeError, TypeError):
+                    effective_weak = []
+
+            result = ExamService.retry_from_bank(
+                db, blueprint_id,
+                weak_topics=effective_weak or [],
+                topic_filter=topic_filter,
+            )
             return result
 
         except ValueError as err:
@@ -954,6 +1226,7 @@ class ExamService:
                     activity=day.get("activity", ""),
                     activity_type=day.get("type", "review"),
                     duration_minutes=day.get("duration_minutes"),
+                    time_slot=day.get("time_slot", ""),
                     resources=day.get("resources", ""),
                     completed=0,
                 ))

@@ -90,6 +90,12 @@ export const sessionsAPI = {
   list: (subjectId) => api.get('/exam/sessions', { params: subjectId ? { subject_id: subjectId } : {} }),
   detail: (sessionId) => api.get(`/exam/sessions/${sessionId}`),
   retry: (sessionId, payload) => api.post(`/exam/sessions/${sessionId}/retry`, payload || {}, { timeout: 30000 }),
+  retryInplace: (sessionId, payload) => api.post(`/exam/sessions/${sessionId}/retry-inplace`, payload || {}, { timeout: 30000 }),
+  fetchPracticeQuestions: (sessionId, topicFilter) =>
+    api.post(`/exam/sessions/${sessionId}/practice-questions`, null, {
+      params: topicFilter ? { topic_filter: topicFilter } : {},
+      timeout: 15000,
+    }),
   saveStudyPlan: (sessionId, planData) => api.post(`/exam/sessions/${sessionId}/study-plan`, planData),
   togglePlanItem: (itemId) => api.post(`/exam/sessions/plan-item/${itemId}/toggle`),
   delete: (sessionId) => api.delete(`/exam/sessions/${sessionId}`),
