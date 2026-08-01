@@ -257,35 +257,88 @@ def _classify_tier(acc: int) -> Tuple[int, int, str]:
     # Fallback: treat any out-of-range as URGENT
     return 4, 60, "review"
 
-def _tier_activity_description(topic: str, activity_type: str, acc: int) -> str:
-    """Generate activity description text based on tier."""
+TIME_SLOTS = [
+    "Pagi (08:00–09:00)",
+    "Sore (15:00–16:00)",
+    "Malam (19:00–20:00)",
+]
+
+_URGENT_ACTIVITIES = [
+    "Pelajari konsep dasar {topic} — fokus pemahaman definisi dan rumus inti",
+    "Latihan soal dasar {topic} — kerjakan soal pemula untuk memperkuat fondasi",
+    "Review mendalam {topic} — identifikasi kesalahan umum dan perbaiki pemahaman",
+    "Simulasi mini {topic} — uji pemahaman dengan soal campuran sebelum ujian",
+]
+
+_HIGH_ACTIVITIES = [
+    "Latihan soal {topic} — drill soal menengah dan review kesalahan",
+    "Review kesalahan {topic} — perbaiki pola salah jawab dan perkuat konsep",
+]
+
+_MEDIUM_ACTIVITIES = [
+    "Review singkat {topic} — pastikan konsep sudah dipahami dan siap ujian",
+]
+
+_LOW_ACTIVITIES = []  # skipped
+
+_TIER_ACTIVITY_MAP = {
+    "urgent": _URGENT_ACTIVITIES,
+    "high": _HIGH_ACTIVITIES,
+    "medium": _MEDIUM_ACTIVITIES,
+    "low": _LOW_ACTIVITIES,
+}
+
+def _acc_to_tier_key(acc: int) -> str:
     if acc < 40:
-        return f"Review mendalam topik {topic} — latihan intensif soal dan konsep dasar"
+        return "urgent"
     elif acc < 60:
-        return f"Latihan soal topik {topic} — drill soal dan review kesalahan"
-    else:
-        return f"Review singkat topik {topic} — pastikan konsep sudah dipahami"
+        return "high"
+    elif acc < 80:
+        return "medium"
+    return "low"
+
+def _tier_activity_description(topic: str, activity_type: str, acc: int, day_index: int = 0) -> str:
+    """Generate activity description text, varies by day_index within the tier."""
+    tier_key = _acc_to_tier_key(acc)
+    activities = _TIER_ACTIVITY_MAP.get(tier_key, _URGENT_ACTIVITIES)
+    if not activities:
+        return f"Topik {topic} sudah dikuasai — tidak perlu latihan tambahan"
+    template = activities[day_index % len(activities)]
+    return template.format(topic=topic)
+
+
+_FALLBACK_ACTIVITIES = {
+    "review": "Review topik {topic} — perkuat pemahaman konsep",
+    "practice": "Latihan soal topik {topic} — drill dan perbaiki kesalahan",
+    "simulation": "Simulasi ujian penuh — uji seluruh kemampuan yang sudah dipelajari",
+    "rest": "Istirahat dan recovery — persiapan untuk sesi berikutnya",
+}
+
+def fallback_activity_description(topic: str, activity_type: str) -> str:
+    """Generate a fallback activity description for old plans missing activity text."""
+    template = _FALLBACK_ACTIVITIES.get(activity_type, "Review topik {topic}")
+    return template.format(topic=topic)
 
 
 def _get_resources(db, subject_id, topic: str, subject_name: str) -> str:
     """Return a resources string for a study plan item."""
     if db is None or subject_id is None:
-        return f"Materi {subject_name} — topik {topic}."
+        return f"Materi {subject_name} — topik {topic}"
     try:
         count = db.query(QuestionBank).filter(
             QuestionBank.subject_id == subject_id,
             QuestionBank.topic == topic
         ).count()
         if count > 0:
-            return f"{count} soal latihan tersedia untuk topik {topic}"
+            return f"{count} soal latihan tersedia — topik {topic}"
         mat_count = db.query(Material).filter(
             Material.subject_id == subject_id
         ).count()
         if mat_count > 0:
-            return f"Baca materi {subject_name}"
-        return "Notebook dan Flashcard di Kabayan AI."
+            return f"Baca materi {subject_name} — topik {topic}"
+        return "Gunakan Notebook dan Flashcard untuk review mandiri"
     except Exception:
-        return f"Materi {subject_name} — topik {topic}."
+        return f"Materi {subject_name} — topik {topic}"
 
 
 def generate_study_plan(
@@ -341,6 +394,7 @@ def generate_study_plan(
 
     day_slots: List[dict] = []
 
+    day_counter = 0  # global counter for day_index across all topics
     for wt in sorted_weak:
         if len(day_slots) >= 6:
             break
@@ -352,18 +406,20 @@ def generate_study_plan(
             continue
 
         topic = wt.get("topic", "Topik")
-        activity_desc = _tier_activity_description(topic, atype, acc)
 
-        for _ in range(days):
+        for day_in_topic in range(days):
             if len(day_slots) >= 6:
                 break
+            activity_desc = _tier_activity_description(topic, atype, acc, day_in_topic)
             day_slots.append({
                 "topic": topic,
                 "activity": activity_desc,
                 "type": atype,
                 "duration_minutes": dur,
+                "time_slot": TIME_SLOTS[day_counter % len(TIME_SLOTS)],
                 "resources": _get_resources(db, subject_id, topic, subject_name),
             })
+            day_counter += 1
 
     # ── Fill remaining slots (up to 6) with Review Umum ──────────────────────
     while len(day_slots) < 6:
@@ -372,8 +428,10 @@ def generate_study_plan(
             "activity": "Review umum seluruh materi — perkuat pemahaman topik yang sudah dipelajari",
             "type": "review",
             "duration_minutes": 60,
+            "time_slot": TIME_SLOTS[day_counter % len(TIME_SLOTS)],
             "resources": "",
         })
+        day_counter += 1
 
     # ── Always append Simulasi Penuh as 7th item ─────────────────────────────
     day_slots.append({
@@ -381,6 +439,7 @@ def generate_study_plan(
         "activity": "Simulasi ujian penuh — uji seluruh kemampuan yang sudah dipelajari",
         "type": "simulation",
         "duration_minutes": 60,
+        "time_slot": TIME_SLOTS[day_counter % len(TIME_SLOTS)],
         "resources": "",
     })
 
@@ -394,6 +453,7 @@ def generate_study_plan(
             "activity": slot["activity"],
             "type": slot["type"],
             "duration_minutes": slot["duration_minutes"],
+            "time_slot": slot.get("time_slot", ""),
             "resources": slot["resources"],
         })
 
