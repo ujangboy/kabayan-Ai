@@ -177,16 +177,22 @@ class AIService:
 
     @staticmethod
     def chat(history: List[Dict[str, str]], context: str, user_input: str) -> str:
-        from prompts.chat import CHAT_PROMPT
+        from prompts.chat import CHAT_SYSTEM_PROMPT_WITH_DOCS_TEMPLATE, CHAT_SYSTEM_PROMPT_NO_DOCS_TEMPLATE
 
         # REQ-04: truncate + trim
         context = _truncate_context(context)
         history = _trim_history(history)
         hist_str = "\n".join([f"{m['role']}: {m['content']}" for m in history])
 
+        has_docs = bool(context.strip())
+        prompt_template = CHAT_SYSTEM_PROMPT_WITH_DOCS_TEMPLATE if has_docs else CHAT_SYSTEM_PROMPT_NO_DOCS_TEMPLATE
+
         db = SessionLocal()
         setting_hash = settings_service.get_embedding_model(db)
-        prompt_str = CHAT_PROMPT.format(context=context, history=hist_str, input=user_input)
+        if has_docs:
+            prompt_str = prompt_template.format(context=context, history=hist_str, input=user_input)
+        else:
+            prompt_str = prompt_template.format(history=hist_str, input=user_input)
 
         cached = cache_service.get_cache(db, prompt_str, context, setting_hash)
         if cached:
@@ -194,7 +200,11 @@ class AIService:
             return cached
 
         llm = AIService._get_llm("chat")
-        messages = [SystemMessage(content=CHAT_PROMPT.format(context=context, history="", input=""))]
+        if has_docs:
+            sys_msg = CHAT_SYSTEM_PROMPT_WITH_DOCS_TEMPLATE.format(context=context, history="", input="")
+        else:
+            sys_msg = CHAT_SYSTEM_PROMPT_NO_DOCS_TEMPLATE.format(history="", input="")
+        messages = [SystemMessage(content=sys_msg)]
         for msg in history:
             if msg["role"] == "user":
                 messages.append(HumanMessage(content=msg["content"]))
@@ -212,7 +222,7 @@ class AIService:
 
     @staticmethod
     async def achat_stream(history: List[Dict[str, str]], context: str, user_input: str):
-        from prompts.chat import CHAT_PROMPT
+        from prompts.chat import CHAT_SYSTEM_PROMPT_WITH_DOCS_TEMPLATE, CHAT_SYSTEM_PROMPT_NO_DOCS_TEMPLATE
         import asyncio
 
         # REQ-04: truncate + trim
@@ -220,9 +230,15 @@ class AIService:
         history = _trim_history(history)
         hist_str = "\n".join([f"{m['role']}: {m['content']}" for m in history])
 
+        has_docs = bool(context.strip())
+        prompt_template = CHAT_SYSTEM_PROMPT_WITH_DOCS_TEMPLATE if has_docs else CHAT_SYSTEM_PROMPT_NO_DOCS_TEMPLATE
+
         db = SessionLocal()
         setting_hash = settings_service.get_embedding_model(db)
-        prompt_str = CHAT_PROMPT.format(context=context, history=hist_str, input=user_input)
+        if has_docs:
+            prompt_str = prompt_template.format(context=context, history=hist_str, input=user_input)
+        else:
+            prompt_str = prompt_template.format(history=hist_str, input=user_input)
 
         cached = await asyncio.to_thread(
             cache_service.get_cache, db, prompt_str, context, setting_hash
@@ -233,7 +249,11 @@ class AIService:
             return
 
         llm = AIService._get_llm("chat")
-        messages = [SystemMessage(content=CHAT_PROMPT.format(context=context, history="", input=""))]
+        if has_docs:
+            sys_msg = CHAT_SYSTEM_PROMPT_WITH_DOCS_TEMPLATE.format(context=context, history="", input="")
+        else:
+            sys_msg = CHAT_SYSTEM_PROMPT_NO_DOCS_TEMPLATE.format(history="", input="")
+        messages = [SystemMessage(content=sys_msg)]
         for msg in history:
             if msg["role"] == "user":
                 messages.append(HumanMessage(content=msg["content"]))
