@@ -3,13 +3,14 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   CreditCard, Plus, X, Book, Zap, Loader2, Play,
-  Trash2, ChevronLeft, ChevronRight, RotateCcw, Trophy
+  Trash2, ChevronLeft, ChevronRight, RotateCcw, Trophy, Clock, Calendar
 } from 'lucide-react';
 import { flashcardAPI, subjectAPI } from '@/services/api';
 import { useToast } from '@/components/Toast';
 import { extractErrorMessage } from '@/utils/errors';
 import MathMarkdown from '@/components/MathMarkdown';
 import MaterialPicker from '@/components/MaterialPicker';
+import { formatDate, formatTimeOnly } from '@/utils';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Main Page
@@ -167,27 +168,35 @@ export default function FlashcardPage() {
 // ─────────────────────────────────────────────────────────────────────────────
 function SubjectFlashcardCard({ group, onStart, onDeleteAll }) {
   const { subject, cards } = group;
+  // Ambil created_at terbaru dari kartu dalam grup
+  const latestCard = cards.reduce((a, b) =>
+    new Date(b.created_at || 0) > new Date(a.created_at || 0) ? b : a, cards[0]);
+  const createdAt = latestCard?.created_at;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       className="card-base p-5 flex flex-col"
     >
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex-1">
-          <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Mata Kuliah</div>
-          <h3 className="font-semibold text-text text-sm">{subject.name}</h3>
+      <div className="flex items-start justify-between mb-2">
+        <div className="flex-1 min-w-0">
+          {/* Label "Mata Kuliah" */}
+          <div className="text-[10px] font-semibold text-accent-teal uppercase tracking-wider mb-1">
+            Mata Kuliah
+          </div>
+          <h3 className="font-semibold text-text text-sm truncate">{subject.name}</h3>
         </div>
         <button
           onClick={onDeleteAll}
-          className="p-1 text-text-muted hover:text-danger transition-colors"
+          className="p-1 text-text-muted hover:text-danger transition-colors shrink-0 ml-2"
           title="Hapus semua flashcard ini"
         >
           <Trash2 size={14} />
         </button>
       </div>
 
-      <div className="flex items-center gap-3 mb-4 text-xs text-text-secondary">
+      <div className="flex items-center gap-3 mb-2 text-xs text-text-secondary">
         <span className="flex items-center gap-1">
           <CreditCard size={12} />
           {cards.length} kartu
@@ -197,6 +206,20 @@ function SubjectFlashcardCard({ group, onStart, onDeleteAll }) {
           Flip &amp; Recall
         </span>
       </div>
+
+      {/* Tanggal + waktu dibuat */}
+      {createdAt && (
+        <div className="flex items-center gap-3 mb-3 text-[10px] text-text-muted">
+          <span className="flex items-center gap-1">
+            <Calendar size={9} />
+            {formatDate(createdAt)}
+          </span>
+          <span className="flex items-center gap-1">
+            <Clock size={9} />
+            {formatTimeOnly(createdAt)}
+          </span>
+        </div>
+      )}
 
       {/* Mini preview of first card */}
       {cards[0] && (

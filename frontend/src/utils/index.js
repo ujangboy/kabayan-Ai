@@ -19,6 +19,21 @@ export function formatTime(dateStr) {
   });
 }
 
+// "1 Agu 2026, 16:48"
+export function formatDateTime(dateStr) {
+  if (!dateStr) return '-';
+  const d = new Date(dateStr);
+  const date = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+  const time = d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+  return `${date}, ${time}`;
+}
+
+// "16:48" saja
+export function formatTimeOnly(dateStr) {
+  if (!dateStr) return '';
+  return new Date(dateStr).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+}
+
 export function fileIcon(type) {
   const t = (type || '').toUpperCase();
   if (t.includes('YOUTUBE')) return '🎬';

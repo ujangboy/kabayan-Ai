@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileText, Plus, Trash2, Edit3, X, Book } from 'lucide-react';
+import { FileText, Plus, Trash2, Edit3, X, Book, Clock } from 'lucide-react';
 import { notesAPI, subjectAPI } from '@/services/api';
-import { formatDate } from '@/utils';
+import { formatDate, formatTimeOnly } from '@/utils';
 import MathMarkdown from '@/components/MathMarkdown';
 import MaterialPicker from '@/components/MaterialPicker';
 
@@ -71,31 +71,67 @@ export default function NotebookPage() {
           ) : notes.length === 0 ? (
             <p className="text-text-muted text-xs p-2 text-center">Belum ada catatan.</p>
           ) : (
-            notes.map((n) => (
-              <div
-                key={n.id}
-                onClick={() => setSelectedNote(n)}
-                className={`group w-full text-left p-3 rounded-xl transition-colors ${selectedNote?.id === n.id ? 'bg-primary/10 border border-primary/20' : 'hover:bg-card border border-transparent'}`}
-              >
-                <div className="flex justify-between items-start mb-1">
-                  <h3 className={`text-sm font-medium line-clamp-1 ${selectedNote?.id === n.id ? 'text-primary' : 'text-text'}`}>
-                    {n.title}
-                  </h3>
-                  <button
-                    onClick={(e) => handleDelete(n.id, e)}
-                    className="opacity-0 group-hover:opacity-100 text-text-muted hover:text-danger p-1 rounded-lg transition-colors"
-                    title="Hapus catatan"
-                  >
-                    <X size={14} />
-                  </button>
+            notes.map((n) => {
+              // Warna aksen berdasarkan subject_id agar tiap mata kuliah beda warna
+              const COLORS = [
+                { border: 'border-l-primary',      dot: 'bg-primary'      },
+                { border: 'border-l-accent-teal',  dot: 'bg-accent-teal'  },
+                { border: 'border-l-accent-purple',dot: 'bg-accent-purple' },
+                { border: 'border-l-warning',      dot: 'bg-warning'      },
+                { border: 'border-l-accent-blue',  dot: 'bg-accent-blue'  },
+                { border: 'border-l-success',      dot: 'bg-success'      },
+              ];
+              const color = COLORS[(n.subject?.id || 0) % COLORS.length];
+              // Cuplikan isi catatan — strip markdown sederhana
+              const snippet = (n.content || '')
+                .replace(/#+\s/g, '').replace(/\*+/g, '').replace(/\n/g, ' ').trim()
+                .slice(0, 60);
+
+              return (
+                <div
+                  key={n.id}
+                  onClick={() => setSelectedNote(n)}
+                  className={`group w-full text-left p-3 rounded-xl transition-colors border-l-2 ${color.border} ${
+                    selectedNote?.id === n.id ? 'bg-primary/10 border border-primary/20 border-l-2' : 'hover:bg-card border border-transparent'
+                  }`}
+                >
+                  <div className="flex justify-between items-start mb-0.5">
+                    <h3 className={`text-sm font-medium line-clamp-1 flex-1 min-w-0 ${selectedNote?.id === n.id ? 'text-primary' : 'text-text'}`}>
+                      {n.title}
+                    </h3>
+                    <button
+                      onClick={(e) => handleDelete(n.id, e)}
+                      className="opacity-0 group-hover:opacity-100 text-text-muted hover:text-danger p-1 rounded-lg transition-colors shrink-0"
+                      title="Hapus catatan"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+
+                  {/* Nama mata kuliah */}
+                  {n.subject && (
+                    <div className="flex items-center gap-1 mb-1">
+                      <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${color.dot}`} />
+                      <span className="text-[10px] text-text-secondary truncate">{n.subject.name}</span>
+                    </div>
+                  )}
+
+                  {/* Cuplikan konten */}
+                  {snippet && (
+                    <p className="text-[10px] text-text-muted line-clamp-2 mb-1 leading-relaxed">{snippet}…</p>
+                  )}
+
+                  {/* Tanggal + waktu */}
+                  <div className="flex items-center gap-2 text-[10px] text-text-muted">
+                    <span>{formatDate(n.created_at)}</span>
+                    <span className="flex items-center gap-0.5">
+                      <Clock size={8} />
+                      {formatTimeOnly(n.created_at)}
+                    </span>
+                  </div>
                 </div>
-                <p className="text-[10px] text-text-muted mb-2">{formatDate(n.created_at)}</p>
-                <div className="flex items-center gap-1">
-                  <Book size={10} className="text-text-secondary" />
-                  <span className="text-[10px] text-text-secondary truncate">{n.subject?.name || 'Umum'}</span>
-                </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
         {notes.length > 0 && (

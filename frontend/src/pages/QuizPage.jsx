@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { HelpCircle, Play, X, Zap, Trophy, Trash2, CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { HelpCircle, Play, X, Zap, Trophy, Trash2, CheckCircle, XCircle, Loader2, Clock, Calendar } from 'lucide-react';
 import { quizAPI, subjectAPI } from '@/services/api';
 import MathMarkdown from '@/components/MathMarkdown';
 import MaterialPicker from '@/components/MaterialPicker';
+import { formatDate, formatTimeOnly } from '@/utils';
 
 export default function QuizPage() {
   const queryClient = useQueryClient();
@@ -117,9 +118,12 @@ export default function QuizPage() {
                 className="card-base p-5 flex flex-col"
               >
                 <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1">
-                    <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">
-                      {quiz.subject?.name || 'Umum'}
+                  <div className="flex-1 min-w-0">
+                    {/* Nama materi / mata kuliah */}
+                    <div className="flex items-center gap-1 mb-1">
+                      <span className="text-[10px] font-semibold text-accent-blue uppercase tracking-wider truncate">
+                        {quiz.subject?.name || 'Umum'}
+                      </span>
                     </div>
                     <h3 className="font-semibold text-text text-sm line-clamp-2">
                       {quiz.title || `Quiz #${quiz.id}`}
@@ -127,25 +131,39 @@ export default function QuizPage() {
                   </div>
                   <button
                     onClick={() => handleDelete(quiz.id)}
-                    className="p-1 text-text-muted hover:text-danger transition-colors"
+                    className="p-1 text-text-muted hover:text-danger transition-colors shrink-0 ml-2"
                     title="Hapus"
                   >
                     <Trash2 size={14} />
                   </button>
                 </div>
 
-                <div className="flex items-center gap-4 mb-3 text-xs text-text-secondary">
+                <div className="flex items-center gap-3 mb-2 text-xs text-text-secondary flex-wrap">
                   <span className="flex items-center gap-1">
                     <HelpCircle size={12} />
                     {quiz.question_count || 0} soal
                   </span>
                   {quiz.score !== null && quiz.score !== undefined && (
-                    <span className="flex items-center gap-1">
-                      <Trophy size={12} className="text-warning" />
+                    <span className="flex items-center gap-1 text-warning">
+                      <Trophy size={12} />
                       {quiz.score}
                     </span>
                   )}
                 </div>
+
+                {/* Tanggal + waktu dibuat */}
+                {quiz.created_at && (
+                  <div className="flex items-center gap-3 mb-3 text-[10px] text-text-muted">
+                    <span className="flex items-center gap-1">
+                      <Calendar size={9} />
+                      {formatDate(quiz.created_at)}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Clock size={9} />
+                      {formatTimeOnly(quiz.created_at)}
+                    </span>
+                  </div>
+                )}
 
                 <button
                   onClick={() => handleStartQuiz(quiz.id)}

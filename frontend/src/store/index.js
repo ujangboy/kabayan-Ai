@@ -38,7 +38,11 @@ export const useChatStore = create(
 
       addMessage: (chatId, message) => set((s) => ({
         chats: s.chats.map((c) =>
-          c.id === chatId ? { ...c, messages: [...c.messages, message], title: c.messages.length === 0 ? message.content.slice(0, 30) + '...' : c.title } : c
+          c.id === chatId ? {
+            ...c,
+            messages: [...c.messages, { ...message, timestamp: new Date().toISOString() }],
+            title: c.messages.length === 0 ? message.content.slice(0, 30) + '...' : c.title
+          } : c
         ),
       })),
 

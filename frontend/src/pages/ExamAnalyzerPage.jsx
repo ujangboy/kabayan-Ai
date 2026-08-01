@@ -1617,6 +1617,11 @@ function HistoryCard({ session: s, onDetail, onDelete }) {
         <span className="flex items-center gap-1"><RotateCcw size={10} /> {s.attempt_count || 0} attempt</span>
         <span className="flex items-center gap-1"><Clock size={10} />
           {s.created_at ? new Date(s.created_at).toLocaleDateString('id-ID') : '--'}
+          {s.created_at && (
+            <span className="text-text-muted/70">
+              {' '}{new Date(s.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+            </span>
+          )}
         </span>
         {s.has_study_plan && (
           <span className="flex items-center gap-1 text-primary">

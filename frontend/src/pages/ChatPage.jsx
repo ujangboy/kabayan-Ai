@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Send, X, BookOpen, Trash2, Bot, User, Copy, Check, Pin, Edit3 } from 'lucide-react';
 import MathMarkdown from '@/components/MathMarkdown';
 import { useChatStore } from '@/store';
-import { cn } from '@/utils';
+import { cn, formatDateTime } from '@/utils';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 
 const QUICK_PROMPTS = [
@@ -57,6 +57,15 @@ function MessageBubble({ message, isLast }) {
           <div className="prose-dark text-sm">
             <MathMarkdown>{message.content}</MathMarkdown>
           </div>
+        )}
+        {/* Timestamp */}
+        {message.timestamp && (
+          <p className={cn(
+            'text-[10px] mt-1.5 select-none',
+            isUser ? 'text-primary/50 text-right' : 'text-text-muted'
+          )}>
+            {formatDateTime(message.timestamp)}
+          </p>
         )}
         {/* Copy button */}
         <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
