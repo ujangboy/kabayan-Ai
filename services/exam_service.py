@@ -1000,11 +1000,13 @@ class ExamService:
         db: Session,
         session_id: int,
         weak_topics: Optional[List[str]] = None,
+        question_type: Optional[str] = None,
     ) -> dict:
         """
         Reset the SAME ExamSession with fresh questions from the bank.
-        No new session row is created — existing attempts are preserved,
-        a new attempt will be recorded when the user submits again.
+        - If question_type matches (or is not provided), reset in-place (same session row).
+        - If question_type DIFFERS from the blueprint's type, create a NEW session row.
+        No AI call in either case.
         """
         try:
             if not (session := exam_session_repository.get(db, session_id)):
@@ -1030,6 +1032,15 @@ class ExamService:
                     detail="Blueprint tidak ditemukan.",
                 )
 
+            # Determine if question_type differs from blueprint → need new session
+            blueprint_qtype = blueprint.question_type or "mixed"
+            requested_qtype = question_type or blueprint_qtype
+            create_new_session = (
+                question_type is not None
+                and question_type != blueprint_qtype
+                and question_type != "mixed"
+            )
+
             # Resolve weak topics: use provided, or fall back to session's evaluated weak topics
             effective_weak = weak_topics
             if not effective_weak:
@@ -1053,16 +1064,18 @@ class ExamService:
                 "menengah": "menengah", "ahli": "sulit", "sulit": "sulit",
             }
             mapped_diff = diff_map.get(blueprint.difficulty) if blueprint.difficulty != "campuran" else None
-            question_type = blueprint.question_type if blueprint.question_type and blueprint.question_type != "mixed" else None
+            # Use requested_qtype for filtering (may differ from blueprint if user chose new type)
+            effective_qtype = requested_qtype if requested_qtype and requested_qtype != "mixed" else None
 
             weak_set = set(effective_weak or [])
             all_rows = question_bank_repository.get_by_subject(
                 db, blueprint.subject_id,
                 difficulty=mapped_diff,
-                question_type=question_type,
+                question_type=effective_qtype,
                 limit=total_needed * 5,
             )
             if not all_rows:
+                # Fallback: ignore question_type filter
                 all_rows = question_bank_repository.get_by_subject(
                     db, blueprint.subject_id, limit=total_needed * 5,
                 )
@@ -1093,30 +1106,56 @@ class ExamService:
                 _bank_row_to_question(row, i + 1) for i, row in enumerate(selected)
             ]
 
+            # Build title that reflects question type if changed
+            qtype_label = requested_qtype.replace('_', ' ').title() if requested_qtype and requested_qtype != "mixed" else None
+            base_title = blueprint_data.get('title', '')
+            new_title = f"Latihan Ulang — {base_title}"
+            if create_new_session and qtype_label:
+                new_title = f"Latihan Ulang ({qtype_label}) — {base_title}"
+
             new_payload = {
-                "title":            f"Latihan Ulang — {blueprint_data.get('title', '')}",
+                "title":            new_title,
                 "exam_type":        blueprint.exam_type,
                 "difficulty":       blueprint.difficulty,
                 "bloom_level":      blueprint.bloom_level,
+                "question_type":    requested_qtype,
                 "duration_minutes": blueprint.duration_minutes,
                 "questions":        all_questions,
                 "is_retry":         True,
             }
 
-            # Reset the SAME session (in-place) instead of creating a new one
-            session.questions_json  = json.dumps(new_payload, ensure_ascii=False)
-            session.answers_json    = None
-            session.score           = None
-            session.total_correct   = None
-            session.total_wrong     = None
-            session.evaluation_json = None
-            session.submitted_at    = None
-            session.status          = "active"
-            session.started_at      = datetime.datetime.utcnow()
-            session.updated_at      = datetime.datetime.utcnow()
-            db.flush()
-
-            return {"session_id": session.id, **new_payload}
+            if create_new_session:
+                # Different question type → create a NEW session row (new history entry)
+                new_session = exam_session_repository.create_session(
+                    db=db,
+                    blueprint_id=blueprint_id,
+                    subject_id=blueprint.subject_id,
+                    questions_json=json.dumps(new_payload, ensure_ascii=False),
+                )
+                new_session.subject_name = session.subject_name
+                new_session.exam_type    = blueprint.exam_type
+                new_session.difficulty   = blueprint.difficulty
+                new_session.bloom_level  = blueprint.bloom_level
+                new_session.question_type = requested_qtype
+                new_session.total_questions = len(all_questions)
+                new_session.title        = new_title
+                new_session.status       = "active"
+                db.flush()
+                return {"session_id": new_session.id, "is_new_session": True, **new_payload}
+            else:
+                # Same question type → reset in-place (preserve history row)
+                session.questions_json  = json.dumps(new_payload, ensure_ascii=False)
+                session.answers_json    = None
+                session.score           = None
+                session.total_correct   = None
+                session.total_wrong     = None
+                session.evaluation_json = None
+                session.submitted_at    = None
+                session.status          = "active"
+                session.started_at      = datetime.datetime.utcnow()
+                session.updated_at      = datetime.datetime.utcnow()
+                db.flush()
+                return {"session_id": session.id, "is_new_session": False, **new_payload}
 
         except HTTPException:
             raise

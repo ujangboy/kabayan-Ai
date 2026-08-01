@@ -198,11 +198,12 @@ async def retry_session_inplace(
     payload: RetryRequest = RetryRequest(),
     db: Session = Depends(get_db),
 ):
-    """Retry by resetting the SAME session — no new history row created."""
+    """Retry by resetting the SAME session (or creating new session if question_type differs)."""
     try:
         data = exam_service.retry_inplace(
             db, session_id,
             weak_topics=payload.weak_topics,
+            question_type=payload.question_type,
         )
         return JSONResponse(data)
     except ValueError as e:

@@ -21,6 +21,8 @@ class SubmitAnswersRequest(BaseModel):
 
 class RetryRequest(BaseModel):
     weak_topics: list[str] = Field(default_factory=list)
+    topic_filter: Optional[str] = None
+    question_type: Optional[str] = None
 
 
 class StudyPlanRequest(BaseModel):

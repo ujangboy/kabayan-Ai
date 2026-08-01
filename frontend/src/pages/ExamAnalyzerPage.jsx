@@ -53,6 +53,18 @@ const Q_TYPE_MAP = {
   'Perhitungan':'calculation','Campuran':'mixed',
 };
 
+// Reverse map: kode → label yang readable
+const Q_TYPE_LABEL = {
+  mcq:          'Pilihan Ganda',
+  truefalse:    'Benar / Salah',
+  short_answer: 'Isian Singkat',
+  essay:        'Essay',
+  case_study:   'Studi Kasus',
+  analysis:     'Analisis',
+  calculation:  'Perhitungan',
+  mixed:        'Campuran',
+};
+
 
 // ─── Small shared components ─────────────────────────────────────────────────
 function StarRating({ stars = 3 }) {
@@ -1561,7 +1573,13 @@ function HistoryCard({ session: s, onDetail, onDelete }) {
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 mb-1 flex-wrap">
-            <Chip label={s.exam_type?.toUpperCase() || 'SIMULASI'} size="xs" color="blue" />
+            <Chip label={s.exam_type?.toUpperCase().replace('_',' ') || 'SIMULASI'} size="xs" color="blue" />
+            {s.question_type && s.question_type !== 'mixed' && (
+              <Chip label={Q_TYPE_LABEL[s.question_type] || s.question_type} size="xs" color="purple" />
+            )}
+            {s.question_type === 'mixed' && (
+              <Chip label="Campuran" size="xs" color="teal" />
+            )}
             <Chip label={meta.label} size="xs" color={meta.color} />
             {s.status === 'mastered' && <Star size={11} className="text-warning fill-warning" />}
           </div>
@@ -2474,12 +2492,14 @@ function AttemptsTab({ attempts }) {
 function RetryButton({ historySessionId, sessionData, onClose, onResume }) {
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState('');
+  const [selectedQType, setSelectedQType] = useState(sessionData.question_type || 'mixed');
 
   const handleRetry = async () => {
     setError(''); setLoading(true);
     try {
-      // Use retry-inplace: resets the SAME session, no new history row
-      const r = await sessionsAPI.retryInplace(historySessionId);
+      // Pass question_type — if different from session, backend creates new session row
+      const payload = selectedQType !== sessionData.question_type ? { question_type: selectedQType } : {};
+      const r = await sessionsAPI.retryInplace(historySessionId, payload);
       if (r.data?.detail) throw new Error(r.data.detail);
       if (!r.data?.session_id) throw new Error('Sesi latihan gagal disiapkan.');
       onClose();
@@ -2489,14 +2509,38 @@ function RetryButton({ historySessionId, sessionData, onClose, onResume }) {
     } finally { setLoading(false); }
   };
 
+  const isDifferentType = selectedQType !== (sessionData.question_type || 'mixed');
+
   return (
-    <div>
-      {error && <p className="text-danger text-xs mb-2">{error}</p>}
-      <button onClick={handleRetry} disabled={loading} className="btn-primary text-sm">
-        {loading
-          ? <><Loader2 size={13} className="animate-spin"/> Menyiapkan...</>
-          : <><RotateCcw size={13}/> Latihan Lagi</>}
-      </button>
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
+        <select
+          value={selectedQType}
+          onChange={e => setSelectedQType(e.target.value)}
+          disabled={loading}
+          className="px-2.5 py-1.5 bg-card border border-border rounded-lg text-xs text-text focus:outline-none focus:border-primary disabled:opacity-50"
+        >
+          <option value="mixed">Campuran</option>
+          <option value="mcq">Pilihan Ganda</option>
+          <option value="truefalse">Benar / Salah</option>
+          <option value="short_answer">Isian Singkat</option>
+          <option value="essay">Essay</option>
+          <option value="case_study">Studi Kasus</option>
+          <option value="analysis">Analisis</option>
+          <option value="calculation">Perhitungan</option>
+        </select>
+        <button onClick={handleRetry} disabled={loading} className="btn-primary text-sm flex items-center gap-1.5">
+          {loading
+            ? <><Loader2 size={13} className="animate-spin"/> Menyiapkan...</>
+            : <><RotateCcw size={13}/> {isDifferentType ? 'Buat Baru' : 'Latihan Lagi'}</>}
+        </button>
+      </div>
+      {isDifferentType && !error && (
+        <p className="text-xs text-warning flex items-center gap-1">
+          <AlertCircle size={11}/> Jenis soal berbeda — akan membuat history baru
+        </p>
+      )}
+      {error && <p className="text-danger text-xs">{error}</p>}
     </div>
   );
 }
