@@ -1490,7 +1490,7 @@ function HistoryView({ subjectId, subjects, onSelectSubject, onStartConfig, onRe
       {/* Detail modal */}
       <AnimatePresence>
         {detailId && (
-          <DetailModal historySessionId={detailId} onClose={() => setDetailId(null)} onResume={onResume} />
+          <DetailModal historySessionId={detailId} onClose={() => setDetailId(null)} onResume={onResume} pendingPlanTab={pendingPlanTab} setPendingPlanTab={setPendingPlanTab} />
         )}
       </AnimatePresence>
     </div>
@@ -1591,7 +1591,7 @@ function HistoryCard({ session: s, onDetail, onDelete }) {
 
 
 // ─── Detail Modal ─────────────────────────────────────────────────────────────
-function DetailModal({ historySessionId, onClose, onResume }) {
+function DetailModal({ historySessionId, onClose, onResume, pendingPlanTab, setPendingPlanTab }) {
   const queryClient = useQueryClient();
   const [tab, setTab] = useState(pendingPlanTab ? 'plan' : 'overview');
 
