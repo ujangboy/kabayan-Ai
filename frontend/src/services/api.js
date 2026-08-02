@@ -46,6 +46,15 @@ export const notesAPI = {
   getAll: () => api.get('/notes'),
   delete: (id) => api.post(`/notes/${id}/delete`),
   clear: () => api.post('/notes/clear'),
+  rename: (id, title) => api.put(`/notes/${id}/rename`,
+    new URLSearchParams({ title }).toString(),
+    { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+  ),
+  togglePin: (id) => api.post(`/notes/${id}/pin`),
+  updateContent: (id, content) => api.patch(`/notes/${id}/content`,
+    new URLSearchParams({ content }).toString(),
+    { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+  ),
 };
 
 // --- FLASHCARDS ---

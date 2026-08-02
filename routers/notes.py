@@ -25,6 +25,7 @@ async def get_notes_json(db: Session = Depends(get_db), skip: int = Query(0, ge=
             "id": n.id,
             "title": n.title,
             "content": n.content,
+            "is_pinned": bool(n.is_pinned),
             "created_at": n.created_at.isoformat() if n.created_at else None,
             "subject": {"id": n.subject.id, "name": n.subject.name} if n.subject else None
         })
@@ -49,6 +50,34 @@ async def create_note(
 async def delete_note(note_id: int, db: Session = Depends(get_db)):
     notes_service.delete(db, note_id)
     return JSONResponse({"status": "success", "message": "Note deleted"})
+
+@router.put("/api/notes/{note_id}/rename")
+async def rename_note(note_id: int, title: str = Form(...), db: Session = Depends(get_db)):
+    from repositories.note_repository import note_repository
+    note = note_repository.get(db, note_id)
+    if not note:
+        return JSONResponse(status_code=404, content={"status": "error", "message": "Note not found"})
+    note_repository.update(db, note, {"title": title.strip()})
+    return JSONResponse({"status": "success", "message": "Note renamed", "title": title.strip()})
+
+@router.post("/api/notes/{note_id}/pin")
+async def toggle_pin_note(note_id: int, db: Session = Depends(get_db)):
+    from repositories.note_repository import note_repository
+    note = note_repository.get(db, note_id)
+    if not note:
+        return JSONResponse(status_code=404, content={"status": "error", "message": "Note not found"})
+    new_pin_state = not bool(note.is_pinned)
+    note_repository.update(db, note, {"is_pinned": new_pin_state})
+    return JSONResponse({"status": "success", "is_pinned": new_pin_state})
+
+@router.patch("/api/notes/{note_id}/content")
+async def update_note_content(note_id: int, db: Session = Depends(get_db), content: str = Form(...)):
+    from repositories.note_repository import note_repository
+    note = note_repository.get(db, note_id)
+    if not note:
+        return JSONResponse(status_code=404, content={"status": "error", "message": "Note not found"})
+    note_repository.update(db, note, {"content": content})
+    return JSONResponse({"status": "success"})
 
 @router.post("/api/notes/{note_id}/action")
 async def note_action(note_id: int, action: str = Form(...), db: Session = Depends(get_db)):

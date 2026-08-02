@@ -297,3 +297,95 @@
   .preserve-3d { transform-style: preserve-3d; }
   .backface-hidden { backface-visibility: hidden; }
 }
+
+/* ── Tiptap NoteEditor content styles ──────────────────────────────────── */
+.note-editor-content {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: #e2e8f0;
+}
+
+.note-editor-content h1 { font-size: 1.5rem; font-weight: 700; color: #fff; margin: 1.5rem 0 0.75rem; }
+.note-editor-content h2 { font-size: 1.2rem; font-weight: 700; color: #fff; margin: 1.25rem 0 0.6rem; }
+.note-editor-content h3 { font-size: 1rem;   font-weight: 600; color: #fff; margin: 1rem 0 0.5rem; }
+
+.note-editor-content p { margin-bottom: 0.85rem; }
+.note-editor-content p:last-child { margin-bottom: 0; }
+
+.note-editor-content strong { color: #fff; font-weight: 600; }
+.note-editor-content em { font-style: italic; color: #cbd5e1; }
+.note-editor-content s { text-decoration: line-through; color: #71717a; }
+.note-editor-content u { text-underline-offset: 3px; }
+
+.note-editor-content ul { list-style: disc; padding-left: 1.5rem; margin-bottom: 0.85rem; }
+.note-editor-content ol { list-style: decimal; padding-left: 1.5rem; margin-bottom: 0.85rem; }
+.note-editor-content li { margin-bottom: 0.35rem; }
+.note-editor-content li p { margin-bottom: 0; }
+
+/* Task list (To-Do) */
+.note-editor-content ul[data-type="taskList"] { list-style: none; padding-left: 0.25rem; }
+.note-editor-content ul[data-type="taskList"] li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  margin-bottom: 0.4rem;
+}
+.note-editor-content ul[data-type="taskList"] li > label {
+  display: flex;
+  align-items: center;
+  margin-top: 2px;
+  cursor: pointer;
+}
+.note-editor-content ul[data-type="taskList"] li > label input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  accent-color: #6366f1;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.note-editor-content ul[data-type="taskList"] li[data-checked="true"] > div {
+  text-decoration: line-through;
+  color: #52525b;
+}
+.note-editor-content ul[data-type="taskList"] li > div { flex: 1; }
+
+/* Code */
+.note-editor-content code {
+  background: #1E1E2E;
+  color: #c4b5fd;
+  padding: 0.15em 0.4em;
+  border-radius: 5px;
+  font-size: 0.875em;
+  font-family: 'JetBrains Mono', monospace;
+}
+.note-editor-content pre {
+  background: #1E1E2E;
+  border: 1px solid #27272a;
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  overflow-x: auto;
+  margin-bottom: 1rem;
+}
+.note-editor-content pre code { background: transparent; padding: 0; color: #e2e8f0; }
+
+/* Blockquote */
+.note-editor-content blockquote {
+  border-left: 3px solid #6366f1;
+  padding-left: 1rem;
+  margin: 1rem 0;
+  color: #a1a1aa;
+  font-style: italic;
+}
+
+/* Placeholder */
+.note-editor-content p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: #52525b;
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+/* Focus ring remove untuk EditorContent wrapper */
+.tiptap:focus { outline: none; }

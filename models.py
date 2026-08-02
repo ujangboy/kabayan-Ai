@@ -1,5 +1,5 @@
 import enum
-from sqlalchemy import Column, Integer, String, Text, DateTime, Date, ForeignKey, Enum, UniqueConstraint
+from sqlalchemy import Column, Integer, String, Text, DateTime, Date, ForeignKey, Enum, UniqueConstraint, Boolean
 from sqlalchemy.orm import relationship
 import datetime
 from database import Base
@@ -64,6 +64,7 @@ class Note(Base):
     subject_id = Column(Integer, ForeignKey("subjects.id", ondelete="CASCADE"), index=True)
     title = Column(String)
     content = Column(Text)
+    is_pinned = Column(Boolean, default=False, nullable=False, server_default="0")
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     subject = relationship("Subject", back_populates="notes")

@@ -1,16 +1,30 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileText, Plus, Trash2, Edit3, X, Book, Clock } from 'lucide-react';
+import { FileText, Plus, Trash2, Edit3, X, Book, Pin, Save } from 'lucide-react';
 import { notesAPI, subjectAPI } from '@/services/api';
-import { formatDate, formatTimeOnly } from '@/utils';
-import MathMarkdown from '@/components/MathMarkdown';
+import { formatDate } from '@/utils';
+import { cn } from '@/utils';
+import NoteEditor from '@/components/NoteEditor';
 import MaterialPicker from '@/components/MaterialPicker';
+
+const COLORS = [
+  { border: 'border-l-primary',       dot: 'bg-primary'       },
+  { border: 'border-l-accent-teal',   dot: 'bg-accent-teal'   },
+  { border: 'border-l-accent-purple', dot: 'bg-accent-purple'  },
+  { border: 'border-l-warning',       dot: 'bg-warning'       },
+  { border: 'border-l-accent-blue',   dot: 'bg-accent-blue'   },
+  { border: 'border-l-success',       dot: 'bg-success'       },
+];
 
 export default function NotebookPage() {
   const queryClient = useQueryClient();
   const [selectedNote, setSelectedNote] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingNoteId, setEditingNoteId] = useState(null);
+  const [editingTitle, setEditingTitle] = useState('');
+  // 'saved' | 'saving' | 'error'
+  const [saveStatus, setSaveStatus] = useState('saved');
 
   const { data: notesData, isLoading } = useQuery({
     queryKey: ['notes'],
@@ -22,19 +36,53 @@ export default function NotebookPage() {
     queryFn: () => subjectAPI.getAll().then(r => r.data)
   });
 
-  const notes = notesData?.notes || [];
+  const rawNotes = notesData?.notes || [];
   const subjects = subjectData?.subjects || [];
+
+  // Sort: pinned dulu, lalu created_at desc — persis pola sortedChats di ChatPage
+  const notes = [...rawNotes].sort((a, b) => {
+    if (!!a.is_pinned !== !!b.is_pinned) return a.is_pinned ? -1 : 1;
+    return new Date(b.created_at) - new Date(a.created_at);
+  });
+
+  const pinnedNotes = notes.filter(n => n.is_pinned);
+  const unpinnedNotes = notes.filter(n => !n.is_pinned);
 
   const deleteMutation = useMutation({
     mutationFn: (id) => notesAPI.delete(id),
-    onSuccess: () => {
+    onSuccess: (_, id) => {
       queryClient.invalidateQueries(['notes']);
-      if (selectedNote) setSelectedNote(null);
-    },
-    onError: (err) => {
-      console.error('Failed to delete note:', err);
+      if (selectedNote?.id === id) setSelectedNote(null);
     },
   });
+
+  const renameMutation = useMutation({
+    mutationFn: ({ id, title }) => notesAPI.rename(id, title),
+    onSuccess: (data, { id, title }) => {
+      queryClient.invalidateQueries(['notes']);
+      // Update selectedNote jika sedang dibuka
+      if (selectedNote?.id === id) {
+        setSelectedNote(prev => ({ ...prev, title }));
+      }
+    },
+  });
+
+  const pinMutation = useMutation({
+    mutationFn: (id) => notesAPI.togglePin(id),
+    onSuccess: () => queryClient.invalidateQueries(['notes']),
+  });
+
+  const updateContentMutation = useMutation({
+    mutationFn: ({ id, content }) => notesAPI.updateContent(id, content),
+    onMutate: () => setSaveStatus('saving'),
+    onSuccess: () => setSaveStatus('saved'),
+    onError: () => setSaveStatus('error'),
+  });
+
+  const handleContentSave = useCallback((html) => {
+    if (!selectedNote) return;
+    updateContentMutation.mutate({ id: selectedNote.id, content: html });
+  }, [selectedNote]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const clearMutation = useMutation({
     mutationFn: () => notesAPI.clear(),
@@ -42,27 +90,120 @@ export default function NotebookPage() {
       queryClient.invalidateQueries(['notes']);
       setSelectedNote(null);
     },
-    onError: (err) => {
-      console.error('Failed to clear notes:', err);
-    },
   });
 
   const handleDelete = (id, e) => {
     e.stopPropagation();
-    if (confirm('Hapus catatan ini?')) {
-      deleteMutation.mutate(id);
-    }
+    if (confirm('Hapus catatan ini?')) deleteMutation.mutate(id);
+  };
+
+  const handleRenameSubmit = (id) => {
+    const trimmed = editingTitle.trim();
+    if (trimmed) renameMutation.mutate({ id, title: trimmed });
+    setEditingNoteId(null);
   };
 
   const handleClearAll = () => {
-    if (confirm('Hapus SEMUA catatan?')) {
-      clearMutation.mutate();
-    }
+    if (confirm('Hapus SEMUA catatan?')) clearMutation.mutate();
+  };
+
+  const renderNoteItem = (n) => {
+    const color = COLORS[(n.subject?.id || 0) % COLORS.length];
+    const snippet = (n.content || '')
+      .replace(/#+\s/g, '').replace(/\*+/g, '').replace(/\n/g, ' ').trim()
+      .slice(0, 60);
+
+    return (
+      <div
+        key={n.id}
+        className={cn(
+          'group relative rounded-xl transition-colors border-l-2',
+          color.border,
+          selectedNote?.id === n.id
+            ? 'bg-primary/10 border border-primary/20 border-l-2'
+            : 'hover:bg-card border border-transparent'
+        )}
+      >
+        {/* Inline rename input */}
+        {editingNoteId === n.id ? (
+          <input
+            autoFocus
+            value={editingTitle}
+            onChange={(e) => setEditingTitle(e.target.value)}
+            onBlur={() => handleRenameSubmit(n.id)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleRenameSubmit(n.id);
+              if (e.key === 'Escape') setEditingNoteId(null);
+            }}
+            className="w-full px-3 py-2 text-xs bg-background border border-primary rounded-lg text-text outline-none"
+          />
+        ) : (
+          <button
+            onClick={() => setSelectedNote(n)}
+            className="w-full text-left p-3"
+          >
+            {/* Baris judul + tanggal (tanggal hilang saat hover, diganti action buttons) */}
+            <div className="flex items-center justify-between mb-0.5">
+              <span className={cn(
+                'text-sm font-medium truncate flex-1 min-w-0 flex items-center gap-1',
+                selectedNote?.id === n.id ? 'text-primary' : 'text-text'
+              )}>
+                {n.is_pinned && <Pin size={8} className="text-primary shrink-0" />}
+                <span className="truncate">{n.title}</span>
+              </span>
+              <span className="text-[10px] text-text-muted ml-1.5 shrink-0 group-hover:hidden whitespace-nowrap">
+                {formatDate(n.created_at)}
+              </span>
+            </div>
+
+            {/* Nama mata kuliah */}
+            {n.subject && (
+              <div className="flex items-center gap-1 mb-1">
+                <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${color.dot}`} />
+                <span className="text-[10px] text-text-secondary truncate">{n.subject.name}</span>
+              </div>
+            )}
+
+            {/* Cuplikan konten */}
+            {snippet && (
+              <p className="text-[10px] text-text-muted line-clamp-2 leading-relaxed">{snippet}…</p>
+            )}
+          </button>
+        )}
+
+        {/* Action buttons — muncul saat hover, persis pola Chat AI */}
+        {editingNoteId !== n.id && (
+          <div className="absolute right-1 top-2 hidden group-hover:flex items-center gap-0.5 bg-card border border-border rounded-md px-0.5 py-0.5 shadow-sm">
+            <button
+              onClick={(e) => { e.stopPropagation(); pinMutation.mutate(n.id); }}
+              title={n.is_pinned ? 'Unpin' : 'Sematkan'}
+              className={cn('p-1 rounded transition-colors', n.is_pinned ? 'text-primary' : 'text-text-muted hover:text-primary')}
+            >
+              <Pin size={11} />
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); setEditingNoteId(n.id); setEditingTitle(n.title || ''); }}
+              title="Ganti Nama"
+              className="p-1 rounded text-text-muted hover:text-text transition-colors"
+            >
+              <Edit3 size={11} />
+            </button>
+            <button
+              onClick={(e) => handleDelete(n.id, e)}
+              title="Hapus"
+              className="p-1 rounded text-text-muted hover:text-danger transition-colors"
+            >
+              <X size={11} />
+            </button>
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
     <div className="flex h-full overflow-hidden">
-      
+
       {/* Sidebar Catatan */}
       <div className="w-64 border-r border-border bg-sidebar flex flex-col shrink-0 hidden md:flex">
         <div className="p-4 border-b border-border flex items-center justify-between">
@@ -71,108 +212,94 @@ export default function NotebookPage() {
             <Plus size={16} />
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto p-2 space-y-1">
+        <div className="flex-1 overflow-y-auto p-2 space-y-0.5">
           {isLoading ? (
             <p className="text-text-muted text-xs p-2">Memuat...</p>
           ) : notes.length === 0 ? (
             <p className="text-text-muted text-xs p-2 text-center">Belum ada catatan.</p>
           ) : (
-            notes.map((n) => {
-              // Warna aksen berdasarkan subject_id agar tiap mata kuliah beda warna
-              const COLORS = [
-                { border: 'border-l-primary',      dot: 'bg-primary'      },
-                { border: 'border-l-accent-teal',  dot: 'bg-accent-teal'  },
-                { border: 'border-l-accent-purple',dot: 'bg-accent-purple' },
-                { border: 'border-l-warning',      dot: 'bg-warning'      },
-                { border: 'border-l-accent-blue',  dot: 'bg-accent-blue'  },
-                { border: 'border-l-success',      dot: 'bg-success'      },
-              ];
-              const color = COLORS[(n.subject?.id || 0) % COLORS.length];
-              // Cuplikan isi catatan — strip markdown sederhana
-              const snippet = (n.content || '')
-                .replace(/#+\s/g, '').replace(/\*+/g, '').replace(/\n/g, ' ').trim()
-                .slice(0, 60);
-
-              return (
-                <div
-                  key={n.id}
-                  onClick={() => setSelectedNote(n)}
-                  className={`group w-full text-left p-3 rounded-xl transition-colors border-l-2 ${color.border} ${
-                    selectedNote?.id === n.id ? 'bg-primary/10 border border-primary/20 border-l-2' : 'hover:bg-card border border-transparent'
-                  }`}
-                >
-                  <div className="flex justify-between items-start mb-0.5">
-                    <h3 className={`text-sm font-medium line-clamp-1 flex-1 min-w-0 ${selectedNote?.id === n.id ? 'text-primary' : 'text-text'}`}>
-                      {n.title}
-                    </h3>
-                    <button
-                      onClick={(e) => handleDelete(n.id, e)}
-                      className="opacity-0 group-hover:opacity-100 text-text-muted hover:text-danger p-1 rounded-lg transition-colors shrink-0"
-                      title="Hapus catatan"
-                    >
-                      <X size={14} />
-                    </button>
-                  </div>
-
-                  {/* Nama mata kuliah */}
-                  {n.subject && (
-                    <div className="flex items-center gap-1 mb-1">
-                      <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${color.dot}`} />
-                      <span className="text-[10px] text-text-secondary truncate">{n.subject.name}</span>
-                    </div>
-                  )}
-
-                  {/* Cuplikan konten */}
-                  {snippet && (
-                    <p className="text-[10px] text-text-muted line-clamp-2 mb-1 leading-relaxed">{snippet}…</p>
-                  )}
-
-                  {/* Tanggal + waktu */}
-                  <div className="flex items-center gap-2 text-[10px] text-text-muted">
-                    <span>{formatDate(n.created_at)}</span>
-                    <span className="flex items-center gap-0.5">
-                      <Clock size={8} />
-                      {formatTimeOnly(n.created_at)}
-                    </span>
-                  </div>
+            <>
+              {/* Section: Disematkan */}
+              {pinnedNotes.length > 0 && (
+                <div>
+                  <p className="px-2 pt-3 pb-1 text-[10px] font-semibold text-text-muted uppercase tracking-wider select-none">
+                    📌 Disematkan
+                  </p>
+                  {pinnedNotes.map(renderNoteItem)}
                 </div>
-              );
-            })
+              )}
+
+              {/* Section: Catatan */}
+              {unpinnedNotes.length > 0 && (
+                <div>
+                  {pinnedNotes.length > 0 && (
+                    <p className="px-2 pt-3 pb-1 text-[10px] font-semibold text-text-muted uppercase tracking-wider select-none">
+                      Catatan
+                    </p>
+                  )}
+                  {unpinnedNotes.map(renderNoteItem)}
+                </div>
+              )}
+            </>
           )}
         </div>
         {notes.length > 0 && (
           <div className="p-3 border-t border-border">
-            <button onClick={handleClearAll} className="w-full btn-ghost text-danger hover:bg-danger/10 text-xs justify-center">
-              Hapus Semua
+            <button onClick={handleClearAll} className="w-full btn-ghost text-danger hover:bg-danger/10 text-xs justify-center flex items-center gap-1">
+              <Trash2 size={11} /> Hapus Semua
             </button>
           </div>
         )}
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 bg-background overflow-y-auto p-6 md:p-10">
+      <div className="flex-1 flex flex-col min-w-0 bg-background overflow-hidden">
         {selectedNote ? (
-          <div className="max-w-3xl mx-auto w-full space-y-6">
-            <div className="flex items-start justify-between border-b border-border pb-4">
+          <div className="flex flex-col h-full">
+            {/* Header note */}
+            <div className="flex items-start justify-between px-8 pt-6 pb-4 border-b border-border shrink-0">
               <div>
-                <h1 className="text-2xl font-bold text-text mb-2">{selectedNote.title}</h1>
+                <h1 className="text-xl font-bold text-text mb-1">{selectedNote.title}</h1>
                 <div className="flex items-center gap-3 text-xs text-text-secondary">
-                  <span className="flex items-center gap-1"><Book size={14} /> {selectedNote.subject?.name || 'Umum'}</span>
+                  <span className="flex items-center gap-1"><Book size={12} /> {selectedNote.subject?.name || 'Umum'}</span>
                   <span>•</span>
                   <span>{formatDate(selectedNote.created_at)}</span>
                 </div>
               </div>
-              <button onClick={(e) => handleDelete(selectedNote.id, e)} className="p-2 text-text-muted hover:text-danger hover:bg-danger/10 rounded-xl transition-colors">
-                <Trash2 size={18} />
-              </button>
+              <div className="flex items-center gap-2 shrink-0">
+                {/* Status auto-save */}
+                <span className={cn(
+                  'text-[11px] flex items-center gap-1 transition-colors',
+                  saveStatus === 'saving' && 'text-warning',
+                  saveStatus === 'saved'  && 'text-success',
+                  saveStatus === 'error'  && 'text-danger',
+                )}>
+                  {saveStatus === 'saving' && <><span className="animate-pulse">●</span> Menyimpan...</>}
+                  {saveStatus === 'saved'  && <><Save size={11} /> Tersimpan</>}
+                  {saveStatus === 'error'  && <>⚠ Gagal simpan</>}
+                </span>
+                <button
+                  onClick={(e) => handleDelete(selectedNote.id, e)}
+                  className="p-2 text-text-muted hover:text-danger hover:bg-danger/10 rounded-xl transition-colors"
+                  title="Hapus catatan"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
             </div>
-            
-            <div className="prose-dark max-w-none text-sm text-text pb-20">
-              <MathMarkdown>{selectedNote.content}</MathMarkdown>
+
+            {/* Editor dengan toolbar */}
+            <div className="flex-1 overflow-hidden">
+              <NoteEditor
+                key={selectedNote.id}
+                noteId={selectedNote.id}
+                content={selectedNote.content}
+                onSave={handleContentSave}
+              />
             </div>
           </div>
         ) : (
-          <div className="h-full flex flex-col items-center justify-center text-center max-w-sm mx-auto">
+          <div className="h-full flex flex-col items-center justify-center text-center max-w-sm mx-auto px-4">
             <div className="w-16 h-16 rounded-2xl bg-card border border-border flex items-center justify-center mb-4">
               <FileText size={32} className="text-text-muted" />
             </div>
