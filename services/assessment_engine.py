@@ -20,12 +20,7 @@ from models import QuestionBank, Material
 
 # ─── Grading helpers ─────────────────────────────────────────────────────────
 
-def _grade(score: int) -> str:
-    if score >= 90: return "A"
-    if score >= 80: return "B"
-    if score >= 70: return "C"
-    if score >= 60: return "D"
-    return "E"
+from services.grading_utils import calculate_grade
 
 def _performance(score: int) -> str:
     if score >= 90: return "Sangat Baik"
@@ -221,7 +216,7 @@ def assemble_evaluation(
         "total_correct":        correct,
         "total_wrong":          wrong,
         "total_unanswered":     unanswered,
-        "grade":                _grade(score),
+        "grade":                calculate_grade(score),
         "badge":                _badge(score),
         "estimated_exam_score": min(100, round(score * 0.9 + 5)),
         "performance_level":    _performance(score),

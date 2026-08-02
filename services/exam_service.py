@@ -35,12 +35,7 @@ BANK_MIN_RATIO = 0.8   # need ≥ 80% of requested questions already in bank
 
 # ─── History Helpers ─────────────────────────────────────────────────────────
 
-def _calc_grade(score: int) -> str:
-    if score >= 90: return "A"
-    if score >= 80: return "B"
-    if score >= 70: return "C"
-    if score >= 60: return "D"
-    return "E"
+from services.grading_utils import calculate_grade
 
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -700,7 +695,7 @@ class ExamService:
             session.evaluation_json      = json.dumps(eval_data, ensure_ascii=False)
             session.submitted_at         = datetime.datetime.utcnow()
 
-            grade_val = eval_data.get("grade") or _calc_grade(eval_data["score"])
+            grade_val = eval_data.get("grade") or calculate_grade(eval_data["score"])
             session.status               = "completed"
             session.latest_score         = eval_data["score"]
             session.best_score           = eval_data["score"] if session.best_score is None else max(session.best_score, eval_data["score"])
