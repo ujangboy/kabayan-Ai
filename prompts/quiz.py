@@ -1,6 +1,9 @@
 from langchain_core.prompts import PromptTemplate
 
-QUIZ_PROMPT_TEMPLATE = """Kamu adalah dosen yang hangat dan komunikatif. Buatlah soal kuis dari materi yang diberikan untuk menguji pemahaman (Higher Order Thinking Skills), bukan sekadar hafalan.
+QUIZ_PROMPT_TEMPLATE = """Kamu adalah dosen yang hangat dan komunikatif. Buatlah soal kuis dari materi yang diberikan.
+
+TINGKAT KESULITAN: {difficulty}
+{difficulty_instruction}
 
 Sediakan:
 - {mcq_count} soal Pilihan Ganda (dengan opsi A, B, C, D)
@@ -35,7 +38,25 @@ Format kembalian harus berupa JSON valid seperti berikut, tanpa teks tambahan:
 Materi:
 {context}"""
 
+DIFFICULTY_INSTRUCTIONS = {
+    "mudah": (
+        "Buat soal yang menguji ingatan dan pemahaman dasar (Bloom: Remember & Understand). "
+        "Soal bersifat faktual dan langsung, pilihan jawaban jelas perbedaannya, tidak ada jebakan. "
+        "Cocok untuk mahasiswa yang baru mengenal materi."
+    ),
+    "sedang": (
+        "Buat soal yang menguji pemahaman dan penerapan konsep (Bloom: Understand & Apply). "
+        "Sertakan distractors yang masuk akal, soal memerlukan sedikit analisis. "
+        "Cocok untuk mahasiswa yang sudah mempelajari materi dasar."
+    ),
+    "sulit": (
+        "Buat soal Higher Order Thinking Skills / HOTS (Bloom: Analyze, Evaluate, Create). "
+        "Soal memerlukan penalaran, perbandingan antar konsep, atau penerapan di situasi baru yang kompleks. "
+        "Distractors sangat mirip dan memerlukan pemikiran kritis untuk memilih jawaban benar."
+    ),
+}
+
 QUIZ_PROMPT = PromptTemplate(
-    input_variables=["context", "mcq_count", "essay_count"],
+    input_variables=["context", "mcq_count", "essay_count", "difficulty", "difficulty_instruction"],
     template=QUIZ_PROMPT_TEMPLATE
 )

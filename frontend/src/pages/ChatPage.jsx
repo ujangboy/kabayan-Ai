@@ -109,6 +109,8 @@ export default function ChatPage() {
   const [editingTitle, setEditingTitle] = useState('');
   const [noteToast, setNoteToast] = useState(null);
   const [isNoteSaving, setIsNoteSaving] = useState(false);
+  // Mutex ref — mencegah double-call karena React state update async
+  const isNoteSavingRef = useRef(false);
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
 
@@ -180,9 +182,12 @@ export default function ChatPage() {
 
   // Direct-to-Notebook: simpan input ke catatan TANPA memanggil Groq AI
   const saveAsNote = useCallback(async () => {
+    if (isNoteSavingRef.current) return;
     const text = input.trim();
     if (!text) return;
     const title = text.slice(0, 30);
+    isNoteSavingRef.current = true;
+    setIsNoteSaving(true);
     try {
       const res = await fetch('/api/notebook/generate', {
         method: 'POST',
@@ -199,18 +204,23 @@ export default function ChatPage() {
       }
     } catch {
       setNoteToast({ type: 'error', msg: 'Koneksi ke server gagal.' });
+    } finally {
+      isNoteSavingRef.current = false;
+      setIsNoteSaving(false);
+      setTimeout(() => setNoteToast(null), 3000);
     }
-    setTimeout(() => setNoteToast(null), 3000);
   }, [input]);
 
   // Generate-to-Notebook: minta AI generate catatan dari materi yang dipilih,
   // lalu simpan hasilnya langsung ke Notebook (tidak masuk chat)
   const generateAndSaveNote = useCallback(async () => {
+    if (isNoteSavingRef.current) return;
     if (!selectedDocs.length) {
       setNoteToast({ type: 'error', msg: 'Pilih materi di halaman Materi dulu!' });
       setTimeout(() => setNoteToast(null), 3000);
       return;
     }
+    isNoteSavingRef.current = true;
     setIsNoteSaving(true);
     setShowQuickPrompts(false);
     setNoteToast({ type: 'success', msg: '⏳ AI sedang membuat catatan...' });
@@ -248,6 +258,7 @@ export default function ChatPage() {
     } catch {
       setNoteToast({ type: 'error', msg: 'Gagal generate catatan.' });
     } finally {
+      isNoteSavingRef.current = false;
       setIsNoteSaving(false);
       setTimeout(() => setNoteToast(null), 4000);
     }

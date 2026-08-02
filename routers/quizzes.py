@@ -35,7 +35,8 @@ async def get_quizzes_json(db: Session = Depends(get_db), skip: int = Query(0, g
         if q.questions_json:
             try:
                 qdata = json.loads(q.questions_json)
-                question_count = len(qdata.get("mcq", []))
+                # Hitung MCQ + essay agar jumlah soal di card akurat
+                question_count = len(qdata.get("mcq", [])) + len(qdata.get("essay", []))
             except Exception:
                 pass
         material_names = []
@@ -50,6 +51,13 @@ async def get_quizzes_json(db: Session = Depends(get_db), skip: int = Query(0, g
             "title": q.title,
             "score": q.score,
             "question_count": question_count,
+            "question_type": q.question_type,
+            "total_questions": q.total_questions,
+            "correct_count": q.correct_count,
+            "wrong_count": q.wrong_count,
+            "time_taken": q.time_taken,
+            "attempt_count": q.attempt_count,
+            "difficulty": getattr(q, 'difficulty', None),
             "created_at": q.created_at.isoformat() if q.created_at else None,
             "subject": {"id": q.subject.id, "name": q.subject.name} if q.subject else None,
             "material_names": material_names,
@@ -117,9 +125,10 @@ async def generate_quiz(
 
         data = quiz_service.generate_quiz(
             db, req.subject_id, context,
-            mcq_count=req.mcq_count, essay_count=0,
+            mcq_count=req.mcq_count, essay_count=req.essay_count,
             title=title,
             material_ids=req.material_ids or None,
+            difficulty=req.difficulty or "sedang",
         )
         return JSONResponse(data)
 
@@ -133,13 +142,47 @@ async def generate_quiz(
 async def save_quiz_score(
     quiz_id: int,
     score: int = Form(...),
+    correct_count: int = Form(None),
+    wrong_count: int = Form(None),
+    time_taken: int = Form(None),
+    total_questions: int = Form(None),
     db: Session = Depends(get_db)
 ):
-    """Simpan score setelah user selesai mengerjakan quiz."""
-    quiz = quiz_service.save_score(db, quiz_id, score)
+    """Simpan score + tracking setelah user selesai mengerjakan quiz."""
+    quiz = quiz_service.save_score(
+        db, quiz_id, score,
+        correct_count=correct_count,
+        wrong_count=wrong_count,
+        time_taken=time_taken,
+        total_questions=total_questions,
+    )
     if not quiz:
         return JSONResponse(status_code=404, content={"detail": "Quiz tidak ditemukan."})
+    from services.subject_service import subject_service
+    subject_service.recalculate_subject_stats(db, quiz.subject_id)
     return JSONResponse({"status": "success", "quiz_id": quiz_id, "score": score})
+
+
+@router.get("/api/quizzes/history")
+async def get_quiz_history(subject_id: int = Query(None), db: Session = Depends(get_db)):
+    """Riwayat skor quiz per subject — untuk grafik perkembangan."""
+    from models import Quiz as QuizModel
+    query = db.query(QuizModel).order_by(QuizModel.created_at.asc())
+    if subject_id:
+        query = query.filter(QuizModel.subject_id == subject_id)
+    rows = query.all()
+    history = []
+    for q in rows:
+        if q.score is None:
+            continue
+        history.append({
+            "id": q.id,
+            "date": q.created_at.isoformat() if q.created_at else None,
+            "score": q.score,
+            "title": q.title or f"Quiz #{q.id}",
+            "subject_id": q.subject_id,
+        })
+    return JSONResponse({"history": history})
 
 
 @router.delete("/api/quizzes/{quiz_id}")

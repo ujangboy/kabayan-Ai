@@ -1,9 +1,10 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import {
   CreditCard, Plus, X, Book, Zap, Loader2, Play,
-  Trash2, ChevronLeft, ChevronRight, RotateCcw, Trophy, Clock, Calendar, FileText
+  Trash2, ChevronLeft, ChevronRight, RotateCcw, Trophy, Clock, Calendar, FileText, Brain, Sparkles
 } from 'lucide-react';
 import { flashcardAPI, subjectAPI } from '@/services/api';
 import { useToast } from '@/components/Toast';
@@ -17,10 +18,11 @@ import { formatDate, formatTimeOnly } from '@/utils';
 // ─────────────────────────────────────────────────────────────────────────────
 export default function FlashcardPage() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [isAIModalOpen, setIsAIModalOpen] = useState(false);
   const [isManualModalOpen, setIsManualModalOpen] = useState(false);
-  const [activeSubjectId, setActiveSubjectId] = useState(null); // null = list view
+  const [activeBatchId, setActiveBatchId] = useState(null); // null = list view
 
   const { data: flashcardData, isLoading } = useQuery({
     queryKey: ['flashcards'],
@@ -35,19 +37,25 @@ export default function FlashcardPage() {
   const allFlashcards = flashcardData?.flashcards || [];
   const subjects = subjectData?.subjects || [];
 
-  // Group flashcards by subject
-  const subjectGroups = {};
+  // Group flashcards by batch_id — setiap generate = deck terpisah
+  const batchGroups = {};
   for (const f of allFlashcards) {
-    const sid = f.subject?.id ?? 0;
-    if (!subjectGroups[sid]) {
-      subjectGroups[sid] = {
+    const bid = f.batch_id || `legacy-${f.subject?.id ?? 0}`;
+    if (!batchGroups[bid]) {
+      batchGroups[bid] = {
+        batch_id: bid,
         subject: f.subject || { id: 0, name: 'Umum' },
         cards: [],
       };
     }
-    subjectGroups[sid].cards.push(f);
+    batchGroups[bid].cards.push(f);
   }
-  const groups = Object.values(subjectGroups);
+  // Urutkan: deck terbaru di atas (berdasarkan created_at kartu pertama)
+  const groups = Object.values(batchGroups).sort((a, b) => {
+    const aTime = new Date(a.cards[0]?.created_at || 0);
+    const bTime = new Date(b.cards[0]?.created_at || 0);
+    return bTime - aTime;
+  });
 
   const clearAllMutation = useMutation({
     mutationFn: () => flashcardAPI.clear(),
@@ -62,16 +70,16 @@ export default function FlashcardPage() {
     if (confirm('Hapus SEMUA flashcard?')) clearAllMutation.mutate();
   };
 
-  // If a subject is active, show session view
-  if (activeSubjectId !== null) {
-    const group = groups.find(g => g.subject.id === activeSubjectId);
+  // Jika deck aktif, tampilkan session view
+  if (activeBatchId !== null) {
+    const group = groups.find(g => g.batch_id === activeBatchId);
     const cards = group?.cards || [];
     return (
       <FlashcardSession
         cards={cards}
         subjectName={group?.subject?.name || 'Flashcard'}
         onClose={() => {
-          setActiveSubjectId(null);
+          setActiveBatchId(null);
           queryClient.invalidateQueries(['flashcards']);
         }}
       />
@@ -89,6 +97,20 @@ export default function FlashcardPage() {
             <p className="text-text-secondary text-sm mt-1">Hafalkan materi dengan teknik Active Recall.</p>
           </div>
           <div className="flex items-center gap-3 flex-wrap">
+            {(() => {
+              const totalDue = groups.reduce((sum, g) =>
+                sum + g.cards.filter(c => c.next_review && !c.mastered && new Date(c.next_review) <= new Date()).length, 0
+              );
+              return (
+                <button
+                  onClick={() => navigate('/flashcard/review')}
+                  className="btn-ghost border border-accent-purple/40 text-accent-purple text-xs"
+                >
+                  <Brain size={14} />
+                  {totalDue > 0 ? `Review (${totalDue} kartu)` : 'Review SRS'}
+                </button>
+              );
+            })()}
             <button onClick={() => setIsAIModalOpen(true)} className="btn-primary text-xs">
               <Zap size={14} /> Generate AI
             </button>
@@ -117,12 +139,13 @@ export default function FlashcardPage() {
             </div>
           ) : (
             groups.map((group) => (
-              <SubjectFlashcardCard
-                key={group.subject.id}
+              <BatchFlashcardCard
+                key={group.batch_id}
                 group={group}
-                onStart={() => setActiveSubjectId(group.subject.id)}
+                onStart={() => setActiveBatchId(group.batch_id)}
+                onReview={() => navigate(`/flashcard/review?subject_id=${group.subject.id}`)}
                 onDeleteAll={() => {
-                  if (confirm(`Hapus semua flashcard untuk ${group.subject.name}?`)) {
+                  if (confirm(`Hapus deck ini (${group.cards.length} kartu)?`)) {
                     const ids = group.cards.map(c => c.id);
                     flashcardAPI.batchDelete(ids)
                       .then(() => queryClient.invalidateQueries(['flashcards']));
@@ -140,11 +163,11 @@ export default function FlashcardPage() {
           <GenerateAIModal
             subjects={subjects}
             onClose={() => setIsAIModalOpen(false)}
-            onSuccess={(subjectId) => {
+            onSuccess={(batchId) => {
               setIsAIModalOpen(false);
               queryClient.invalidateQueries(['flashcards']);
-              // langsung masuk session untuk subject yang baru di-generate
-              setTimeout(() => setActiveSubjectId(subjectId), 400);
+              // langsung masuk session deck yang baru di-generate
+              setTimeout(() => setActiveBatchId(batchId), 400);
             }}
           />
         )}
@@ -164,19 +187,24 @@ export default function FlashcardPage() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Card component for each subject group
+// Card component for each batch (deck) — setiap generate = satu card
 // ─────────────────────────────────────────────────────────────────────────────
-function SubjectFlashcardCard({ group, onStart, onDeleteAll }) {
+function BatchFlashcardCard({ group, onStart, onReview, onDeleteAll }) {
   const { subject, cards } = group;
-  // Ambil created_at terbaru dari kartu dalam grup
+  // Ambil created_at terbaru dari kartu dalam deck
   const latestCard = cards.reduce((a, b) =>
     new Date(b.created_at || 0) > new Date(a.created_at || 0) ? b : a, cards[0]);
   const createdAt = latestCard?.created_at;
 
-  // Kumpulkan nama materi unik dari semua kartu di grup
+  // Kumpulkan nama materi unik dari semua kartu di deck
   const allMaterialNames = [...new Set(
     cards.flatMap(c => c.material_names || []).filter(Boolean)
   )];
+
+  // ─── Statistik SRS dari data kartu ───
+  const masteredCount = cards.filter(c => c.mastered).length;
+  const newCount = cards.filter(c => !c.times_seen).length;
+  const dueCount = cards.filter(c => c.next_review && !c.mastered && new Date(c.next_review) <= new Date()).length;
 
   return (
     <motion.div
@@ -201,7 +229,7 @@ function SubjectFlashcardCard({ group, onStart, onDeleteAll }) {
         </button>
       </div>
 
-      <div className="flex items-center gap-3 mb-2 text-xs text-text-secondary">
+      <div className="flex items-center gap-3 mb-2 text-xs text-text-secondary flex-wrap">
         <span className="flex items-center gap-1">
           <CreditCard size={12} />
           {cards.length} kartu
@@ -210,18 +238,38 @@ function SubjectFlashcardCard({ group, onStart, onDeleteAll }) {
           <Book size={12} />
           Flip &amp; Recall
         </span>
+        {masteredCount > 0 && (
+          <span className="flex items-center gap-1 text-success">
+            <Trophy size={11} />
+            {masteredCount} dikuasai
+          </span>
+        )}
+        {newCount > 0 && (
+          <span className="flex items-center gap-1 text-accent-blue">
+            <Sparkles size={11} />
+            {newCount} baru
+          </span>
+        )}
       </div>
+
+      {dueCount > 0 && (
+        <div className="flex items-center gap-1.5 mb-2">
+          <span className="badge badge-warning text-[10px]">
+            {dueCount} kartu perlu review
+          </span>
+        </div>
+      )}
 
       {/* Nama materi yang digunakan */}
       {allMaterialNames.length > 0 && (
         <div className="flex gap-1 flex-wrap mb-2">
-          {allMaterialNames.slice(0, 2).map((name, i) => (
-            <span key={i} className="inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded bg-accent-blue/10 text-accent-blue border border-accent-blue/20 truncate max-w-[120px]">
+          {allMaterialNames.slice(0, 3).map((name, i) => (
+            <span key={i} className="inline-flex items-center gap-0.5 text-[10px] px-2 py-0.5 rounded bg-accent-blue/10 text-accent-blue border border-accent-blue/20 truncate max-w-[220px]">
               <FileText size={8} className="shrink-0" />{name}
             </span>
           ))}
-          {allMaterialNames.length > 2 && (
-            <span className="text-[10px] text-text-muted self-center">+{allMaterialNames.length - 2} lagi</span>
+          {allMaterialNames.length > 3 && (
+            <span className="text-[10px] text-text-muted self-center">+{allMaterialNames.length - 3} lagi</span>
           )}
         </div>
       )}
@@ -247,12 +295,22 @@ function SubjectFlashcardCard({ group, onStart, onDeleteAll }) {
         </div>
       )}
 
-      <button
-        onClick={onStart}
-        className="btn-primary w-full justify-center text-xs mt-auto"
-      >
-        <Play size={12} /> Mulai Belajar
-      </button>
+      <div className="flex gap-2 mt-auto">
+        {dueCount > 0 && (
+          <button
+            onClick={onReview}
+            className="flex-1 justify-center text-xs px-3 py-2 rounded-lg border border-accent-purple/40 text-accent-purple font-semibold hover:bg-accent-purple/10 transition-colors flex items-center gap-1.5"
+          >
+            <Brain size={12} /> Review
+          </button>
+        )}
+        <button
+          onClick={onStart}
+          className={`${dueCount > 0 ? 'flex-[2]' : 'flex-1'} btn-primary justify-center text-xs px-3 py-2`}
+        >
+          <Play size={12} /> Mulai Belajar
+        </button>
+      </div>
     </motion.div>
   );
 }
@@ -265,6 +323,14 @@ function FlashcardSession({ cards, subjectName, onClose }) {
   const [isFlipped, setIsFlipped] = useState(false);
   const [known, setKnown] = useState(new Set());
   const [isFinished, setIsFinished] = useState(false);
+  const [feedback, setFeedback] = useState(null); // { known, srs }
+  const [autoAdvanceProgress, setAutoAdvanceProgress] = useState(0); // 0-100 untuk animasi bar
+  const [rerunQueue, setRerunQueue] = useState([]);
+  const rerunCountRef = useRef({});
+  const autoAdvanceTimerRef = useRef(null);
+  const autoAdvanceIntervalRef = useRef(null);
+  const MAX_RERUN = 3;
+  const AUTO_ADVANCE_MS = 1500;
 
   const queryClient = useQueryClient();
 
@@ -273,46 +339,115 @@ function FlashcardSession({ cards, subjectName, onClose }) {
     onSuccess: () => queryClient.invalidateQueries(['flashcards']),
   });
 
-  const total = cards.length;
-  const currentCard = cards[currentIndex];
+  const reviewMutation = useMutation({
+    mutationFn: ({ id, rating }) => flashcardAPI.review(id, rating),
+  });
+
+  const total = cards.length + rerunQueue.length;
+  const currentCard = currentIndex < cards.length ? cards[currentIndex] : rerunQueue[currentIndex - cards.length];
+
+  // Bersihkan timer auto-advance saat unmount
+  useEffect(() => {
+    return () => {
+      clearTimeout(autoAdvanceTimerRef.current);
+      clearInterval(autoAdvanceIntervalRef.current);
+    };
+  }, []);
 
   const goNext = useCallback(() => {
+    setFeedback(null);
+    setAutoAdvanceProgress(0);
     setIsFlipped(false);
     setTimeout(() => {
-      if (currentIndex < total - 1) {
-        setCurrentIndex(i => i + 1);
+      const nextIdx = currentIndex + 1;
+      if (nextIdx < cards.length + rerunQueue.length) {
+        setCurrentIndex(nextIdx);
       } else {
         setIsFinished(true);
       }
     }, 150);
-  }, [currentIndex, total]);
+  }, [currentIndex, cards.length, rerunQueue.length]);
 
   const goPrev = useCallback(() => {
+    clearTimeout(autoAdvanceTimerRef.current);
+    clearInterval(autoAdvanceIntervalRef.current);
+    setFeedback(null);
+    setAutoAdvanceProgress(0);
     if (currentIndex > 0) {
       setIsFlipped(false);
       setTimeout(() => setCurrentIndex(i => i - 1), 150);
     }
   }, [currentIndex]);
 
+  // Mulai auto-advance: animasi progress bar lalu goNext otomatis
+  const startAutoAdvance = useCallback((nextFn) => {
+    setAutoAdvanceProgress(0);
+    const startTime = Date.now();
+    clearInterval(autoAdvanceIntervalRef.current);
+    autoAdvanceIntervalRef.current = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      const pct = Math.min(100, (elapsed / AUTO_ADVANCE_MS) * 100);
+      setAutoAdvanceProgress(pct);
+      if (pct >= 100) clearInterval(autoAdvanceIntervalRef.current);
+    }, 30);
+    clearTimeout(autoAdvanceTimerRef.current);
+    autoAdvanceTimerRef.current = setTimeout(() => {
+      clearInterval(autoAdvanceIntervalRef.current);
+      nextFn();
+    }, AUTO_ADVANCE_MS);
+  }, []);
+
   const handleKnow = () => {
     setKnown(prev => new Set([...prev, currentCard.id]));
-    goNext();
+    setFeedback({ known: true });
+    setIsFlipped(true);
+    reviewMutation.mutate({ id: currentCard.id, rating: 3 });
+    startAutoAdvance(goNext);
   };
 
   const handleDontKnow = () => {
+    setFeedback({ known: false });
+    setIsFlipped(true);
+    reviewMutation.mutate({ id: currentCard.id, rating: 0 }, {
+      onSuccess: (data) => {
+        if (data?.rerun) {
+          const count = (rerunCountRef.current[currentCard.id] || 0) + 1;
+          rerunCountRef.current[currentCard.id] = count;
+          if (count <= MAX_RERUN) {
+            setRerunQueue(q => [...q, { ...currentCard, _rerunCount: count }]);
+          }
+        }
+      },
+    });
+    startAutoAdvance(goNext);
+  };
+
+  const handleSkipAutoAdvance = () => {
+    clearTimeout(autoAdvanceTimerRef.current);
+    clearInterval(autoAdvanceIntervalRef.current);
     goNext();
   };
 
   const handleRestart = () => {
+    clearTimeout(autoAdvanceTimerRef.current);
+    clearInterval(autoAdvanceIntervalRef.current);
     setCurrentIndex(0);
     setIsFlipped(false);
     setKnown(new Set());
     setIsFinished(false);
+    setFeedback(null);
+    setAutoAdvanceProgress(0);
+    setRerunQueue([]);
+    rerunCountRef.current = {};
   };
 
   const handleDeleteCard = () => {
     if (confirm('Hapus flashcard ini?')) {
+      clearTimeout(autoAdvanceTimerRef.current);
+      clearInterval(autoAdvanceIntervalRef.current);
       deleteMutation.mutate(currentCard.id);
+      setFeedback(null);
+      setAutoAdvanceProgress(0);
       if (currentIndex >= total - 1) {
         if (total === 1) { onClose(); } else { setCurrentIndex(total - 2); }
       }
@@ -412,10 +547,44 @@ function FlashcardSession({ cards, subjectName, onClose }) {
           </motion.div>
         </div>
 
-        {/* Action buttons — show after flip */}
+        {/* Action buttons / feedback — after flip */}
         <AnimatePresence>
-          {isFlipped && (
+          {feedback ? (
             <motion.div
+              key="feedback"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 8 }}
+              className="mt-6 w-full max-w-xl"
+            >
+              {/* Feedback mini strip */}
+              <div className={`flex items-center justify-between rounded-xl px-4 py-2.5 mb-3 ${
+                feedback.known
+                  ? 'bg-success/10 border border-success/30'
+                  : 'bg-danger/10 border border-danger/30'
+              }`}>
+                <span className={`text-sm font-semibold ${feedback.known ? 'text-success' : 'text-danger'}`}>
+                  {feedback.known ? '✅ Hafal' : '❌ Belum Hafal'}
+                </span>
+                <button
+                  onClick={handleSkipAutoAdvance}
+                  className="text-xs text-text-muted hover:text-text transition-colors ml-4 shrink-0"
+                >
+                  Lanjut sekarang →
+                </button>
+              </div>
+              {/* Auto-advance progress bar */}
+              <div className="w-full h-1 bg-border rounded-full overflow-hidden">
+                <motion.div
+                  className={`h-full rounded-full ${feedback.known ? 'bg-success' : 'bg-danger'}`}
+                  style={{ width: `${autoAdvanceProgress}%` }}
+                  transition={{ ease: 'linear' }}
+                />
+              </div>
+            </motion.div>
+          ) : isFlipped && (
+            <motion.div
+              key="actions"
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 8 }}
@@ -475,6 +644,8 @@ function GenerateAIModal({ subjects, onClose, onSuccess }) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState('');
 
+  const PRESETS = [5, 10, 15, 20];
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!subjectId) return setError('Pilih mata kuliah terlebih dahulu.');
@@ -483,12 +654,14 @@ function GenerateAIModal({ subjects, onClose, onSuccess }) {
     setIsGenerating(true);
     try {
       const result = await flashcardAPI.generate({
-        subject_id: subjectId,
-        count,
+        subject_id: Number(subjectId),
+        count: Number(count),
         material_ids: selectedMaterialIds.length > 0 ? selectedMaterialIds.join(',') : '',
       });
       if (result.detail) throw new Error(result.detail);
-      onSuccess(Number(subjectId));
+      // Kirim batch_id dari response agar langsung masuk deck baru
+      const batchId = result?.batch_id;
+      onSuccess(batchId);
     } catch (err) {
       setError(extractErrorMessage(err));
       setIsGenerating(false);
@@ -543,15 +716,24 @@ function GenerateAIModal({ subjects, onClose, onSuccess }) {
           />
           <div>
             <label className="block text-xs font-medium text-text-secondary mb-1">Jumlah Flashcard</label>
-            <input
-              type="number"
-              min="5"
-              max="50"
-              value={count}
-              onChange={(e) => setCount(e.target.value)}
-              disabled={isGenerating}
-              className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary transition-colors disabled:opacity-60"
-            />
+            <div className="flex gap-2">
+              {PRESETS.map(p => (
+                <button
+                  key={p}
+                  type="button"
+                  disabled={isGenerating}
+                  onClick={() => setCount(p)}
+                  className={`flex-1 py-2 rounded-lg text-sm font-semibold border transition-colors disabled:opacity-50 ${
+                    count === p
+                      ? 'bg-primary text-white border-primary'
+                      : 'bg-background text-text-secondary border-border hover:border-primary/50 hover:text-text'
+                  }`}
+                >
+                  {p}
+                </button>
+              ))}
+            </div>
+            <p className="text-[10px] text-text-muted mt-1">Setiap generate membuat deck baru yang terpisah.</p>
           </div>
           {isGenerating && (
             <div className="flex items-center gap-2 text-sm text-primary py-1">

@@ -121,9 +121,23 @@ class NotebookGenerateRequest(BaseModel):
 async def notebook_generate(request: NotebookGenerateRequest, db: Session = Depends(get_db)):
     """Simpan teks dari input chat langsung ke notebook tanpa memanggil Groq AI."""
     from repositories.note_repository import note_repository
+    import datetime
     if not request.content.strip():
         return JSONResponse(status_code=400, content={"status": "error", "message": "Konten tidak boleh kosong"})
     title = request.title.strip() or request.content[:30].strip()
+    # Idempotency check: skip jika note dengan content yang sama ATAU title yang sama
+    # sudah ada dalam 60 detik terakhir — mencegah double-save dari race condition frontend
+    recent_cutoff = datetime.datetime.utcnow() - datetime.timedelta(seconds=60)
+    from models import Note
+    stripped_content = request.content.strip()
+    stripped_title = title.strip()
+    existing = db.query(Note).filter(
+        Note.created_at >= recent_cutoff
+    ).filter(
+        (Note.content == stripped_content) | (Note.title == stripped_title)
+    ).first()
+    if existing:
+        return JSONResponse({"status": "success", "message": "Catatan berhasil disimpan ke Notebook!"})
     note_repository.create(db, {
         "title": title,
         "content": request.content,

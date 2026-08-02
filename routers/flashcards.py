@@ -2,7 +2,7 @@ import logging
 from fastapi import APIRouter, Depends, Form, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError, OperationalError
 from database import get_db
@@ -48,8 +48,91 @@ async def get_flashcards_json(db: Session = Depends(get_db), skip: int = Query(0
             "created_at": f.created_at.isoformat() if f.created_at else None,
             "subject": {"id": f.subject.id, "name": f.subject.name} if f.subject else None,
             "material_names": material_names,
+            "batch_id": f.batch_id,
+            # ─── SRS fields ───
+            "next_review": f.next_review.isoformat() if f.next_review else None,
+            "interval_days": f.interval,
+            "ease_factor": (f.ease_factor or 250) / 100,
+            "times_seen": f.times_seen or 0,
+            "times_correct": f.times_correct or 0,
+            "last_reviewed": f.last_reviewed.isoformat() if f.last_reviewed else None,
+            "mastered": f.mastered or 0,
         })
     return JSONResponse({"flashcards": results, "skip": skip, "limit": limit})
+
+
+class ReviewRequest(BaseModel):
+    flashcard_id: int
+    rating: int                        # 0=Lupa, 1=Sulit, 2=Biasa, 3=Mudah, 4=Sempurna
+    response_time_ms: Optional[int] = None
+
+
+@router.post("/api/flashcards/review")
+async def review_flashcard(req: ReviewRequest, db: Session = Depends(get_db)):
+    """Catat penilaian user untuk satu kartu dan update jadwal SRS."""
+    from models import Flashcard
+    flashcard = db.query(Flashcard).filter(Flashcard.id == req.flashcard_id).first()
+    if not flashcard:
+        return JSONResponse(status_code=404, content={"detail": "Flashcard tidak ditemukan."})
+    result = flashcard_service.apply_review(db, flashcard, req.rating, req.response_time_ms)
+    db.commit()
+    return JSONResponse({"status": "success", "flashcard_id": req.flashcard_id, **result})
+
+
+@router.get("/api/flashcards/review/due")
+async def get_due_flashcards(subject_id: int = Query(None), db: Session = Depends(get_db), limit: int = Query(50, ge=1, le=200)):
+    """Kartu yang sudah waktunya di-review (next_review <= sekarang)."""
+    import datetime
+    from models import Flashcard
+    query = db.query(Flashcard).filter(
+        Flashcard.next_review <= datetime.datetime.utcnow()
+    )
+    if subject_id:
+        query = query.filter(Flashcard.subject_id == subject_id)
+    cards = query.order_by(Flashcard.next_review.asc()).limit(limit).all()
+
+    results = []
+    for f in cards:
+        results.append({
+            "id": f.id,
+            "question": f.question,
+            "answer": f.answer,
+            "subject_id": f.subject_id,
+            "subject_name": f.subject.name if f.subject else None,
+            "next_review": f.next_review.isoformat() if f.next_review else None,
+            "interval_days": f.interval,
+            "times_seen": f.times_seen or 0,
+            "mastered": f.mastered or 0,
+        })
+    return JSONResponse({"due_count": len(results), "flashcards": results})
+
+
+@router.get("/api/flashcards/stats")
+async def get_flashcard_stats(subject_id: int = Query(None), db: Session = Depends(get_db)):
+    """Statistik flashcard: total, mastered, perlu review, dll."""
+    import datetime
+    from models import Flashcard
+    query = db.query(Flashcard)
+    if subject_id:
+        query = query.filter(Flashcard.subject_id == subject_id)
+    cards = query.all()
+
+    now = datetime.datetime.utcnow()
+    total = len(cards)
+    mastered = sum(1 for c in cards if c.mastered)
+    due = sum(1 for c in cards if c.next_review and c.next_review <= now and not c.mastered)
+    new_count = sum(1 for c in cards if (c.times_seen or 0) == 0)
+    learning = total - mastered - new_count
+    avg_ease = round(sum(c.ease_factor or 250 for c in cards) / max(1, total) / 100, 2)
+
+    return JSONResponse({
+        "total": total,
+        "mastered": mastered,
+        "learning": max(0, learning),
+        "new": new_count,
+        "due_today": due,
+        "avg_ease": avg_ease,
+    })
 
 @router.post("/api/flashcards")
 async def create_flashcard(
@@ -159,8 +242,9 @@ async def generate_flashcards(
         )
         return JSONResponse({
             "status": "success",
-            "count": data,
-            "message": f"{data} flashcard berhasil dibuat oleh AI."
+            "count": data["count"],
+            "batch_id": data["batch_id"],
+            "message": f"{data['count']} flashcard berhasil dibuat oleh AI."
         })
     except ValueError as e:
         return JSONResponse(status_code=422, content={"detail": str(e)})

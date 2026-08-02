@@ -1,15 +1,18 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional
 
 class GenerateQuizRequest(BaseModel):
     subject_id: int
     mcq_count: int = 5
+    essay_count: int = 0
     material_ids: Optional[str] = None
+    difficulty: Optional[str] = "sedang"  # mudah / sedang / sulit
 
 class GenerateFlashcardRequest(BaseModel):
     subject_id: int
-    count: int = 10
+    count: int = Field(default=10, ge=5, le=20)
     material_ids: Optional[str] = None
+    # batch_id dihapus — service selalu generate batch_id baru agar setiap generate = deck terpisah
 
 class GenerateNoteRequest(BaseModel):
     subject_id: int

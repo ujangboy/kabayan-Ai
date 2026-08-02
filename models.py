@@ -25,6 +25,13 @@ class Subject(Base):
     semester = Column(String)
     lecturer = Column(String)
     description = Column(Text)
+    # ─── Statistik agregat (denormalized, dihitung oleh recalculate_subject_stats) ───
+    best_score = Column(Integer, nullable=True)          # skor tertinggi dari quiz + simulasi ujian
+    avg_score = Column(Integer, nullable=True)           # rata-rata skor quiz + simulasi ujian
+    total_quizzes = Column(Integer, default=0)           # jumlah quiz untuk subject ini
+    total_flashcards = Column(Integer, default=0)        # jumlah flashcard untuk subject ini
+    total_materials = Column(Integer, default=0)         # jumlah materi untuk subject ini
+    last_activity_at = Column(DateTime, nullable=True)   # aktivitas terakhir (upload/quiz/ujian/flashcard)
 
     materials = relationship("Material", back_populates="subject", cascade="all, delete-orphan")
     notes = relationship("Note", back_populates="subject", cascade="all, delete-orphan")
@@ -65,12 +72,35 @@ class Flashcard(Base):
     id = Column(Integer, primary_key=True, index=True)
     subject_id = Column(Integer, ForeignKey("subjects.id", ondelete="CASCADE"), index=True)
     title = Column(String, nullable=True)          # nama set flashcard (opsional)
+    batch_id = Column(String, nullable=True)       # UUID batch untuk membedakan hasil generate
     question = Column(Text)
     answer = Column(Text)
     material_ids = Column(String, nullable=True)   # comma-separated material IDs
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    # ─── Spaced Repetition fields (Fase 3: SRS) ───
+    ease_factor = Column(Integer, default=250)     # 2.5 dalam satuan 1/100 (250 = 2.50)
+    interval = Column(Integer, default=1)          # interval review dalam hari
+    next_review = Column(DateTime, nullable=True)  # kapan kartu harus direview lagi
+    times_seen = Column(Integer, default=0)        # berapa kali kartu direview
+    times_correct = Column(Integer, default=0)     # berapa kali dinilai benar/ingat
+    last_reviewed = Column(DateTime, nullable=True)
+    mastered = Column(Integer, default=0)          # 1 = sudah dikuasai (interval >= 21 hari)
 
     subject = relationship("Subject", back_populates="flashcards")
+    reviews = relationship("FlashcardReview", back_populates="flashcard", cascade="all, delete-orphan")
+
+
+class FlashcardReview(Base):
+    """Riwayat penilaian per kartu untuk spaced repetition."""
+    __tablename__ = "flashcard_reviews"
+    id = Column(Integer, primary_key=True, index=True)
+    flashcard_id = Column(Integer, ForeignKey("flashcards.id", ondelete="CASCADE"), index=True)
+    rating = Column(Integer)                        # 0=Lupa, 1=Sulit, 2=Biasa, 3=Mudah, 4=Sempurna
+    reviewed_at = Column(DateTime, default=datetime.datetime.utcnow)
+    next_review = Column(DateTime, nullable=True)
+    response_time_ms = Column(Integer, nullable=True)  # lama berpikir sebelum menjawab (ms)
+
+    flashcard = relationship("Flashcard", back_populates="reviews")
 
 class Quiz(Base):
     __tablename__ = "quizzes"
@@ -81,6 +111,14 @@ class Quiz(Base):
     questions_json = Column(Text, nullable=True)   # JSON string hasil generate AI
     material_ids = Column(String, nullable=True)   # comma-separated material IDs
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    # ─── Tracking fields (Fase 2: quiz enhanced) ───
+    question_type = Column(String, nullable=True)          # mcq / essay / mixed
+    total_questions = Column(Integer, default=0)           # jumlah total soal (mcq + essay)
+    correct_count = Column(Integer, nullable=True)         # jumlah benar di attempt terakhir
+    wrong_count = Column(Integer, nullable=True)           # jumlah salah di attempt terakhir
+    time_taken = Column(Integer, nullable=True)            # durasi pengerjaan (detik) attempt terakhir
+    attempt_count = Column(Integer, default=0)             # berapa kali quiz dimainkan
+    difficulty = Column(String, nullable=True)             # mudah / sedang / sulit
 
     subject = relationship("Subject", back_populates="quizzes")
 
@@ -291,6 +329,26 @@ class StudyPlanItem(Base):
     completed      = Column(Integer, default=0)          # 0/1
 
     plan = relationship("StudyPlan", back_populates="items")
+    practice_results = relationship("PracticeResult", back_populates="plan_item", cascade="all, delete-orphan", order_by="PracticeResult.created_at")
+
+
+class PracticeResult(Base):
+    """Hasil latihan (quiz / flashcard) yang dikerjakan dari item rencana belajar."""
+    __tablename__ = "practice_results"
+    id                 = Column(Integer, primary_key=True, index=True)
+    plan_item_id       = Column(Integer, ForeignKey("study_plan_items.id", ondelete="CASCADE"), index=True)
+    session_id         = Column(Integer, ForeignKey("exam_sessions.id", ondelete="CASCADE"), index=True)
+    practice_type      = Column(String, default="quiz")  # quiz / flashcard / practice
+    quiz_id            = Column(Integer, nullable=True)  # FK quiz jika practice dari quiz list
+    score              = Column(Integer, nullable=True)  # 0-100
+    total_questions    = Column(Integer, nullable=True)
+    correct_count      = Column(Integer, nullable=True)
+    flashcard_reviewed = Column(Integer, nullable=True)  # jumlah kartu yang direview
+    time_taken_seconds = Column(Integer, nullable=True)
+    created_at         = Column(DateTime, default=datetime.datetime.utcnow)
+
+    plan_item = relationship("StudyPlanItem", back_populates="practice_results")
+    session   = relationship("ExamSession")
 
 
 # ─── Question Bank Model ─────────────────────────────────────────────────────
