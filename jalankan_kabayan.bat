@@ -6,11 +6,16 @@ echo      MENYALAKAN KABAYAN AI v2...
 echo =========================================
 echo.
 
-:: Pindah ke direktori skrip
 cd /d "%~dp0"
 
-echo Memulai server...
-start "" http://localhost:8000
-python -m uvicorn main:app --port 8000 --reload
+echo Memulai frontend + backend...
+start "" cmd /k "cd frontend && npm run dev:all"
 
-pause
+echo.
+echo Frontend: http://localhost:5173
+echo Backend:  http://localhost:8000
+echo.
+echo Tekan Ctrl+C untuk menghentikan.
+echo.
+
+cmd /k
