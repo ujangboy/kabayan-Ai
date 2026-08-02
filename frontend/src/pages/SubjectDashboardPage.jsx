@@ -37,6 +37,9 @@ function ScoreChart({ history }) {
   const y = (s) => H - PAD_Y - ((s - minScore) / Math.max(1, maxScore - minScore)) * (H - PAD_Y * 2);
 
   const path = data.map((d, i) => `${i === 0 ? 'M' : 'L'}${x(i).toFixed(1)},${y(d.score).toFixed(1)}`).join(' ');
+  const chartPoints = path.replace(/[ML]/g, '').trim();
+  const lastX = x(data.length - 1).toFixed(1);
+  const bottomY = H - PAD_Y;
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto">
@@ -52,10 +55,10 @@ function ScoreChart({ history }) {
       })}
       {/* Area fill */}
       <polygon
-        points={`${PAD_X},${H - PAD_Y} ${path.replace(/M/g, 'L').replace(/^L/, 'M')} ${x(data.length - 1).toFixed(1)},${H - PAD_Y}`}
+        points={`${PAD_X},${bottomY} ${chartPoints} ${lastX},${bottomY}`}
         fill="var(--primary)" opacity="0.08"
       />
-      <polyline points={path} fill="none" stroke="var(--primary)" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
+      <polyline points={chartPoints} fill="none" stroke="var(--primary)" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
       {data.map((d, i) => (
         <g key={i}>
           <circle cx={x(i)} cy={y(d.score)} r="4" fill={d.score >= 70 ? 'var(--success)' : d.score >= 50 ? 'var(--warning)' : 'var(--danger)'} stroke="var(--card)" strokeWidth="1.5" />
