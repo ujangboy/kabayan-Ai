@@ -352,6 +352,7 @@ export default function NoteEditor({ content, onSave, noteId }) {
   const lastSavedRef = useRef(null);
 
   const editor = useEditor({
+    immediatelyRender: false,
     extensions: [
       StarterKit.configure({ heading: { levels: [1, 2, 3] } }),
       Underline,
