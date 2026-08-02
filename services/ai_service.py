@@ -120,6 +120,7 @@ class AIService:
             api_key=config.GROQ_API_KEY,
             model_name=CapabilityRouter.get_model(capability),
             temperature=temperature if temperature is not None else config.TEMPERATURE,
+            max_tokens=16384,
             max_retries=2,
             timeout=timeout,
         )
@@ -169,6 +170,13 @@ class AIService:
 
         response = _retry_with_backoff(lambda: chain.invoke(input_variables))
         response_text = response.content
+
+        # Detect truncation (finish_reason == "length" means output hit token limit)
+        finish_reason = getattr(response, 'response_metadata', {}).get('finish_reason', '')
+        if finish_reason == 'length':
+            logger.warning("Response truncated for capability=%s (hit max_tokens)", capability)
+            if response_text and not response_text.rstrip().endswith(('.', '!', '?', '```')):
+                response_text = response_text.rstrip() + "\n\n⚠️ *Catatan: Respons terpotong karena batas token.*"
 
         if use_cache:
             cache_service.set_cache(db, prompt_str, "", setting_hash, response_text)
