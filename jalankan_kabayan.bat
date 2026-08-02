@@ -8,14 +8,8 @@ echo.
 
 cd /d "%~dp0"
 
-echo Memulai frontend + backend...
-start "" cmd /k "cd frontend && npm run dev:all"
-
-echo.
-echo Frontend: http://localhost:5173
-echo Backend:  http://localhost:8000
-echo.
-echo Tekan Ctrl+C untuk menghentikan.
+echo Memulai frontend (port 5173) + backend (port 8000)...
+echo Tekan Ctrl+C untuk menghentikan kedua server.
 echo.
 
-cmd /k
+cd frontend && npm run dev:all
