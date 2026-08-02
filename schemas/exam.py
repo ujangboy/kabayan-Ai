@@ -30,3 +30,20 @@ class StudyPlanRequest(BaseModel):
     motivational_message: str = ""
     priority_actions: list[str] = Field(default_factory=list)
     study_plan: list[dict] = Field(default_factory=list)
+
+
+class SubmitPlanQuizRequest(BaseModel):
+    score: int = Field(..., ge=0, le=100)
+    total_questions: Optional[int] = None
+    correct_count: Optional[int] = None
+    time_taken_seconds: Optional[int] = None
+    quiz_id: Optional[int] = None
+
+
+class PlanFlashcardResult(BaseModel):
+    flashcard_id: int
+    rating: int = Field(..., ge=0, le=4)
+
+
+class SubmitPlanFlashcardsRequest(BaseModel):
+    results: list[PlanFlashcardResult] = Field(default_factory=list)

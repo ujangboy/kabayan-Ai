@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Loader2, BarChart2, BookOpen, Calendar, RotateCcw, CheckCircle, XCircle,
   ChevronDown, Lightbulb, FileText, Check, Award, Clock, TrendingUp, Target,
-  AlertTriangle, AlertCircle, RefreshCw, ArrowRight,
+  AlertTriangle, AlertCircle, RefreshCw, ArrowRight, ExternalLink,
 } from 'lucide-react';
 import { examAPI, sessionsAPI } from '@/services/api';
 import { cn } from '@/utils';
@@ -597,6 +598,7 @@ function InlinePractice({ questions, topic, onComplete, onClose, onRetryTopic })
 }
 
 function StudyPlanTab({ plan, sessionId, onToggle, onPlanSaved }) {
+  const navigate = useNavigate();
   const today = new Date().toISOString().split('T')[0];
   const [startDate, setStartDate] = useState(plan?.start_date || today);
   const [dateSaving, setDateSaving] = useState(false);
@@ -655,7 +657,7 @@ function StudyPlanTab({ plan, sessionId, onToggle, onPlanSaved }) {
 
   return (
     <div className="space-y-4">
-      {/* Date picker */}
+      {/* Date picker + open full plan */}
       <div className="flex items-center gap-2 mb-2">
         <Calendar size={14} className="text-primary" />
         <span className="text-xs font-semibold text-text-secondary">Mulai Belajar:</span>
@@ -668,6 +670,12 @@ function StudyPlanTab({ plan, sessionId, onToggle, onPlanSaved }) {
                      focus:outline-none focus:border-primary disabled:opacity-50"
         />
         {dateSaving && <Loader2 size={12} className="animate-spin text-primary" />}
+        <button
+          onClick={() => navigate(`/study-plan?session_id=${sessionId}`)}
+          className="ml-auto inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-primary/30 text-primary text-[11px] font-semibold hover:bg-primary/10 transition-colors"
+        >
+          <ExternalLink size={11} /> Buka Halaman Penuh
+        </button>
       </div>
       {dateError && <p className="text-danger text-xs mb-2">{dateError}</p>}
 

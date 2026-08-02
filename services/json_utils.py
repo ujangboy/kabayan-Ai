@@ -58,7 +58,7 @@ def sanitize_all_strings(data):
 def sanitize_json_str(s: str) -> str:
     """Iteratively fix invalid JSON escapes (e.g. latex commands like \\cap)."""
     s = re.sub(r',\s*([}\]])', r'\1', s)
-    max_passes = 10
+    max_passes = 30
     for _ in range(max_passes):
         try:
             json.loads(s)
@@ -67,10 +67,15 @@ def sanitize_json_str(s: str) -> str:
             if "escape" not in str(e).lower():
                 raise
             pos = e.pos
-            if pos < len(s) and s[pos] == '\\':
-                s = s[:pos] + '\\' + s[pos:]
-                continue
-            raise
+            if pos is None or pos >= len(s):
+                raise
+            # Find the backslash that starts this escape
+            bs = pos
+            while bs > 0 and s[bs - 1] == '\\':
+                bs -= 1
+            # Double the first backslash of the sequence
+            s = s[:bs] + '\\' + s[bs:]
+            continue
     return s
 
 

@@ -47,6 +47,17 @@ class StudyPlanItemRepository(BaseRepository[StudyPlanItem]):
     def __init__(self):
         super().__init__(StudyPlanItem)
 
+    def _recalc_plan_progress(self, db: Session, plan_id: int):
+        plan = db.query(StudyPlan).filter(StudyPlan.id == plan_id).first()
+        if not plan:
+            return
+        items = db.query(StudyPlanItem).filter(StudyPlanItem.plan_id == plan.id).all()
+        done  = sum(1 for i in items if i.completed)
+        plan.completed_days = done
+        plan.progress = int((done / len(items)) * 100) if items else 0
+        plan.updated_at = datetime.datetime.utcnow()
+        db.flush()
+
     def toggle_completed(self, db: Session, item_id: int) -> Optional[StudyPlanItem]:
         obj = self.get(db, item_id)
         if not obj:
@@ -54,15 +65,17 @@ class StudyPlanItemRepository(BaseRepository[StudyPlanItem]):
         obj.completed = 0 if obj.completed else 1
         db.flush()
         db.refresh(obj)
-        # Recalculate plan progress
-        plan = db.query(StudyPlan).filter(StudyPlan.id == obj.plan_id).first()
-        if plan:
-            items = db.query(StudyPlanItem).filter(StudyPlanItem.plan_id == plan.id).all()
-            done  = sum(1 for i in items if i.completed)
-            plan.completed_days = done
-            plan.progress = int((done / len(items)) * 100) if items else 0
-            plan.updated_at = datetime.datetime.utcnow()
-            db.flush()
+        self._recalc_plan_progress(db, obj.plan_id)
+        return obj
+
+    def set_completed(self, db: Session, item_id: int, completed: int = 1) -> Optional[StudyPlanItem]:
+        obj = self.get(db, item_id)
+        if not obj:
+            return None
+        obj.completed = 1 if completed else 0
+        db.flush()
+        db.refresh(obj)
+        self._recalc_plan_progress(db, obj.plan_id)
         return obj
 
 

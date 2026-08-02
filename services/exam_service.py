@@ -878,7 +878,7 @@ class ExamService:
             db.query(ExamSession)
             .options(
                 selectinload(ExamSession.attempts).selectinload(ExamAttempt.reviews),
-                selectinload(ExamSession.plan).selectinload(StudyPlan.items),
+                selectinload(ExamSession.plan).selectinload(StudyPlan.items).selectinload(StudyPlanItem.practice_results),
             )
             .filter(ExamSession.id == session_id)
             .first()
@@ -925,7 +925,16 @@ class ExamService:
                            "duration_minutes": i.duration_minutes,
                            "time_slot": i.time_slot or TIME_SLOTS[i.order_number % len(TIME_SLOTS)] if i.order_number is not None else "",
                            "resources": i.resources,
-                           "completed": bool(i.completed)} for i in s.plan.items],
+                           "completed": bool(i.completed),
+                           "practice_results": [
+                               {"id": pr.id, "practice_type": pr.practice_type,
+                                "score": pr.score, "total_questions": pr.total_questions,
+                                "correct_count": pr.correct_count,
+                                "flashcard_reviewed": pr.flashcard_reviewed,
+                                "time_taken_seconds": pr.time_taken_seconds,
+                                "created_at": pr.created_at.isoformat() if pr.created_at else None}
+                               for pr in i.practice_results
+                           ]} for i in s.plan.items],
             }
 
         return {
@@ -1345,6 +1354,69 @@ class ExamService:
             "plan_progress": plan.progress if plan else 0,
             "plan_completed_days": plan.completed_days if plan else 0,
         }
+
+    @staticmethod
+    def submit_plan_quiz(db: Session, item_id: int, payload) -> dict:
+        """Simpan hasil latihan quiz dari item rencana belajar + tandai selesai."""
+        from models import PracticeResult
+        item = study_plan_item_repo.get(db, item_id)
+        if not item:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Item rencana tidak ditemukan.",
+            )
+        plan = study_plan_repo.get(db, item.plan_id)
+        result = PracticeResult(
+            plan_item_id=item.id,
+            session_id=plan.session_id if plan else None,
+            practice_type="quiz",
+            quiz_id=payload.quiz_id,
+            score=payload.score,
+            total_questions=payload.total_questions,
+            correct_count=payload.correct_count,
+            time_taken_seconds=payload.time_taken_seconds,
+            created_at=datetime.datetime.utcnow(),
+        )
+        db.add(result)
+        if item.completed != 1:
+            study_plan_item_repo.set_completed(db, item.id, 1)
+        db.commit()
+        db.refresh(result)
+        return {"status": "success", "score": payload.score, "practice_result_id": result.id}
+
+    @staticmethod
+    def submit_plan_flashcards(db: Session, item_id: int, payload) -> dict:
+        """Catat review flashcard dari item rencana + update SRS + tandai selesai."""
+        from models import PracticeResult, Flashcard
+        from services.flashcard_service import flashcard_service
+        item = study_plan_item_repo.get(db, item_id)
+        if not item:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Item rencana tidak ditemukan.",
+            )
+        plan = study_plan_repo.get(db, item.plan_id)
+        reviewed = 0
+        for r in payload.results:
+            fc = db.query(Flashcard).filter(Flashcard.id == r.flashcard_id).first()
+            if fc:
+                flashcard_service.apply_review(db, fc, r.rating)
+                reviewed += 1
+        if reviewed:
+            db.flush()
+        result = PracticeResult(
+            plan_item_id=item.id,
+            session_id=plan.session_id if plan else None,
+            practice_type="flashcard",
+            flashcard_reviewed=reviewed,
+            created_at=datetime.datetime.utcnow(),
+        )
+        db.add(result)
+        if item.completed != 1:
+            study_plan_item_repo.set_completed(db, item.id, 1)
+        db.commit()
+        db.refresh(result)
+        return {"status": "success", "reviewed": reviewed, "practice_result_id": result.id}
 
     @staticmethod
     def delete_session(db: Session, session_id: int) -> bool:

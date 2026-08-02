@@ -199,14 +199,22 @@ except Exception:
 # Initialize Database (Alembic is source of truth for schema)
 Base.metadata.create_all(bind=engine)
 
-# Stamp with Alembic head so future migrations detect this as "current"
+# Apply pending migrations (upgrade, NOT stamp — stamp would hide unapplied migrations)
 try:
     from alembic.config import Config
     from alembic import command
     alembic_cfg = Config(os.path.join(os.path.dirname(__file__), "alembic.ini"))
-    command.stamp(alembic_cfg, "head")
+    command.upgrade(alembic_cfg, "head")
+    logger.info("Alembic schema upgraded to head.")
 except Exception as e:
-    logger.warning(f"Alembic stamp skipped (first run?): {e}")
+    logger.warning(f"Alembic upgrade failed (fresh DB with create_all schema?), stamping head instead: {e}")
+    try:
+        from alembic.config import Config
+        from alembic import command
+        alembic_cfg = Config(os.path.join(os.path.dirname(__file__), "alembic.ini"))
+        command.stamp(alembic_cfg, "head")
+    except Exception as e2:
+        logger.warning(f"Alembic stamp skipped (first run?): {e2}")
 
 app = FastAPI(title="Kabayan AI Study Workspace")
 register_all_handlers(app)

@@ -34,6 +34,10 @@ export const materiAPI = {
 export const subjectAPI = {
   getAll: () => api.get('/subjects'),
   getById: (id) => api.get(`/subjects/${id}`),
+  getDashboard: (id) => api.get(`/subjects/${id}/dashboard`),
+  update: (id, data) => api.post(`/subjects/${id}/update`, new URLSearchParams(data).toString(), {
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  }),
   delete: (id) => api.post(`/subjects/${id}/delete`),
 };
 
@@ -51,6 +55,13 @@ export const flashcardAPI = {
   batchDelete: (ids) => api.post('/flashcards/batch-delete', { ids }).then(r => r.data),
   clear: () => api.post('/flashcards/clear'),
   generate: (payload) => api.post('/flashcards/generate', payload).then(r => r.data),
+  review: (flashcardId, rating, responseTimeMs) => api.post('/flashcards/review', {
+    flashcard_id: flashcardId,
+    rating,
+    response_time_ms: responseTimeMs,
+  }).then(r => r.data),
+  getDue: (subjectId) => api.get('/flashcards/review/due', { params: subjectId ? { subject_id: subjectId } : {} }).then(r => r.data),
+  getStats: (subjectId) => api.get('/flashcards/stats', { params: subjectId ? { subject_id: subjectId } : {} }).then(r => r.data),
 };
 
 // --- QUIZ ---
@@ -62,6 +73,17 @@ export const quizAPI = {
     new URLSearchParams({ score: String(score) }).toString(),
     { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
   ).then(r => r.data),
+  saveScoreDetailed: (id, score, opts = {}) => api.post(`/quizzes/${id}/score`,
+    new URLSearchParams({
+      score: String(score),
+      ...(opts.correct != null ? { correct_count: String(opts.correct) } : {}),
+      ...(opts.wrong != null ? { wrong_count: String(opts.wrong) } : {}),
+      ...(opts.timeTaken != null ? { time_taken: String(opts.timeTaken) } : {}),
+      ...(opts.totalQuestions != null ? { total_questions: String(opts.totalQuestions) } : {}),
+    }).toString(),
+    { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+  ).then(r => r.data),
+  getHistory: (subjectId) => api.get('/quizzes/history', { params: subjectId ? { subject_id: subjectId } : {} }).then(r => r.data),
   delete: (id) => api.delete(`/quizzes/${id}`),
   clear: () => api.post('/quizzes/clear'),
 };
@@ -98,6 +120,8 @@ export const sessionsAPI = {
     }),
   saveStudyPlan: (sessionId, planData) => api.post(`/exam/sessions/${sessionId}/study-plan`, planData),
   togglePlanItem: (itemId) => api.post(`/exam/sessions/plan-item/${itemId}/toggle`),
+  submitPlanQuiz: (itemId, payload) => api.post(`/exam/sessions/plan-item/${itemId}/submit-quiz`, payload),
+  submitPlanFlashcards: (itemId, payload) => api.post(`/exam/sessions/plan-item/${itemId}/submit-flashcards`, payload),
   delete: (sessionId) => api.delete(`/exam/sessions/${sessionId}`),
 };
 

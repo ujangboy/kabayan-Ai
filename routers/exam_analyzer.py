@@ -11,6 +11,8 @@ from schemas.exam import (
     SubmitAnswersRequest,
     RetryRequest,
     StudyPlanRequest,
+    SubmitPlanQuizRequest,
+    SubmitPlanFlashcardsRequest,
 )
 from exceptions import AppError
 
@@ -99,6 +101,11 @@ async def submit_exam(
 ):
     try:
         data = exam_service.submit_and_evaluate(db, session_id, payload.answers)
+        from services.subject_service import subject_service
+        from repositories.exam_repository import exam_session_repository
+        session = exam_session_repository.get(db, session_id)
+        if session and session.subject_id:
+            subject_service.recalculate_subject_stats(db, session.subject_id)
         return JSONResponse(data)
     except ValueError as e:
         raise AppError(str(e), status_code=400)
@@ -272,6 +279,36 @@ async def toggle_session_plan_item(item_id: int, db: Session = Depends(get_db)):
         return JSONResponse(data)
     except Exception as e:
         logger.error(f"toggle_plan_item error: {e}", exc_info=True)
+        raise AppError(str(e), status_code=500)
+
+
+@router.post("/sessions/plan-item/{item_id}/submit-quiz")
+async def submit_plan_quiz(
+    item_id: int,
+    payload: SubmitPlanQuizRequest,
+    db: Session = Depends(get_db),
+):
+    """Simpan hasil latihan quiz dari item rencana belajar."""
+    try:
+        data = exam_service.submit_plan_quiz(db, item_id, payload)
+        return JSONResponse(data)
+    except Exception as e:
+        logger.error(f"submit_plan_quiz error: {e}", exc_info=True)
+        raise AppError(str(e), status_code=500)
+
+
+@router.post("/sessions/plan-item/{item_id}/submit-flashcards")
+async def submit_plan_flashcards(
+    item_id: int,
+    payload: SubmitPlanFlashcardsRequest,
+    db: Session = Depends(get_db),
+):
+    """Catat review flashcard dari item rencana belajar + update SRS."""
+    try:
+        data = exam_service.submit_plan_flashcards(db, item_id, payload)
+        return JSONResponse(data)
+    except Exception as e:
+        logger.error(f"submit_plan_flashcards error: {e}", exc_info=True)
         raise AppError(str(e), status_code=500)
 
 
