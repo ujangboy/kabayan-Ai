@@ -25,6 +25,7 @@ class Subject(Base):
     semester = Column(String)
     lecturer = Column(String)
     description = Column(Text)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=True)
     # ─── Statistik agregat (denormalized, dihitung oleh recalculate_subject_stats) ───
     best_score = Column(Integer, nullable=True)          # skor tertinggi dari quiz + simulasi ujian
     avg_score = Column(Integer, nullable=True)           # rata-rata skor quiz + simulasi ujian

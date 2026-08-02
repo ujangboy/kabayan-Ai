@@ -5,15 +5,28 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   BookOpen, History, Zap, Search, X, ChevronRight, Trash2,
   RotateCcw, Clock, Calendar, Star, Award, BarChart2, FileText, Loader2,
+  Trophy, HelpCircle, CreditCard,
 } from 'lucide-react';
-import { materiAPI, sessionsAPI } from '@/services/api';
-import { cn } from '@/utils';
+import { materiAPI, sessionsAPI, subjectAPI } from '@/services/api';
+import { cn, formatDate, formatTimeOnly } from '@/utils';
 import DetailModal from './DetailModal';
 import { Chip, ProgressBar, STATUS_META, getBadge, getGradeColor, Q_TYPE_LABEL } from './shared';
 
 // ─── Subject picker (shown when no subject selected) ──────────────────────────
 function SubjectPicker({ subjects, onSelectSubject, onStartConfig }) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  const deleteMutation = useMutation({
+    mutationFn: (id) => subjectAPI.delete(id),
+    onSuccess: () => queryClient.invalidateQueries(['subjects']),
+  });
+
+  const handleDelete = (id) => {
+    if (confirm('Hapus mata kuliah ini? Semua materi, catatan, flashcard, dan quiz terkait akan ikut terhapus.')) {
+      deleteMutation.mutate(id);
+    }
+  };
 
   if (!subjects.length) {
     return (
@@ -43,6 +56,7 @@ function SubjectPicker({ subjects, onSelectSubject, onStartConfig }) {
             subject={s}
             onSelectSubject={onSelectSubject}
             onStartConfig={onStartConfig}
+            onDelete={handleDelete}
           />
         ))}
       </div>
@@ -50,7 +64,7 @@ function SubjectPicker({ subjects, onSelectSubject, onStartConfig }) {
   );
 }
 
-function SubjectCard({ subject, onSelectSubject, onStartConfig }) {
+function SubjectCard({ subject, onSelectSubject, onStartConfig, onDelete }) {
   const { data: materialData, isLoading } = useQuery({
     queryKey: ['materials', subject.id],
     queryFn: () => materiAPI.getAll(subject.id).then(r => r.data),
@@ -94,13 +108,38 @@ function SubjectCard({ subject, onSelectSubject, onStartConfig }) {
           <h3 className="font-semibold text-text truncate">{subject.name}</h3>
           <p className="text-xs text-text-muted">{materialCount} materi</p>
         </div>
+        {onDelete && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onDelete(subject.id); }}
+            className="p-1 text-text-muted hover:text-danger transition-colors shrink-0"
+            title="Hapus mata kuliah"
+          >
+            <Trash2 size={14} />
+          </button>
+        )}
+      </div>
+
+      {/* Ringkasan stats */}
+      <div className="grid grid-cols-3 gap-1.5">
+        <div className="rounded-lg bg-background/60 py-1.5 px-1 text-center">
+          <p className="text-sm font-bold text-text flex items-center justify-center gap-1"><Trophy size={11} className="text-warning" />{subject.best_score ?? '—'}</p>
+          <p className="text-[9px] text-text-muted uppercase tracking-wide">Skor</p>
+        </div>
+        <div className="rounded-lg bg-background/60 py-1.5 px-1 text-center">
+          <p className="text-sm font-bold text-text flex items-center justify-center gap-1"><HelpCircle size={11} className="text-accent-teal" />{subject.total_quizzes ?? 0}</p>
+          <p className="text-[9px] text-text-muted uppercase tracking-wide">Quiz</p>
+        </div>
+        <div className="rounded-lg bg-background/60 py-1.5 px-1 text-center">
+          <p className="text-sm font-bold text-text flex items-center justify-center gap-1"><CreditCard size={11} className="text-accent-purple" />{subject.total_flashcards ?? 0}</p>
+          <p className="text-[9px] text-text-muted uppercase tracking-wide">Flashcard</p>
+        </div>
       </div>
 
       {/* Daftar nama materi */}
       {subjectMaterials.length > 0 && (
         <div className="flex gap-1 flex-wrap">
           {subjectMaterials.slice(0, 3).map((m, i) => (
-            <span key={i} className="inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded bg-accent-blue/10 text-accent-blue border border-accent-blue/20 truncate max-w-[110px]">
+            <span key={i} className="inline-flex items-center gap-0.5 text-[10px] px-2 py-0.5 rounded bg-accent-blue/10 text-accent-blue border border-accent-blue/20 truncate max-w-[200px]">
               <FileText size={8} className="shrink-0" />
               {m.filename || `Materi #${m.id}`}
             </span>
@@ -108,6 +147,14 @@ function SubjectCard({ subject, onSelectSubject, onStartConfig }) {
           {subjectMaterials.length > 3 && (
             <span className="text-[10px] text-text-muted self-center">+{subjectMaterials.length - 3} lagi</span>
           )}
+        </div>
+      )}
+
+      {/* Tanggal + waktu dibuat */}
+      {subject.created_at && (
+        <div className="flex items-center gap-3 text-[10px] text-text-muted">
+          <span className="flex items-center gap-1"><Calendar size={9} />{formatDate(subject.created_at)}</span>
+          <span className="flex items-center gap-1"><Clock size={9} />{formatTimeOnly(subject.created_at)}</span>
         </div>
       )}
 

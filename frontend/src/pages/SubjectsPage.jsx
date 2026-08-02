@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Book, Plus, Trash2, X } from 'lucide-react';
+import { Book, Plus, Trash2, X, FileText, HelpCircle, CreditCard, Trophy, Calendar, Clock } from 'lucide-react';
 import { subjectAPI } from '@/services/api';
-import { formatDate } from '@/utils';
+import { formatDate, formatTimeOnly } from '@/utils';
 
 export default function SubjectsPage() {
   const queryClient = useQueryClient();
@@ -79,10 +79,35 @@ export default function SubjectsPage() {
                       <Trash2 size={14} />
                     </button>
                   </div>
-                  <div className="space-y-1 text-sm text-text-secondary pl-2 mb-4 flex-1">
+                  <div className="space-y-1 text-sm text-text-secondary pl-2 mb-3 flex-1">
                     {s.semester && <p><span className="text-text-muted text-xs">Semester:</span> {s.semester}</p>}
                     {s.lecturer && <p><span className="text-text-muted text-xs">Dosen:</span> {s.lecturer}</p>}
                     {s.description && <p className="text-xs line-clamp-2 mt-2 italic">"{s.description}"</p>}
+                  </div>
+                  {/* Tanggal + waktu dibuat */}
+                  {s.created_at && (
+                    <div className="flex items-center gap-3 pl-2 mb-3 text-[10px] text-text-muted">
+                      <span className="flex items-center gap-1"><Calendar size={9} />{formatDate(s.created_at)}</span>
+                      <span className="flex items-center gap-1"><Clock size={9} />{formatTimeOnly(s.created_at)}</span>
+                    </div>
+                  )}
+                  <div className="grid grid-cols-4 gap-1 px-2 pb-3 text-center">
+                    <div className="rounded-lg bg-background/60 py-1.5 px-1">
+                      <p className="text-sm font-bold text-text flex items-center justify-center gap-1"><Trophy size={11} className="text-warning" />{s.best_score ?? '—'}</p>
+                      <p className="text-[9px] text-text-muted uppercase tracking-wide">Skor</p>
+                    </div>
+                    <div className="rounded-lg bg-background/60 py-1.5 px-1">
+                      <p className="text-sm font-bold text-text flex items-center justify-center gap-1"><HelpCircle size={11} className="text-accent-teal" />{s.total_quizzes ?? 0}</p>
+                      <p className="text-[9px] text-text-muted uppercase tracking-wide">Quiz</p>
+                    </div>
+                    <div className="rounded-lg bg-background/60 py-1.5 px-1">
+                      <p className="text-sm font-bold text-text flex items-center justify-center gap-1"><CreditCard size={11} className="text-accent-purple" />{s.total_flashcards ?? 0}</p>
+                      <p className="text-[9px] text-text-muted uppercase tracking-wide">Flashcard</p>
+                    </div>
+                    <div className="rounded-lg bg-background/60 py-1.5 px-1">
+                      <p className="text-sm font-bold text-text flex items-center justify-center gap-1"><FileText size={11} className="text-accent-blue" />{s.total_materials ?? 0}</p>
+                      <p className="text-[9px] text-text-muted uppercase tracking-wide">Materi</p>
+                    </div>
                   </div>
                 </motion.div>
               </Link>
