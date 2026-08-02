@@ -21,13 +21,6 @@ export function formatDate(dateStr) {
   });
 }
 
-export function formatTime(dateStr) {
-  if (!dateStr) return '-';
-  return toLocalDate(dateStr).toLocaleTimeString('id-ID', {
-    hour: '2-digit', minute: '2-digit',
-  });
-}
-
 // "1 Agu 2026, 16:48"
 export function formatDateTime(dateStr) {
   if (!dateStr) return '-';
