@@ -657,7 +657,7 @@ function GenerateAIModal({ subjects, onClose, onSuccess }) {
     try {
       const result = await flashcardAPI.generate({
         subject_id: Number(subjectId),
-        count: Number(count),
+        count: Math.max(5, Math.min(20, Number(count) || 10)),
         material_ids: selectedMaterialIds.length > 0 ? selectedMaterialIds.join(',') : '',
       });
       if (result.detail) throw new Error(result.detail);
