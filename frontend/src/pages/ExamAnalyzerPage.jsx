@@ -25,6 +25,7 @@ export default function ExamAnalyzerPage() {
   const [evalData, setEvalData]       = useState(null);
   const [detailId, setDetailId]       = useState(null);
   const [pendingPlanTab, setPendingPlanTab] = useState(false);
+  const [recommend, setRecommend]     = useState(null);
 
   // ── Pick up retry session from Exam History ──
   useEffect(() => {
