@@ -337,10 +337,12 @@ function FlashcardSession({ cards, subjectName, onClose }) {
   const deleteMutation = useMutation({
     mutationFn: (id) => flashcardAPI.delete(id),
     onSuccess: () => queryClient.invalidateQueries(['flashcards']),
+    onError: (err) => console.error('Failed to delete flashcard:', err),
   });
 
   const reviewMutation = useMutation({
     mutationFn: ({ id, rating }) => flashcardAPI.review(id, rating),
+    onError: (err) => console.error('Failed to review flashcard:', err),
   });
 
   const total = cards.length + rerunQueue.length;

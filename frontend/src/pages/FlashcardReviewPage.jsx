@@ -59,6 +59,7 @@ export default function FlashcardReviewPage() {
 
   const reviewMutation = useMutation({
     mutationFn: ({ id, rating, responseTimeMs }) => flashcardAPI.review(id, rating, responseTimeMs),
+    onError: (err) => console.error('Failed to review flashcard:', err),
   });
 
   const cards = data?.flashcards || [];

@@ -200,6 +200,9 @@ export default function SubjectDashboardPage() {
       queryClient.invalidateQueries(['subjects']);
       navigate('/subjects');
     },
+    onError: (err) => {
+      console.error('Failed to delete subject:', err);
+    },
   });
 
   const subject = data?.subject;

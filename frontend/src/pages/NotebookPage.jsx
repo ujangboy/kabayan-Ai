@@ -30,7 +30,10 @@ export default function NotebookPage() {
     onSuccess: () => {
       queryClient.invalidateQueries(['notes']);
       if (selectedNote) setSelectedNote(null);
-    }
+    },
+    onError: (err) => {
+      console.error('Failed to delete note:', err);
+    },
   });
 
   const clearMutation = useMutation({
@@ -38,7 +41,10 @@ export default function NotebookPage() {
     onSuccess: () => {
       queryClient.invalidateQueries(['notes']);
       setSelectedNote(null);
-    }
+    },
+    onError: (err) => {
+      console.error('Failed to clear notes:', err);
+    },
   });
 
   const handleDelete = (id, e) => {

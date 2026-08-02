@@ -21,7 +21,10 @@ export default function SubjectsPage() {
     mutationFn: (id) => subjectAPI.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries(['subjects']);
-    }
+    },
+    onError: (err) => {
+      console.error('Failed to delete subject:', err);
+    },
   });
 
   const handleDelete = (id) => {

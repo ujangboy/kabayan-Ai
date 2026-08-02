@@ -51,14 +51,20 @@ export default function QuizPage() {
     mutationFn: (id) => quizAPI.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries(['quizzes']);
-    }
+    },
+    onError: (err) => {
+      console.error('Failed to delete quiz:', err);
+    },
   });
 
   const clearMutation = useMutation({
     mutationFn: () => quizAPI.clear(),
     onSuccess: () => {
       queryClient.invalidateQueries(['quizzes']);
-    }
+    },
+    onError: (err) => {
+      console.error('Failed to clear quizzes:', err);
+    },
   });
 
   const handleDelete = (id) => {
