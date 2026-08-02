@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FileText, Plus, Trash2, Edit3, X, Book, Clock } from 'lucide-react';
@@ -202,8 +202,10 @@ function CreateNoteModal({ onClose, subjects, onSuccess }) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [aiTopic, setAiTopic] = useState('');
   const [showAiPanel, setShowAiPanel] = useState(false);
+  // Ref mutex — mencegah double-submit dari double-click
+  const isSubmittingRef = useRef(false);
 
-  // Generate catatan via AI
+  // Generate catatan via AI — hanya isi formData, TIDAK simpan ke DB
   const handleGenerateAI = async () => {
     const topic = aiTopic.trim() || formData.title.trim();
     if (!topic) {
@@ -238,6 +240,8 @@ function CreateNoteModal({ onClose, subjects, onSuccess }) {
         throw new Error(errData.detail || 'Gagal generate catatan');
       }
       const result = await res.json();
+      // Hanya isi form — belum disimpan ke DB
+      // User masih harus klik Simpan untuk menyimpan
       setFormData(p => ({ ...p, title: result.title || topic.slice(0, 60), content: result.content }));
     } catch (err) {
       alert('Gagal generate AI: ' + err.message);
@@ -249,6 +253,9 @@ function CreateNoteModal({ onClose, subjects, onSuccess }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.title || !formData.content) return;
+    // Guard mutex — mencegah double-submit
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
     setIsSubmitting(true);
     const data = new URLSearchParams();
     data.append('title', formData.title);
@@ -264,6 +271,7 @@ function CreateNoteModal({ onClose, subjects, onSuccess }) {
       onSuccess();
     } catch (err) {
       alert(err.message);
+      isSubmittingRef.current = false;
       setIsSubmitting(false);
     }
   };

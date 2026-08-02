@@ -15,6 +15,13 @@ class NotesService:
             temperature=0.7,
         )
         content = sanitize_output(response)
+        # Kembalikan content saja — caller yang memutuskan apakah perlu disimpan
+        return content
+
+    @staticmethod
+    def generate_and_save_notes(db: Session, subject_id: int, title: str, context: str):
+        """Generate AI + langsung simpan ke DB. Dipakai oleh endpoint yang memang ingin auto-save."""
+        content = NotesService.generate_notes(db, subject_id, title, context)
         note = note_repository.create(db, {
             "subject_id": subject_id,
             "title": title,

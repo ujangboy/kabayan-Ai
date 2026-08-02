@@ -100,12 +100,13 @@ async def generate_notes_ai(
             subject_name = subject.name if subject else f"Subject #{req.subject_id}"
             req.title = f"Catatan {subject_name}"
 
-        note = notes_service.generate_notes(db, req.subject_id, req.title, context)
+        # generate_notes hanya return content — TIDAK auto-save ke DB
+        # Saving dilakukan oleh frontend saat user klik Simpan via POST /api/notes
+        content = notes_service.generate_notes(db, req.subject_id, req.title, context)
         return JSONResponse({
             "status": "success",
-            "id": note.id,
-            "title": note.title,
-            "content": note.content
+            "title": req.title,
+            "content": content
         })
     except ValueError as e:
         return JSONResponse(status_code=422, content={"detail": str(e)})
