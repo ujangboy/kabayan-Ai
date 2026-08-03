@@ -547,14 +547,18 @@ function GeneratePanel({ subjects, onClose, onNoteCreated }) {
         subject_id: Number(subjectId),
         material_ids: selectedMaterialIds.join(','),
       };
+      // Topic is sent as context for AI, NOT as the note title
       if (topic.trim()) payload.title = topic.trim().slice(0, 80);
 
       const res = await notesAPI.generate(payload);
       const result = res.data;
 
+      // Title comes from AI-generated content (extracted by backend)
+      const noteTitle = result.title || 'Catatan AI';
+
       // Save the generated note to DB
       const saveRes = await notesAPI.create(
-        result.title || topic.trim() || 'Catatan AI',
+        noteTitle,
         result.content || '',
         Number(subjectId)
       );
@@ -659,7 +663,7 @@ function GeneratePanel({ subjects, onClose, onNoteCreated }) {
           {/* Topic input */}
           <div>
             <label className="text-xs font-medium text-text-secondary mb-1.5 block">
-              Topik / Judul <span className="text-text-muted font-normal">(opsional)</span>
+              Topik <span className="text-text-muted font-normal">(opsional — jadi panduan AI)</span>
             </label>
             <input
               type="text"

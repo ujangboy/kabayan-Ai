@@ -117,7 +117,7 @@ async def generate_notes_ai(
         if len(materials) == 1:
             query = materials[0].filename
         context = rag_context_service.gather_context(
-            materials, max_words=1500, query=query
+            materials, max_words=300, query=query
         )
 
         if not context.strip():
@@ -130,11 +130,18 @@ async def generate_notes_ai(
             req.title = f"Catatan {subject_name}"
 
         # generate_notes hanya return content — TIDAK auto-save ke DB
-        # Saving dilakukan oleh frontend saat user klik Simpan via POST /api/notes
         content = notes_service.generate_notes(db, req.subject_id, req.title, context)
+
+        # Extract title from AI-generated content (first heading)
+        import re
+        title = req.title
+        heading_match = re.search(r'^#\s+(.+)', content, re.MULTILINE)
+        if heading_match:
+            title = heading_match.group(1).strip()[:80]
+
         return JSONResponse({
             "status": "success",
-            "title": req.title,
+            "title": title,
             "content": content
         })
     except ValueError as e:

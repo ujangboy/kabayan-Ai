@@ -3,19 +3,25 @@ from prompts.notes import NOTES_PROMPT
 from repositories.note_repository import note_repository
 from services.json_utils import sanitize_output
 from sqlalchemy.orm import Session
+from langchain_groq import ChatGroq
+from services.ai_service import CapabilityRouter
+import config
 
 class NotesService:
     @staticmethod
     def generate_notes(db: Session, subject_id: int, title: str, context: str):
-        response = ai_service.generate(
-            capability="reasoning",
-            prompt_template=NOTES_PROMPT,
-            input_variables={"context": context},
-            use_cache=False,
+        # Use lower max_tokens to stay within Groq free-tier TPM limit (8000)
+        llm = ChatGroq(
+            api_key=config.GROQ_API_KEY,
+            model_name=CapabilityRouter.get_model("reasoning"),
             temperature=0.7,
+            max_tokens=4000,
+            max_retries=2,
+            timeout=90.0,
         )
-        content = sanitize_output(response)
-        # Kembalikan content saja — caller yang memutuskan apakah perlu disimpan
+        chain = NOTES_PROMPT | llm
+        response = chain.invoke({"context": context})
+        content = sanitize_output(response.content)
         return content
 
     @staticmethod
