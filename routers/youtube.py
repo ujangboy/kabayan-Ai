@@ -23,16 +23,16 @@ async def import_youtube(request: YoutubeImportRequest, background_tasks: Backgr
     except ValueError as e:
         return JSONResponse(status_code=400, content={"detail": str(e)})
 
-    # Duplicate check — cari material dengan external_id sama di subject yang sama
+    # Duplicate check global — video yang sama ditolak di semua mata kuliah (hindari kerja ganda)
     from models import YoutubeMetadata
     existing = db.query(Material).filter(
-        Material.subject_id == request.subject_id,
         Material.material_type == MaterialType.YOUTUBE,
         Material.external_id == video_id
     ).first()
 
     if existing:
-        return JSONResponse(status_code=409, content={"detail": "Video ini sudah diimpor ke mata kuliah ini."})
+        subject_name = existing.subject.name if existing.subject else "?"
+        return JSONResponse(status_code=409, content={"detail": f"Video ini sudah diimpor (di mata kuliah '{subject_name}')."})
 
     # Basic meta for UI immediately
     meta = source.get_metadata()
@@ -48,6 +48,12 @@ async def import_youtube(request: YoutubeImportRequest, background_tasks: Backgr
         "thumbnail": meta.get("thumbnail_url"),
         "status": "Pending"
     })
+
+    # PENTING: commit SEBELUM background task dijalankan.
+    # create() hanya flush; tanpa commit, task (session baru) tidak akan
+    # melihat material ini karena transaksi request belum di-commit
+    # (teardown dependency berjalan SETELAH background task selesai).
+    db.commit()
 
     background_tasks.add_task(youtube_service.process_youtube_async, mat.id, request.url)
 
