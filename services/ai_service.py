@@ -142,46 +142,46 @@ class AIService:
 
         prompt_str = prompt_template.format(**input_variables)
         db = SessionLocal()
-        setting_hash = settings_service.get_embedding_model(db)
+        try:
+            setting_hash = settings_service.get_embedding_model(db)
 
-        if use_cache:
-            cached = cache_service.get_cache(db, prompt_str, "", setting_hash)
-            if cached:
-                db.close()
-                return cached
+            if use_cache:
+                cached = cache_service.get_cache(db, prompt_str, "", setting_hash)
+                if cached:
+                    return cached
 
-        llm = AIService._get_llm(capability, temperature=temperature)
+            llm = AIService._get_llm(capability, temperature=temperature)
 
-        # If output_schema provided, try structured output first
-        if output_schema:
-            try:
-                structured_llm = llm.with_structured_output(output_schema)
-                result = _retry_with_backoff(lambda: structured_llm.invoke(input_variables))
-                if use_cache:
-                    cache_service.set_cache(db, prompt_str, "", setting_hash, str(result))
-                db.close()
-                if isinstance(result, BaseModel):
-                    return result.model_dump()
-                return result
-            except Exception as exc:
-                logger.warning("Structured output failed for %s, falling back to text: %s", capability, exc)
+            # If output_schema provided, try structured output first
+            if output_schema:
+                try:
+                    structured_llm = llm.with_structured_output(output_schema)
+                    result = _retry_with_backoff(lambda: structured_llm.invoke(input_variables))
+                    if use_cache:
+                        cache_service.set_cache(db, prompt_str, "", setting_hash, str(result))
+                    if isinstance(result, BaseModel):
+                        return result.model_dump()
+                    return result
+                except Exception as exc:
+                    logger.warning("Structured output failed for %s, falling back to text: %s", capability, exc)
 
-        chain = prompt_template | llm
+            chain = prompt_template | llm
 
-        response = _retry_with_backoff(lambda: chain.invoke(input_variables))
-        response_text = response.content
+            response = _retry_with_backoff(lambda: chain.invoke(input_variables))
+            response_text = response.content
 
-        # Detect truncation (finish_reason == "length" means output hit token limit)
-        finish_reason = getattr(response, 'response_metadata', {}).get('finish_reason', '')
-        if finish_reason == 'length':
-            logger.warning("Response truncated for capability=%s (hit max_tokens)", capability)
-            if response_text and not response_text.rstrip().endswith(('.', '!', '?', '```')):
-                response_text = response_text.rstrip() + "\n\n⚠️ *Catatan: Respons terpotong karena batas token.*"
+            # Detect truncation (finish_reason == "length" means output hit token limit)
+            finish_reason = getattr(response, 'response_metadata', {}).get('finish_reason', '')
+            if finish_reason == 'length':
+                logger.warning("Response truncated for capability=%s (hit max_tokens)", capability)
+                if response_text and not response_text.rstrip().endswith(('.', '!', '?', '```')):
+                    response_text = response_text.rstrip() + "\n\n⚠️ *Catatan: Respons terpotong karena batas token.*"
 
-        if use_cache:
-            cache_service.set_cache(db, prompt_str, "", setting_hash, response_text)
-        db.close()
-        return _normalize_math(response_text)
+            if use_cache:
+                cache_service.set_cache(db, prompt_str, "", setting_hash, response_text)
+            return _normalize_math(response_text)
+        finally:
+            db.close()
 
     @staticmethod
     def chat(history: List[Dict[str, str]], context: str, user_input: str) -> str:
@@ -196,37 +196,38 @@ class AIService:
         prompt_template = CHAT_SYSTEM_PROMPT_WITH_DOCS_TEMPLATE if has_docs else CHAT_SYSTEM_PROMPT_NO_DOCS_TEMPLATE
 
         db = SessionLocal()
-        setting_hash = settings_service.get_embedding_model(db)
-        if has_docs:
-            prompt_str = prompt_template.format(context=context, history=hist_str, input=user_input)
-        else:
-            prompt_str = prompt_template.format(history=hist_str, input=user_input)
-
-        cached = cache_service.get_cache(db, prompt_str, context, setting_hash)
-        if cached:
-            db.close()
-            return cached
-
-        llm = AIService._get_llm("chat")
-        if has_docs:
-            sys_msg = CHAT_SYSTEM_PROMPT_WITH_DOCS_TEMPLATE.format(context=context, history="", input="")
-        else:
-            sys_msg = CHAT_SYSTEM_PROMPT_NO_DOCS_TEMPLATE.format(history="", input="")
-        messages = [SystemMessage(content=sys_msg)]
-        for msg in history:
-            if msg["role"] == "user":
-                messages.append(HumanMessage(content=msg["content"]))
+        try:
+            setting_hash = settings_service.get_embedding_model(db)
+            if has_docs:
+                prompt_str = prompt_template.format(context=context, history=hist_str, input=user_input)
             else:
-                messages.append(AIMessage(content=msg["content"]))
-        messages.append(HumanMessage(content=user_input))
+                prompt_str = prompt_template.format(history=hist_str, input=user_input)
 
-        # REQ-03: retry
-        response = _retry_with_backoff(lambda: llm.invoke(messages))
-        response_text = response.content
+            cached = cache_service.get_cache(db, prompt_str, context, setting_hash)
+            if cached:
+                return cached
 
-        cache_service.set_cache(db, prompt_str, context, setting_hash, response_text)
-        db.close()
-        return response_text
+            llm = AIService._get_llm("chat")
+            if has_docs:
+                sys_msg = CHAT_SYSTEM_PROMPT_WITH_DOCS_TEMPLATE.format(context=context, history="", input="")
+            else:
+                sys_msg = CHAT_SYSTEM_PROMPT_NO_DOCS_TEMPLATE.format(history="", input="")
+            messages = [SystemMessage(content=sys_msg)]
+            for msg in history:
+                if msg["role"] == "user":
+                    messages.append(HumanMessage(content=msg["content"]))
+                else:
+                    messages.append(AIMessage(content=msg["content"]))
+            messages.append(HumanMessage(content=user_input))
+
+            # REQ-03: retry
+            response = _retry_with_backoff(lambda: llm.invoke(messages))
+            response_text = response.content
+
+            cache_service.set_cache(db, prompt_str, context, setting_hash, response_text)
+            return response_text
+        finally:
+            db.close()
 
     @staticmethod
     async def achat_stream(history: List[Dict[str, str]], context: str, user_input: str):
@@ -242,63 +243,63 @@ class AIService:
         prompt_template = CHAT_SYSTEM_PROMPT_WITH_DOCS_TEMPLATE if has_docs else CHAT_SYSTEM_PROMPT_NO_DOCS_TEMPLATE
 
         db = SessionLocal()
-        setting_hash = settings_service.get_embedding_model(db)
-        if has_docs:
-            prompt_str = prompt_template.format(context=context, history=hist_str, input=user_input)
-        else:
-            prompt_str = prompt_template.format(history=hist_str, input=user_input)
-
-        cached = await asyncio.to_thread(
-            cache_service.get_cache, db, prompt_str, context, setting_hash
-        )
-        if cached:
-            db.close()
-            yield cached
-            return
-
-        llm = AIService._get_llm("chat")
-        if has_docs:
-            sys_msg = CHAT_SYSTEM_PROMPT_WITH_DOCS_TEMPLATE.format(context=context, history="", input="")
-        else:
-            sys_msg = CHAT_SYSTEM_PROMPT_NO_DOCS_TEMPLATE.format(history="", input="")
-        messages = [SystemMessage(content=sys_msg)]
-        for msg in history:
-            if msg["role"] == "user":
-                messages.append(HumanMessage(content=msg["content"]))
-            else:
-                messages.append(AIMessage(content=msg["content"]))
-        messages.append(HumanMessage(content=user_input))
-
-        full_response = ""
-        last_yield = time.time()
         try:
-            async for chunk in llm.astream(messages):
-                if chunk.content:
-                    full_response += chunk.content
-                    yield chunk.content
-                    last_yield = time.time()
-                elif time.time() - last_yield > 8:
-                    yield ""
-                    last_yield = time.time()
-        except Exception as e:
-            err_str = str(e).lower()
-            # REQ-03: graceful stream error — beri tahu user, jangan crash
-            if any(x in err_str for x in ["timeout", "connection", "502", "503", "504"]):
-                yield "\n\n⚠️ Koneksi ke Groq API terputus. Coba kirim pesan lagi."
-            elif "rate limit" in err_str or "429" in err_str:
-                yield "\n\n⚠️ Limit API Groq tercapai. Tunggu sebentar lalu coba lagi."
+            setting_hash = settings_service.get_embedding_model(db)
+            if has_docs:
+                prompt_str = prompt_template.format(context=context, history=hist_str, input=user_input)
             else:
-                yield f"\n\n⚠️ Error: {str(e)}"
-            db.close()
-            return
+                prompt_str = prompt_template.format(history=hist_str, input=user_input)
 
-        # Normalize math delimiters on the full response before caching
-        # so repeated requests return already-normalized text
-        normalized_response = _normalize_math(full_response)
-        await asyncio.to_thread(
-            cache_service.set_cache, db, prompt_str, context, setting_hash, normalized_response
-        )
-        db.close()
+            cached = await asyncio.to_thread(
+                cache_service.get_cache, db, prompt_str, context, setting_hash
+            )
+            if cached:
+                yield cached
+                return
+
+            llm = AIService._get_llm("chat")
+            if has_docs:
+                sys_msg = CHAT_SYSTEM_PROMPT_WITH_DOCS_TEMPLATE.format(context=context, history="", input="")
+            else:
+                sys_msg = CHAT_SYSTEM_PROMPT_NO_DOCS_TEMPLATE.format(history="", input="")
+            messages = [SystemMessage(content=sys_msg)]
+            for msg in history:
+                if msg["role"] == "user":
+                    messages.append(HumanMessage(content=msg["content"]))
+                else:
+                    messages.append(AIMessage(content=msg["content"]))
+            messages.append(HumanMessage(content=user_input))
+
+            full_response = ""
+            last_yield = time.time()
+            try:
+                async for chunk in llm.astream(messages):
+                    if chunk.content:
+                        full_response += chunk.content
+                        yield chunk.content
+                        last_yield = time.time()
+                    elif time.time() - last_yield > 8:
+                        yield ""
+                        last_yield = time.time()
+            except Exception as e:
+                err_str = str(e).lower()
+                # REQ-03: graceful stream error — beri tahu user, jangan crash
+                if any(x in err_str for x in ["timeout", "connection", "502", "503", "504"]):
+                    yield "\n\n⚠️ Koneksi ke Groq API terputus. Coba kirim pesan lagi."
+                elif "rate limit" in err_str or "429" in err_str:
+                    yield "\n\n⚠️ Limit API Groq tercapai. Tunggu sebentar lalu coba lagi."
+                else:
+                    yield f"\n\n⚠️ Error: {str(e)}"
+                return
+
+            # Normalize math delimiters on the full response before caching
+            # so repeated requests return already-normalized text
+            normalized_response = _normalize_math(full_response)
+            await asyncio.to_thread(
+                cache_service.set_cache, db, prompt_str, context, setting_hash, normalized_response
+            )
+        finally:
+            db.close()
 
 
 ai_service = AIService()

@@ -38,9 +38,13 @@ class CacheService:
                 response=response
             ))
         db.flush()
+        # COMMIT PENTING: tanpa commit, perubahan hilang saat session ditutup
+        # (session.close() me-rollback transaksi yang belum di-commit)
+        db.commit()
 
     @staticmethod
     def invalidate_all(db: Session):
         cache_repository.invalidate_all(db)
+        db.commit()
 
 cache_service = CacheService()
