@@ -97,6 +97,7 @@ async def get_audio_status(material_id: int, db: Session = Depends(get_db)):
         "status": audio_gen.status,
         "filepath": audio_gen.filepath,
         "engine_used": audio_gen.engine_used,
+        "failure_reason": audio_gen.failure_reason,
         "updated_at": audio_gen.created_at.isoformat() if audio_gen.created_at else None
     })
 

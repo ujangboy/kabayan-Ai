@@ -48,7 +48,8 @@ export default function MateriPage() {
 
   const generateAudioMutation = useMutation({
     mutationFn: (id) => audioAPI.generate(id),
-    onSuccess: () => {
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries(['audioStatus']);
       toast.info('Audio sedang dibuat di latar belakang. Cek kembali dalam beberapa menit.');
     },
     onError: (err) => {
@@ -72,7 +73,7 @@ export default function MateriPage() {
     const { data, isFetching } = useQuery({
       queryKey: ['audioStatus', materialId],
       queryFn: () => audioAPI.status(materialId).then((res) => res.data),
-      refetchInterval: 5000,
+      refetchInterval: (query) => (query.state.data?.status === 'processing' ? 5000 : false),
       enabled: !!materialId,
       staleTime: 5000,
     });
@@ -96,8 +97,22 @@ export default function MateriPage() {
       );
     }
 
-
-    return <span className="text-text-muted text-[10px]">Audio gagal</span>;
+    return (
+      <div className="space-y-1">
+        <span className="badge badge-danger text-[10px]">Audio gagal</span>
+        {data.failure_reason && (
+          <div className="text-[10px] text-danger leading-tight max-w-[180px] break-words" title={data.failure_reason}>
+            {data.failure_reason}
+          </div>
+        )}
+        <button
+          onClick={() => handleAudio(materialId)}
+          className="text-[10px] text-primary hover:underline inline-flex items-center gap-1"
+        >
+          <Play size={10} /> Coba lagi
+        </button>
+      </div>
+    );
   }
   return (
     <div className="flex-1 overflow-y-auto p-6 md:p-10">
@@ -428,7 +443,9 @@ function YoutubeModal({ onClose, subjects, onSuccess }) {
               className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm text-text focus:outline-none focus:border-red-500/50 transition-colors"
             />
             <p className="text-[10px] text-text-muted mt-1">
-              Subtitle/CC otomatis digunakan jika tersedia. Jika tidak ada, Whisper AI akan mentranskripsi audio secara otomatis.
+              Subtitle/CC otomatis digunakan jika tersedia. Jika tidak ada, Whisper AI akan mentranskripsikan audio.
+              <br />
+              Video sering diblokir YouTube? Simpan file <code className="text-primary">cookies.txt</code> (dari ekstensi browser "Get cookies.txt") di folder <code className="text-primary">storage/</code> untuk menembus blokir.
             </p>
           </div>
           <div className="flex justify-end gap-2 pt-2">

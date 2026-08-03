@@ -186,6 +186,7 @@ class AudioGeneration(Base):
     material_id = Column(Integer, ForeignKey("materials.id", ondelete="CASCADE"))
     filepath = Column(String)
     status = Column(String, default="processing") # processing, done, failed
+    failure_reason = Column(String, nullable=True)
     engine_used = Column(String)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
