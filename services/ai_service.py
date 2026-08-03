@@ -120,7 +120,7 @@ class AIService:
             api_key=config.GROQ_API_KEY,
             model_name=CapabilityRouter.get_model(capability),
             temperature=temperature if temperature is not None else config.TEMPERATURE,
-            max_tokens=16384,
+            max_tokens=4000,
             max_retries=2,
             timeout=timeout,
         )

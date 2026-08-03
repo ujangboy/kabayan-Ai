@@ -80,7 +80,7 @@ class FlashcardService:
             capability="flashcard",
             prompt_template=FLASHCARD_PROMPT,
             input_variables={"context": context, "count": count},
-            use_cache=False,
+            use_cache=True,
             temperature=0.7,
         )
 

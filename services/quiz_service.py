@@ -45,7 +45,7 @@ class QuizService:
                 "difficulty": difficulty,
                 "difficulty_instruction": difficulty_instruction,
             },
-            use_cache=False,
+            use_cache=True,
             temperature=0.7,
         )
 

@@ -3,25 +3,18 @@ from prompts.notes import NOTES_PROMPT
 from repositories.note_repository import note_repository
 from services.json_utils import sanitize_output
 from sqlalchemy.orm import Session
-from langchain_groq import ChatGroq
-from services.ai_service import CapabilityRouter
-import config
 
 class NotesService:
     @staticmethod
     def generate_notes(db: Session, subject_id: int, title: str, context: str):
-        # Use lower max_tokens to stay within Groq free-tier TPM limit (8000)
-        llm = ChatGroq(
-            api_key=config.GROQ_API_KEY,
-            model_name=CapabilityRouter.get_model("reasoning"),
+        response = ai_service.generate(
+            capability="reasoning",
+            prompt_template=NOTES_PROMPT,
+            input_variables={"context": context},
+            use_cache=True,
             temperature=0.7,
-            max_tokens=4000,
-            max_retries=2,
-            timeout=90.0,
         )
-        chain = NOTES_PROMPT | llm
-        response = chain.invoke({"context": context})
-        content = sanitize_output(response.content)
+        content = sanitize_output(response)
         return content
 
     @staticmethod
@@ -55,7 +48,7 @@ class NotesService:
         if action == 'rapikan':
             from langchain_core.prompts import PromptTemplate
             prompt = PromptTemplate.from_template("Rapikan format dan bahasa dari catatan berikut tanpa mengubah makna aslinya:\n\n{context}")
-            new_content = sanitize_output(ai_service.generate("reasoning", prompt, {"context": note.content}, use_cache=False))
+            new_content = sanitize_output(ai_service.generate("reasoning", prompt, {"context": note.content}, use_cache=True))
             note_repository.update(db, note, {"content": new_content})
             updated_content = new_content
             
@@ -68,7 +61,7 @@ class NotesService:
         elif action == 'jelaskan':
             from langchain_core.prompts import PromptTemplate
             prompt = PromptTemplate.from_template("Jelaskan catatan berikut dengan bahasa yang lebih sederhana dan mudah dipahami:\n\n{context}")
-            explanation = sanitize_output(ai_service.generate("reasoning", prompt, {"context": note.content}, use_cache=False))
+            explanation = sanitize_output(ai_service.generate("reasoning", prompt, {"context": note.content}, use_cache=True))
             new_content = note.content + "\n\n--- PENJELASAN AI ---\n" + explanation
             note_repository.update(db, note, {"content": new_content})
             updated_content = new_content
