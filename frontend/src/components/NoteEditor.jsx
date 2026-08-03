@@ -390,9 +390,14 @@ export default function NoteEditor({ content, onSave, noteId, defaultMode = 'vie
     if (mode === 'edit') {
       (async () => {
         const html = await toHtml(content || '');
-        editor.commands.setContent(html, false);
         lastSavedRef.current = html;
-        setTimeout(() => editor.commands.focus('end'), 50);
+        // Defer setContent ke scheduler task — memanggilnya langsung di dalam
+        // lifecycle method memicu warning "flushSync was called from inside a
+        // lifecycle method" dari Tiptap ReactNodeViewRenderer.
+        setTimeout(() => {
+          editor.commands.setContent(html, false);
+          setTimeout(() => editor.commands.focus('end'), 50);
+        }, 0);
       })();
     }
   }, [noteId, mode, editor, content]);
