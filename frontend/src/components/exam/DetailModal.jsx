@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -17,6 +17,12 @@ export default function DetailModal({ historySessionId, onClose, onResume, pendi
   const queryClient = useQueryClient();
   const [tab, setTab] = useState(pendingPlanTab ? 'plan' : 'overview');
 
+  // Lifted up from StudyPlanTab so refetch() doesn't reset these states
+  const practiceCounter = useRef(0);
+  const [practiceMode, setPracticeMode]   = useState(null); // null | { itemId, topic, questions, _v }
+  const [practiceError, setPracticeError] = useState('');
+  const [loadingItemId, setLoadingItemId] = useState(null);
+
   useEffect(() => {
     if (pendingPlanTab && tab === 'plan') setPendingPlanTab(false);
   }, [tab]);
@@ -28,7 +34,14 @@ export default function DetailModal({ historySessionId, onClose, onResume, pendi
 
   const toggleMutation = useMutation({
     mutationFn: (itemId) => sessionsAPI.togglePlanItem(itemId),
-    onSuccess: () => { refetch(); queryClient.invalidateQueries(['exam-sessions']); },
+    // Skip refetch while practice is active — refetch would rebuild plan prop
+    // and cause InlinePractice to flicker. We refetch when practice closes instead.
+    onSuccess: () => {
+      if (!practiceMode) {
+        refetch();
+        queryClient.invalidateQueries(['exam-sessions']);
+      }
+    },
   });
 
   if (isLoading) {
@@ -72,7 +85,7 @@ export default function DetailModal({ historySessionId, onClose, onResume, pendi
             { id:'plan',     label:'Study Plan', icon: Calendar  },
             { id:'attempts', label:'Attempts',   icon: RotateCcw },
           ].map(({ id, label, icon: Icon }) => (
-            <button key={id} onClick={() => setTab(id)}
+            <button type="button" key={id} onClick={() => setTab(id)}
               className={cn('flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
                 tab === id ? 'bg-primary text-white' : 'bg-card text-text-secondary hover:text-text border border-border')}>
               <Icon size={11} />{label}
@@ -84,13 +97,29 @@ export default function DetailModal({ historySessionId, onClose, onResume, pendi
       <div className="flex-1 overflow-y-auto p-5">
         {tab === 'overview'  && <OverviewTab data={data} />}
         {tab === 'review'    && <ReviewTab attempt={latestAttempt} />}
-        {tab === 'plan'      && <StudyPlanTab plan={data.study_plan} sessionId={historySessionId} onToggle={(id) => toggleMutation.mutate(id)} onPlanSaved={() => refetch()} />}
+        {tab === 'plan'      && <StudyPlanTab
+          plan={data.study_plan}
+          sessionId={historySessionId}
+          onToggle={(id) => toggleMutation.mutate(id)}
+          onPlanSaved={() => refetch()}
+          practiceMode={practiceMode}
+          setPracticeMode={setPracticeMode}
+          practiceError={practiceError}
+          setPracticeError={setPracticeError}
+          loadingItemId={loadingItemId}
+          setLoadingItemId={setLoadingItemId}
+          onPracticeClose={() => {
+            // Refetch plan data now that practice is closed
+            refetch();
+            queryClient.invalidateQueries(['exam-sessions']);
+          }}
+        />}
         {tab === 'attempts'  && <AttemptsTab attempts={data.attempts || []} />}
       </div>
 
       <div className="p-4 border-t border-border shrink-0 flex gap-2 flex-wrap">
         <RetryButton historySessionId={historySessionId} sessionData={data} onClose={onClose} onResume={onResume} />
-        <button onClick={onClose} className="btn-ghost text-sm border border-border ml-auto">
+        <button type="button" onClick={onClose} className="btn-ghost text-sm border border-border ml-auto">
           Tutup
         </button>
       </div>
@@ -233,7 +262,7 @@ function ReviewTab({ attempt }) {
           <div key={r.id || i}
             className={cn('rounded-xl border overflow-hidden',
               r.is_correct ? 'border-success/25' : 'border-danger/25')}>
-            <button onClick={() => setExpandedIdx(expandedIdx === i ? null : i)}
+            <button type="button" onClick={() => setExpandedIdx(expandedIdx === i ? null : i)}
               className="w-full flex items-center gap-3 p-3 text-left hover:bg-background/40 transition-colors">
               <div className={cn('w-6 h-6 rounded-full flex items-center justify-center shrink-0',
                 r.is_correct ? 'bg-success' : 'bg-danger')}>
@@ -292,6 +321,7 @@ function ReviewTab({ attempt }) {
                       {r.tips && <span className="flex items-center gap-1 text-primary"><Lightbulb size={10}/>{r.tips}</span>}
                       {!r.ai_explanation && !expl?.text && (
                         <button
+                          type="button"
                           onClick={() => fetchExplanation(r, i)}
                           disabled={expl?.loading}
                           className="ml-auto flex items-center gap-1 px-2 py-0.5 rounded-lg bg-accent-teal/10 text-accent-teal border border-accent-teal/20 hover:bg-accent-teal/20 transition-colors disabled:opacity-50"
@@ -428,6 +458,7 @@ function InlinePractice({ questions, topic, onComplete, onClose, onRetryTopic })
                   </div>
                   {onRetryTopic && (
                     <button
+                      type="button"
                       disabled={retryingTopic !== null}
                       onClick={async () => {
                         if (retryingTopic !== null) return;
@@ -454,17 +485,18 @@ function InlinePractice({ questions, topic, onComplete, onClose, onRetryTopic })
         {/* Buttons */}
         <div className="flex gap-2 flex-wrap">
           {score >= 100 ? (
-            <button onClick={() => onComplete && onComplete()} className="btn-primary text-xs px-4 py-1.5 flex items-center gap-1">
+            <button onClick={() => onComplete && onComplete()} type="button" className="btn-primary text-xs px-4 py-1.5 flex items-center gap-1">
               <Check size={12} /> Selesai
             </button>
           ) : (
-            <button onClick={onClose} className="btn-ghost text-xs border border-border px-4 py-1.5">
+            <button type="button" onClick={onClose} className="btn-ghost text-xs border border-border px-4 py-1.5">
               Tutup
             </button>
           )}
           {/* Ulangi topik ini — re-fetch soal untuk topik yang sama */}
           {topic && onRetryTopic && (
             <button
+              type="button"
               disabled={retryingTopic !== null}
               onClick={async () => {
                 if (retryingTopic !== null) return;
@@ -501,7 +533,7 @@ function InlinePractice({ questions, topic, onComplete, onClose, onRetryTopic })
         <div className="flex items-center gap-2">
           <span className="text-[10px] text-success">{correctCount}✓</span>
           <span className="text-[10px] text-danger">{wrongCount}✗</span>
-          <button onClick={onClose} className="text-[10px] text-text-muted hover:text-text">Tutup</button>
+          <button type="button" onClick={onClose} className="text-[10px] text-text-muted hover:text-text">Tutup</button>
         </div>
       </div>
 
@@ -518,7 +550,7 @@ function InlinePractice({ questions, topic, onComplete, onClose, onRetryTopic })
             const sel = userAnswer === key || userAnswer === opt;
             const isCorrectOpt = key === q.answer || opt.startsWith(q.answer + '.');
             return (
-              <button key={i} onClick={() => selectAnswer(key)} disabled={showExpl}
+              <button type="button" key={i} onClick={() => selectAnswer(key)} disabled={showExpl}
                 className={cn('w-full text-left p-2.5 rounded-lg border text-xs transition-all',
                   showExpl && isCorrectOpt ? 'bg-success/10 border-success/30 text-success' :
                   showExpl && sel && !isCorrectOpt ? 'bg-danger/10 border-danger/30 text-danger' :
@@ -538,7 +570,7 @@ function InlinePractice({ questions, topic, onComplete, onClose, onRetryTopic })
 
       {/* Jawab button */}
       {!showExpl && (
-        <button onClick={handleJawab} disabled={!userAnswer}
+        <button type="button" onClick={handleJawab} disabled={!userAnswer}
           className="btn-primary text-xs px-4 py-1.5 disabled:opacity-40">
           Jawab
         </button>
@@ -588,7 +620,7 @@ function InlinePractice({ questions, topic, onComplete, onClose, onRetryTopic })
 
       {/* Next / Selesai */}
       {showExpl && (
-        <button onClick={handleNext}
+        <button type="button" onClick={handleNext}
           className="btn-primary text-xs px-4 py-1.5 flex items-center gap-1">
           {isLast ? <><Check size={12} /> Lihat Hasil</> : <><ArrowRight size={12} /> Soal Berikutnya</>}
         </button>
@@ -597,13 +629,22 @@ function InlinePractice({ questions, topic, onComplete, onClose, onRetryTopic })
   );
 }
 
-function StudyPlanTab({ plan, sessionId, onToggle, onPlanSaved }) {
+function StudyPlanTab({ plan, sessionId, onToggle, onPlanSaved,
+  practiceMode, setPracticeMode,
+  practiceError, setPracticeError,
+  loadingItemId, setLoadingItemId,
+  onPracticeClose,
+}) {
   const navigate = useNavigate();
   const today = new Date().toISOString().split('T')[0];
   const [startDate, setStartDate] = useState(plan?.start_date || today);
   const [dateSaving, setDateSaving] = useState(false);
   const [dateError, setDateError] = useState('');
-  const [practiceMode, setPracticeMode] = useState(null); // null | { itemId, topic, questions }
+
+  // Sync startDate when plan prop refreshes from outside
+  useEffect(() => {
+    if (plan?.start_date) setStartDate(plan.start_date);
+  }, [plan?.start_date]);
 
   const DAYS_ID   = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
   const MONTHS_ID = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
@@ -679,6 +720,14 @@ function StudyPlanTab({ plan, sessionId, onToggle, onPlanSaved }) {
       </div>
       {dateError && <p className="text-danger text-xs mb-2">{dateError}</p>}
 
+      {practiceError && (
+        <div className="flex items-start gap-2 p-3 rounded-xl bg-danger/5 border border-danger/20 text-xs text-danger">
+          <AlertCircle size={13} className="shrink-0 mt-0.5" />
+          <span className="flex-1">{practiceError}</span>
+          <button type="button" onClick={() => setPracticeError('')} className="shrink-0 text-danger/60 hover:text-danger">✕</button>
+        </div>
+      )}
+
       {plan.motivational_message && (
         <div className="p-3 rounded-xl bg-primary/5 border border-primary/15 flex items-start gap-2">
           <Award size={14} className="text-primary mt-0.5 shrink-0" />
@@ -719,7 +768,7 @@ function StudyPlanTab({ plan, sessionId, onToggle, onPlanSaved }) {
                 inPractice ? 'border-primary/30 bg-primary/5' :
                 item.completed ? 'bg-success/5 border-success/20 opacity-70' : 'bg-card border-border')}>
               <div className={cn('flex items-start gap-3 p-3', inPractice && 'border-b border-primary/10')}>
-                <button onClick={() => onToggle(item.id)}
+                <button type="button" onClick={() => onToggle(item.id)}
                   className={cn('w-5 h-5 rounded-md border flex items-center justify-center shrink-0 mt-0.5 transition-all',
                     item.completed ? 'bg-success border-success text-white' : 'border-border hover:border-primary')}>
                   {item.completed && <Check size={11} />}
@@ -749,27 +798,36 @@ function StudyPlanTab({ plan, sessionId, onToggle, onPlanSaved }) {
                       </p>
                       {item.resources.includes('soal latihan') && !item.completed && (
                         <button
+                          type="button"
+                          disabled={loadingItemId === item.id}
                           onClick={async (e) => {
+                            e.preventDefault();
                             e.stopPropagation();
+                            setPracticeError('');
+                            setLoadingItemId(item.id);
                             try {
-                               const r = await sessionsAPI.fetchPracticeQuestions(sessionId, item.topic);
+                              const r = await sessionsAPI.fetchPracticeQuestions(sessionId, item.topic);
                               if (r.data?.detail) throw new Error(r.data.detail);
                               if (!r.data?.questions?.length) throw new Error('Tidak ada soal tersedia untuk topik ini.');
-                              setPracticeMode({ itemId: item.id, topic: item.topic, questions: r.data.questions });
+                              setPracticeMode({ itemId: item.id, topic: item.topic, questions: r.data.questions, _v: ++practiceCounter.current });
                             } catch (err) {
-                              alert(err.response?.data?.detail || err.message || 'Gagal memuat soal latihan.');
+                              setPracticeError(err.message || 'Gagal memuat soal latihan.');
+                            } finally {
+                              setLoadingItemId(null);
                             }
                           }}
                           className="text-[10px] px-2 py-1 rounded bg-warning text-black font-bold
-                                     hover:bg-warning/80 transition-colors shrink-0 shadow-sm">
-                          Mulai Latihan →
+                                     hover:bg-warning/80 transition-colors shrink-0 shadow-sm disabled:opacity-50 flex items-center gap-1">
+                          {loadingItemId === item.id
+                            ? <><Loader2 size={9} className="animate-spin" /> Memuat...</>
+                            : 'Mulai Latihan →'}
                         </button>
                       )}
                     </div>
                   )}
                 </div>
                 {!inPractice && !item.completed && (
-                  <button onClick={() => onToggle(item.id)}
+                  <button type="button" onClick={() => onToggle(item.id)}
                     className="text-[10px] px-2 py-0.5 rounded border border-border text-text-muted
                                hover:border-warning/40 hover:text-warning transition-colors shrink-0">
                     Lewati
@@ -780,22 +838,26 @@ function StudyPlanTab({ plan, sessionId, onToggle, onPlanSaved }) {
               {/* Inline Practice */}
               {inPractice && (
                 <InlinePractice
-                  key={`${practiceMode.topic}-${practiceMode.questions[0]?.id || 'practice'}`}
+                  key={`${practiceMode.topic}-${practiceMode._v || 'practice'}`}
                   questions={practiceMode.questions}
                   topic={practiceMode.topic}
                   onComplete={() => {
                     onToggle(item.id);
                     setPracticeMode(null);
+                    onPracticeClose?.();
                   }}
-                  onClose={() => setPracticeMode(null)}
+                  onClose={() => {
+                    setPracticeMode(null);
+                    onPracticeClose?.();
+                  }}
                   onRetryTopic={async (topic) => {
                     try {
                       const r = await sessionsAPI.fetchPracticeQuestions(sessionId, topic);
                       if (r.data?.detail) throw new Error(r.data.detail);
                       if (!r.data?.questions?.length) throw new Error('Tidak ada soal tersedia untuk topik ini.');
-                      setPracticeMode({ itemId: item.id, topic, questions: r.data.questions });
+                      setPracticeMode({ itemId: item.id, topic, questions: r.data.questions, _v: ++practiceCounter.current });
                     } catch (err) {
-                      alert(err.response?.data?.detail || err.message || 'Gagal memuat soal.');
+                      setPracticeError(err.message || 'Gagal memuat soal.');
                     }
                   }}
                 />
@@ -896,7 +958,7 @@ function RetryButton({ historySessionId, sessionData, onClose, onResume }) {
           <option value="analysis">Analisis</option>
           <option value="calculation">Perhitungan</option>
         </select>
-        <button onClick={handleRetry} disabled={loading} className="btn-primary text-sm flex items-center gap-1.5">
+        <button type="button" onClick={handleRetry} disabled={loading} className="btn-primary text-sm flex items-center gap-1.5">
           {loading
             ? <><Loader2 size={13} className="animate-spin"/> Menyiapkan...</>
             : <><RotateCcw size={13}/> {isDifferentType ? 'Buat Baru' : 'Latihan Lagi'}</>}
