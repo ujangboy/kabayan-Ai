@@ -10,13 +10,28 @@ const api = axios.create({
 // ─── Response interceptor ─────────────────────────────────────────────────────
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
+    const status = error.response?.status;
+
+    // Retry once on 502/503 — these happen transiently when the dev server
+    // proxy hasn't warmed up yet or the backend is briefly restarting.
+    const config = error.config;
+    if ((status === 502 || status === 503) && !config._retried) {
+      config._retried = true;
+      await new Promise((res) => setTimeout(res, 800));
+      try {
+        return await api(config);
+      } catch {
+        // fall through to normal error handling below
+      }
+    }
+
     if (import.meta.env.DEV) {
       console.error('[API Error]', error);
     }
     const safeMessage = extractErrorMessage(error);
     const normalized = new Error(safeMessage);
-    normalized.status   = error.response?.status;
+    normalized.status   = status;
     normalized.code     = error.response?.data?.code;
     normalized.original = error;
     return Promise.reject(normalized);
