@@ -1,10 +1,12 @@
 import { useState, useRef, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { FileText, Plus, Trash2, Pin, Save, ChevronLeft, MoreHorizontal } from 'lucide-react';
-import { notesAPI } from '@/services/api';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FileText, Plus, Trash2, Pin, Save, ChevronLeft, MoreHorizontal, Sparkles, X } from 'lucide-react';
+import { notesAPI, subjectAPI } from '@/services/api';
 import { formatDate, formatDateTime } from '@/utils';
 import { cn } from '@/utils';
 import NoteEditor from '@/components/NoteEditor';
+import MaterialPicker from '@/components/MaterialPicker';
 
 // ─── Auto-title: extract title from content (zero AI) ─────────────────────
 function extractTitle(content) {
@@ -43,6 +45,7 @@ export default function NotebookPage() {
   const queryClient = useQueryClient();
   const [selectedNote, setSelectedNote] = useState(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [showGeneratePanel, setShowGeneratePanel] = useState(false);
   const createMutexRef = useRef(false);
   // Refs to avoid stale closures in callbacks
   const rawNotesRef = useRef([]);
@@ -54,7 +57,13 @@ export default function NotebookPage() {
     queryFn: () => notesAPI.getAll().then(r => r.data),
   });
 
+  const { data: subjectData } = useQuery({
+    queryKey: ['subjects'],
+    queryFn: () => subjectAPI.getAll().then(r => r.data),
+  });
+
   const rawNotes = notesData?.notes || [];
+  const subjects = subjectData?.subjects || [];
 
   const notes = [...rawNotes].sort((a, b) => {
     if (!!a.is_pinned !== !!b.is_pinned) return a.is_pinned ? -1 : 1;
@@ -238,18 +247,27 @@ export default function NotebookPage() {
         {/* Sidebar header */}
         <div className="px-4 pt-4 pb-3 flex items-center justify-between">
           <h2 className="text-sm font-semibold text-text">Catatan</h2>
-          <button
-            onClick={handleCreateNote}
-            disabled={isCreating}
-            className={cn(
-              'p-1.5 rounded-lg transition-all duration-150',
-              'text-primary hover:bg-primary/10',
-              isCreating && 'opacity-50 pointer-events-none'
-            )}
-            title="Catatan Baru"
-          >
-            <Plus size={16} />
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setShowGeneratePanel(true)}
+              className="p-1.5 rounded-lg transition-all duration-150 text-primary hover:bg-primary/10"
+              title="Generate dengan AI"
+            >
+              <Sparkles size={15} />
+            </button>
+            <button
+              onClick={handleCreateNote}
+              disabled={isCreating}
+              className={cn(
+                'p-1.5 rounded-lg transition-all duration-150',
+                'text-primary hover:bg-primary/10',
+                isCreating && 'opacity-50 pointer-events-none'
+              )}
+              title="Catatan Baru"
+            >
+              <Plus size={16} />
+            </button>
+          </div>
         </div>
 
         {/* Note list */}
@@ -323,6 +341,21 @@ export default function NotebookPage() {
           <EmptyState onCreate={handleCreateNote} isCreating={isCreating} />
         )}
       </div>
+
+      {/* ═══ Generate Panel (slide from right) ═══ */}
+      <AnimatePresence>
+        {showGeneratePanel && (
+          <GeneratePanel
+            subjects={subjects}
+            onClose={() => setShowGeneratePanel(false)}
+            onNoteCreated={(note) => {
+              setShowGeneratePanel(false);
+              queryClient.invalidateQueries(['notes']);
+              setSelectedNote(note);
+            }}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -491,5 +524,184 @@ function EmptyState({ onCreate, isCreating }) {
         {isCreating ? 'Membuat...' : 'Catatan Baru'}
       </button>
     </div>
+  );
+}
+
+// ─── Generate Panel (slide from right) ─────────────────────────────────────
+function GeneratePanel({ subjects, onClose, onNoteCreated }) {
+  const [subjectId, setSubjectId] = useState('');
+  const [selectedMaterialIds, setSelectedMaterialIds] = useState([]);
+  const [topic, setTopic] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [error, setError] = useState('');
+  const panelRef = useRef(null);
+
+  const handleGenerate = async () => {
+    if (!subjectId) { setError('Pilih mata kuliah terlebih dahulu.'); return; }
+    if (selectedMaterialIds.length === 0) { setError('Pilih minimal satu materi.'); return; }
+
+    setError('');
+    setIsGenerating(true);
+    try {
+      const payload = {
+        subject_id: Number(subjectId),
+        material_ids: selectedMaterialIds.join(','),
+      };
+      if (topic.trim()) payload.title = topic.trim().slice(0, 80);
+
+      const res = await notesAPI.generate(payload);
+      const result = res.data;
+
+      // Save the generated note to DB
+      const saveRes = await notesAPI.create(
+        result.title || topic.trim() || 'Catatan AI',
+        result.content || '',
+        Number(subjectId)
+      );
+      const noteId = saveRes.data?.note_id;
+
+      if (!noteId) {
+        setError('Catatan berhasil dibuat tapi gagal dimuat. Muat ulang halaman.');
+        return;
+      }
+
+      // Fetch full note object and pass back
+      const listRes = await notesAPI.getAll();
+      const allNotes = listRes.data?.notes || [];
+      const newNote = allNotes.find(n => n.id === noteId);
+      if (newNote) {
+        onNoteCreated(newNote);
+      } else {
+        // Fallback: construct note from what we have
+        onNoteCreated({
+          id: noteId,
+          title: result.title || topic.trim() || 'Catatan AI',
+          content: result.content || '',
+          created_at: new Date().toISOString(),
+          is_pinned: false,
+          subject: subjects.find(s => s.id === Number(subjectId)) || null,
+        });
+      }
+    } catch (err) {
+      setError(err.message || 'Gagal generate catatan.');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  return (
+    <>
+      {/* Backdrop */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.15 }}
+        className="fixed inset-0 z-40 bg-background/40 backdrop-blur-sm"
+        onClick={onClose}
+      />
+
+      {/* Panel */}
+      <motion.div
+        ref={panelRef}
+        initial={{ x: '100%' }}
+        animate={{ x: 0 }}
+        exit={{ x: '100%' }}
+        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+        className="fixed right-0 top-0 bottom-0 z-50 w-full max-w-md bg-sidebar border-l border-border shadow-2xl flex flex-col"
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border shrink-0">
+          <div className="flex items-center gap-2">
+            <Sparkles size={18} className="text-primary" />
+            <h3 className="font-semibold text-text text-sm">Generate dengan AI</h3>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg text-text-muted hover:text-text hover:bg-card transition-colors"
+          >
+            <X size={16} />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+          {/* Subject selector */}
+          <div>
+            <label className="text-xs font-medium text-text-secondary mb-1.5 block">
+              Mata Kuliah *
+            </label>
+            <select
+              value={subjectId}
+              onChange={(e) => {
+                setSubjectId(e.target.value);
+                setSelectedMaterialIds([]);
+                setError('');
+              }}
+              className="w-full px-3 py-2 bg-background border border-border rounded-xl text-sm text-text focus:outline-none focus:border-primary transition-colors"
+            >
+              <option value="">-- Pilih Mata Kuliah --</option>
+              {subjects.map(s => (
+                <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Material picker */}
+          {subjectId && (
+            <MaterialPicker
+              subjectId={Number(subjectId)}
+              selectedMaterialIds={selectedMaterialIds}
+              onSelectionChange={setSelectedMaterialIds}
+            />
+          )}
+
+          {/* Topic input */}
+          <div>
+            <label className="text-xs font-medium text-text-secondary mb-1.5 block">
+              Topik / Judul <span className="text-text-muted font-normal">(opsional)</span>
+            </label>
+            <input
+              type="text"
+              value={topic}
+              onChange={(e) => setTopic(e.target.value)}
+              placeholder="Contoh: Hukum Newton, Sistem Reproduksi..."
+              className="w-full px-3 py-2 bg-background border border-border rounded-xl text-sm text-text focus:outline-none focus:border-primary transition-colors placeholder:text-text-muted/40"
+              onKeyDown={(e) => { if (e.key === 'Enter' && !isGenerating) handleGenerate(); }}
+            />
+          </div>
+
+          {/* Error */}
+          {error && (
+            <p className="text-xs text-danger bg-danger/5 px-3 py-2 rounded-xl">{error}</p>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="px-5 py-3 border-t border-border shrink-0">
+          <button
+            onClick={handleGenerate}
+            disabled={isGenerating || !subjectId || selectedMaterialIds.length === 0}
+            className={cn(
+              'w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all',
+              'bg-primary text-white hover:bg-primary/90 shadow-sm',
+              (isGenerating || !subjectId || selectedMaterialIds.length === 0) && 'opacity-50 pointer-events-none'
+            )}
+          >
+            {isGenerating ? (
+              <>
+                <span className="animate-spin">⏳</span>
+                AI sedang menulis...
+              </>
+            ) : (
+              <>
+                <Sparkles size={15} />
+                Generate Catatan
+              </>
+            )}
+          </button>
+        </div>
+      </motion.div>
+    </>
   );
 }

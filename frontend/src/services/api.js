@@ -68,6 +68,10 @@ export const notesAPI = {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     });
   },
+  generate: (payload) => api.post('/notes/generate', payload, {
+    headers: { 'Content-Type': 'application/json' },
+    timeout: 120000,
+  }),
   delete: (id) => api.post(`/notes/${id}/delete`),
   clear: () => api.post('/notes/clear'),
   rename: (id, title) => api.put(`/notes/${id}/rename`,
