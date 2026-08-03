@@ -117,16 +117,37 @@ function Sep() {
 function FontSizeDropdown({ editor, floating = false }) {
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState('bottom');
+  const [liveSize, setLiveSize] = useState(null);
+  const wrapRef = useRef(null);
+
+  // Reactive: ikuti ukuran font teks di cursor/selection.
+  // HANYA untuk floating bubble (top toolbar statis).
+  useEffect(() => {
+    if (!editor || !floating) return;
+    const sync = () => {
+      const attrs = editor.getAttributes('textStyle') || {};
+      const raw = attrs.fontSize;
+      const px = raw ? parseInt(String(raw).replace('px', ''), 10) : 14;
+      setLiveSize(Number.isFinite(px) ? px : 14);
+    };
+    sync();
+    editor.on('selectionUpdate', sync);
+    editor.on('transaction', sync);
+    return () => {
+      editor.off('selectionUpdate', sync);
+      editor.off('transaction', sync);
+    };
+  }, [editor, floating]);
 
   const attrs = editor?.getAttributes('textStyle') || {};
   const raw = attrs.fontSize;
   const px = raw ? parseInt(String(raw).replace('px', ''), 10) : 14;
-  const label = Number.isFinite(px) ? px : 14;
+  const label = floating && liveSize !== null ? liveSize : (Number.isFinite(px) ? px : 14);
 
   // Decide popup direction based on available space
   const measure = () => {
     if (!open || !floating) return;
-    const el = document.querySelector('[data-fontsize-trigger]');
+    const el = wrapRef.current;
     if (!el) return;
     const rect = el.getBoundingClientRect();
     setPos(rect.top > 260 ? 'top' : 'bottom');
@@ -147,10 +168,9 @@ function FontSizeDropdown({ editor, floating = false }) {
   };
 
   return (
-    <div className="relative shrink-0">
+    <div ref={wrapRef} className="relative shrink-0">
       <button
         type="button"
-        data-fontsize-trigger
         onMouseDown={(e) => e.preventDefault()}
         onClick={() => setOpen(v => !v)}
         title="Ukuran Font"
@@ -301,7 +321,7 @@ function FloatingToolbar({ editor, editorMode }) {
 
     const handleSelectionChange = () => {
       const sel = window.getSelection();
-      if (!sel || sel.isCollapsed || !sel.rangeCount) {
+      if (!sel || !sel.rangeCount) {
         setPos(null);
         return;
       }
@@ -311,6 +331,17 @@ function FloatingToolbar({ editor, editorMode }) {
         setPos(null);
         return;
       }
+
+      // Collapsed caret (cursor tanpa seleksi): tampilkan toolbar hanya jika
+      // teks di posisi cursor memiliki font-size khusus.
+      if (sel.isCollapsed) {
+        const attrs = editor?.getAttributes('textStyle') || {};
+        if (!attrs.fontSize) {
+          setPos(null);
+          return;
+        }
+      }
+
       const rect = range.getBoundingClientRect();
       // Clamp x so toolbar doesn't go off-screen
       const clampedX = Math.max(160, Math.min(rect.left + rect.width / 2, window.innerWidth - 160));
@@ -319,7 +350,7 @@ function FloatingToolbar({ editor, editorMode }) {
 
     document.addEventListener('selectionchange', handleSelectionChange);
     return () => document.removeEventListener('selectionchange', handleSelectionChange);
-  }, [editorMode]);
+  }, [editorMode, editor]);
 
   // Close color popup on outside click
   useEffect(() => {
