@@ -1,45 +1,57 @@
 import { useState, useRef, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { motion, AnimatePresence } from 'framer-motion';
-import { FileText, Plus, Trash2, Edit3, X, Book, Pin, Save } from 'lucide-react';
-import { notesAPI, subjectAPI } from '@/services/api';
-import { formatDate } from '@/utils';
+import { FileText, Plus, Trash2, Pin, Save, ChevronLeft, MoreHorizontal } from 'lucide-react';
+import { notesAPI } from '@/services/api';
+import { formatDate, formatDateTime } from '@/utils';
 import { cn } from '@/utils';
 import NoteEditor from '@/components/NoteEditor';
-import MaterialPicker from '@/components/MaterialPicker';
 
-const COLORS = [
-  { border: 'border-l-primary',       dot: 'bg-primary'       },
-  { border: 'border-l-accent-teal',   dot: 'bg-accent-teal'   },
-  { border: 'border-l-accent-purple', dot: 'bg-accent-purple'  },
-  { border: 'border-l-warning',       dot: 'bg-warning'       },
-  { border: 'border-l-accent-blue',   dot: 'bg-accent-blue'   },
-  { border: 'border-l-success',       dot: 'bg-success'       },
-];
+// ─── Auto-title: extract title from content (zero AI) ─────────────────────
+function extractTitle(content) {
+  if (!content) return '';
+  const text = content
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\$\$[\s\S]+?\$\$/g, ' ')
+    .replace(/\$[^\$\n]+?\$/g, ' ')
+    .trim();
+  if (!text) return '';
+
+  // 1) Heading: # Title
+  const headingMatch = text.match(/^#{1,3}\s+(.+)/m);
+  if (headingMatch) return headingMatch[1].trim().slice(0, 80);
+
+  // 2) First sentence (ends with . ! ?)
+  const sentenceMatch = text.match(/^(.+?[.!?])\s/m);
+  if (sentenceMatch) return sentenceMatch[1].trim().slice(0, 80);
+
+  // 3) First line
+  const firstLine = text.split('\n')[0].trim();
+  return firstLine.slice(0, 80);
+}
+
+// ─── Placeholder title generator ──────────────────────────────────────────
+function nextPlaceholderTitle(notes) {
+  const base = 'Catatan Baru';
+  const existing = new Set(notes.map(n => (n.title || '').toLowerCase()));
+  if (!existing.has(base.toLowerCase())) return base;
+  let i = 2;
+  while (existing.has(`${base} ${i}`.toLowerCase())) i++;
+  return `${base} ${i}`;
+}
 
 export default function NotebookPage() {
   const queryClient = useQueryClient();
   const [selectedNote, setSelectedNote] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingNoteId, setEditingNoteId] = useState(null);
-  const [editingTitle, setEditingTitle] = useState('');
-  // 'saved' | 'saving' | 'error'
-  const [saveStatus, setSaveStatus] = useState('saved');
+  const [isCreating, setIsCreating] = useState(false);
+  const createMutexRef = useRef(false);
 
   const { data: notesData, isLoading } = useQuery({
     queryKey: ['notes'],
-    queryFn: () => notesAPI.getAll().then(r => r.data)
-  });
-
-  const { data: subjectData } = useQuery({
-    queryKey: ['subjects'],
-    queryFn: () => subjectAPI.getAll().then(r => r.data)
+    queryFn: () => notesAPI.getAll().then(r => r.data),
   });
 
   const rawNotes = notesData?.notes || [];
-  const subjects = subjectData?.subjects || [];
 
-  // Sort: pinned dulu, lalu created_at desc — persis pola sortedChats di ChatPage
   const notes = [...rawNotes].sort((a, b) => {
     if (!!a.is_pinned !== !!b.is_pinned) return a.is_pinned ? -1 : 1;
     return new Date(b.created_at) - new Date(a.created_at);
@@ -56,33 +68,24 @@ export default function NotebookPage() {
     },
   });
 
+  const pinMutation = useMutation({
+    mutationFn: (id) => notesAPI.togglePin(id),
+    onSuccess: () => queryClient.invalidateQueries(['notes']),
+  });
+
   const renameMutation = useMutation({
     mutationFn: ({ id, title }) => notesAPI.rename(id, title),
-    onSuccess: (data, { id, title }) => {
+    onSuccess: (_, { id, title }) => {
       queryClient.invalidateQueries(['notes']);
-      // Update selectedNote jika sedang dibuka
       if (selectedNote?.id === id) {
         setSelectedNote(prev => ({ ...prev, title }));
       }
     },
   });
 
-  const pinMutation = useMutation({
-    mutationFn: (id) => notesAPI.togglePin(id),
-    onSuccess: () => queryClient.invalidateQueries(['notes']),
-  });
-
   const updateContentMutation = useMutation({
     mutationFn: ({ id, content }) => notesAPI.updateContent(id, content),
-    onMutate: () => setSaveStatus('saving'),
-    onSuccess: () => setSaveStatus('saved'),
-    onError: () => setSaveStatus('error'),
   });
-
-  const handleContentSave = useCallback((html) => {
-    if (!selectedNote) return;
-    updateContentMutation.mutate({ id: selectedNote.id, content: html });
-  }, [selectedNote]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const clearMutation = useMutation({
     mutationFn: () => notesAPI.clear(),
@@ -92,440 +95,391 @@ export default function NotebookPage() {
     },
   });
 
+  // ── Instant note creation ──────────────────────────────────────────────
+  const handleCreateNote = useCallback(async () => {
+    if (createMutexRef.current) return;
+    createMutexRef.current = true;
+    setIsCreating(true);
+    try {
+      const title = nextPlaceholderTitle(notes);
+      const res = await notesAPI.create(title, '');
+      const noteId = res.data?.note_id;
+      queryClient.invalidateQueries(['notes']);
+      if (noteId) {
+        // Refetch to get full note object, then select
+        const listRes = await notesAPI.getAll();
+        const allNotes = listRes.data?.notes || [];
+        const newNote = allNotes.find(n => n.id === noteId);
+        if (newNote) setSelectedNote(newNote);
+      }
+    } catch (err) {
+      console.error('Gagal membuat catatan:', err);
+    } finally {
+      setIsCreating(false);
+      createMutexRef.current = false;
+    }
+  }, [notes, queryClient]);
+
+  // ── Auto-title from content ────────────────────────────────────────────
+  const handleAutoTitle = useCallback((noteId, content) => {
+    const note = rawNotes.find(n => n.id === noteId);
+    if (!note) return;
+
+    // Only auto-update if title is a placeholder
+    const placeholderPattern = /^Catatan Baru(\s\d+)?$/i;
+    if (!placeholderPattern.test(note.title || '')) return;
+
+    const newTitle = extractTitle(content);
+    if (newTitle && newTitle !== note.title) {
+      renameMutation.mutate({ id: noteId, title: newTitle });
+    }
+  }, [rawNotes, renameMutation]);
+
+  // ── Content save (debounced) ───────────────────────────────────────────
+  const handleContentSave = useCallback((html) => {
+    if (!selectedNote) return;
+    updateContentMutation.mutate({ id: selectedNote.id, content: html });
+    handleAutoTitle(selectedNote.id, html);
+  }, [selectedNote, updateContentMutation, handleAutoTitle]);
+
   const handleDelete = (id, e) => {
     e.stopPropagation();
     if (confirm('Hapus catatan ini?')) deleteMutation.mutate(id);
-  };
-
-  const handleRenameSubmit = (id) => {
-    const trimmed = editingTitle.trim();
-    if (trimmed) renameMutation.mutate({ id, title: trimmed });
-    setEditingNoteId(null);
   };
 
   const handleClearAll = () => {
     if (confirm('Hapus SEMUA catatan?')) clearMutation.mutate();
   };
 
-  const renderNoteItem = (n) => {
-    const color = COLORS[(n.subject?.id || 0) % COLORS.length];
+  // ── Note card ──────────────────────────────────────────────────────────
+  const renderNoteCard = (n) => {
     const snippet = (n.content || '')
-      .replace(/#+\s/g, '').replace(/\*+/g, '').replace(/\n/g, ' ').trim()
-      .slice(0, 60);
+      .replace(/<[^>]+>/g, '')
+      .replace(/#+\s/g, '')
+      .replace(/\*+/g, '')
+      .replace(/\n+/g, ' ')
+      .trim()
+      .slice(0, 80);
+
+    const isSelected = selectedNote?.id === n.id;
 
     return (
       <div
         key={n.id}
         className={cn(
-          'group relative rounded-xl transition-colors border-l-2',
-          color.border,
-          selectedNote?.id === n.id
-            ? 'bg-primary/10 border border-primary/20 border-l-2'
-            : 'hover:bg-card border border-transparent'
+          'group relative rounded-xl transition-all duration-150',
+          isSelected
+            ? 'bg-primary/10 ring-1 ring-primary/20'
+            : 'hover:bg-card/80'
         )}
       >
-        {/* Inline rename input */}
-        {editingNoteId === n.id ? (
-          <input
-            autoFocus
-            value={editingTitle}
-            onChange={(e) => setEditingTitle(e.target.value)}
-            onBlur={() => handleRenameSubmit(n.id)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') handleRenameSubmit(n.id);
-              if (e.key === 'Escape') setEditingNoteId(null);
-            }}
-            className="w-full px-3 py-2 text-xs bg-background border border-primary rounded-lg text-text outline-none"
-          />
-        ) : (
-          <button
-            onClick={() => setSelectedNote(n)}
-            className="w-full text-left p-3"
-          >
-            {/* Baris judul + tanggal (tanggal hilang saat hover, diganti action buttons) */}
-            <div className="flex items-center justify-between mb-0.5">
-              <span className={cn(
-                'text-sm font-medium truncate flex-1 min-w-0 flex items-center gap-1',
-                selectedNote?.id === n.id ? 'text-primary' : 'text-text'
-              )}>
-                {n.is_pinned && <Pin size={8} className="text-primary shrink-0" />}
-                <span className="truncate">{n.title}</span>
-              </span>
-              <span className="text-[10px] text-text-muted ml-1.5 shrink-0 group-hover:hidden whitespace-nowrap">
-                {formatDate(n.created_at)}
-              </span>
-            </div>
-
-            {/* Nama mata kuliah */}
-            {n.subject && (
-              <div className="flex items-center gap-1 mb-1">
-                <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${color.dot}`} />
-                <span className="text-[10px] text-text-secondary truncate">{n.subject.name}</span>
-              </div>
-            )}
-
-            {/* Cuplikan konten */}
-            {snippet && (
-              <p className="text-[10px] text-text-muted line-clamp-2 leading-relaxed">{snippet}…</p>
-            )}
-          </button>
-        )}
-
-        {/* Action buttons — muncul saat hover, persis pola Chat AI */}
-        {editingNoteId !== n.id && (
-          <div className="absolute right-1 top-2 hidden group-hover:flex items-center gap-0.5 bg-card border border-border rounded-md px-0.5 py-0.5 shadow-sm">
-            <button
-              onClick={(e) => { e.stopPropagation(); pinMutation.mutate(n.id); }}
-              title={n.is_pinned ? 'Unpin' : 'Sematkan'}
-              className={cn('p-1 rounded transition-colors', n.is_pinned ? 'text-primary' : 'text-text-muted hover:text-primary')}
-            >
-              <Pin size={11} />
-            </button>
-            <button
-              onClick={(e) => { e.stopPropagation(); setEditingNoteId(n.id); setEditingTitle(n.title || ''); }}
-              title="Ganti Nama"
-              className="p-1 rounded text-text-muted hover:text-text transition-colors"
-            >
-              <Edit3 size={11} />
-            </button>
-            <button
-              onClick={(e) => handleDelete(n.id, e)}
-              title="Hapus"
-              className="p-1 rounded text-text-muted hover:text-danger transition-colors"
-            >
-              <X size={11} />
-            </button>
+        <button
+          onClick={() => setSelectedNote(n)}
+          className="w-full text-left px-3 py-2.5"
+        >
+          <div className="flex items-center gap-1.5 mb-0.5">
+            {n.is_pinned && <Pin size={9} className="text-primary shrink-0" />}
+            <span className={cn(
+              'text-sm font-medium truncate',
+              isSelected ? 'text-primary' : 'text-text'
+            )}>
+              {n.title || 'Tanpa Judul'}
+            </span>
           </div>
-        )}
+          {snippet && (
+            <p className="text-[11px] text-text-muted line-clamp-1 leading-relaxed mb-1">
+              {snippet}
+            </p>
+          )}
+          <span className="text-[10px] text-text-muted/70">
+            {formatDate(n.created_at)}
+          </span>
+        </button>
+
+        {/* Hover actions */}
+        <div className="absolute right-1.5 top-2 hidden group-hover:flex items-center gap-0.5">
+          <button
+            onClick={(e) => { e.stopPropagation(); pinMutation.mutate(n.id); }}
+            title={n.is_pinned ? 'Unpin' : 'Sematkan'}
+            className={cn(
+              'p-1 rounded-md transition-colors',
+              n.is_pinned ? 'text-primary' : 'text-text-muted hover:text-primary'
+            )}
+          >
+            <Pin size={11} />
+          </button>
+          <button
+            onClick={(e) => handleDelete(n.id, e)}
+            title="Hapus"
+            className="p-1 rounded-md text-text-muted hover:text-danger transition-colors"
+          >
+            <Trash2 size={11} />
+          </button>
+        </div>
       </div>
     );
   };
 
   return (
-    <div className="flex h-full overflow-hidden">
+    <div className="flex h-full overflow-hidden bg-background">
 
-      {/* Sidebar Catatan */}
-      <div className="w-64 border-r border-border bg-sidebar flex flex-col shrink-0 hidden md:flex">
-        <div className="p-4 border-b border-border flex items-center justify-between">
-          <h2 className="font-semibold text-text text-sm">Notebook</h2>
-          <button onClick={() => setIsModalOpen(true)} className="p-1 text-primary hover:bg-primary/10 rounded">
+      {/* ═══ Sidebar ═══ */}
+      <div className="w-72 border-r border-border bg-sidebar flex flex-col shrink-0 hidden md:flex">
+        {/* Sidebar header */}
+        <div className="px-4 pt-4 pb-3 flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-text">Catatan</h2>
+          <button
+            onClick={handleCreateNote}
+            disabled={isCreating}
+            className={cn(
+              'p-1.5 rounded-lg transition-all duration-150',
+              'text-primary hover:bg-primary/10',
+              isCreating && 'opacity-50 pointer-events-none'
+            )}
+            title="Catatan Baru"
+          >
             <Plus size={16} />
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto p-2 space-y-0.5">
+
+        {/* Note list */}
+        <div className="flex-1 overflow-y-auto px-2 pb-2 space-y-0.5">
           {isLoading ? (
-            <p className="text-text-muted text-xs p-2">Memuat...</p>
+            <p className="text-text-muted text-xs p-3 text-center">Memuat...</p>
           ) : notes.length === 0 ? (
-            <p className="text-text-muted text-xs p-2 text-center">Belum ada catatan.</p>
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <div className="w-12 h-12 rounded-2xl bg-card border border-border flex items-center justify-center mb-3">
+                <FileText size={20} className="text-text-muted" />
+              </div>
+              <p className="text-xs text-text-muted">Belum ada catatan</p>
+              <button
+                onClick={handleCreateNote}
+                className="mt-2 text-xs text-primary hover:text-primary/80 transition-colors"
+              >
+                + Buat Catatan
+              </button>
+            </div>
           ) : (
             <>
-              {/* Section: Disematkan */}
               {pinnedNotes.length > 0 && (
                 <div>
-                  <p className="px-2 pt-3 pb-1 text-[10px] font-semibold text-text-muted uppercase tracking-wider select-none">
-                    📌 Disematkan
+                  <p className="px-2 pt-2 pb-1 text-[10px] font-medium text-text-muted/60 uppercase tracking-wider select-none">
+                    Disematkan
                   </p>
-                  {pinnedNotes.map(renderNoteItem)}
+                  {pinnedNotes.map(renderNoteCard)}
                 </div>
               )}
-
-              {/* Section: Catatan */}
               {unpinnedNotes.length > 0 && (
                 <div>
                   {pinnedNotes.length > 0 && (
-                    <p className="px-2 pt-3 pb-1 text-[10px] font-semibold text-text-muted uppercase tracking-wider select-none">
+                    <p className="px-2 pt-3 pb-1 text-[10px] font-medium text-text-muted/60 uppercase tracking-wider select-none">
                       Catatan
                     </p>
                   )}
-                  {unpinnedNotes.map(renderNoteItem)}
+                  {unpinnedNotes.map(renderNoteCard)}
                 </div>
               )}
             </>
           )}
         </div>
+
+        {/* Sidebar footer */}
         {notes.length > 0 && (
           <div className="p-3 border-t border-border">
-            <button onClick={handleClearAll} className="w-full btn-ghost text-danger hover:bg-danger/10 text-xs justify-center flex items-center gap-1">
-              <Trash2 size={11} /> Hapus Semua
+            <button
+              onClick={handleClearAll}
+              className="w-full text-[11px] text-text-muted hover:text-danger transition-colors py-1.5 rounded-lg hover:bg-danger/5"
+            >
+              Hapus Semua
             </button>
           </div>
         )}
       </div>
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 bg-background overflow-hidden">
+      {/* ═══ Main content ═══ */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {selectedNote ? (
-          <div className="flex flex-col h-full">
-            {/* Header note */}
-            <div className="flex items-start justify-between px-8 pt-6 pb-4 border-b border-border shrink-0">
-              <div>
-                <h1 className="text-xl font-bold text-text mb-1">{selectedNote.title}</h1>
-                <div className="flex items-center gap-3 text-xs text-text-secondary">
-                  <span className="flex items-center gap-1"><Book size={12} /> {selectedNote.subject?.name || 'Umum'}</span>
-                  <span>•</span>
-                  <span>{formatDate(selectedNote.created_at)}</span>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                {/* Status auto-save */}
-                <span className={cn(
-                  'text-[11px] flex items-center gap-1 transition-colors',
-                  saveStatus === 'saving' && 'text-warning',
-                  saveStatus === 'saved'  && 'text-success',
-                  saveStatus === 'error'  && 'text-danger',
-                )}>
-                  {saveStatus === 'saving' && <><span className="animate-pulse">●</span> Menyimpan...</>}
-                  {saveStatus === 'saved'  && <><Save size={11} /> Tersimpan</>}
-                  {saveStatus === 'error'  && <>⚠ Gagal simpan</>}
-                </span>
-                <button
-                  onClick={(e) => handleDelete(selectedNote.id, e)}
-                  className="p-2 text-text-muted hover:text-danger hover:bg-danger/10 rounded-xl transition-colors"
-                  title="Hapus catatan"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
-            </div>
-
-            {/* Editor dengan toolbar */}
-            <div className="flex-1 overflow-hidden">
-              <NoteEditor
-                key={selectedNote.id}
-                noteId={selectedNote.id}
-                content={selectedNote.content}
-                onSave={handleContentSave}
-              />
-            </div>
-          </div>
-        ) : (
-          <div className="h-full flex flex-col items-center justify-center text-center max-w-sm mx-auto px-4">
-            <div className="w-16 h-16 rounded-2xl bg-card border border-border flex items-center justify-center mb-4">
-              <FileText size={32} className="text-text-muted" />
-            </div>
-            <h2 className="text-lg font-bold text-text mb-2">Notebook Anda</h2>
-            <p className="text-sm text-text-secondary mb-6">Pilih catatan dari samping, atau buat catatan baru secara manual. Anda juga dapat membuat catatan otomatis dari Chat AI.</p>
-            <button onClick={() => setIsModalOpen(true)} className="btn-primary">
-              <Plus size={16} /> Buat Catatan Manual
-            </button>
-          </div>
-        )}
-      </div>
-
-      <AnimatePresence>
-        {isModalOpen && (
-          <CreateNoteModal
-            onClose={() => setIsModalOpen(false)}
-            subjects={subjects}
-            onSuccess={(newNote) => {
-              setIsModalOpen(false);
-              queryClient.invalidateQueries(['notes']);
+          <NoteView
+            key={selectedNote.id}
+            note={selectedNote}
+            onBack={() => setSelectedNote(null)}
+            onSave={handleContentSave}
+            onPin={() => pinMutation.mutate(selectedNote.id)}
+            onDelete={() => {
+              if (confirm('Hapus catatan ini?')) deleteMutation.mutate(selectedNote.id);
             }}
           />
+        ) : (
+          <EmptyState onCreate={handleCreateNote} isCreating={isCreating} />
         )}
-      </AnimatePresence>
+      </div>
     </div>
   );
 }
 
-function CreateNoteModal({ onClose, subjects, onSuccess }) {
-  const [formData, setFormData] = useState({ title: '', content: '', subject_id: '' });
-  const [selectedMaterialIds, setSelectedMaterialIds] = useState([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [aiTopic, setAiTopic] = useState('');
-  const [showAiPanel, setShowAiPanel] = useState(false);
-  // Ref mutex — mencegah double-submit dari double-click
-  const isSubmittingRef = useRef(false);
+// ─── Note view (editor + minimal header) ──────────────────────────────────
+function NoteView({ note, onBack, onSave, onPin, onDelete }) {
+  const [title, setTitle] = useState(note.title || '');
+  const [showMenu, setShowMenu] = useState(false);
+  const [saveStatus, setSaveStatus] = useState('saved');
+  const titleRef = useRef(null);
+  const saveTimerRef = useRef(null);
+  const queryClient = useQueryClient();
 
-  // Generate catatan via AI — hanya isi formData, TIDAK simpan ke DB
-  const handleGenerateAI = async () => {
-    const topic = aiTopic.trim() || formData.title.trim();
-    if (!topic) {
-      alert('Isi Judul Catatan atau kolom topik terlebih dahulu sebagai konteks untuk AI.');
-      return;
-    }
-    if (!formData.subject_id) {
-      alert('Pilih mata kuliah terlebih dahulu.');
-      return;
-    }
-    if (selectedMaterialIds.length === 0) {
-      alert('Harap pilih materi terlebih dahulu.');
-      return;
-    }
-    setIsGenerating(true);
-    try {
-      const payload = {
-        subject_id: Number(formData.subject_id),
-      };
-      const titleValue = topic.slice(0, 60).trim();
-      if (titleValue) payload.title = titleValue;
-      if (selectedMaterialIds.length > 0) {
-        payload.material_ids = selectedMaterialIds.join(',');
-      }
-      const res = await fetch('/api/notes/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.detail || 'Gagal generate catatan');
-      }
-      const result = await res.json();
-      // Hanya isi form — belum disimpan ke DB
-      // User masih harus klik Simpan untuk menyimpan
-      setFormData(p => ({ ...p, title: result.title || topic.slice(0, 60), content: result.content }));
-    } catch (err) {
-      alert('Gagal generate AI: ' + err.message);
-    } finally {
-      setIsGenerating(false);
+  const renameMutation = useMutation({
+    mutationFn: ({ id, title }) => notesAPI.rename(id, title),
+    onSuccess: () => queryClient.invalidateQueries(['notes']),
+  });
+
+  const handleTitleBlur = () => {
+    const trimmed = title.trim();
+    if (trimmed && trimmed !== note.title) {
+      renameMutation.mutate({ id: note.id, title: trimmed });
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!formData.title || !formData.content) return;
-    // Guard mutex — mencegah double-submit
-    if (isSubmittingRef.current) return;
-    isSubmittingRef.current = true;
-    setIsSubmitting(true);
-    const data = new URLSearchParams();
-    data.append('title', formData.title);
-    data.append('content', formData.content);
-    if (formData.subject_id) data.append('subject_id', formData.subject_id);
-    try {
-      const res = await fetch('/api/notes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: data.toString(),
-      });
-      if (!res.ok) throw new Error('Gagal menyimpan catatan');
-      onSuccess();
-    } catch (err) {
-      alert(err.message);
-      isSubmittingRef.current = false;
-      setIsSubmitting(false);
+  const handleTitleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      titleRef.current?.blur();
     }
   };
+
+  const handleContentSave = useCallback((html) => {
+    setSaveStatus('saving');
+    clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      onSave(html);
+      setSaveStatus('saved');
+    }, 300);
+  }, [onSave]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        className="w-full max-w-2xl card-base shadow-2xl flex flex-col max-h-[90vh]"
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-border shrink-0">
-          <div className="flex items-center gap-2">
-            <Edit3 size={18} className="text-primary" />
-            <h3 className="font-semibold text-text">Catatan Baru</h3>
-          </div>
-          <button onClick={onClose} className="text-text-muted hover:text-text"><X size={18} /></button>
+    <div className="flex flex-col h-full">
+      {/* Minimal header */}
+      <div className="flex items-center justify-between px-4 py-2 border-b border-border/50 shrink-0">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onBack}
+            className="p-1.5 rounded-lg text-text-muted hover:text-text hover:bg-card transition-colors md:hidden"
+          >
+            <ChevronLeft size={18} />
+          </button>
+          <button
+            onClick={onBack}
+            className="hidden md:flex items-center gap-1 text-xs text-text-muted hover:text-text transition-colors px-2 py-1 rounded-lg hover:bg-card"
+          >
+            <ChevronLeft size={14} />
+            <span>Kembali</span>
+          </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-4 flex flex-col flex-1 min-h-0 space-y-3 overflow-y-auto">
-          {/* Baris judul + mata kuliah */}
-          <div className="flex gap-3 shrink-0">
-            <input
-              type="text"
-              required
-              value={formData.title}
-              onChange={(e) => setFormData(p => ({ ...p, title: e.target.value }))}
-              className="flex-1 px-3 py-2 bg-background border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary transition-colors font-medium"
-              placeholder="Judul Catatan..."
-            />
-            <select
-              value={formData.subject_id}
-              onChange={(e) => { setFormData(p => ({ ...p, subject_id: e.target.value })); setSelectedMaterialIds([]); }}
-              className="w-1/3 px-3 py-2 bg-background border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary transition-colors"
-            >
-              <option value="">-- Mata Kuliah --</option>
-              {subjects.map(s => (
-                <option key={s.id} value={s.id}>{s.name}</option>
-              ))}
-            </select>
-          </div>
+        <div className="flex items-center gap-1.5">
+          {/* Auto-save status */}
+          <span className={cn(
+            'text-[10px] flex items-center gap-1 transition-colors px-2',
+            saveStatus === 'saving' && 'text-warning',
+            saveStatus === 'saved' && 'text-success/70',
+          )}>
+            {saveStatus === 'saving' && <><span className="animate-pulse">●</span> Menyimpan</>}
+            {saveStatus === 'saved' && <><Save size={10} /> Tersimpan</>}
+          </span>
 
-          <MaterialPicker
-            subjectId={formData.subject_id}
-            selectedMaterialIds={selectedMaterialIds}
-            onSelectionChange={setSelectedMaterialIds}
-          />
+          <button
+            onClick={onPin}
+            className={cn(
+              'p-1.5 rounded-lg transition-colors',
+              note.is_pinned ? 'text-primary' : 'text-text-muted hover:text-primary'
+            )}
+            title={note.is_pinned ? 'Unpin' : 'Sematkan'}
+          >
+            <Pin size={15} />
+          </button>
 
-          {/* Panel Generate AI */}
-          <div className="shrink-0">
+          <div className="relative">
             <button
-              type="button"
-              onClick={() => setShowAiPanel(v => !v)}
-              className="flex items-center gap-2 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+              onClick={() => setShowMenu(v => !v)}
+              className="p-1.5 rounded-lg text-text-muted hover:text-text hover:bg-card transition-colors"
             >
-              ✨ {showAiPanel ? 'Sembunyikan Generate AI' : 'Generate Catatan dengan AI'}
+              <MoreHorizontal size={15} />
             </button>
-            <AnimatePresence>
-              {showAiPanel && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="overflow-hidden"
-                >
-                  <div className="mt-2 p-3 rounded-xl border border-primary/20 bg-primary/5 space-y-2">
-                    <p className="text-xs text-text-secondary">Masukkan topik yang ingin dibuatkan catatannya oleh AI:</p>
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={aiTopic}
-                        onChange={(e) => setAiTopic(e.target.value)}
-                        placeholder="Contoh: Sistem Reproduksi Manusia, Hukum Newton..."
-                        className="flex-1 px-3 py-2 bg-background border border-border rounded-lg text-xs text-text focus:outline-none focus:border-primary transition-colors"
-                        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleGenerateAI(); } }}
-                      />
-                      <button
-                        type="button"
-                        onClick={handleGenerateAI}
-                        disabled={isGenerating || selectedMaterialIds.length === 0}
-                        className="px-3 py-2 bg-primary text-white rounded-lg text-xs font-medium hover:bg-primary/80 disabled:opacity-50 transition-all whitespace-nowrap"
-                      >
-                        {isGenerating ? '⏳ Generating...' : '✨ Generate'}
-                      </button>
-                    </div>
-                    {isGenerating && (
-                      <p className="text-[10px] text-primary animate-pulse">AI sedang menulis catatan...</p>
-                    )}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {showMenu && (
+              <>
+                <div className="fixed inset-0 z-30" onClick={() => setShowMenu(false)} />
+                <div className="absolute right-0 top-full mt-1 z-40 bg-card border border-border rounded-xl shadow-xl py-1 min-w-[140px]">
+                  <button
+                    onClick={() => { onDelete(); setShowMenu(false); }}
+                    className="w-full text-left px-3 py-2 text-xs text-danger hover:bg-danger/5 transition-colors"
+                  >
+                    Hapus Catatan
+                  </button>
+                </div>
+              </>
+            )}
           </div>
+        </div>
+      </div>
 
-          {/* Textarea konten */}
-          <div className="flex-1 flex flex-col min-h-[180px]">
-            <textarea
-              required
-              value={formData.content}
-              onChange={(e) => setFormData(p => ({ ...p, content: e.target.value }))}
-              className="w-full flex-1 bg-background border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary transition-colors p-4 resize-none font-mono min-h-[180px]"
-              placeholder="Ketik isi catatan di sini, atau klik ✨ Generate AI di atas untuk mengisi otomatis (Mendukung format Markdown)..."
-            />
-          </div>
+      {/* Title */}
+      <div className="px-8 md:px-16 lg:px-24 pt-6 pb-2 shrink-0">
+        <input
+          ref={titleRef}
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          onBlur={handleTitleBlur}
+          onKeyDown={handleTitleKeyDown}
+          className="w-full text-2xl font-bold text-text bg-transparent outline-none placeholder:text-text-muted/40"
+          placeholder="Judul Catatan"
+        />
+        <div className="flex items-center gap-2 mt-1.5 text-[11px] text-text-muted/60">
+          {note.subject && (
+            <span className="flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary/60" />
+              {note.subject.name}
+            </span>
+          )}
+          {note.subject && <span>·</span>}
+          <span title={formatDateTime(note.created_at)}>{formatDate(note.created_at)}</span>
+        </div>
+      </div>
 
-          {/* Actions */}
-          <div className="flex justify-end gap-2 pt-1 shrink-0">
-            <button type="button" onClick={onClose} className="btn-ghost">Batal</button>
-            <button
-              type="submit"
-              disabled={isSubmitting || !formData.title || !formData.content}
-              className="btn-primary"
-            >
-              {isSubmitting ? 'Menyimpan...' : 'Simpan'}
-            </button>
-          </div>
-        </form>
-      </motion.div>
+      {/* Editor */}
+      <div className="flex-1 overflow-hidden">
+        <NoteEditor
+          key={note.id}
+          noteId={note.id}
+          content={note.content}
+          onSave={handleContentSave}
+          defaultMode="edit"
+        />
+      </div>
     </div>
   );
 }
 
+// ─── Empty state ──────────────────────────────────────────────────────────
+function EmptyState({ onCreate, isCreating }) {
+  return (
+    <div className="h-full flex flex-col items-center justify-center text-center px-4">
+      <div className="w-16 h-16 rounded-2xl bg-card border border-border flex items-center justify-center mb-4">
+        <FileText size={28} className="text-text-muted/40" />
+      </div>
+      <h2 className="text-base font-semibold text-text mb-1">Notebook</h2>
+      <p className="text-xs text-text-muted mb-5 max-w-[240px] leading-relaxed">
+        Pilih catatan dari samping, atau buat catatan baru untuk mulai menulis.
+      </p>
+      <button
+        onClick={onCreate}
+        disabled={isCreating}
+        className={cn(
+          'flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all',
+          'bg-primary text-white hover:bg-primary/90 shadow-sm',
+          isCreating && 'opacity-50 pointer-events-none'
+        )}
+      >
+        <Plus size={15} />
+        {isCreating ? 'Membuat...' : 'Catatan Baru'}
+      </button>
+    </div>
+  );
+}

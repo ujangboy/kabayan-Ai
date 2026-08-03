@@ -59,6 +59,15 @@ export const subjectAPI = {
 // --- NOTES ---
 export const notesAPI = {
   getAll: () => api.get('/notes'),
+  create: (title, content = '', subjectId = null) => {
+    const data = new URLSearchParams();
+    data.append('title', title);
+    data.append('content', content);
+    if (subjectId) data.append('subject_id', subjectId);
+    return api.post('/notes', data.toString(), {
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    });
+  },
   delete: (id) => api.post(`/notes/${id}/delete`),
   clear: () => api.post('/notes/clear'),
   rename: (id, title) => api.put(`/notes/${id}/rename`,

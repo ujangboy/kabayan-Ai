@@ -34,17 +34,17 @@ async def get_notes_json(db: Session = Depends(get_db), skip: int = Query(0, ge=
 @router.post("/api/notes")
 async def create_note(
     title: str = Form(...),
-    content: str = Form(...),
+    content: str = Form(""),
     subject_id: Optional[int] = Form(None),
     db: Session = Depends(get_db)
 ):
     from repositories.note_repository import note_repository
-    note_repository.create(db, {
+    note = note_repository.create(db, {
         "title": title,
         "content": content,
         "subject_id": subject_id if subject_id else None
     })
-    return JSONResponse({"status": "success", "message": "Note created"})
+    return JSONResponse({"status": "success", "message": "Note created", "note_id": note.id})
 
 @router.post("/api/notes/{note_id}/delete")
 async def delete_note(note_id: int, db: Session = Depends(get_db)):

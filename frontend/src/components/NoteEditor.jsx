@@ -346,8 +346,8 @@ function FloatingToolbar({ editor, editorMode }) {
 }
 
 // ─── Main component ───────────────────────────────────────────────────────
-export default function NoteEditor({ content, onSave, noteId }) {
-  const [mode, setMode] = useState('view');
+export default function NoteEditor({ content, onSave, noteId, defaultMode = 'view' }) {
+  const [mode, setMode] = useState(defaultMode);
   const saveTimerRef = useRef(null);
   const lastSavedRef = useRef(null);
 
@@ -397,8 +397,8 @@ export default function NoteEditor({ content, onSave, noteId }) {
     }
   }, [noteId, mode, editor, content]);
 
-  // Reset ke view mode saat pindah note
-  useEffect(() => { setMode('view'); }, [noteId]);
+  // Reset ke default mode saat pindah note
+  useEffect(() => { setMode(defaultMode); }, [noteId]);
   useEffect(() => () => clearTimeout(saveTimerRef.current), []);
   useEffect(() => () => { editor?.destroy(); }, [editor]);
 
