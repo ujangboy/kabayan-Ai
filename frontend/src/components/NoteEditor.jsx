@@ -117,32 +117,41 @@ function Sep() {
 function FontSizeDropdown({ editor, floating = false }) {
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState('bottom');
-  const [liveSize, setLiveSize] = useState(null);
+  const [liveSize, setLiveSize] = useState(14);
   const wrapRef = useRef(null);
 
-  // Reactive: ikuti ukuran font teks di cursor/selection.
-  // HANYA untuk floating bubble (top toolbar statis).
+  // Reactive: baca fontSize dari selection setiap kali editor state berubah.
   useEffect(() => {
     if (!editor || !floating) return;
-    const sync = () => {
-      const attrs = editor.getAttributes('textStyle') || {};
-      const raw = attrs.fontSize;
-      const px = raw ? parseInt(String(raw).replace('px', ''), 10) : 14;
-      setLiveSize(Number.isFinite(px) ? px : 14);
+    const readFontSize = () => {
+      const { from, to, empty } = editor.state.selection;
+      if (empty) { setLiveSize(14); return; }
+      let size = 14;
+      editor.state.doc.nodesBetween(from, to, (node) => {
+        if (size !== 14) return;
+        const marks = node.marks || [];
+        for (const mark of marks) {
+          if (mark.type.name === 'textStyle' && mark.attrs.fontSize) {
+            const px = parseInt(String(mark.attrs.fontSize).replace('px', ''), 10);
+            if (Number.isFinite(px)) { size = px; break; }
+          }
+        }
+      });
+      setLiveSize(size);
     };
-    sync();
-    editor.on('selectionUpdate', sync);
-    editor.on('transaction', sync);
+    readFontSize();
+    editor.on('selectionUpdate', readFontSize);
+    editor.on('transaction', readFontSize);
     return () => {
-      editor.off('selectionUpdate', sync);
-      editor.off('transaction', sync);
+      editor.off('selectionUpdate', readFontSize);
+      editor.off('transaction', readFontSize);
     };
   }, [editor, floating]);
 
   const attrs = editor?.getAttributes('textStyle') || {};
   const raw = attrs.fontSize;
   const px = raw ? parseInt(String(raw).replace('px', ''), 10) : 14;
-  const label = floating && liveSize !== null ? liveSize : (Number.isFinite(px) ? px : 14);
+  const label = floating ? liveSize : (Number.isFinite(px) ? px : 14);
 
   // Decide popup direction based on available space
   const measure = () => {
@@ -335,8 +344,18 @@ function FloatingToolbar({ editor, editorMode }) {
       // Collapsed caret (cursor tanpa seleksi): tampilkan toolbar hanya jika
       // teks di posisi cursor memiliki font-size khusus.
       if (sel.isCollapsed) {
-        const attrs = editor?.getAttributes('textStyle') || {};
-        if (!attrs.fontSize) {
+        const pos = editor?.state.selection.$from;
+        let hasCustomFontSize = false;
+        if (pos) {
+          const marks = pos.marks();
+          for (const mark of marks) {
+            if (mark.type.name === 'textStyle' && mark.attrs.fontSize) {
+              hasCustomFontSize = true;
+              break;
+            }
+          }
+        }
+        if (!hasCustomFontSize) {
           setPos(null);
           return;
         }
