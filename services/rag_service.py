@@ -6,12 +6,35 @@ import lancedb
 import threading
 import datetime
 import pandas as pd
+import pyarrow as pa
 from langchain_huggingface import HuggingFaceEmbeddings
 import config
 from services.settings_service import settings_service
 from database import SessionLocal
 
 TABLE_NAME = "chunks"
+
+
+def _table_schema(dim: int) -> pa.Schema:
+    """Skema eksplisit tabel LanceDB.
+
+    Penting: timestamp_start/end bertipe int64 NULLABLE (bukan null/infer),
+    agar chunk dokumen (tanpa timestamp) dan chunk YouTube (ber-timestamp)
+    bisa hidup dalam tabel yang sama.
+    """
+    return pa.schema([
+        pa.field("id", pa.int64(), nullable=False),
+        pa.field("vector", pa.list_(pa.float32(), dim), nullable=False),
+        pa.field("doc_id", pa.string(), nullable=False),
+        pa.field("content", pa.string(), nullable=False),
+        pa.field("deleted", pa.bool_(), nullable=False),
+        pa.field("timestamp_start", pa.int64(), nullable=True),
+        pa.field("timestamp_end", pa.int64(), nullable=True),
+        pa.field("model_name", pa.string(), nullable=True),
+        pa.field("model_version", pa.string(), nullable=True),
+        pa.field("indexed_at", pa.string(), nullable=False),
+        pa.field("extra_metadata", pa.string(), nullable=True),
+    ])
 
 
 def _embedding_model_version(model_name: str) -> str:
@@ -230,7 +253,7 @@ class RAGService:
                 ids.append(row_id)
 
             if self._table is None:
-                self._table = self._db.create_table(TABLE_NAME, records, mode="overwrite")
+                self._table = self._db.create_table(TABLE_NAME, records, mode="overwrite", schema=_table_schema(self.dimension))
             else:
                 self._table.add(records)
 
@@ -395,7 +418,7 @@ class RAGService:
                 self._db.drop_table(TABLE_NAME)
             except Exception:
                 pass
-            self._table = self._db.create_table(TABLE_NAME, records, mode="overwrite")
+            self._table = self._db.create_table(TABLE_NAME, records, mode="overwrite", schema=_table_schema(self.dimension))
 
             self.chunk_metadata = new_metadata
             self.doc_to_chunk_indices = new_doc_map

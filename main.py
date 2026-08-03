@@ -182,6 +182,24 @@ def fix_stuck_materials():
 
 fix_stuck_materials()
 
+# Recover audio generations stuck on "processing" from dead background tasks
+def fix_stuck_audio():
+    """Recover audio generations stuck on 'processing' from dead background tasks."""
+    import models
+    try:
+        db = SessionLocal()
+        stuck = db.query(models.AudioGeneration).filter(models.AudioGeneration.status == "processing").all()
+        for ag in stuck:
+            ag.status = "failed"
+            ag.failure_reason = "Proses audio terputus (server restart). Klik tombol audio untuk mencoba lagi."
+            logger.info(f"Recovered stuck audio generation {ag.id} -> failed")
+        db.commit()
+        db.close()
+    except Exception as e:
+        logger.error(f"fix_stuck_audio error: {e}")
+
+fix_stuck_audio()
+
 # Clean stale LanceDB lock files from unexpected shutdowns
 try:
     for fname in os.listdir(config.LANCEDB_DIR):
@@ -231,7 +249,10 @@ async def material_worker():
     while True:
         try:
             db = SessionLocal()
-            mat = db.query(models.Material).filter(models.Material.status == "Pending").first()
+            mat = db.query(models.Material).filter(
+                models.Material.status == "Pending",
+                models.Material.material_type != models.MaterialType.YOUTUBE  # YouTube diproses oleh youtube_service
+            ).first()
             if mat:
                 mat.status = "Processing"
                 db.commit()
@@ -293,16 +314,6 @@ app.include_router(youtube.router)
 app.include_router(settings.router)
 app.include_router(exam_analyzer.router)
 
-@app.get("/{full_path:path}")
-async def serve_react(full_path: str):
-    if full_path.startswith("api/") or full_path.startswith("static/") or full_path.startswith("assets/"):
-        return JSONResponse(status_code=404, content={"detail": "Not Found"})
-
-    index_path = os.path.join(DIST_DIR, "index.html")
-    if os.path.isfile(index_path):
-        return FileResponse(index_path, media_type='text/html')
-    return JSONResponse(status_code=404, content={"detail": "Frontend not built"})
-
 @app.get("/")
 async def get_home():
     return RedirectResponse(url="/dashboard", status_code=303)
@@ -339,6 +350,17 @@ async def health_check():
         
     all_pass = all(v == "OK" for v in status.values())
     return JSONResponse(status_code=200 if all_pass else 500, content={"status": "PASS" if all_pass else "FAIL", "details": status})
+
+# SPA fallback — DAFTARKAN PALING AKHIR agar /health, /, dan route lain menang dulu
+@app.get("/{full_path:path}")
+async def serve_react(full_path: str):
+    if full_path.startswith("api/") or full_path.startswith("static/") or full_path.startswith("assets/"):
+        return JSONResponse(status_code=404, content={"detail": "Not Found"})
+
+    index_path = os.path.join(DIST_DIR, "index.html")
+    if os.path.isfile(index_path):
+        return FileResponse(index_path, media_type='text/html')
+    return JSONResponse(status_code=404, content={"detail": "Frontend not built"})
 
 if __name__ == "__main__":
     import uvicorn
