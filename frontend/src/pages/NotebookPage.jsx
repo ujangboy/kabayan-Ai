@@ -44,6 +44,10 @@ export default function NotebookPage() {
   const [selectedNote, setSelectedNote] = useState(null);
   const [isCreating, setIsCreating] = useState(false);
   const createMutexRef = useRef(false);
+  // Refs to avoid stale closures in callbacks
+  const rawNotesRef = useRef([]);
+  const notesRef = useRef([]);
+  const renameMutateRef = useRef(null);
 
   const { data: notesData, isLoading } = useQuery({
     queryKey: ['notes'],
@@ -56,6 +60,10 @@ export default function NotebookPage() {
     if (!!a.is_pinned !== !!b.is_pinned) return a.is_pinned ? -1 : 1;
     return new Date(b.created_at) - new Date(a.created_at);
   });
+
+  // Sync refs every render
+  rawNotesRef.current = rawNotes;
+  notesRef.current = notes;
 
   const pinnedNotes = notes.filter(n => n.is_pinned);
   const unpinnedNotes = notes.filter(n => !n.is_pinned);
@@ -83,6 +91,9 @@ export default function NotebookPage() {
     },
   });
 
+  // Keep ref in sync so callbacks don't need it as a dependency
+  renameMutateRef.current = renameMutation.mutate;
+
   const updateContentMutation = useMutation({
     mutationFn: ({ id, content }) => notesAPI.updateContent(id, content),
   });
@@ -101,12 +112,11 @@ export default function NotebookPage() {
     createMutexRef.current = true;
     setIsCreating(true);
     try {
-      const title = nextPlaceholderTitle(notes);
+      const title = nextPlaceholderTitle(notesRef.current);
       const res = await notesAPI.create(title, '');
       const noteId = res.data?.note_id;
       queryClient.invalidateQueries(['notes']);
       if (noteId) {
-        // Refetch to get full note object, then select
         const listRes = await notesAPI.getAll();
         const allNotes = listRes.data?.notes || [];
         const newNote = allNotes.find(n => n.id === noteId);
@@ -118,11 +128,11 @@ export default function NotebookPage() {
       setIsCreating(false);
       createMutexRef.current = false;
     }
-  }, [notes, queryClient]);
+  }, [queryClient]);
 
   // ── Auto-title from content ────────────────────────────────────────────
   const handleAutoTitle = useCallback((noteId, content) => {
-    const note = rawNotes.find(n => n.id === noteId);
+    const note = rawNotesRef.current.find(n => n.id === noteId);
     if (!note) return;
 
     // Only auto-update if title is a placeholder
@@ -131,9 +141,9 @@ export default function NotebookPage() {
 
     const newTitle = extractTitle(content);
     if (newTitle && newTitle !== note.title) {
-      renameMutation.mutate({ id: noteId, title: newTitle });
+      renameMutateRef.current?.({ id: noteId, title: newTitle });
     }
-  }, [rawNotes, renameMutation]);
+  }, []);
 
   // ── Content save (debounced) ───────────────────────────────────────────
   const handleContentSave = useCallback((html) => {
