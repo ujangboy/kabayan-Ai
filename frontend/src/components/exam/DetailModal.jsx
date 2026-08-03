@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -18,7 +18,6 @@ export default function DetailModal({ historySessionId, onClose, onResume, pendi
   const [tab, setTab] = useState(pendingPlanTab ? 'plan' : 'overview');
 
   // Lifted up from StudyPlanTab so refetch() doesn't reset these states
-  const practiceCounter = useRef(0);
   const [practiceMode, setPracticeMode]   = useState(null); // null | { itemId, topic, questions, _v }
   const [practiceError, setPracticeError] = useState('');
   const [loadingItemId, setLoadingItemId] = useState(null);
@@ -809,7 +808,7 @@ function StudyPlanTab({ plan, sessionId, onToggle, onPlanSaved,
                               const r = await sessionsAPI.fetchPracticeQuestions(sessionId, item.topic);
                               if (r.data?.detail) throw new Error(r.data.detail);
                               if (!r.data?.questions?.length) throw new Error('Tidak ada soal tersedia untuk topik ini.');
-                              setPracticeMode({ itemId: item.id, topic: item.topic, questions: r.data.questions, _v: ++practiceCounter.current });
+                              setPracticeMode({ itemId: item.id, topic: item.topic, questions: r.data.questions, _v: Date.now() });
                             } catch (err) {
                               setPracticeError(err.message || 'Gagal memuat soal latihan.');
                             } finally {
@@ -855,7 +854,7 @@ function StudyPlanTab({ plan, sessionId, onToggle, onPlanSaved,
                       const r = await sessionsAPI.fetchPracticeQuestions(sessionId, topic);
                       if (r.data?.detail) throw new Error(r.data.detail);
                       if (!r.data?.questions?.length) throw new Error('Tidak ada soal tersedia untuk topik ini.');
-                      setPracticeMode({ itemId: item.id, topic, questions: r.data.questions, _v: ++practiceCounter.current });
+                      setPracticeMode({ itemId: item.id, topic, questions: r.data.questions, _v: Date.now() });
                     } catch (err) {
                       setPracticeError(err.message || 'Gagal memuat soal.');
                     }
