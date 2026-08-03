@@ -33,6 +33,7 @@ import {
 import { cn } from '@/utils';
 import MathMarkdown from '@/components/MathMarkdown';
 import { MathInline, MathBlock } from '@/extensions/math';
+import { FontSize, FONT_SIZE_OPTIONS } from '@/extensions/fontSize';
 
 // ─── Konfigurasi marked ───────────────────────────────────────────────────
 marked.setOptions({ breaks: true, gfm: true });
@@ -112,6 +113,98 @@ function Sep() {
   return <div className="w-px h-4 bg-border/40 mx-0.5 shrink-0" />;
 }
 
+// ─── Font size dropdown (top toolbar + floating bubble) ───────────────────
+function FontSizeDropdown({ editor, floating = false }) {
+  const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState('bottom');
+
+  const attrs = editor?.getAttributes('textStyle') || {};
+  const raw = attrs.fontSize;
+  const px = raw ? parseInt(String(raw).replace('px', ''), 10) : 14;
+  const label = Number.isFinite(px) ? px : 14;
+
+  // Decide popup direction based on available space
+  const measure = () => {
+    if (!open || !floating) return;
+    const el = document.querySelector('[data-fontsize-trigger]');
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    setPos(rect.top > 260 ? 'top' : 'bottom');
+  };
+  useEffect(() => {
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, [open, floating]);
+
+  const apply = (size) => {
+    if (size === 14) {
+      editor.chain().focus().unsetFontSize().run();
+    } else {
+      editor.chain().focus().setFontSize(`${size}px`).run();
+    }
+    setOpen(false);
+  };
+
+  return (
+    <div className="relative shrink-0">
+      <button
+        type="button"
+        data-fontsize-trigger
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={() => setOpen(v => !v)}
+        title="Ukuran Font"
+        className={cn(
+          'rounded-lg transition-all select-none flex items-center justify-center gap-0.5 font-medium',
+          floating ? 'w-7 h-6 text-[10px]' : 'w-9 h-7 text-[11px]',
+          open
+            ? 'bg-primary/20 text-primary'
+            : 'text-text-muted hover:text-text hover:bg-white/8'
+        )}
+      >
+        {label}
+        <svg width="6" height="4" viewBox="0 0 6 4" className="opacity-70 shrink-0">
+          <path d="M0 0h6L3 4z" fill="currentColor" />
+        </svg>
+      </button>
+
+      {open && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div
+            className={cn(
+              'absolute z-50 flex flex-col overflow-y-auto rounded-xl shadow-xl border p-1',
+              floating
+                ? 'bg-[#1a1b2e]/95 backdrop-blur-xl border-white/10'
+                : 'bg-card border-border',
+              pos === 'bottom' ? 'top-full mt-1 left-0' : 'bottom-full mb-1 left-0'
+            )}
+            style={{ maxHeight: 200 }}
+          >
+            {FONT_SIZE_OPTIONS.map(size => (
+              <button
+                key={size}
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => apply(size)}
+                className={cn(
+                  'px-2.5 py-1 rounded-md text-left transition-colors',
+                  size === label
+                    ? 'bg-primary/15 text-primary font-semibold'
+                    : 'text-text hover:bg-white/8'
+                )}
+                style={{ fontSize: Math.max(size * 0.8, 9) }}
+              >
+                {size}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 // ─── Top toolbar (edit mode) ──────────────────────────────────────────────
 function Toolbar({ editor, onPreview, onInsertMath }) {
   if (!editor) return null;
@@ -128,6 +221,8 @@ function Toolbar({ editor, onPreview, onInsertMath }) {
         <Eye size={12} /> Pratinjau
       </button>
 
+      <Sep />
+      <FontSizeDropdown editor={editor} />
       <Sep />
       <ToolBtn onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} title="Undo">
         <Undo2 size={14} />
@@ -255,6 +350,10 @@ function FloatingToolbar({ editor, editorMode }) {
       onMouseDown={(e) => e.preventDefault()}
     >
       <div className="flex items-center gap-px px-2 py-1.5 bg-[#1a1b2e]/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.05)]">
+        {/* ── Font size ── */}
+        <FontSizeDropdown editor={editor} floating />
+        <div className="w-px h-5 bg-white/10 mx-1 shrink-0" />
+
         {/* ── Text formatting ── */}
         <ToolBtn className="!w-6 !h-6" onClick={() => editor.chain().focus().toggleBold().run()} active={ia('bold')} title="Bold">
           <Bold size={12} strokeWidth={2.5} />
@@ -358,6 +457,7 @@ export default function NoteEditor({ content, onSave, noteId, defaultMode = 'vie
       Underline,
       TextStyle,
       Color,
+      FontSize,
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
       TaskList,
       TaskItem.configure({ nested: true }),

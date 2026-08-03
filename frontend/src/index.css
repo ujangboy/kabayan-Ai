@@ -301,10 +301,17 @@
 /* ── Tiptap NoteEditor content styles ──────────────────────────────────── */
 .note-editor-content {
   font-family: 'Inter', sans-serif;
-  font-size: 0.95rem;
+  font-size: 14px;
   line-height: 1.7;
   color: #e2e8f0;
 }
+
+/* Font size dari dropdown (inline style) menang atas style default,
+   termasuk heading — inline style punya prioritas lebih tinggi. */
+.note-editor-content [style*="font-size"] { font-size: inherit; }
+.note-editor-content h1[style*="font-size"] { font-size: inherit; }
+.note-editor-content h2[style*="font-size"] { font-size: inherit; }
+.note-editor-content h3[style*="font-size"] { font-size: inherit; }
 
 .note-editor-content h1 { font-size: 1.5rem; font-weight: 700; color: #fff; margin: 1.5rem 0 0.75rem; }
 .note-editor-content h2 { font-size: 1.2rem; font-weight: 700; color: #fff; margin: 1.25rem 0 0.6rem; }
