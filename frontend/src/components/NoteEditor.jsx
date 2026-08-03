@@ -341,24 +341,10 @@ function FloatingToolbar({ editor, editorMode }) {
         return;
       }
 
-      // Collapsed caret (cursor tanpa seleksi): tampilkan toolbar hanya jika
-      // teks di posisi cursor memiliki font-size khusus.
+      // Hanya tampilkan toolbar saat teks di-block/selected (bukan collapsed caret)
       if (sel.isCollapsed) {
-        const pos = editor?.state.selection.$from;
-        let hasCustomFontSize = false;
-        if (pos) {
-          const marks = pos.marks();
-          for (const mark of marks) {
-            if (mark.type.name === 'textStyle' && mark.attrs.fontSize) {
-              hasCustomFontSize = true;
-              break;
-            }
-          }
-        }
-        if (!hasCustomFontSize) {
-          setPos(null);
-          return;
-        }
+        setPos(null);
+        return;
       }
 
       const rect = range.getBoundingClientRect();
