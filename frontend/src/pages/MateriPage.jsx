@@ -13,6 +13,7 @@ export default function MateriPage() {
   const { toast } = useToast();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isYoutubeModalOpen, setIsYoutubeModalOpen] = useState(false);
+  const [subjectFilter, setSubjectFilter] = useState('');
 
   const { data: materiData, isLoading } = useQuery({
     queryKey: ['materials'],
@@ -26,6 +27,10 @@ export default function MateriPage() {
 
   const materials = materiData?.materials || [];
   const subjects = subjectData?.subjects || [];
+  const sortedSubjects = [...subjects].sort((a, b) => a.name.localeCompare(b.name, 'id', { sensitivity: 'base' }));
+  const filteredMaterials = subjectFilter
+    ? materials.filter(m => String(m.subject_id ?? m.subject?.id) === subjectFilter)
+    : materials;
   const { selectedDocs, setSelectedDocs } = useChatStore();
 
   const toggleSelection = (id) => {
@@ -153,6 +158,25 @@ export default function MateriPage() {
           </div>
         </div>
 
+        {/* Filter Mata Kuliah */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <select
+              value={subjectFilter}
+              onChange={(e) => setSubjectFilter(e.target.value)}
+              className="px-3 py-2 bg-card border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary transition-colors"
+            >
+              <option value="">-- Semua Mata Kuliah --</option>
+              {sortedSubjects.map(s => (
+                <option key={s.id} value={String(s.id)}>{s.name}</option>
+              ))}
+            </select>
+            <span className="text-xs text-text-muted">
+              Menampilkan {filteredMaterials.length} dari {materials.length} materi
+            </span>
+          </div>
+        </div>
+
         {/* Table */}
         <div className="card-base overflow-x-auto p-0">
           <table className="w-full text-sm">
@@ -176,8 +200,12 @@ export default function MateriPage() {
                 <tr>
                   <td colSpan="6" className="text-center py-10 text-text-muted">Belum ada materi. Silakan upload materi baru.</td>
                 </tr>
+              ) : filteredMaterials.length === 0 ? (
+                <tr>
+                  <td colSpan="6" className="text-center py-10 text-text-muted">Tidak ada materi pada mata kuliah ini.</td>
+                </tr>
               ) : (
-                materials.map((m, idx) => (
+                filteredMaterials.map((m, idx) => (
                   <motion.tr
                     key={m.id}
                     initial={{ opacity: 0, y: 10 }}
@@ -262,7 +290,7 @@ export default function MateriPage() {
         {isUploadModalOpen && (
           <UploadModal
             onClose={() => setIsUploadModalOpen(false)}
-            subjects={subjects}
+            subjects={sortedSubjects}
             onSuccess={() => {
               setIsUploadModalOpen(false);
               queryClient.invalidateQueries(['materials']);
@@ -272,7 +300,7 @@ export default function MateriPage() {
         {isYoutubeModalOpen && (
           <YoutubeModal
             onClose={() => setIsYoutubeModalOpen(false)}
-            subjects={subjects}
+            subjects={sortedSubjects}
             onSuccess={() => {
               setIsYoutubeModalOpen(false);
               queryClient.invalidateQueries(['materials']);
