@@ -69,6 +69,28 @@ export const useChatStore = create(
 export const useAppStore = create((set) => ({
   sidebarOpen: true,
   searchOpen: false,
+  pendingOperations: new Set(),
+  addPendingOperation: (id) => set((s) => {
+    if (id == null) return {};
+    const key = String(id);
+    if (s.pendingOperations.has(key)) return {};
+    const next = new Set(s.pendingOperations);
+    next.add(key);
+    return { pendingOperations: next };
+  }),
+  removePendingOperation: (idOrPredicate) => set((s) => {
+    if (idOrPredicate == null) return {};
+    const predicate = typeof idOrPredicate === 'function'
+      ? idOrPredicate
+      : (op) => op === String(idOrPredicate);
+    let removed = false;
+    const next = new Set(s.pendingOperations);
+    for (const op of s.pendingOperations) {
+      if (predicate(op)) { next.delete(op); removed = true; }
+    }
+    return removed ? { pendingOperations: next } : {};
+  }),
+  clearPendingOperations: () => set({ pendingOperations: new Set() }),
   toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
   setSearchOpen: (v) => set({ searchOpen: v }),
 }));

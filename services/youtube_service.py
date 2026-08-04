@@ -13,8 +13,7 @@ import config
 logger = logging.getLogger(__name__)
 
 class YoutubeService:
-    @staticmethod
-    def process_youtube_async(material_id: int, url: str):
+    def process_youtube_async(self, material_id: int, url: str):
         db = SessionLocal()
         try:
             # Get material
@@ -102,13 +101,12 @@ class YoutubeService:
             mat = material_repository.get(db, material_id)
             if mat:
                 mat.status = "Failed"
-                mat.failure_reason = YoutubeService._user_friendly_error(e)
+                mat.failure_reason = self._user_friendly_error(e)
                 db.commit()
         finally:
             db.close()
 
-    @staticmethod
-    def delete_youtube(db: Session, material_id: int) -> bool:
+    def delete_youtube(self, db: Session, material_id: int) -> bool:
         mat = material_repository.get(db, material_id)
         if mat and mat.material_type == MaterialType.YOUTUBE:
             doc_id = f"mat_{mat.id}"
@@ -121,8 +119,7 @@ class YoutubeService:
             return success
         return False
 
-    @staticmethod
-    def _user_friendly_error(exc: Exception) -> str:
+    def _user_friendly_error(self, exc: Exception) -> str:
         err_str = str(exc).lower()
         if "invalid youtube url" in err_str:
             return "Gagal: URL YouTube tidak valid."

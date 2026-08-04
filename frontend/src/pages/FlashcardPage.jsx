@@ -12,6 +12,7 @@ import { extractErrorMessage } from '@/utils/errors';
 import MathMarkdown from '@/components/MathMarkdown';
 import MaterialPicker from '@/components/MaterialPicker';
 import { formatDate, formatTimeOnly } from '@/utils';
+import { usePendingOperation } from '@/hooks/usePendingOperation';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Main Page
@@ -645,6 +646,7 @@ function GenerateAIModal({ subjects, onClose, onSuccess }) {
   const [selectedMaterialIds, setSelectedMaterialIds] = useState([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState('');
+  const flashcardOp = usePendingOperation('flashcard');
 
   const PRESETS = [5, 10, 15, 20];
 
@@ -654,6 +656,7 @@ function GenerateAIModal({ subjects, onClose, onSuccess }) {
     if (selectedMaterialIds.length === 0) return setError('Harap pilih materi terlebih dahulu.');
     setError('');
     setIsGenerating(true);
+    flashcardOp.start();
     try {
       const result = await flashcardAPI.generate({
         subject_id: Number(subjectId),
@@ -667,6 +670,8 @@ function GenerateAIModal({ subjects, onClose, onSuccess }) {
     } catch (err) {
       setError(extractErrorMessage(err));
       setIsGenerating(false);
+    } finally {
+      flashcardOp.finish();
     }
   };
 

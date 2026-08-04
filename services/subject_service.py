@@ -53,16 +53,13 @@ def compute_subject_stats(db: Session, subject: Subject) -> dict:
 
 
 class SubjectService:
-    @staticmethod
-    def get_all(db: Session) -> List[Subject]:
+    def get_all(self, db: Session) -> List[Subject]:
         return subject_repository.get_all(db)
 
-    @staticmethod
-    def get_by_id(db: Session, id: int) -> Optional[Subject]:
+    def get_by_id(self, db: Session, id: int) -> Optional[Subject]:
         return subject_repository.get(db, id)
 
-    @staticmethod
-    def create(db: Session, name: str, semester: str, lecturer: str, description: str) -> Subject:
+    def create(self, db: Session, name: str, semester: str, lecturer: str, description: str) -> Subject:
         return subject_repository.create(db, {
             "name": name,
             "semester": semester,
@@ -70,8 +67,7 @@ class SubjectService:
             "description": description
         })
 
-    @staticmethod
-    def update(db: Session, id: int, name: str, semester: str, lecturer: str, description: str) -> Optional[Subject]:
+    def update(self, db: Session, id: int, name: str, semester: str, lecturer: str, description: str) -> Optional[Subject]:
         subject = subject_repository.get(db, id)
         if not subject:
             return None
@@ -83,15 +79,13 @@ class SubjectService:
         db.refresh(subject)
         return subject
 
-    @staticmethod
-    def delete(db: Session, id: int) -> bool:
+    def delete(self, db: Session, id: int) -> bool:
         success = subject_repository.delete(db, id)
         if success:
             cache_service.invalidate_all(db)
         return success
 
-    @staticmethod
-    def recalculate_subject_stats(db: Session, subject_id: int) -> Optional[Subject]:
+    def recalculate_subject_stats(self, db: Session, subject_id: int) -> Optional[Subject]:
         """Hitung ulang + persist statistik agregat untuk satu subject."""
         subject = subject_repository.get(db, subject_id)
         if not subject:

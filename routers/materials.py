@@ -111,6 +111,24 @@ async def cancel_audio(material_id: int, db: Session = Depends(get_db)):
         return JSONResponse(status_code=400, content={"detail": "Audio tidak sedang diproses atau tidak ditemukan."})
     return JSONResponse({"status": "success", "message": "Audio dibatalkan."})
 
+@router.get("/api/audio/statuses")
+async def get_all_audio_statuses(db: Session = Depends(get_db)):
+    """Semua audio generation yang sedang diproses — untuk banner global lintas halaman."""
+    rows = (
+        db.query(models.AudioGeneration)
+        .filter(models.AudioGeneration.status == "processing")
+        .all()
+    )
+    return JSONResponse({"processing": [
+        {
+            "material_id": r.material_id,
+            "status": r.status,
+            "progress": r.progress,
+            "stage": r.stage,
+        }
+        for r in rows
+    ]})
+
 @router.get("/api/materials/{material_id}/audio")
 async def get_audio_status(material_id: int, db: Session = Depends(get_db)):
     audio_gen = audio_service.get_audio_status(db, material_id)

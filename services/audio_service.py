@@ -48,8 +48,7 @@ class AudioService:
         self.engine = EdgeTTSEngine()
         self.fallback_engine = PiperTTSEngine()
 
-    @staticmethod
-    def _set_progress(db, audio_gen, progress: int, stage: str, commit: bool = True):
+    def _set_progress(self, db, audio_gen, progress: int, stage: str, commit: bool = True):
         """Update progress/stage + timestamp agar UI bisa menampilkan tahap berjalan."""
         if not audio_gen:
             return
@@ -81,6 +80,7 @@ class AudioService:
     async def generate_audio_for_material_async(self, material_id: int):
         db = SessionLocal()
         audio_gen = None
+        output_path = None
         try:
             # Create or get audio generation record
             audio_gen = audio_repository.get_by_material_id(db, material_id)
@@ -172,16 +172,29 @@ class AudioService:
                     self._set_progress(db, audio_gen, 100, "Selesai")
             else:
                 logger.error(f"[AudioGen] GAGAL: TTS engine gagal untuk material {material_id}")
+                # C2: hapus file audio partial yang mungkin tertulis sebagian sebelum gagal
+                if output_path and os.path.exists(output_path):
+                    try:
+                        os.remove(output_path)
+                        logger.info(f"File audio partial (TTS gagal) dihapus: {output_path}")
+                    except Exception as e:
+                        logger.warning(f"Gagal hapus file audio partial: {e}")
                 audio_repository.update_status(db, audio_gen.id, status="failed", failure_reason="Mesin TTS (edge-tts) gagal menghasilkan audio setelah beberapa percobaan. Periksa koneksi internet lalu coba lagi.")
         except Exception as e:
             logger.error(f"[AudioGen] Error tidak terduga untuk material {material_id}: {e}", exc_info=True)
+            # C2: hapus file audio partial yang tertinggal saat terjadi error
+            if output_path and os.path.exists(output_path):
+                try:
+                    os.remove(output_path)
+                    logger.info(f"File audio partial (error) dihapus: {output_path}")
+                except Exception as e2:
+                    logger.warning(f"Gagal hapus file audio partial: {e2}")
             if audio_gen:
                 audio_repository.update_status(db, audio_gen.id, status="failed", failure_reason=str(e)[:300])
         finally:
             db.close()
 
-    @staticmethod
-    def delete_audio(db, material_id: int) -> bool:
+    def delete_audio(self, db, material_id: int) -> bool:
         """Hapus file audio + record audio_generations untuk material tertentu."""
         from repositories.audio_repository import audio_repository
         audio_gen = audio_repository.get_by_material_id(db, material_id)
@@ -199,8 +212,7 @@ class AudioService:
         cache_service.invalidate_all(db)
         return True
 
-    @staticmethod
-    def cancel_audio(db, material_id: int) -> bool:
+    def cancel_audio(self, db, material_id: int) -> bool:
         """Batalkan audio yang sedang diproses (set status failed)."""
         audio_gen = audio_repository.get_by_material_id(db, material_id)
         if audio_gen and audio_gen.status == "processing":

@@ -16,6 +16,7 @@ import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import rehypeRaw from 'rehype-raw';
+import rehypeSanitize from 'rehype-sanitize';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import 'katex/dist/katex.min.css';
@@ -141,7 +142,11 @@ export default function MathMarkdown({ children = '', className = '' }) {
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath]}
         rehypePlugins={[
+          // B9: rehypeRaw mengizinkan HTML mentah → wajib disanitasi
+          // dengan rehype-sanitize SEBELUM rehype-katex (output katex aman,
+          // di-generate dari LaTeX yang sudah di-escape oleh katex sendiri).
           rehypeRaw,
+          rehypeSanitize,
           [
             rehypeKatex,
             {

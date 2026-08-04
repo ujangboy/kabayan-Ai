@@ -2,13 +2,14 @@ from services.ai_service import ai_service
 from prompts.flashcard import FLASHCARD_PROMPT
 from repositories.flashcard_repository import flashcard_repository
 from services.json_utils import parse_ai_json
+from services.ai_schemas import FlashcardItem
+from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
 
 class FlashcardService:
     # Rating SRS: 0=Lupa, 1=Sulit, 2=Biasa, 3=Mudah, 4=Sempurna
-    @staticmethod
-    def apply_review(db: Session, flashcard, rating: int, response_time_ms: int = None):
+    def apply_review(self, db: Session, flashcard, rating: int, response_time_ms: int = None):
         """Update field SRS kartu berdasarkan rating user (SM-2 sederhana)."""
         import models
         import datetime
@@ -70,8 +71,7 @@ class FlashcardService:
             "rerun": rerun,
         }
 
-    @staticmethod
-    def generate_flashcards(db: Session, subject_id, context: str, count: int = 10, title: str = None, material_ids: str = None):
+    def generate_flashcards(self, db: Session, subject_id, context: str, count: int = 10, title: str = None, material_ids: str = None):
         import models
         import datetime
         import uuid
@@ -98,8 +98,13 @@ class FlashcardService:
             generated_batch_id = str(uuid.uuid4())
             count_created = 0
             for item in items:
-                question = (item.get("question") or "").strip()
-                answer = (item.get("answer") or "").strip()
+                # B3: validasi struktur tiap kartu dengan Pydantic schema
+                try:
+                    valid = FlashcardItem.model_validate(item)
+                except ValidationError:
+                    continue
+                question = (valid.question or valid.front or "").strip()
+                answer = (valid.answer or valid.back or "").strip()
                 if not question or not answer:
                     continue
                 fc = models.Flashcard(

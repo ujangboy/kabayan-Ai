@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import hashlib
 import numpy as np
@@ -13,6 +14,18 @@ from services.settings_service import settings_service
 from database import SessionLocal
 
 TABLE_NAME = "chunks"
+
+# ── B1: doc_id sanitization ────────────────────────────────────────────────
+# doc_id dipakai dalam filter WHERE LanceDB (doc_id IN (...)) dan metadata tabel.
+# Batasi ke karakter aman agar tidak bisa menyisipkan injeksi/path traversal.
+_DOC_ID_ALLOWED_RE = re.compile(r'[^0-9A-Za-z_-]')
+
+
+def _sanitize_doc_id(doc_id) -> str:
+    s = str(doc_id or "").strip()
+    if not s:
+        return ""
+    return _DOC_ID_ALLOWED_RE.sub('_', s)
 
 
 def _table_schema(dim: int) -> pa.Schema:
@@ -81,7 +94,16 @@ class RAGService:
         self._db = None
         self._table = None
         self._query_embed_cache = {}
-        self._load_index()
+        # B8: lazy-load — index tidak dimuat saat import/startup,
+        # hanya saat pertama kali benar-benar dipakai.
+        self._loaded = False
+
+    def _ensure_loaded(self):
+        """Muat index LanceDB secara lazy (B8), thread-safe via RLock."""
+        with self._lock:
+            if not self._loaded:
+                self._load_index()
+                self._loaded = True
 
     # ── Embedder ──────────────────────────────────────────────────────
 
@@ -103,26 +125,28 @@ class RAGService:
         return _embedding_model_version(self.get_embedding_model_name())
 
     def check_model_compatibility(self) -> dict:
-        current_model = self.get_embedding_model_name()
-        current_ver = self.get_embedding_model_version()
-        index_models = set()
+        with self._lock:
+            self._ensure_loaded()
+            current_model = self.get_embedding_model_name()
+            current_ver = self.get_embedding_model_version()
+            index_models = set()
 
-        for meta in self.chunk_metadata:
-            stored = meta.get("model_name") or meta.get("model_version") or "unknown"
-            index_models.add(stored)
+            for meta in self.chunk_metadata:
+                stored = meta.get("model_name") or meta.get("model_version") or "unknown"
+                index_models.add(stored)
 
-        if not index_models:
-            return {"status": "empty", "current_model": current_model, "current_version": current_ver}
+            if not index_models:
+                return {"status": "empty", "current_model": current_model, "current_version": current_ver}
 
-        all_compatible = index_models == {current_ver} or index_models == {current_model}
-        return {
-            "status": "compatible" if all_compatible else "incompatible",
-            "current_model": current_model,
-            "current_version": current_ver,
-            "index_models": list(index_models),
-            "chunk_count": len(self.chunk_metadata),
-            "needs_reindex": not all_compatible,
-        }
+            all_compatible = index_models == {current_ver} or index_models == {current_model}
+            return {
+                "status": "compatible" if all_compatible else "incompatible",
+                "current_model": current_model,
+                "current_version": current_ver,
+                "index_models": list(index_models),
+                "chunk_count": len(self.chunk_metadata),
+                "needs_reindex": not all_compatible,
+            }
 
     # ── Persistence (LanceDB) ────────────────────────────────────────
 
@@ -181,6 +205,11 @@ class RAGService:
     def index_document(self, doc_id: str, chunks: list):
         if not chunks:
             return
+
+        self._ensure_loaded()
+        doc_id = _sanitize_doc_id(doc_id)
+        if not doc_id:
+            raise ValueError("doc_id tidak valid")
 
         self.delete_document_chunks(doc_id)
 
@@ -268,6 +297,8 @@ class RAGService:
 
     def delete_document_chunks(self, doc_id: str):
         with self._lock:
+            self._ensure_loaded()
+            doc_id = _sanitize_doc_id(doc_id)
             if doc_id not in self.doc_to_chunk_indices:
                 return
 
@@ -295,6 +326,7 @@ class RAGService:
 
     def search(self, query: str, active_doc_ids: list = None, top_k: int = 5) -> dict:
         with self._lock:
+            self._ensure_loaded()
             if self._table is None or not self.chunk_metadata:
                 return {"text": "", "sources": []}
 
@@ -309,8 +341,9 @@ class RAGService:
 
             filters = ["deleted = false"]
             if active_doc_ids:
-                ids_str = ", ".join(f"'{d}'" for d in active_doc_ids)
-                filters.append(f"doc_id IN ({ids_str})")
+                ids_str = ", ".join(f"'{_sanitize_doc_id(d)}'" for d in active_doc_ids if _sanitize_doc_id(d))
+                if ids_str:
+                    filters.append(f"doc_id IN ({ids_str})")
             where_clause = " AND ".join(filters)
 
             fetch_k = max(1, top_k * 3)
@@ -354,6 +387,7 @@ class RAGService:
 
     def rebuild_index(self):
         with self._lock:
+            self._ensure_loaded()
             if not self.chunk_metadata:
                 self.chunk_metadata = []
                 self.doc_to_chunk_indices = {}
@@ -430,6 +464,7 @@ class RAGService:
 
     def get_stats(self):
         with self._lock:
+            self._ensure_loaded()
             total = len(self.chunk_metadata)
             deleted = sum(1 for m in self.chunk_metadata if _is_deleted(m))
             active = total - deleted

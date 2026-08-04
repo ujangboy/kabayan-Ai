@@ -11,8 +11,7 @@ from services.rag_service import rag_service
 from parsers.document_parser import extract_text
 
 class MaterialService:
-    @staticmethod
-    def upload_material_sync(db: Session, subject_id: int, file: UploadFile) -> str:
+    def upload_material_sync(self, db: Session, subject_id: int, file: UploadFile) -> str:
         original_filename = file.filename or "uploaded_file"
         ext = os.path.splitext(original_filename)[1]
         safe_filename = f"{uuid.uuid4().hex}{ext}"
@@ -29,23 +28,40 @@ class MaterialService:
         
         return filepath, mat.id
 
-    @staticmethod
-    def _set_progress(db: Session, material_id: int, progress: int, stage: str):
+    def _set_progress(self, db: Session, material_id: int, progress: int, stage: str):
         mat = material_repository.get(db, material_id)
         if mat:
             material_repository.update(db, mat, {"progress": progress, "stage": stage})
             db.commit()
 
-    @staticmethod
-    def process_material_async(filepath: str, doc_id: str, material_id: int = None):
+    def _remove_file(self, filepath: str):
+        if filepath and os.path.exists(filepath):
+            try:
+                os.remove(filepath)
+            except Exception:
+                pass
+
+    def _delete_audio_files(self, db: Session, material_id: int):
+        # C1: hapus SEMUA file audio fisik milik materi (bisa lebih dari satu generasi)
+        from models import AudioGeneration
+        rows = db.query(AudioGeneration).filter(AudioGeneration.material_id == material_id).all()
+        for row in rows:
+            if row.filepath:
+                full_path = os.path.join(config.BASE_DIR, row.filepath.lstrip("/"))
+                self._remove_file(full_path)
+
+    def process_material_async(self, filepath: str, doc_id: str, material_id: int = None):
         db = SessionLocal()
         try:
-            MaterialService._set_progress(db, material_id, 30, "Mengekstrak teks dari file...")
+            self._set_progress(db, material_id, 30, "Mengekstrak teks dari file...")
             text = extract_text(filepath)
             if not text:
                 if material_id:
-                    material_repository.update(db, material_repository.get(db, material_id), {"status": "Failed", "failure_reason": "Tidak dapat mengekstrak teks dari file."})
-                    db.commit()
+                    mat = material_repository.get(db, material_id)
+                    if mat:
+                        self._remove_file(mat.filepath)
+                        material_repository.update(db, mat, {"status": "Failed", "failure_reason": "Tidak dapat mengekstrak teks dari file.", "filepath": None})
+                        db.commit()
                 return
                 
             paragraphs = text.split('\n\n')
@@ -77,11 +93,11 @@ class MaterialService:
             if current_chunk:
                 chunks.append("\n\n".join(current_chunk))
 
-            MaterialService._set_progress(db, material_id, 70, "Membuat potongan materi...")
+            self._set_progress(db, material_id, 70, "Membuat potongan materi...")
 
             rag_service.index_document(doc_id, chunks)
 
-            MaterialService._set_progress(db, material_id, 90, "Mengindeks ke RAG...")
+            self._set_progress(db, material_id, 90, "Mengindeks ke RAG...")
 
             if material_id:
                 mat = material_repository.get(db, material_id)
@@ -93,53 +109,55 @@ class MaterialService:
         except Exception as e:
             if material_id:
                 try:
-                    material_repository.update(db, material_repository.get(db, material_id), {"status": "Failed", "failure_reason": str(e)})
-                    db.commit()
+                    mat = material_repository.get(db, material_id)
+                    if mat:
+                        self._remove_file(mat.filepath)
+                        material_repository.update(db, mat, {"status": "Failed", "failure_reason": str(e), "filepath": None})
+                        db.commit()
                 except Exception:
                     pass
         finally:
             db.close()
 
-    @staticmethod
-    def cancel(db: Session, id: int) -> bool:
+    def cancel(self, db: Session, id: int) -> bool:
         mat = material_repository.get(db, id)
         if mat and mat.status in ("Pending", "Processing"):
+            self._remove_file(mat.filepath)
             material_repository.update(db, mat, {
                 "status": "Failed",
                 "failure_reason": "Dibatalkan oleh user.",
                 "stage": "Dibatalkan",
+                "filepath": None,
             })
             db.commit()
             return True
         return False
 
-    @staticmethod
-    def delete(db: Session, id: int) -> bool:
+    def delete(self, db: Session, id: int) -> bool:
         mat = material_repository.get(db, id)
         if mat:
+            # C1: hapus file audio fisik semua generasi materi ini sebelum row dihapus
+            self._delete_audio_files(db, mat.id)
             doc_id = f"mat_{mat.id}"
             rag_service.delete_document_chunks(doc_id)
             if rag_service._should_rebuild():
                 import threading
                 threading.Thread(target=rag_service.rebuild_index, daemon=True).start()
-            if os.path.exists(mat.filepath):
-                try:
-                    os.remove(mat.filepath)
-                except:
-                    pass
+            self._remove_file(mat.filepath)
             success = material_repository.delete(db, id)
             if success:
                 cache_service.invalidate_all(db)
+                # C5: sweep file yatim setelah menghapus materi
+                from services.storage_cleanup_service import cleanup_orphan_files
+                cleanup_orphan_files(db)
             return success
         return False
 
-    @staticmethod
-    def get_by_subject(db: Session, subject_id: int):
+    def get_by_subject(self, db: Session, subject_id: int):
         """Kembalikan SEMUA materi (untuk UI/listing)."""
         return material_repository.get_by_subject(db, subject_id)
 
-    @staticmethod
-    def get_ready_materials(db: Session, subject_id: int, material_ids: str = None):
+    def get_ready_materials(self, db: Session, subject_id: int, material_ids: str = None):
         """Kembalikan hanya materi dengan status Ready, opsional filter by material_ids."""
         all_materials = material_repository.get_by_subject(db, subject_id)
         if material_ids:

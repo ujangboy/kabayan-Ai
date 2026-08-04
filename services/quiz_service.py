@@ -2,22 +2,22 @@ from services.ai_service import ai_service
 from prompts.quiz import QUIZ_PROMPT, DIFFICULTY_INSTRUCTIONS
 from repositories.quiz_repository import quiz_repository
 from services.json_utils import parse_ai_json
+from services.ai_schemas import QuizOutput, QuizQuestion, EssayQuestion
+from pydantic import ValidationError
 from sqlalchemy.orm import Session
 import json
 import datetime
 
 
 class QuizService:
-    @staticmethod
-    def _normalize_options(options) -> list:
+    def _normalize_options(self, options) -> list:
         if isinstance(options, list):
             return options
         if isinstance(options, dict):
             return [f"{k}. {v}" for k, v in options.items()]
         return []
 
-    @staticmethod
-    def _normalize_answer(answer: str, options: list) -> str:
+    def _normalize_answer(self, answer: str, options: list) -> str:
         if not isinstance(options, list):
             return answer
         if answer in options:
@@ -27,8 +27,7 @@ class QuizService:
                 return opt
         return answer
 
-    @staticmethod
-    def generate_quiz(db: Session, subject_id: int, context: str,
+    def generate_quiz(self, db: Session, subject_id: int, context: str,
                       mcq_count: int = 5, essay_count: int = 0, title: str = None,
                       material_ids: str = None, difficulty: str = "sedang"):
         # Ambil instruksi sesuai tingkat kesulitan, fallback ke sedang
@@ -60,10 +59,17 @@ class QuizService:
                 data["mcq"] = []
 
             for q in data.get("mcq", []):
-                normalized_opts = QuizService._normalize_options(q.get("options", []))
-                normalized_ans = QuizService._normalize_answer(q.get("answer", ""), normalized_opts)
+                normalized_opts = self._normalize_options(q.get("options", []))
+                normalized_ans = self._normalize_answer(q.get("answer", ""), normalized_opts)
                 q["options"] = normalized_opts
                 q["answer"] = normalized_ans
+
+            # B3: validasi struktur output terhadap Pydantic schema
+            try:
+                validated = QuizOutput.model_validate(data)
+            except ValidationError as ve:
+                raise ValueError(f"Output AI tidak sesuai skema: {ve.errors()[:3]}")
+            data = validated.model_dump()
 
             import models
             mcq_count_final = len(data.get("mcq", []))
@@ -91,8 +97,7 @@ class QuizService:
             snippet = str(result)[:300] if result else ""
             raise ValueError(f"AI gagal: {e}\nResponse: {snippet}")
 
-    @staticmethod
-    def save_score(db: Session, quiz_id: int, score: int, correct_count: int = None,
+    def save_score(self, db: Session, quiz_id: int, score: int, correct_count: int = None,
                    wrong_count: int = None, time_taken: int = None, total_questions: int = None):
         """Update score + tracking setelah user selesai mengerjakan quiz."""
         quiz = quiz_repository.get(db, quiz_id)

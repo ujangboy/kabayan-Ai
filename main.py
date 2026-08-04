@@ -313,6 +313,15 @@ async def startup_event():
     except Exception as e:
         logger.warning(f"Recovery stuck rows gagal: {e}")
 
+    # C5: sweep file yatim (upload/audio yang tidak lagi direferensikan DB)
+    try:
+        db = SessionLocal()
+        from services.storage_cleanup_service import cleanup_orphan_files
+        cleanup_orphan_files(db)
+        db.close()
+    except Exception as e:
+        logger.warning(f"Storage cleanup startup gagal: {e}")
+
     asyncio.create_task(material_worker())
 
 from fastapi.middleware.cors import CORSMiddleware

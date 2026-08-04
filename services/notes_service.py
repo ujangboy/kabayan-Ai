@@ -5,8 +5,7 @@ from services.json_utils import sanitize_output
 from sqlalchemy.orm import Session
 
 class NotesService:
-    @staticmethod
-    def generate_notes(db: Session, subject_id: int, title: str, context: str):
+    def generate_notes(self, db: Session, subject_id: int, title: str, context: str):
         response = ai_service.generate(
             capability="reasoning",
             prompt_template=NOTES_PROMPT,
@@ -17,10 +16,9 @@ class NotesService:
         content = sanitize_output(response)
         return content
 
-    @staticmethod
-    def generate_and_save_notes(db: Session, subject_id: int, title: str, context: str):
+    def generate_and_save_notes(self, db: Session, subject_id: int, title: str, context: str):
         """Generate AI + langsung simpan ke DB. Dipakai oleh endpoint yang memang ingin auto-save."""
-        content = NotesService.generate_notes(db, subject_id, title, context)
+        content = self.generate_notes(db, subject_id, title, context)
         note = note_repository.create(db, {
             "subject_id": subject_id,
             "title": title,
@@ -28,16 +26,13 @@ class NotesService:
         })
         return note
 
-    @staticmethod
-    def get_all(db: Session, skip: int = 0, limit: int = 50):
+    def get_all(self, db: Session, skip: int = 0, limit: int = 50):
         return note_repository.get_all(db, skip=skip, limit=limit)
 
-    @staticmethod
-    def delete(db: Session, note_id: int):
+    def delete(self, db: Session, note_id: int):
         return note_repository.delete(db, note_id)
-        
-    @staticmethod
-    def process_action(db: Session, note_id: int, action: str):
+
+    def process_action(self, db: Session, note_id: int, action: str):
         from services.flashcard_service import flashcard_service
         from services.quiz_service import quiz_service
         from services.summary_service import summary_service

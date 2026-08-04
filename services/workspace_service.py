@@ -2,8 +2,7 @@ from sqlalchemy.orm import Session
 import models
 
 class WorkspaceService:
-    @staticmethod
-    def get_dashboard_stats(db: Session):
+    def get_dashboard_stats(self, db: Session):
         subjects_count = db.query(models.Subject).count()
         materials_count = db.query(models.Material).count()
         notes_count = db.query(models.Note).count()

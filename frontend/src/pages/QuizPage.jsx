@@ -8,6 +8,7 @@ import MaterialPicker from '@/components/MaterialPicker';
 import QuizTimer from '@/components/quiz/QuizTimer';
 import QuizProgressBar from '@/components/quiz/QuizProgressBar';
 import { formatDate, formatTimeOnly } from '@/utils';
+import { usePendingOperation } from '@/hooks/usePendingOperation';
 
 const QTYPE_LABEL = { mcq: 'Pilihan Ganda', essay: 'Essay', mixed: 'Campuran' };
 const DIFFICULTY_BADGE = {
@@ -267,6 +268,7 @@ function GenerateQuizModal({ onClose, subjects, onSuccess }) {
   const [selectedMaterialIds, setSelectedMaterialIds] = useState([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState('');
+  const quizOp = usePendingOperation('quiz');
 
   const DIFFICULTIES = [
     { value: 'mudah',  label: 'Mudah',  desc: 'Faktual & ingatan dasar' },
@@ -281,6 +283,7 @@ function GenerateQuizModal({ onClose, subjects, onSuccess }) {
     if (!mcqCount && !essayCount) return setError('Minimal 1 soal.');
     setError('');
     setIsGenerating(true);
+    quizOp.start();
     try {
       const result = await quizAPI.generate({
         subject_id: subjectId,
@@ -295,6 +298,8 @@ function GenerateQuizModal({ onClose, subjects, onSuccess }) {
     } catch (err) {
       setError(err.message || 'Gagal membuat quiz. Coba lagi.');
       setIsGenerating(false);
+    } finally {
+      quizOp.finish();
     }
   };
 

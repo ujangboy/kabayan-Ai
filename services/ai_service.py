@@ -1,5 +1,6 @@
 import time
 import re
+import threading
 import logging
 from langchain_groq import ChatGroq
 from langchain_core.prompts import PromptTemplate
@@ -35,6 +36,10 @@ def _normalize_math(text: str) -> str:
     text = re.sub(r'\\\(([\s\S]*?)\\\)', lambda m: f'${m.group(1)}$', text)
     return text
 
+
+def _wrap_data(tag: str, content: str) -> str:
+    """Bungkus konten tak-tepercaya (input user / dokumen) dengan tag penanda (B2)."""
+    return f"<{tag}>\n{content}\n</{tag}>"
 def _truncate_context(text: str, max_chars: int = MAX_CONTEXT_CHARS) -> str:
     """Potong context agar tidak overflow context window Groq."""
     if len(text) <= max_chars:
@@ -69,20 +74,37 @@ def _retry_with_backoff(fn, max_attempts: int = 3, base_delay: float = 2.0):
 
 # ─── REQ-06: Internal Rate Limiter (Loop Guard) ──────────────────────────────
 class InternalRateLimiter:
-    def __init__(self, max_requests: int = 100, window_seconds: int = 60):
+    """Rate limiter per-key (per-capability = per-endpoint), bukan global (B10).
+
+    Setiap capability punya bucket sendiri, sehingga lonjakan satu fitur
+    tidak menghabiskan kuota fitur lain.
+    """
+
+    def __init__(self, max_requests: int = 100, window_seconds: int = 60, max_buckets: int = 64):
         self.max_requests = max_requests
         self.window_seconds = window_seconds
-        self.timestamps: List[float] = []
+        self.max_buckets = max_buckets
+        self._buckets: Dict[str, List[float]] = {}
+        self._lock = threading.Lock()
 
-    def check_limit(self):
+    def check_limit(self, key: str = "default"):
         now = time.time()
-        self.timestamps = [t for t in self.timestamps if now - t < self.window_seconds]
-        if len(self.timestamps) >= self.max_requests:
-            raise Exception(
-                "RATE_LIMIT_LOCAL: Internal Loop Guard aktif. "
-                "Limit eksekusi AI maksimal 100 per menit."
-            )
-        self.timestamps.append(now)
+        with self._lock:
+            bucket = [t for t in self._buckets.get(key, []) if now - t < self.window_seconds]
+            if len(bucket) >= self.max_requests:
+                raise Exception(
+                    "RATE_LIMIT_LOCAL: Internal Loop Guard aktif. "
+                    f"Limit eksekusi AI untuk '{key}' maksimal {self.max_requests} per menit."
+                )
+            bucket.append(now)
+            self._buckets[key] = bucket
+            # Bersihkan bucket yang sudah tidak aktif agar memori tidak membengkak
+            if len(self._buckets) > self.max_buckets:
+                self._buckets = {
+                    k: v for k, v in self._buckets.items()
+                    if any(now - t < self.window_seconds for t in v)
+                }
+
 
 global_rate_limiter = InternalRateLimiter()
 
@@ -110,9 +132,8 @@ class CapabilityRouter:
 # ─── AI Service ──────────────────────────────────────────────────────────────
 class AIService:
 
-    @staticmethod
-    def _get_llm(capability: str, temperature: float = None) -> ChatGroq:
-        global_rate_limiter.check_limit()
+    def _get_llm(self, capability: str, temperature: float = None) -> ChatGroq:
+        global_rate_limiter.check_limit(capability)
         # Exam-related capabilities need longer timeout (multi-topic generation)
         exam_caps = {"exam_analysis", "exam_blueprint", "exam_question", "exam_evaluate", "reasoning", "quiz"}
         timeout = 90.0 if capability in exam_caps else 30.0
@@ -125,8 +146,8 @@ class AIService:
             timeout=timeout,
         )
 
-    @staticmethod
     def generate(
+        self,
         capability: str,
         prompt_template: PromptTemplate,
         input_variables: Dict[str, Any],
@@ -150,7 +171,7 @@ class AIService:
                 if cached:
                     return cached
 
-            llm = AIService._get_llm(capability, temperature=temperature)
+            llm = self._get_llm(capability, temperature=temperature)
 
             # If output_schema provided, try structured output first
             if output_schema:
@@ -183,8 +204,7 @@ class AIService:
         finally:
             db.close()
 
-    @staticmethod
-    def chat(history: List[Dict[str, str]], context: str, user_input: str) -> str:
+    def chat(self, history: List[Dict[str, str]], context: str, user_input: str) -> str:
         from prompts.chat import CHAT_SYSTEM_PROMPT_WITH_DOCS_TEMPLATE, CHAT_SYSTEM_PROMPT_NO_DOCS_TEMPLATE
 
         # REQ-04: truncate + trim
@@ -195,21 +215,25 @@ class AIService:
         has_docs = bool(context.strip())
         prompt_template = CHAT_SYSTEM_PROMPT_WITH_DOCS_TEMPLATE if has_docs else CHAT_SYSTEM_PROMPT_NO_DOCS_TEMPLATE
 
+        # B2: tandai konten tak-tepercaya sebagai DATA, bukan instruksi
+        wrapped_context = _wrap_data("dokumen", context) if has_docs else ""
+        wrapped_input = _wrap_data("pesan_pengguna", user_input)
+
         db = SessionLocal()
         try:
             setting_hash = settings_service.get_embedding_model(db)
             if has_docs:
-                prompt_str = prompt_template.format(context=context, history=hist_str, input=user_input)
+                prompt_str = prompt_template.format(context=wrapped_context, history=hist_str, input=wrapped_input)
             else:
-                prompt_str = prompt_template.format(history=hist_str, input=user_input)
+                prompt_str = prompt_template.format(history=hist_str, input=wrapped_input)
 
             cached = cache_service.get_cache(db, prompt_str, context, setting_hash)
             if cached:
                 return cached
 
-            llm = AIService._get_llm("chat")
+            llm = self._get_llm("chat")
             if has_docs:
-                sys_msg = CHAT_SYSTEM_PROMPT_WITH_DOCS_TEMPLATE.format(context=context, history="", input="")
+                sys_msg = CHAT_SYSTEM_PROMPT_WITH_DOCS_TEMPLATE.format(context=wrapped_context, history="", input="")
             else:
                 sys_msg = CHAT_SYSTEM_PROMPT_NO_DOCS_TEMPLATE.format(history="", input="")
             messages = [SystemMessage(content=sys_msg)]
@@ -218,7 +242,7 @@ class AIService:
                     messages.append(HumanMessage(content=msg["content"]))
                 else:
                     messages.append(AIMessage(content=msg["content"]))
-            messages.append(HumanMessage(content=user_input))
+            messages.append(HumanMessage(content=wrapped_input))
 
             # REQ-03: retry
             response = _retry_with_backoff(lambda: llm.invoke(messages))
@@ -229,8 +253,7 @@ class AIService:
         finally:
             db.close()
 
-    @staticmethod
-    async def achat_stream(history: List[Dict[str, str]], context: str, user_input: str):
+    async def achat_stream(self, history: List[Dict[str, str]], context: str, user_input: str):
         from prompts.chat import CHAT_SYSTEM_PROMPT_WITH_DOCS_TEMPLATE, CHAT_SYSTEM_PROMPT_NO_DOCS_TEMPLATE
         import asyncio
 
@@ -242,13 +265,17 @@ class AIService:
         has_docs = bool(context.strip())
         prompt_template = CHAT_SYSTEM_PROMPT_WITH_DOCS_TEMPLATE if has_docs else CHAT_SYSTEM_PROMPT_NO_DOCS_TEMPLATE
 
+        # B2: tandai konten tak-tepercaya sebagai DATA, bukan instruksi
+        wrapped_context = _wrap_data("dokumen", context) if has_docs else ""
+        wrapped_input = _wrap_data("pesan_pengguna", user_input)
+
         db = SessionLocal()
         try:
             setting_hash = settings_service.get_embedding_model(db)
             if has_docs:
-                prompt_str = prompt_template.format(context=context, history=hist_str, input=user_input)
+                prompt_str = prompt_template.format(context=wrapped_context, history=hist_str, input=wrapped_input)
             else:
-                prompt_str = prompt_template.format(history=hist_str, input=user_input)
+                prompt_str = prompt_template.format(history=hist_str, input=wrapped_input)
 
             cached = await asyncio.to_thread(
                 cache_service.get_cache, db, prompt_str, context, setting_hash
@@ -257,9 +284,9 @@ class AIService:
                 yield cached
                 return
 
-            llm = AIService._get_llm("chat")
+            llm = self._get_llm("chat")
             if has_docs:
-                sys_msg = CHAT_SYSTEM_PROMPT_WITH_DOCS_TEMPLATE.format(context=context, history="", input="")
+                sys_msg = CHAT_SYSTEM_PROMPT_WITH_DOCS_TEMPLATE.format(context=wrapped_context, history="", input="")
             else:
                 sys_msg = CHAT_SYSTEM_PROMPT_NO_DOCS_TEMPLATE.format(history="", input="")
             messages = [SystemMessage(content=sys_msg)]
@@ -268,7 +295,7 @@ class AIService:
                     messages.append(HumanMessage(content=msg["content"]))
                 else:
                     messages.append(AIMessage(content=msg["content"]))
-            messages.append(HumanMessage(content=user_input))
+            messages.append(HumanMessage(content=wrapped_input))
 
             full_response = ""
             last_yield = time.time()

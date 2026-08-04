@@ -6,6 +6,7 @@ import { useChatStore } from '@/store';
 import { cn, formatDateTime } from '@/utils';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { notesAPI } from '@/services/api';
+import { usePendingOperation } from '@/hooks/usePendingOperation';
 
 const QUICK_PROMPTS = [
   { label: '📝 Ringkas', prompt: 'Buatkan ringkasan yang komprehensif dari materi yang saya pilih.' },
@@ -112,8 +113,13 @@ export default function ChatPage() {
   const [isNoteSaving, setIsNoteSaving] = useState(false);
   // Mutex ref — mencegah double-call karena React state update async
   const isNoteSavingRef = useRef(false);
+  // Mutex ref untuk isLoading — mencegah 2 stream chat paralel (double-click cepat)
+  const isLoadingRef = useRef(false);
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
+
+  const chatOp = usePendingOperation('chat');
+  const notebookOp = usePendingOperation('notebook');
 
   // Handle URL params
   useEffect(() => {
@@ -139,7 +145,8 @@ export default function ChatPage() {
   }, [chat?.messages, isLoading]);
 
   const sendMessage = useCallback(async (text) => {
-    if (!text?.trim() || isLoading) return;
+    if (!text?.trim() || isLoadingRef.current) return;
+    isLoadingRef.current = true;
     const chatId = currentChatId;
     addMessage(chatId, { role: 'user', content: text });
     setInput('');
@@ -150,8 +157,9 @@ export default function ChatPage() {
     // Add empty assistant message
     addMessage(chatId, { role: 'assistant', content: '' });
 
-    try {
-      const res = await fetch('/api/chat', {
+     try {
+       chatOp.start();
+       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -176,10 +184,12 @@ export default function ChatPage() {
       }
     } catch (err) {
       updateLastMessage(chatId, '⚠️ Terjadi kesalahan. Coba lagi.');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [currentChatId, isLoading, selectedDocs, chat, addMessage, updateLastMessage]);
+     } finally {
+       isLoadingRef.current = false;
+       setIsLoading(false);
+       chatOp.finish();
+     }
+   }, [currentChatId, selectedDocs, chat, addMessage, updateLastMessage, chatOp]);
 
   // Direct-to-Notebook: simpan input ke catatan TANPA memanggil Groq AI
   const saveAsNote = useCallback(async () => {
@@ -225,6 +235,7 @@ export default function ChatPage() {
     isNoteSavingRef.current = true;
     setIsNoteSaving(true);
     setShowQuickPrompts(false);
+    notebookOp.start();
     setNoteToast({ type: 'success', msg: '⏳ Menyiapkan catatan...' });
     try {
       // Step 1: Detect context (mata kuliah, topic, subject_id)
@@ -246,11 +257,12 @@ export default function ChatPage() {
     } catch {
       setNoteToast({ type: 'error', msg: 'Gagal menyimpan ke Notebook.' });
     } finally {
+      notebookOp.finish();
       isNoteSavingRef.current = false;
       setIsNoteSaving(false);
       setTimeout(() => setNoteToast(null), 4000);
     }
-  }, [chat]);
+  }, [chat, notebookOp]);
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(input); }

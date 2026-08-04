@@ -18,7 +18,7 @@ from services.assessment_engine import assemble_evaluation, generate_study_plan,
 from repositories.exam_repository import exam_blueprint_repository, exam_session_repository
 from repositories.question_bank_repository import question_bank_repository
 from repositories.exam_history_repository import exam_attempt_repo, study_plan_repo, study_plan_item_repo
-from models import ExamSession, ExamAttempt, ExamReview, StudyPlan, StudyPlanItem
+from models import ExamBlueprint, ExamSession, ExamAttempt, ExamReview, StudyPlan, StudyPlanItem
 from schemas.ai_output import ExamQuestionOutput
 from prompts.exam_analyzer import (
     ANALYSIS_PROMPT,
@@ -118,8 +118,7 @@ def _bank_row_to_question(row, global_id: int) -> dict:
 class ExamService:
 
     # ── 1. Analyze ────────────────────────────────────────────────────────────
-    @staticmethod
-    def analyze(db: Session, subject_id: int) -> dict:
+    def analyze(self, db: Session, subject_id: int) -> dict:
         from services.material_service import material_service
         from services.subject_service import subject_service as subj_svc
         from models import Note, Flashcard, Quiz
@@ -188,8 +187,8 @@ class ExamService:
 
 
     # ── 2. Generate Blueprint (AI, cached) ────────────────────────────────────
-    @staticmethod
     def generate_blueprint(
+        self,
         db: Session,
         subject_id: int,
         exam_type: str,
@@ -266,8 +265,7 @@ class ExamService:
 
 
     # ── 3. Generate Questions — Question Bank first, AI only if needed ─────────
-    @staticmethod
-    def generate_questions(db: Session, blueprint_id: int) -> dict:
+    def generate_questions(self, db: Session, blueprint_id: int) -> dict:
         from services.material_service import material_service
 
         blueprint = exam_blueprint_repository.get(db, blueprint_id)
@@ -410,8 +408,8 @@ class ExamService:
 
 
     # ── 4. Retry — pure Python, zero AI ───────────────────────────────────────
-    @staticmethod
     def retry_from_bank(
+        self,
         db: Session,
         blueprint_id: int,
         weak_topics: Optional[List[str]] = None,
@@ -535,8 +533,8 @@ class ExamService:
         )
         return {"session_id": session.id, **payload}
 
-    @staticmethod
     def fetch_practice_questions(
+        self,
         db: Session,
         session_id: int,
         topic_filter: Optional[str] = None,
@@ -618,8 +616,8 @@ class ExamService:
         }
 
     # ── 5. Submit & Evaluate — Python engine, AI only for subjective ──────────
-    @staticmethod
     def submit_and_evaluate(
+        self,
         db: Session,
         session_id: int,
         answers: dict,
@@ -774,8 +772,7 @@ class ExamService:
 
 
     # ── 6. Recommendation — rule-based Python, no AI ──────────────────────────
-    @staticmethod
-    def get_recommendation(db: Session, session_id: int) -> dict:
+    def get_recommendation(self, db: Session, session_id: int) -> dict:
         from services.subject_service import subject_service as subj_svc
 
         session = exam_session_repository.get(db, session_id)
@@ -798,8 +795,8 @@ class ExamService:
         )
 
     # ── 7. Lazy AI explanation for one question ───────────────────────────────
-    @staticmethod
     def get_explanation(
+        self,
         db: Session,
         bank_id: Optional[int],
         question_text: str,
@@ -837,13 +834,11 @@ class ExamService:
         return response
 
     # ── 8. Question Bank stats ────────────────────────────────────────────────
-    @staticmethod
-    def get_bank_stats(db: Session, subject_id: int) -> dict:
+    def get_bank_stats(self, db: Session, subject_id: int) -> dict:
         return question_bank_repository.stats_by_subject(db, subject_id)
 
     # ── 9. Unified Session Management ─────────────────────────────────────────
-    @staticmethod
-    def get_blueprints(db: Session, subject_id: int) -> list:
+    def get_blueprints(self, db: Session, subject_id: int) -> list:
         from sqlalchemy import desc
         bps = (
             db.query(ExamBlueprint)
@@ -867,8 +862,7 @@ class ExamService:
             for bp in bps
         ]
 
-    @staticmethod
-    def get_session_detail(db: Session, session_id: int) -> dict:
+    def get_session_detail(self, db: Session, session_id: int) -> dict:
         s = (
             db.query(ExamSession)
             .options(
@@ -955,8 +949,7 @@ class ExamService:
             "study_plan": plan_data,
         }
 
-    @staticmethod
-    def get_unified_sessions(db: Session, subject_id: Optional[int] = None) -> list:
+    def get_unified_sessions(self, db: Session, subject_id: Optional[int] = None) -> list:
         """Return all sessions (history + active), ordered by started_at desc."""
         from sqlalchemy import desc
         query = (
@@ -975,7 +968,7 @@ class ExamService:
         blueprint_ids = list({s.blueprint_id for s in sessions if s.blueprint_id})
         blueprint_material_map: dict = {}  # blueprint_id → list[str] of material names
         if blueprint_ids:
-            from models import ExamBlueprint, Material
+            from models import Material
             bps = db.query(ExamBlueprint).filter(ExamBlueprint.id.in_(blueprint_ids)).all()
             # Collect all material ids needed
             all_mat_ids: set = set()
@@ -1028,8 +1021,8 @@ class ExamService:
             })
         return result
 
-    @staticmethod
     def retry_inplace(
+        self,
         db: Session,
         session_id: int,
         weak_topics: Optional[List[str]] = None,
@@ -1218,8 +1211,8 @@ class ExamService:
                 detail="Gagal memulai latihan ulang.",
             )
 
-    @staticmethod
     def unified_retry(
+        self,
         db: Session,
         session_id: int,
         weak_topics: Optional[List[str]] = None,
@@ -1253,7 +1246,7 @@ class ExamService:
                 except (json.JSONDecodeError, TypeError):
                     effective_weak = []
 
-            result = ExamService.retry_from_bank(
+            result = self.retry_from_bank(
                 db, blueprint_id,
                 weak_topics=effective_weak or [],
                 topic_filter=topic_filter,
@@ -1275,8 +1268,7 @@ class ExamService:
                 detail="Gagal memulai latihan ulang.",
             )
 
-    @staticmethod
-    def save_study_plan(db: Session, session_id: int, plan_data: dict) -> dict:
+    def save_study_plan(self, db: Session, session_id: int, plan_data: dict) -> dict:
         """Save/replace study plan for a session."""
         try:
             existing = study_plan_repo.get_by_session(db, session_id)
@@ -1335,8 +1327,7 @@ class ExamService:
                 detail="Gagal menyimpan rencana belajar.",
             )
 
-    @staticmethod
-    def toggle_plan_item(db: Session, item_id: int) -> dict:
+    def toggle_plan_item(self, db: Session, item_id: int) -> dict:
         item = study_plan_item_repo.toggle_completed(db, item_id)
         if not item:
             raise HTTPException(
@@ -1350,8 +1341,7 @@ class ExamService:
             "plan_completed_days": plan.completed_days if plan else 0,
         }
 
-    @staticmethod
-    def submit_plan_quiz(db: Session, item_id: int, payload) -> dict:
+    def submit_plan_quiz(self, db: Session, item_id: int, payload) -> dict:
         """Simpan hasil latihan quiz dari item rencana belajar + tandai selesai."""
         from models import PracticeResult
         item = study_plan_item_repo.get(db, item_id)
@@ -1379,8 +1369,7 @@ class ExamService:
         db.refresh(result)
         return {"status": "success", "score": payload.score, "practice_result_id": result.id}
 
-    @staticmethod
-    def submit_plan_flashcards(db: Session, item_id: int, payload) -> dict:
+    def submit_plan_flashcards(self, db: Session, item_id: int, payload) -> dict:
         """Catat review flashcard dari item rencana + update SRS + tandai selesai."""
         from models import PracticeResult, Flashcard
         from services.flashcard_service import flashcard_service
@@ -1413,8 +1402,7 @@ class ExamService:
         db.refresh(result)
         return {"status": "success", "reviewed": reviewed, "practice_result_id": result.id}
 
-    @staticmethod
-    def delete_session(db: Session, session_id: int) -> bool:
+    def delete_session(self, db: Session, session_id: int) -> bool:
         try:
             if not (session := exam_session_repository.get(db, session_id)):
                 return False

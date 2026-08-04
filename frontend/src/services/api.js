@@ -132,6 +132,7 @@ export const quizAPI = {
 export const audioAPI = {
   generate: (materialId) => api.post(`/materials/${materialId}/audio`),
   status: (materialId) => api.get(`/materials/${materialId}/audio`),
+  statuses: () => api.get('/audio/statuses').then(r => r.data),
   delete: (materialId) => api.post(`/materials/${materialId}/audio/delete`),
   cancel: (materialId) => api.post(`/materials/${materialId}/audio/cancel`),
 };
