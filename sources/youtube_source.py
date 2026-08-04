@@ -323,8 +323,10 @@ class YoutubeSource(BaseSource):
                 except Exception:
                     pass
 
-    def _get_transcript_with_duration(self) -> Tuple[list, int, str]:
+    def _get_transcript_with_duration(self, progress_cb=None):
         # Priority: transcript API → yt-dlp subtitles → Whisper
+        if progress_cb:
+            progress_cb("Mengambil transkrip via API YouTube...", 30)
         try:
             fetched_transcript, lang = self._fetch_from_transcript_api()
             duration = 0
@@ -340,6 +342,8 @@ class YoutubeSource(BaseSource):
         except Exception as e:
             logger.warning(f"[YouTube] Transcript API gagal untuk {self.video_id}: {e}. Mencoba yt-dlp subtitles...")
 
+        if progress_cb:
+            progress_cb("Transkrip API gagal — mencoba subtitle yt-dlp...", 40)
         try:
             result = self._fetch_from_ytdlp_subtitles()
             if result:
@@ -349,10 +353,12 @@ class YoutubeSource(BaseSource):
             logger.warning(f"[YouTube] yt-dlp subtitles gagal untuk {self.video_id}: {e}")
 
         logger.warning(f"[YouTube] Semua sumber subtitle gagal untuk {self.video_id}. Beralih ke Whisper...")
+        if progress_cb:
+            progress_cb("Mentranskripsikan audio dengan Whisper AI...", 60)
         return self._transcribe_audio_with_groq()
 
-    def extract(self) -> List[Document]:
-        transcript, _, lang = self._get_transcript_with_duration()
+    def extract(self, progress_cb=None) -> List[Document]:
+        transcript, _, lang = self._get_transcript_with_duration(progress_cb)
 
         chunks = []
         current_content = []

@@ -30,9 +30,17 @@ class MaterialService:
         return filepath, mat.id
 
     @staticmethod
+    def _set_progress(db: Session, material_id: int, progress: int, stage: str):
+        mat = material_repository.get(db, material_id)
+        if mat:
+            material_repository.update(db, mat, {"progress": progress, "stage": stage})
+            db.commit()
+
+    @staticmethod
     def process_material_async(filepath: str, doc_id: str, material_id: int = None):
         db = SessionLocal()
         try:
+            MaterialService._set_progress(db, material_id, 30, "Mengekstrak teks dari file...")
             text = extract_text(filepath)
             if not text:
                 if material_id:
@@ -69,10 +77,16 @@ class MaterialService:
             if current_chunk:
                 chunks.append("\n\n".join(current_chunk))
 
+            MaterialService._set_progress(db, material_id, 70, "Membuat potongan materi...")
+
             rag_service.index_document(doc_id, chunks)
 
+            MaterialService._set_progress(db, material_id, 90, "Mengindeks ke RAG...")
+
             if material_id:
-                material_repository.update(db, material_repository.get(db, material_id), {"status": "Ready"})
+                mat = material_repository.get(db, material_id)
+                if mat and mat.status == "Processing":
+                    material_repository.update(db, mat, {"status": "Ready", "progress": 100, "stage": "Selesai"})
 
             cache_service.invalidate_all(db)
             db.commit()
@@ -85,6 +99,19 @@ class MaterialService:
                     pass
         finally:
             db.close()
+
+    @staticmethod
+    def cancel(db: Session, id: int) -> bool:
+        mat = material_repository.get(db, id)
+        if mat and mat.status in ("Pending", "Processing"):
+            material_repository.update(db, mat, {
+                "status": "Failed",
+                "failure_reason": "Dibatalkan oleh user.",
+                "stage": "Dibatalkan",
+            })
+            db.commit()
+            return True
+        return False
 
     @staticmethod
     def delete(db: Session, id: int) -> bool:

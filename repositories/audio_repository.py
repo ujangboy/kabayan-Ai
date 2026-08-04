@@ -13,7 +13,7 @@ class AudioRepository(BaseRepository[AudioGeneration]):
     def get_by_material_id(self, db: Session, material_id: int) -> Optional[AudioGeneration]:
         return db.query(self.model).filter(self.model.material_id == material_id).first()
 
-    def update_status(self, db: Session, id: int, status: str, filepath: str = None, engine_used: str = None, failure_reason: str = None) -> AudioGeneration:
+    def update_status(self, db: Session, id: int, status: str, filepath: str = None, engine_used: str = None, failure_reason: str = None, stage: str = None) -> AudioGeneration:
         obj = self.get(db, id)
         if obj:
             obj.status = status
@@ -22,10 +22,20 @@ class AudioRepository(BaseRepository[AudioGeneration]):
             if engine_used:
                 obj.engine_used = engine_used
             obj.failure_reason = failure_reason
+            if stage is not None:
+                obj.stage = stage
             db.commit()
             db.refresh(obj)
         else:
             logger.warning(f"AudioGeneration row {id} sudah tidak ada (mungkin cascade-delete), status {status} tidak dapat disimpan")
         return obj
+
+    def delete_by_material_id(self, db: Session, material_id: int) -> bool:
+        obj = self.get_by_material_id(db, material_id)
+        if obj:
+            db.delete(obj)
+            db.commit()
+            return True
+        return False
 
 audio_repository = AudioRepository()

@@ -52,6 +52,8 @@ class Material(Base):
     language = Column(String, nullable=True)
     status = Column(String, default="Ready", index=True) # Pending, Processing, Ready, Failed
     failure_reason = Column(Text, nullable=True)
+    progress = Column(Integer, default=0, nullable=False) # 0-100, untuk UI progress bar
+    stage = Column(String, nullable=True)                 # label tahap pemrosesan (untuk UI)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
     upload_date = Column(DateTime, default=datetime.datetime.utcnow)
@@ -188,7 +190,10 @@ class AudioGeneration(Base):
     status = Column(String, default="processing") # processing, done, failed
     failure_reason = Column(String, nullable=True)
     engine_used = Column(String)
+    progress = Column(Integer, default=0, nullable=False) # 0-100, untuk UI progress bar
+    stage = Column(String, nullable=True)                 # label tahap pembuatan audio (untuk UI)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow, nullable=True)
 
     material = relationship("Material", backref="audio_generations")
 

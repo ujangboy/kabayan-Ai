@@ -42,6 +42,7 @@ api.interceptors.response.use(
 export const materiAPI = {
   getAll: (subjectId) => api.get('/materials', { params: subjectId ? { subject_id: subjectId } : {} }),
   delete: (id) => api.post(`/materials/${id}/delete`),
+  cancel: (id) => api.post(`/materials/${id}/cancel`),
   importYoutube: (data) => api.post('/materials/youtube', data),
 };
 
@@ -129,6 +130,8 @@ export const quizAPI = {
 export const audioAPI = {
   generate: (materialId) => api.post(`/materials/${materialId}/audio`),
   status: (materialId) => api.get(`/materials/${materialId}/audio`),
+  delete: (materialId) => api.post(`/materials/${materialId}/audio/delete`),
+  cancel: (materialId) => api.post(`/materials/${materialId}/audio/cancel`),
 };
 
 // --- EXAM ANALYZER ---

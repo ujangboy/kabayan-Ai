@@ -17,7 +17,11 @@ export default function MateriPage() {
 
   const { data: materiData, isLoading } = useQuery({
     queryKey: ['materials'],
-    queryFn: () => materiAPI.getAll().then(r => r.data)
+    queryFn: () => materiAPI.getAll().then(r => r.data),
+    refetchInterval: (query) => {
+      const mats = query.state.data?.materials || [];
+      return mats.some(m => m.status === 'Pending' || m.status === 'Processing') ? 4000 : false;
+    }
   });
 
   const { data: subjectData } = useQuery({
@@ -62,6 +66,40 @@ export default function MateriPage() {
     }
   });
 
+  const cancelMaterialMutation = useMutation({
+    mutationFn: (id) => materiAPI.cancel(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['materials']);
+      toast.info('Pemrosesan dibatalkan.');
+    },
+    onError: (err) => {
+      toast.error(extractErrorMessage(err));
+    }
+  });
+
+  const deleteAudioMutation = useMutation({
+    mutationFn: (id) => audioAPI.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['materials']);
+      queryClient.invalidateQueries(['audioStatus']);
+      toast.success('Audio dihapus.');
+    },
+    onError: (err) => {
+      toast.error(extractErrorMessage(err));
+    }
+  });
+
+  const cancelAudioMutation = useMutation({
+    mutationFn: (id) => audioAPI.cancel(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['audioStatus']);
+      toast.info('Pembuatan audio dibatalkan.');
+    },
+    onError: (err) => {
+      toast.error(extractErrorMessage(err));
+    }
+  });
+
   const handleDelete = (id) => {
     if (confirm('Hapus materi ini? Semua data terkait (catatan, quiz) yang bersumber dari materi ini tidak akan terhapus, tetapi sumbernya hilang.')) {
       deleteMutation.mutate(id);
@@ -88,16 +126,44 @@ export default function MateriPage() {
     }
 
     if (data.status === 'processing') {
-      return <span className="badge badge-warning text-[10px]">Membuat audio...</span>;
+      return (
+        <div className="space-y-1 min-w-[130px]">
+          <div className="flex items-center gap-2">
+            <span className="badge badge-warning text-[10px]">Membuat audio...</span>
+            <button
+              onClick={() => { if (confirm('Batalkan pembuatan audio ini?')) cancelAudioMutation.mutate(materialId); }}
+              className="p-0.5 rounded text-text-muted hover:text-danger hover:bg-danger/10 transition-colors"
+              title="Batalkan"
+            >
+              <X size={12} />
+            </button>
+          </div>
+          <div className="w-full h-1 bg-border rounded-full overflow-hidden">
+            <div className="h-full bg-accent-teal transition-all duration-700" style={{ width: `${Math.max(data.progress || 0, 4)}%` }} />
+          </div>
+          <div className="text-[10px] text-text-muted leading-tight truncate max-w-[170px]" title={data.stage || 'Memproses...'}>
+            {data.stage || 'Memproses...'}
+          </div>
+        </div>
+      );
     }
 
     if (data.status === 'done') {
       return (
         <div className="space-y-2">
           <audio controls className="w-full rounded-xl bg-background" src={data.filepath} />
-          <a href={data.filepath} download className="text-primary text-[11px] hover:underline inline-flex items-center gap-1">
-            <Play size={12} /> Download audio
-          </a>
+          <div className="flex items-center gap-2">
+            <a href={data.filepath} download className="text-primary text-[11px] hover:underline inline-flex items-center gap-1">
+              <Play size={12} /> Download audio
+            </a>
+            <button
+              onClick={() => { if (confirm('Hapus audio podcast dari materi ini?')) deleteAudioMutation.mutate(materialId); }}
+              className="p-0.5 rounded text-text-muted hover:text-danger hover:bg-danger/10 transition-colors"
+              title="Hapus audio"
+            >
+              <Trash2 size={12} />
+            </button>
+          </div>
         </div>
       );
     }
@@ -242,12 +308,34 @@ export default function MateriPage() {
                     </td>
                     <td className="px-4 py-4 text-text-secondary">{m.subject?.name || '—'}</td>
                     <td className="px-4 py-4 text-text-secondary">{formatDate(m.upload_date)}</td>
-                    <td className="px-4 py-4">
+                    <td className="px-4 py-4 min-w-[160px]">
                       <div className="space-y-2">
                         <span className={`badge ${m.status === 'Ready' ? 'badge-success' : m.status === 'Failed' ? 'badge-danger' : 'badge-warning'}`}
                               title={m.status === 'Failed' && m.failure_reason ? m.failure_reason : ''}>
                           {m.status}
                         </span>
+                        {(m.status === 'Pending' || m.status === 'Processing') && (
+                          <div className="space-y-1">
+                            <div className="w-full h-1 bg-border rounded-full overflow-hidden">
+                              <div
+                                className={`h-full transition-all duration-700 ${m.status === 'Pending' ? 'bg-text-muted' : 'bg-primary'}`}
+                                style={{ width: `${Math.max(m.progress || 0, 4)}%` }}
+                              />
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <div className="text-[10px] text-text-muted leading-tight truncate max-w-[150px]" title={m.stage || 'Menunggu diproses...'}>
+                                {m.status === 'Pending' ? 'Menunggu antrian...' : (m.stage || 'Memproses...')}
+                              </div>
+                              <button
+                                onClick={() => { if (confirm('Batalkan pemrosesan materi ini?')) cancelMaterialMutation.mutate(m.id); }}
+                                className="p-0.5 rounded text-text-muted hover:text-danger hover:bg-danger/10 transition-colors shrink-0"
+                                title="Batalkan"
+                              >
+                                <X size={11} />
+                              </button>
+                            </div>
+                          </div>
+                        )}
                         {m.status === 'Failed' && m.failure_reason && (
                           <div className="text-[10px] text-danger leading-tight max-w-[160px] break-words" title={m.failure_reason}>
                             {m.failure_reason}
@@ -373,7 +461,7 @@ function UploadModal({ onClose, subjects, onSuccess }) {
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-text-secondary mb-1">Pilih File (PDF/DOCX/PPT)</label>
+            <label className="block text-xs font-medium text-text-secondary mb-1">Pilih File (PDF/DOCX/TXT/MD/PPTX/XLSX)</label>
             <div 
               className="border-2 border-dashed border-border hover:border-primary/50 transition-colors rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer text-center"
               onClick={() => fileInputRef.current?.click()}
@@ -382,13 +470,13 @@ function UploadModal({ onClose, subjects, onSuccess }) {
               <p className="text-sm text-text font-medium">
                 {file ? file.name : 'Klik atau seret file ke sini'}
               </p>
-              <p className="text-xs text-text-muted mt-1">Maks. 500MB</p>
+              <p className="text-xs text-text-muted mt-1">Maks. 50MB</p>
               <input
                 type="file"
                 ref={fileInputRef}
                 onChange={(e) => setFile(e.target.files[0])}
                 className="hidden"
-                accept=".pdf,.docx,.doc,.ppt,.pptx"
+                accept=".pdf,.docx,.doc,.txt,.md,.pptx,.xlsx"
                 required
               />
             </div>

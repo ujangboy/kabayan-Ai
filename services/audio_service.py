@@ -10,6 +10,7 @@ from repositories.audio_repository import audio_repository
 from repositories.material_repository import material_repository
 from services.rag_service import rag_service
 from services.ai_service import ai_service
+from services.cache_service import cache_service
 from langchain_core.prompts import PromptTemplate
 
 logger = logging.getLogger(__name__)
@@ -46,6 +47,18 @@ class AudioService:
     def __init__(self):
         self.engine = EdgeTTSEngine()
         self.fallback_engine = PiperTTSEngine()
+
+    @staticmethod
+    def _set_progress(db, audio_gen, progress: int, stage: str, commit: bool = True):
+        """Update progress/stage + timestamp agar UI bisa menampilkan tahap berjalan."""
+        if not audio_gen:
+            return
+        from datetime import datetime
+        audio_gen.progress = progress
+        audio_gen.stage = stage
+        audio_gen.updated_at = datetime.utcnow()
+        if commit:
+            db.commit()
 
     def clean_text_for_tts(self, text: str) -> str:
         # Hapus blok LaTeX $$...$$ / \[...\] dan inline $...$ / \(...\)
@@ -89,6 +102,7 @@ class AudioService:
                 return
 
             doc_id = f"mat_{material.id}"
+            self._set_progress(db, audio_gen, 15, "Membaca materi...")
 
             # Strategi 1: cari di LanceDB index (sync — jalankan di thread agar event loop tidak macet)
             result = await asyncio.to_thread(rag_service.search, "Ringkas seluruh materi penting", [doc_id], 10)
@@ -112,6 +126,8 @@ class AudioService:
             if not context:
                 context = "Tidak ada teks yang dapat diekstrak dari materi ini."
 
+            self._set_progress(db, audio_gen, 40, "Menyusun naskah podcast (AI)...")
+
             prompt = PromptTemplate(
                 input_variables=["context"],
                 template="Buatkan narasi podcast singkat (maksimal 3 menit dibaca) yang informatif dan santai berdasarkan materi berikut. JANGAN gunakan tanda kurung, JANGAN gunakan asterisk/bintang (*), JANGAN gunakan markdown, cukup teks polos yang mengalir layaknya orang sedang berbicara:\n\n{context}"
@@ -120,6 +136,7 @@ class AudioService:
             script = await asyncio.to_thread(ai_service.generate, "summary", prompt, {"context": context}, False)
             clean_script = self.clean_text_for_tts(script)
             logger.info(f"[AudioGen] AI script selesai: {len(clean_script)} chars, {len(clean_script.split())} words. Akan dikirim ke TTS.")
+            self._set_progress(db, audio_gen, 70, "Menyintesis suara (TTS)...")
 
             # Ensure static directory exists
             audio_dir = os.path.join(config.BASE_DIR, "static", "audio")
@@ -149,7 +166,10 @@ class AudioService:
 
             if success:
                 logger.info(f"[AudioGen] Sukses: {filepath} (engine={engine_used})")
-                audio_repository.update_status(db, audio_gen.id, status="done", filepath=f"/{filepath}", engine_used=engine_used, failure_reason=None)
+                audio_gen = audio_repository.get(db, audio_gen.id)
+                if audio_gen and audio_gen.status == "processing":
+                    audio_repository.update_status(db, audio_gen.id, status="done", filepath=f"/{filepath}", engine_used=engine_used, failure_reason=None)
+                    self._set_progress(db, audio_gen, 100, "Selesai")
             else:
                 logger.error(f"[AudioGen] GAGAL: TTS engine gagal untuk material {material_id}")
                 audio_repository.update_status(db, audio_gen.id, status="failed", failure_reason="Mesin TTS (edge-tts) gagal menghasilkan audio setelah beberapa percobaan. Periksa koneksi internet lalu coba lagi.")
@@ -159,5 +179,33 @@ class AudioService:
                 audio_repository.update_status(db, audio_gen.id, status="failed", failure_reason=str(e)[:300])
         finally:
             db.close()
+
+    @staticmethod
+    def delete_audio(db, material_id: int) -> bool:
+        """Hapus file audio + record audio_generations untuk material tertentu."""
+        from repositories.audio_repository import audio_repository
+        audio_gen = audio_repository.get_by_material_id(db, material_id)
+        if not audio_gen:
+            return False
+        # Hapus file dari disk
+        if audio_gen.filepath:
+            full_path = os.path.join(config.BASE_DIR, audio_gen.filepath.lstrip("/"))
+            if os.path.exists(full_path):
+                try:
+                    os.remove(full_path)
+                except Exception:
+                    pass
+        audio_repository.delete(db, audio_gen.id)
+        cache_service.invalidate_all(db)
+        return True
+
+    @staticmethod
+    def cancel_audio(db, material_id: int) -> bool:
+        """Batalkan audio yang sedang diproses (set status failed)."""
+        audio_gen = audio_repository.get_by_material_id(db, material_id)
+        if audio_gen and audio_gen.status == "processing":
+            audio_repository.update_status(db, audio_gen.id, status="failed", failure_reason="Dibatalkan oleh user.", stage="Dibatalkan")
+            return True
+        return False
 
 audio_service = AudioService()

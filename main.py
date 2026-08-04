@@ -282,7 +282,37 @@ async def startup_event():
                         logger.info(f"Cleaned up orphaned lock file: {file}")
                     except Exception as e:
                         logger.warning(f"Failed to remove lock file {file}: {e}")
-                        
+
+    # Recovery: materi/audio yang terjebak "Processing" saat server restart
+    import models
+    try:
+        db = SessionLocal()
+        cutoff = datetime.datetime.utcnow() - datetime.timedelta(minutes=30)
+        for m in db.query(models.Material).filter(
+            models.Material.status == "Processing",
+            models.Material.updated_at < cutoff
+        ).all():
+            if m.material_type == models.MaterialType.YOUTUBE:
+                m.status = "Failed"
+                m.failure_reason = "Proses terputus (server restart). Silakan import ulang."
+                logger.warning(f"Recovery: YouTube material {m.id} di-set Failed (restart).")
+            else:
+                m.status = "Pending"  # worker akan memproses ulang dari awal
+                m.progress = 0
+                logger.warning(f"Recovery: material {m.id} di-set Pending untuk diproses ulang (restart).")
+        for a in db.query(models.AudioGeneration).filter(
+            models.AudioGeneration.status == "processing"
+        ).all():
+            last = a.updated_at or a.created_at
+            if last and last < cutoff:
+                a.status = "failed"
+                a.failure_reason = "Proses terputus (server restart). Coba buat ulang."
+                logger.warning(f"Recovery: audio generation {a.id} di-set Failed (restart).")
+        db.commit()
+        db.close()
+    except Exception as e:
+        logger.warning(f"Recovery stuck rows gagal: {e}")
+
     asyncio.create_task(material_worker())
 
 from fastapi.middleware.cors import CORSMiddleware

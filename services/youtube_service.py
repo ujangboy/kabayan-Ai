@@ -24,6 +24,8 @@ class YoutubeService:
                 return
 
             mat.status = "Processing"
+            mat.progress = 10
+            mat.stage = "Mendapatkan metadata video..."
             db.commit()
 
             # Extract source
@@ -40,9 +42,22 @@ class YoutubeService:
                 "video_url": url,
                 "transcript_language": "id" # default, will update
             })
+            db.commit()
             
-            # Extract transcript and chunks
-            chunks = source.extract()
+            # Extract transcript and chunks (callback update progress per jalur)
+            def _on_progress(stage: str, progress: int):
+                mat = material_repository.get(db, material_id)
+                if mat:
+                    mat.stage = stage
+                    mat.progress = progress
+                    db.commit()
+            chunks = source.extract(progress_cb=_on_progress)
+
+            mat = material_repository.get(db, material_id)
+            if mat:
+                mat.progress = 80
+                mat.stage = "Menyimpan transkrip..."
+                db.commit()
             
             # If valid, save language and duration
             if chunks:
@@ -71,9 +86,13 @@ class YoutubeService:
             doc_id = f"mat_{mat.id}"
             rag_service.index_document(doc_id, chunks)
 
-            # Update status
-            mat.status = "Ready"
-            db.commit()
+            # Update status — hanya jika masih "Processing" (batal jika user cancel)
+            mat = material_repository.get(db, material_id)
+            if mat and mat.status == "Processing":
+                mat.status = "Ready"
+                mat.progress = 100
+                mat.stage = "Selesai"
+                db.commit()
 
             # Invalidate cache
             cache_service.invalidate_all(db)
