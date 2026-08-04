@@ -11,6 +11,7 @@ ATURAN:
    - Rumus inline: $...$ — contoh: massa jenis adalah $\rho = m/V$
    - Rumus blok: $$...$$ pada baris tersendiri
    - JANGAN gunakan unicode matematika (×, ², √, ∑, ∫). Gunakan LaTeX.
+6. Tulis catatan secara alami dan profesional — gunakan numbering biasa (1. 2. 3.) dan simbol Markdown standar. Hindari emoji, simbol dekoratif, atau karakter hias lainnya.
 
 Materi:
 {context}"""
