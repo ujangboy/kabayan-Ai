@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
-import { Play, Trash2, X } from 'lucide-react';
+import { Play, Trash2, X, RefreshCw } from 'lucide-react';
 import { audioAPI } from '@/services/api';
 
-export default function AudioStatus({ materialId, onCancel, onDelete, onRetry }) {
+export default function AudioStatus({ materialId, onCancel, onDelete, onRetry, onRegenerate }) {
   const { data } = useQuery({
     queryKey: ['audioStatus', materialId],
     queryFn: () => audioAPI.status(materialId).then((res) => res.data),
@@ -46,6 +46,13 @@ export default function AudioStatus({ materialId, onCancel, onDelete, onRetry })
           <a href={data.filepath} download className="text-primary text-[11px] hover:underline inline-flex items-center gap-1">
             <Play size={12} /> Download audio
           </a>
+          <button
+            onClick={() => { if (confirm('Regenerasi ulang audio podcast ini? Audio lama akan dihapus.')) onRegenerate(materialId); }}
+            className="p-0.5 rounded text-text-muted hover:text-accent-teal hover:bg-accent-teal/10 transition-colors"
+            title="Regenerasi audio"
+          >
+            <RefreshCw size={12} />
+          </button>
           <button
             onClick={() => { if (confirm('Hapus audio podcast dari materi ini?')) onDelete(materialId); }}
             className="p-0.5 rounded text-text-muted hover:text-danger hover:bg-danger/10 transition-colors"

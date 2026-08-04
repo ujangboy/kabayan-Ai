@@ -112,6 +112,10 @@ class YoutubeService:
             doc_id = f"mat_{mat.id}"
             rag_service.delete_document_chunks(doc_id)
             
+            # D2: pindahkan file transkrip ke trash sebelum row dihapus
+            from services.storage_cleanup_service import trash_file
+            trash_file(mat.filepath)
+
             # cascade will handle youtube_metadata
             success = material_repository.delete(db, material_id)
             if success:

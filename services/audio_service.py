@@ -172,23 +172,15 @@ class AudioService:
                     self._set_progress(db, audio_gen, 100, "Selesai")
             else:
                 logger.error(f"[AudioGen] GAGAL: TTS engine gagal untuk material {material_id}")
-                # C2: hapus file audio partial yang mungkin tertulis sebagian sebelum gagal
-                if output_path and os.path.exists(output_path):
-                    try:
-                        os.remove(output_path)
-                        logger.info(f"File audio partial (TTS gagal) dihapus: {output_path}")
-                    except Exception as e:
-                        logger.warning(f"Gagal hapus file audio partial: {e}")
+                # C2/D2: pindahkan file audio partial yang tertulis sebagian ke trash
+                from services.storage_cleanup_service import trash_file
+                trash_file(output_path)
                 audio_repository.update_status(db, audio_gen.id, status="failed", failure_reason="Mesin TTS (edge-tts) gagal menghasilkan audio setelah beberapa percobaan. Periksa koneksi internet lalu coba lagi.")
         except Exception as e:
             logger.error(f"[AudioGen] Error tidak terduga untuk material {material_id}: {e}", exc_info=True)
-            # C2: hapus file audio partial yang tertinggal saat terjadi error
-            if output_path and os.path.exists(output_path):
-                try:
-                    os.remove(output_path)
-                    logger.info(f"File audio partial (error) dihapus: {output_path}")
-                except Exception as e2:
-                    logger.warning(f"Gagal hapus file audio partial: {e2}")
+            # C2/D2: pindahkan file audio partial yang tertinggal saat error ke trash
+            from services.storage_cleanup_service import trash_file
+            trash_file(output_path)
             if audio_gen:
                 audio_repository.update_status(db, audio_gen.id, status="failed", failure_reason=str(e)[:300])
         finally:
@@ -200,14 +192,11 @@ class AudioService:
         audio_gen = audio_repository.get_by_material_id(db, material_id)
         if not audio_gen:
             return False
-        # Hapus file dari disk
+        # Hapus file dari disk (D2: pindah ke trash, safety-net)
         if audio_gen.filepath:
+            from services.storage_cleanup_service import trash_file
             full_path = os.path.join(config.BASE_DIR, audio_gen.filepath.lstrip("/"))
-            if os.path.exists(full_path):
-                try:
-                    os.remove(full_path)
-                except Exception:
-                    pass
+            trash_file(full_path)
         audio_repository.delete(db, audio_gen.id)
         cache_service.invalidate_all(db)
         return True

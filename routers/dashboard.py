@@ -3,6 +3,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from database import get_db
 from services.workspace_service import workspace_service
+from services.storage_cleanup_service import get_storage_usage
 import models
 
 router = APIRouter()
@@ -49,6 +50,8 @@ async def get_dashboard_stats(db: Session = Depends(get_db)):
 
         return JSONResponse({
             **stats,
+            # D6: observability storage (byte)
+            "storage": get_storage_usage(),
             "recent_materials": recent,
             "recent_quizzes": quizzes,
         })

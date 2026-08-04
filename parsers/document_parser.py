@@ -18,7 +18,7 @@ def extract_text(file_path: str) -> str:
         return extract_from_pdf(file_path)
     elif ext == '.docx':
         return extract_from_docx(file_path)
-    elif ext in ['.txt', '.csv']:
+    elif ext in ['.txt', '.csv', '.md']:
         return extract_from_txt(file_path)
     elif ext == '.pptx':
         return pptx_parser.parse_pptx(file_path)

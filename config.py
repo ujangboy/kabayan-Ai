@@ -26,9 +26,13 @@ LANCEDB_DIR = os.path.join(STORAGE_DIR, "lancedb")
 TEXT_CACHE_DIR = os.path.join(STORAGE_DIR, "text_cache")
 UPLOADS_DIR = os.path.join(STORAGE_DIR, "uploads")
 SESSION_DIR = os.path.join(STORAGE_DIR, "sessions")
+TRASH_DIR = os.path.join(STORAGE_DIR, "trash")
+
+# Jangka waktu file di trash sebelum benar-benar dihapus (safety-net, D2)
+TRASH_RETENTION_DAYS = 7
 
 # Ensure directories exist
-for path in [LANCEDB_DIR, TEXT_CACHE_DIR, UPLOADS_DIR, SESSION_DIR]:
+for path in [LANCEDB_DIR, TEXT_CACHE_DIR, UPLOADS_DIR, SESSION_DIR, TRASH_DIR]:
     os.makedirs(path, exist_ok=True)
 
 # --- File Organizer Settings (Legacy) ---

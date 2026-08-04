@@ -51,11 +51,11 @@ async def upload_material(
             return JSONResponse(status_code=400, content={"status": "error", "message": f"Ukuran file melebihi batas 50MB. Ukuran file: {len(file_bytes) // (1024*1024)}MB"})
         await file.seek(0)
 
-        # REQ-01: Validasi ekstensi file
+        # REQ-01: Validasi ekstensi file (D1: selaras dengan parsers/document_parser.py)
         filename_lower = (file.filename or "").lower()
-        ALLOWED_EXTENSIONS = (".pdf", ".docx", ".doc", ".txt", ".md", ".pptx", ".xlsx")
+        ALLOWED_EXTENSIONS = (".pdf", ".docx", ".txt", ".md", ".csv", ".pptx", ".xlsx")
         if not any(filename_lower.endswith(ext) for ext in ALLOWED_EXTENSIONS):
-            return JSONResponse(status_code=400, content={"status": "error", "message": f"Format file tidak didukung. Gunakan: PDF, DOCX, TXT, MD, PPTX, XLSX"})
+            return JSONResponse(status_code=400, content={"status": "error", "message": f"Format file tidak didukung. Gunakan: PDF, DOCX, TXT, MD, CSV, PPTX, XLSX"})
 
         # REQ-01: Validasi magic bytes — cegah file palsu (rename ekstensi)
         MAGIC_BYTES = {
@@ -65,7 +65,7 @@ async def upload_material(
             ".xlsx": [b"PK\x03\x04"],
             ".txt":  None,  # teks plain, tidak ada magic bytes spesifik
             ".md":   None,
-            ".doc":  [b"\xd0\xcf\x11\xe0"],  # OLE2 compound
+            ".csv":  None,
         }
         ext = next((e for e in ALLOWED_EXTENSIONS if filename_lower.endswith(e)), None)
         magic_list = MAGIC_BYTES.get(ext)

@@ -313,12 +313,14 @@ async def startup_event():
     except Exception as e:
         logger.warning(f"Recovery stuck rows gagal: {e}")
 
-    # C5: sweep file yatim (upload/audio yang tidak lagi direferensikan DB)
+    # C5/D2/D3: sweep file yatim ke trash + bersihkan trash kedaluwarsa + temp yt-dlp
     try:
         db = SessionLocal()
-        from services.storage_cleanup_service import cleanup_orphan_files
+        from services.storage_cleanup_service import cleanup_orphan_files, cleanup_trash, cleanup_ytdlp_temp
         cleanup_orphan_files(db)
         db.close()
+        cleanup_trash()
+        cleanup_ytdlp_temp()
     except Exception as e:
         logger.warning(f"Storage cleanup startup gagal: {e}")
 

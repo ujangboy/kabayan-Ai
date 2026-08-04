@@ -127,6 +127,13 @@ export default function MateriPage() {
     }
   };
 
+  const handleRegenerateAudio = (id) => {
+    // D5: hapus audio lama lalu buat ulang (backend menolak regen saat status 'done')
+    deleteAudioMutation.mutate(id, {
+      onSettled: () => generateAudioMutation.mutate(id),
+    });
+  };
+
   return (
     <div className="flex-1 overflow-y-auto p-6 md:p-10">
       <div className="max-w-5xl mx-auto space-y-6">
@@ -283,12 +290,13 @@ export default function MateriPage() {
                             {m.failure_reason}
                           </div>
                         )}
-                        <AudioStatus
-                          materialId={m.id}
-                          onCancel={(id) => cancelAudioMutation.mutate(id)}
-                          onDelete={(id) => deleteAudioMutation.mutate(id)}
-                          onRetry={handleAudio}
-                        />
+                       <AudioStatus
+                         materialId={m.id}
+                         onCancel={(id) => cancelAudioMutation.mutate(id)}
+                         onDelete={(id) => deleteAudioMutation.mutate(id)}
+                         onRetry={handleAudio}
+                         onRegenerate={handleRegenerateAudio}
+                       />
                       </div>
                     </td>
                     <td className="px-4 py-4">
@@ -423,7 +431,7 @@ function UploadModal({ onClose, subjects, onSuccess }) {
                 ref={fileInputRef}
                 onChange={(e) => setFile(e.target.files[0])}
                 className="hidden"
-                accept=".pdf,.docx,.doc,.txt,.md,.pptx,.xlsx"
+                accept=".pdf,.docx,.txt,.md,.csv,.pptx,.xlsx"
                 required
               />
             </div>

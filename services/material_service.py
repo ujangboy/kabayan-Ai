@@ -35,11 +35,9 @@ class MaterialService:
             db.commit()
 
     def _remove_file(self, filepath: str):
-        if filepath and os.path.exists(filepath):
-            try:
-                os.remove(filepath)
-            except Exception:
-                pass
+        # D2: pindah ke trash (safety-net) alih-alih hapus permanen
+        from services.storage_cleanup_service import trash_file
+        trash_file(filepath)
 
     def _delete_audio_files(self, db: Session, material_id: int):
         # C1: hapus SEMUA file audio fisik milik materi (bisa lebih dari satu generasi)

@@ -2,12 +2,19 @@ import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import {
   MessageSquare, FileText, CreditCard, HelpCircle,
-  BookMarked, Zap, TrendingUp, Clock, BookOpen, Trophy
+  BookMarked, Zap, TrendingUp, Clock, BookOpen, Trophy, Database
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useChatStore } from '@/store';
 import { formatDate, fileIcon } from '@/utils';
 import api from '@/services/api';
+
+const formatBytes = (bytes) => {
+  if (bytes == null) return '0 B';
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+};
 
 const QUICK_ACTIONS = [
   { icon: MessageSquare, label: 'Chat AI',       desc: 'Tanyakan apa saja',     to: '/chat',      color: 'bg-primary/10 text-primary' },
@@ -122,6 +129,19 @@ export default function DashboardPage() {
             <StatCard icon={CreditCard} label="Flashcard" value={stats.flashcards} color="text-accent-purple" loading={isLoading} />
             <StatCard icon={HelpCircle} label="Quiz"      value={stats.quizzes}    color="text-accent-teal"   loading={isLoading} />
           </div>
+          {/* D6: badge observability storage */}
+          {data?.storage && (
+            <div className="mt-3 flex items-center gap-2 text-xs text-text-secondary">
+              <Database size={14} className="text-accent-blue" />
+              <span>Penyimpanan: <span className="text-text font-medium">{formatBytes(data.storage.total)}</span></span>
+              <span className="opacity-50">·</span>
+              <span>Upload {formatBytes(data.storage.uploads)}</span>
+              <span className="opacity-50">·</span>
+              <span>Audio {formatBytes(data.storage.audio)}</span>
+              <span className="opacity-50">·</span>
+              <span>Trash {formatBytes(data.storage.trash)}</span>
+            </div>
+          )}
         </motion.section>
 
         {/* Recent Materials + Recent Quizzes side by side */}
