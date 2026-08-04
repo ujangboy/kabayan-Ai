@@ -38,20 +38,19 @@ export const FontSize = Extension.create({
 
   addCommands() {
     return {
+      // Catatan: jangan panggil removeEmptyTextStyle() setelah setMark —
+      // komando itu memanggil tr.removeMark(pos, pos+nodeSize, textStyle) pada
+      // node container (listItem/blockquote/tableCell) yang tidak ber-mark dan
+      // menghapus mark yang BARU saja ditambahkan setMark (mark hanya aman di
+      // textblock karena di-skip via isTextblock). Lihat probe v8.
       setFontSize:
         (fontSize) =>
         ({ chain }) =>
-          chain()
-            .setMark('textStyle', { fontSize })
-            .removeEmptyTextStyle()
-            .run(),
+          chain().setMark('textStyle', { fontSize }).run(),
       unsetFontSize:
         () =>
         ({ chain }) =>
-          chain()
-            .setMark('textStyle', { fontSize: null })
-            .removeEmptyTextStyle()
-            .run(),
+          chain().setMark('textStyle', { fontSize: null }).run(),
     };
   },
 });

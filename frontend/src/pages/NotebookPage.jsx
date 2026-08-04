@@ -105,6 +105,12 @@ export default function NotebookPage() {
 
   const updateContentMutation = useMutation({
     mutationFn: ({ id, content }) => notesAPI.updateContent(id, content),
+    onSuccess: (_, { id, content }) => {
+      queryClient.invalidateQueries(['notes']);
+      if (selectedNote?.id === id) {
+        setSelectedNote(prev => (prev ? { ...prev, content } : prev));
+      }
+    },
   });
 
   const clearMutation = useMutation({

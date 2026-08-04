@@ -148,6 +148,10 @@
   .prose-dark strong { color: #ffffff; font-weight: 600; }
   .prose-dark em { color: #cbd5e1; font-style: italic; }
 
+  /* Jangan timpa warna inline (span textStyle) pada strong/em bersarang */
+  .prose-dark [style*="color"] strong,
+  .prose-dark [style*="color"] em { color: inherit; }
+
   /* Lists */
   .prose-dark ul { list-style: disc; padding-left: 1.5rem; margin-bottom: 1.25rem; }
   .prose-dark ol { list-style: decimal; padding-left: 1.5rem; margin-bottom: 1.25rem; }
@@ -324,6 +328,13 @@
 .note-editor-content em { font-style: italic; color: #cbd5e1; }
 .note-editor-content s { text-decoration: line-through; color: #71717a; }
 .note-editor-content u { text-underline-offset: 3px; }
+
+/* Teks berwarna (inline style pada span textStyle) tidak boleh ditimpa
+   warna default strong/em/s — mark ini di-render DI DALAM span warna. */
+.note-editor-content [style*="color"] strong,
+.note-editor-content [style*="color"] em,
+.note-editor-content [style*="color"] s,
+.note-editor-content [style*="color"] u { color: inherit; }
 
 .note-editor-content ul { list-style: disc; padding-left: 1.5rem; margin-bottom: 0.85rem; }
 .note-editor-content ol { list-style: decimal; padding-left: 1.5rem; margin-bottom: 0.85rem; }

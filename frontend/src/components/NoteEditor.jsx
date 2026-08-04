@@ -86,6 +86,30 @@ function convertLatexToTiptapHtml(html) {
   return html;
 }
 
+/**
+ * Ambil range selection dari DOM (window.getSelection) lalu konversi ke
+ * posisi ProseMirror via posAtDOM. Ini menjamin perintah toolbar (font size,
+ * warna) diterapkan PERSIS ke teks yang terlihat terpilih — mencegah kasus
+ * di mana state selection editor tidak sinkron dengan selection DOM
+ * (penyebab umum "font size tidak bekerja" pada konten AI).
+ * Return null jika selection kosong / di luar editor.
+ */
+function getDomSelectionRange(editor) {
+  const sel = window.getSelection();
+  if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return null;
+  const range = sel.getRangeAt(0);
+  const view = editor?.view;
+  if (!view) return null;
+  try {
+    const from = view.posAtDOM(range.startContainer, range.startOffset);
+    const to = view.posAtDOM(range.endContainer, range.endOffset);
+    if (from === null || to === null || from === undefined || to === undefined) return null;
+    return { from: Math.min(from, to), to: Math.max(from, to) };
+  } catch {
+    return null;
+  }
+}
+
 // ─── Shared components ────────────────────────────────────────────────────
 function ToolBtn({ onClick, active, disabled, title, children, className: cls }) {
   return (
@@ -121,11 +145,18 @@ function FontSizeDropdown({ editor, floating = false }) {
   const wrapRef = useRef(null);
 
   // Reactive: baca fontSize dari selection setiap kali editor state berubah.
+  // Berlaku untuk toolbar atas MAUPUN floating toolbar (label harus real-time).
   useEffect(() => {
-    if (!editor || !floating) return;
+    if (!editor) return;
     const readFontSize = () => {
       const { from, to, empty } = editor.state.selection;
-      if (empty) { setLiveSize(14); return; }
+      if (empty) {
+        const attrs = editor.getAttributes('textStyle') || {};
+        const rawSize = attrs.fontSize;
+        const px = rawSize ? parseInt(String(rawSize).replace('px', ''), 10) : 14;
+        setLiveSize(Number.isFinite(px) ? px : 14);
+        return;
+      }
       let size = 14;
       editor.state.doc.nodesBetween(from, to, (node) => {
         if (size !== 14) return;
@@ -146,12 +177,9 @@ function FontSizeDropdown({ editor, floating = false }) {
       editor.off('selectionUpdate', readFontSize);
       editor.off('transaction', readFontSize);
     };
-  }, [editor, floating]);
+  }, [editor]);
 
-  const attrs = editor?.getAttributes('textStyle') || {};
-  const raw = attrs.fontSize;
-  const px = raw ? parseInt(String(raw).replace('px', ''), 10) : 14;
-  const label = floating ? liveSize : (Number.isFinite(px) ? px : 14);
+  const label = liveSize;
 
   // Decide popup direction based on available space
   const measure = () => {
@@ -168,10 +196,14 @@ function FontSizeDropdown({ editor, floating = false }) {
   }, [open, floating]);
 
   const apply = (size) => {
+    const domRange = getDomSelectionRange(editor);
+    if (domRange) {
+      editor.chain().focus().setTextSelection(domRange).run();
+    }
     if (size === 14) {
-      editor.chain().focus().unsetFontSize().run();
+      editor.commands.unsetFontSize();
     } else {
-      editor.chain().focus().setFontSize(`${size}px`).run();
+      editor.commands.setFontSize(`${size}px`);
     }
     setOpen(false);
   };
@@ -309,6 +341,7 @@ function Toolbar({ editor, onPreview, onInsertMath }) {
 
 // ─── Color palette ────────────────────────────────────────────────────────
 const COLOR_PALETTE = [
+  { color: '#FFFFFF', label: 'Putih (Default)' },
   { color: '#F87171', label: 'Merah' },
   { color: '#FB923C', label: 'Oranye' },
   { color: '#FBBF24', label: 'Kuning' },
@@ -372,6 +405,28 @@ function FloatingToolbar({ editor, editorMode }) {
   if (!pos || !editor) return null;
 
   const ia = (n, a) => editor.isActive(n, a);
+
+  // Terapkan warna ke selection DOM aktual (sinkron posisi ProseMirror),
+  // sehingga warna tetap berlaku walau state selection editor tertinggal.
+  const applyColor = (color) => {
+    const domRange = getDomSelectionRange(editor);
+    // Pisahkan 2 dispatch agar tidak double-dispatch
+    // (sama seperti fix FontSizeDropdown.apply)
+    if (domRange) {
+      editor.chain().focus().setTextSelection(domRange).run();
+    }
+    editor.commands.setColor(color);
+    setShowColors(false);
+  };
+
+  const clearColor = () => {
+    const domRange = getDomSelectionRange(editor);
+    if (domRange) {
+      editor.chain().focus().setTextSelection(domRange).run();
+    }
+    editor.commands.unsetColor();
+    setShowColors(false);
+  };
 
   return createPortal(
     <div
@@ -451,7 +506,7 @@ function FloatingToolbar({ editor, editorMode }) {
                 <button
                   key={color}
                   type="button"
-                  onClick={() => { editor.chain().focus().setColor(color).run(); setShowColors(false); }}
+                  onClick={() => applyColor(color)}
                   title={label}
                   className="w-5 h-5 rounded-full border-2 border-transparent hover:border-white/60 hover:scale-125 transition-all duration-150 shadow-md"
                   style={{ backgroundColor: color }}
@@ -460,7 +515,7 @@ function FloatingToolbar({ editor, editorMode }) {
               <div className="w-px h-4 bg-white/10 mx-0.5" />
               <button
                 type="button"
-                onClick={() => { editor.chain().focus().unsetColor().run(); setShowColors(false); }}
+                onClick={clearColor}
                 title="Hapus warna"
                 className="w-5 h-5 rounded-full border-2 border-dashed border-white/20 flex items-center justify-center text-[8px] text-white/40 hover:border-white/50 hover:text-white/70 transition-all"
               >
@@ -520,22 +575,27 @@ export default function NoteEditor({ content, onSave, noteId, defaultMode = 'vie
     },
   });
 
-  // Load content ke Tiptap saat masuk edit mode
+  // Load content ke Tiptap saat masuk edit mode.
+  // Hanya dimuat SEKALI per note — toggle view/edit tidak boleh me-reset
+  // editor (setContent ulang menimpa format font size/warna yang sudah
+  // diterapkan user, padahal content prop masih markdown lama).
+  const loadedNoteIdRef = useRef(null);
   useEffect(() => {
     if (!editor) return;
-    if (mode === 'edit') {
-      (async () => {
-        const html = await toHtml(content || '');
-        lastSavedRef.current = html;
-        // Defer setContent ke scheduler task — memanggilnya langsung di dalam
-        // lifecycle method memicu warning "flushSync was called from inside a
-        // lifecycle method" dari Tiptap ReactNodeViewRenderer.
-        setTimeout(() => {
-          editor.commands.setContent(html, false);
-          setTimeout(() => editor.commands.focus('end'), 50);
-        }, 0);
-      })();
-    }
+    if (mode !== 'edit') return;
+    if (loadedNoteIdRef.current === noteId) return;
+    loadedNoteIdRef.current = noteId;
+    (async () => {
+      const html = await toHtml(content || '');
+      lastSavedRef.current = html;
+      // Defer setContent ke scheduler task — memanggilnya langsung di dalam
+      // lifecycle method memicu warning "flushSync was called from inside a
+      // lifecycle method" dari Tiptap ReactNodeViewRenderer.
+      setTimeout(() => {
+        editor.commands.setContent(html, false);
+        setTimeout(() => editor.commands.focus('end'), 50);
+      }, 0);
+    })();
   }, [noteId, mode, editor, content]);
 
   // Reset ke default mode saat pindah note
