@@ -7,6 +7,11 @@ from database import get_db
 from services.notes_service import notes_service
 from services.material_service import material_service
 from services.rag_context_service import rag_context_service
+from services.ai_service import ai_service
+from services.subject_service import subject_service as subject_svc
+from prompts.notebook import DETECT_CONTEXT_PROMPT, GENERATE_TITLE_PROMPT
+import json
+import re
 
 
 class NotesGenerateRequest(BaseModel):
@@ -153,6 +158,7 @@ async def generate_notes_ai(
 class NotebookGenerateRequest(BaseModel):
     title: str
     content: str
+    subject_id: Optional[int] = None
 
 @router.post("/api/notebook/generate")
 async def notebook_generate(request: NotebookGenerateRequest, db: Session = Depends(get_db)):
@@ -178,6 +184,81 @@ async def notebook_generate(request: NotebookGenerateRequest, db: Session = Depe
     note_repository.create(db, {
         "title": title,
         "content": request.content,
-        "subject_id": None
+        "subject_id": request.subject_id
     })
     return JSONResponse({"status": "success", "message": "Catatan berhasil disimpan ke Notebook!"})
+
+@router.post("/api/notebook/detect-context")
+async def detect_context(request: dict, db: Session = Depends(get_db)):
+    """Detect mata_kuliah dan topic dari riwayat chat menggunakan AI."""
+    chat_history = request.get("history", [])
+    if not chat_history:
+        return JSONResponse({"mata_kuliah": "tidak_diketahui", "topic": "", "subject_id": None})
+
+    # Dapatkan daftar mata kuliah dari DB
+    subjects = subject_svc.get_all(db)
+    subject_names = [s.name for s in subjects]
+    subject_map = {s.name.lower(): s.id for s in subjects}
+
+    # Format riwayat chat menjadi string
+    history_text = "\n".join(
+        f"{m.get('role', 'unknown')}: {m.get('content', '')}"
+        for m in chat_history[-20:]  # maks 20 pesan terakhir
+    )
+
+    try:
+        result = ai_service.generate(
+            capability="summary",
+            prompt_template=DETECT_CONTEXT_PROMPT,
+            input_variables={"subjects": ", ".join(subject_names), "chat_history": history_text},
+            use_cache=False,
+            temperature=0.3,
+        )
+        # Parse JSON dari response AI
+        clean = result.strip()
+        if clean.startswith("```json"):
+            clean = clean[7:]
+        if clean.startswith("```"):
+            clean = clean[3:]
+        if clean.endswith("```"):
+            clean = clean[:-3]
+        parsed = json.loads(clean.strip())
+        mata_kuliah = parsed.get("mata_kuliah", "tidak_diketahui")
+        topic = parsed.get("topic", "")
+        subject_id = None
+        if mata_kuliah and mata_kuliah != "tidak_diketahui":
+            # Cari subject yang cocok (case-insensitive, partial match)
+            for s in subjects:
+                if mata_kuliah.lower() in s.name.lower() or s.name.lower() in mata_kuliah.lower():
+                    subject_id = s.id
+                    break
+        return JSONResponse({"mata_kuliah": mata_kuliah, "topic": topic, "subject_id": subject_id})
+    except Exception as e:
+        return JSONResponse({"mata_kuliah": "tidak_diketahui", "topic": "", "subject_id": None})
+
+@router.post("/api/notebook/generate-title")
+async def generate_title(request: dict, db: Session = Depends(get_db)):
+    """Generate judul deskriptif dari konten catatan menggunakan AI."""
+    content = request.get("content", "")
+    if not content.strip():
+        return JSONResponse({"title": "Catatan Baru"})
+
+    try:
+        snippet = content[:500]
+        result = ai_service.generate(
+            capability="summary",
+            prompt_template=GENERATE_TITLE_PROMPT,
+            input_variables={"content": snippet},
+            use_cache=False,
+            temperature=0.3,
+        )
+        title = result.strip().strip('"').strip("'")
+        # Batasi max 10 kata
+        words = title.split()
+        if len(words) > 10:
+            title = " ".join(words[:10])
+        if not title:
+            title = content[:30].strip()
+        return JSONResponse({"title": title})
+    except Exception:
+        return JSONResponse({"title": content[:30].strip()})

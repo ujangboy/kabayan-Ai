@@ -5,13 +5,14 @@ import MathMarkdown from '@/components/MathMarkdown';
 import { useChatStore } from '@/store';
 import { cn, formatDateTime } from '@/utils';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { notesAPI } from '@/services/api';
 
 const QUICK_PROMPTS = [
   { label: '📝 Ringkas', prompt: 'Buatkan ringkasan yang komprehensif dari materi yang saya pilih.' },
   { label: '💡 Jelaskan', prompt: 'Jelaskan konsep utama dari materi ini dengan bahasa yang mudah dipahami.' },
   { label: '🎯 Analogi', prompt: 'Berikan analogi sederhana untuk menjelaskan materi ini.' },
   { label: '📖 Contoh', prompt: 'Berikan contoh nyata dari konsep-konsep dalam materi ini.' },
-  { label: '✏️ Catatan', toNotebook: true },
+  { label: '📌 Simpan ke Notebook', toNotebook: true },
 ];
 
 function CopyButton({ text }) {
@@ -211,58 +212,45 @@ export default function ChatPage() {
     }
   }, [input]);
 
-  // Generate-to-Notebook: minta AI generate catatan dari materi yang dipilih,
-  // lalu simpan hasilnya langsung ke Notebook (tidak masuk chat)
+  // Simpan respons AI terakhir ke Notebook — auto-detect mata kuliah + auto-judul
   const generateAndSaveNote = useCallback(async () => {
     if (isNoteSavingRef.current) return;
-    if (!selectedDocs.length) {
-      setNoteToast({ type: 'error', msg: 'Pilih materi di halaman Materi dulu!' });
+    const assistantMessages = (chat?.messages || []).filter((m) => m.role === 'assistant');
+    const lastAssistant = assistantMessages.length > 0 ? assistantMessages[assistantMessages.length - 1] : null;
+    if (!lastAssistant || !lastAssistant.content.trim()) {
+      setNoteToast({ type: 'error', msg: 'Belum ada respons AI untuk disimpan.' });
       setTimeout(() => setNoteToast(null), 3000);
       return;
     }
     isNoteSavingRef.current = true;
     setIsNoteSaving(true);
     setShowQuickPrompts(false);
-    setNoteToast({ type: 'success', msg: '⏳ AI sedang membuat catatan...' });
+    setNoteToast({ type: 'success', msg: '⏳ Menyiapkan catatan...' });
     try {
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: 'Buatkan catatan kuliah yang lengkap, terstruktur, dan mudah dipahami dalam format Markdown dari materi yang saya pilih. Gunakan heading, bullet point, tabel jika perlu, dan contoh konkret. Langsung tulis catatan tanpa kalimat pembuka.',
-          history: [],
-          documents: selectedDocs,
-        }),
-      });
-      if (!res.ok) throw new Error('Server error');
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let content = '';
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-        content += decoder.decode(value, { stream: true });
-      }
-      // Simpan ke notebook
-      const title = `Catatan AI — ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}`;
-      const saveRes = await fetch('/api/notebook/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, content }),
-      });
-      if (saveRes.ok) {
-        setNoteToast({ type: 'success', msg: '✅ Catatan AI tersimpan di Notebook!' });
+      // Step 1: Detect context (mata kuliah, topic, subject_id)
+      const detectRes = await notesAPI.detectContext(chat.messages);
+      const { mata_kuliah, subject_id: detectedSubjectId } = detectRes.data || {};
+
+      // Step 2: Generate title
+      const titleRes = await notesAPI.generateTitle(lastAssistant.content);
+      const title = titleRes.data?.title || `Catatan — ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}`;
+
+      // Step 3: Save to notebook
+      const saveRes = await notesAPI.create(title, lastAssistant.content, detectedSubjectId || undefined);
+      if (saveRes.data) {
+        const subjectName = mata_kuliah && mata_kuliah !== 'tidak_diketahui' ? mata_kuliah : 'Notebook';
+        setNoteToast({ type: 'success', msg: `✅ Tersimpan ke Notebook — ${subjectName}` });
       } else {
         setNoteToast({ type: 'error', msg: 'Gagal menyimpan catatan.' });
       }
     } catch {
-      setNoteToast({ type: 'error', msg: 'Gagal generate catatan.' });
+      setNoteToast({ type: 'error', msg: 'Gagal menyimpan ke Notebook.' });
     } finally {
       isNoteSavingRef.current = false;
       setIsNoteSaving(false);
       setTimeout(() => setNoteToast(null), 4000);
     }
-  }, [selectedDocs]);
+  }, [chat]);
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(input); }
@@ -541,9 +529,9 @@ export default function ChatPage() {
                           : 'border-amber-500/30 text-amber-400 hover:bg-amber-500/10 hover:border-amber-400/50'
                         : 'border-border text-text-secondary hover:text-text hover:border-primary/40 hover:bg-primary/5'
                     )}
-                    title={q.toNotebook ? 'Generate catatan AI dari materi yang dipilih → simpan ke Notebook' : undefined}
+                    title={q.toNotebook ? 'Simpan respons AI terakhir ke Notebook' : undefined}
                   >
-                    {q.toNotebook && isNoteSaving ? '⏳ Menyimpan...' : q.label}
+                    {q.toNotebook && isNoteSaving ? '⏳ Menyimpan ke Notebook...' : q.label}
                   </button>
                 ))}
               </motion.div>

@@ -73,6 +73,8 @@ export const notesAPI = {
     headers: { 'Content-Type': 'application/json' },
     timeout: 120000,
   }),
+  detectContext: (history) => api.post('/notebook/detect-context', { history }),
+  generateTitle: (content) => api.post('/notebook/generate-title', { content }),
   delete: (id) => api.post(`/notes/${id}/delete`),
   clear: () => api.post('/notes/clear'),
   rename: (id, title) => api.put(`/notes/${id}/rename`,
