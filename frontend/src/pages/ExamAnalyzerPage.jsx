@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Brain, ChevronLeft, Zap } from 'lucide-react';
 import { subjectAPI } from '@/services/api';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useUiStore } from '@/store';
 import { VIEW } from '@/components/exam/shared';
 import DashboardView from '@/components/exam/DashboardView';
 import ConfigView from '@/components/exam/ConfigView';
@@ -18,7 +19,9 @@ export default function ExamAnalyzerPage() {
   const location  = useLocation();
   const navigate  = useNavigate();
   const [view, setView]               = useState(VIEW.HISTORY);
-  const [subjectId, setSubjectId]     = useState('');
+  const subjectId                     = useUiStore((s) => s.subjectFilterMateri);
+  const setSubjectFilter              = useUiStore((s) => s.setSubjectFilter);
+  const setSubjectId                  = useCallback((v) => setSubjectFilter('materi', v), [setSubjectFilter]);
   const [analysis, setAnalysis]       = useState(null);
   const [blueprint, setBlueprint]     = useState(null);
   const [sessionData, setSessionData] = useState(null);

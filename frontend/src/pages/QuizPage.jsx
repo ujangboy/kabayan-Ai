@@ -9,6 +9,7 @@ import QuizTimer from '@/components/quiz/QuizTimer';
 import QuizProgressBar from '@/components/quiz/QuizProgressBar';
 import { formatDate, formatTimeOnly } from '@/utils';
 import { usePendingOperation } from '@/hooks/usePendingOperation';
+import { useUiStore } from '@/store';
 
 const QTYPE_LABEL = { mcq: 'Pilihan Ganda', essay: 'Essay', mixed: 'Campuran' };
 const DIFFICULTY_BADGE = {
@@ -26,7 +27,8 @@ function formatDuration(seconds) {
 
 export default function QuizPage() {
   const queryClient = useQueryClient();
-  const [selectedSubject, setSelectedSubject] = useState('');
+  const selectedSubject = useUiStore((s) => s.subjectFilterMateri);
+  const setSubjectFilter = useUiStore((s) => s.setSubjectFilter);
   const [isGeneratorOpen, setIsGeneratorOpen] = useState(false);
   const [activeQuizId, setActiveQuizId] = useState(null);
   const [sessionKey, setSessionKey] = useState(0);
@@ -108,7 +110,7 @@ export default function QuizPage() {
           <div className="flex items-center gap-3">
             <select
               value={selectedSubject}
-              onChange={(e) => setSelectedSubject(e.target.value)}
+              onChange={(e) => setSubjectFilter('materi', e.target.value)}
               className="px-3 py-2 bg-card border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary transition-colors"
             >
               <option value="">Semua Mata Kuliah</option>
