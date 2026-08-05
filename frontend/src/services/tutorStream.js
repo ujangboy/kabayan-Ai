@@ -1,20 +1,28 @@
-let activeController = null;
+// Stream controller per-chat sehingga beberapa sesi dapat streaming paralel.
+const controllers = new Map();
 
-export function abortActiveStream() {
-  if (activeController) {
-    activeController.abort();
-    activeController = null;
+export function abortActiveStream(chatId) {
+  const controller = controllers.get(chatId);
+  if (controller) {
+    controller.abort();
+    controllers.delete(chatId);
   }
 }
 
-export function hasActiveStream() {
-  return activeController !== null;
+export function isChatStreaming(chatId) {
+  return controllers.has(chatId);
 }
 
-export async function streamChat({ endpoint, body, onChunk }) {
-  abortActiveStream();
+export function hasActiveStream() {
+  return controllers.size > 0;
+}
+
+export async function streamChat({ chatId, endpoint, body, onChunk }) {
+  // Hanya batalkan stream milik chat yang sama; stream sesi lain tidak diganggu.
+  if (controllers.has(chatId)) controllers.get(chatId).abort();
+
   const controller = new AbortController();
-  activeController = controller;
+  controllers.set(chatId, controller);
 
   try {
     const res = await fetch(endpoint, {
@@ -40,6 +48,6 @@ export async function streamChat({ endpoint, body, onChunk }) {
 
     return { full };
   } finally {
-    if (activeController === controller) activeController = null;
+    if (controllers.get(chatId) === controller) controllers.delete(chatId);
   }
 }

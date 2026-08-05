@@ -7,8 +7,7 @@ export const useChatStore = create(
       chats: [],
       currentChatId: null,
       selectedDocs: [],
-      isStreaming: false,
-      streamingChatId: null,
+      streamingChatIds: [],
       tutorBadge: null,
 
       createChat: () => {
@@ -85,9 +84,16 @@ export const useChatStore = create(
 
       // Streaming state — diluar lifecycle komponen agar stream tetap hidup
       // saat user pindah menu (komponen ChatPage ter-unmount).
-      setStreaming: (isStreaming, chatId) => set({
-        isStreaming,
-        streamingChatId: isStreaming ? chatId : null,
+      // Mendukung beberapa chat streaming paralel (array, bukan pasangan tunggal).
+      setStreaming: (isStreaming, chatId) => set((s) => {
+        if (isStreaming) {
+          if (chatId != null && !s.streamingChatIds.includes(chatId)) {
+            return { streamingChatIds: [...s.streamingChatIds, chatId] };
+          }
+          return {};
+        }
+        if (chatId == null) return {};
+        return { streamingChatIds: s.streamingChatIds.filter((id) => id !== chatId) };
       }),
 
       setTutorBadge: (tutorBadge) => set({ tutorBadge }),
@@ -104,7 +110,7 @@ export const useChatStore = create(
     {
       name: 'kabayan-chat-store',
       partialize: (state) => {
-        const { isStreaming: _is, streamingChatId: _scid, tutorBadge: _badge, ...rest } = state;
+        const { streamingChatIds: _scids, tutorBadge: _badge, ...rest } = state;
         return rest;
       },
     }

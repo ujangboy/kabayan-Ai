@@ -6,7 +6,7 @@ import { useChatStore } from '@/store';
 import { cn, formatDateTime } from '@/utils';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { notesAPI, subjectAPI, tutorAPI } from '@/services/api';
-import { streamChat, abortActiveStream } from '@/services/tutorStream';
+import { streamChat, abortActiveStream, isChatStreaming } from '@/services/tutorStream';
 import { usePendingOperation } from '@/hooks/usePendingOperation';
 
 const QUICK_PROMPTS = [
@@ -175,7 +175,7 @@ function TypingIndicator() {
 export default function ChatPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { chats, currentChatId, setCurrentChat, createChat, deleteChat, deleteAllChats, togglePinChat, renameChat, addMessage, updateLastMessage, patchLastMessage, setMessageFeedback, getCurrentChat, selectedDocs, clearSelectedDocs, isStreaming, streamingChatId, tutorBadge, setStreaming, setTutorBadge, setChatTutor } = useChatStore();
+  const { chats, currentChatId, setCurrentChat, createChat, deleteChat, deleteAllChats, togglePinChat, renameChat, addMessage, updateLastMessage, patchLastMessage, setMessageFeedback, getCurrentChat, selectedDocs, clearSelectedDocs, streamingChatIds, tutorBadge, setStreaming, setTutorBadge, setChatTutor } = useChatStore();
   const [input, setInput] = useState('');
   const [showQuickPrompts, setShowQuickPrompts] = useState(false);
   const [editingChatId, setEditingChatId] = useState(null);
@@ -186,8 +186,6 @@ export default function ChatPage() {
   const [subjects, setSubjects] = useState([]);
   // Mutex ref — mencegah double-call karena React state update async
   const isNoteSavingRef = useRef(false);
-  // Pelacak chat yang sedang streaming — kunci kirim hanya untuk chat tersebu(h)
-  const streamingChatIdRef = useRef(null);
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
 
@@ -210,7 +208,7 @@ export default function ChatPage() {
   const tutorMode = !!chat?.tutorEnabled;
   const tutorSubject = chat?.tutorSubject || '';
   const tutorLevel = chat?.tutorLevel || 'intermediate';
-  const isCurrentChatStreaming = isStreaming && streamingChatId === currentChatId;
+  const isCurrentChatStreaming = streamingChatIds.includes(currentChatId);
   const sortedChats = [...chats].sort((a, b) => {
     const aPinned = !!a.pinned;
     const bPinned = !!b.pinned;
@@ -220,7 +218,7 @@ export default function ChatPage() {
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [chat?.messages, isStreaming]);
+  }, [chat?.messages, isCurrentChatStreaming]);
 
   // Load subjects for Tutor Mode subject selector
   useEffect(() => {
@@ -232,9 +230,8 @@ export default function ChatPage() {
   const sendMessage = useCallback(async (text) => {
     if (!text?.trim()) return;
     const chatId = currentChatId;
-    // Kunci kirim hanya untuk chat yang sedang streaming — sesi lain tetap bisa kirim
-    if (streamingChatIdRef.current === chatId) return;
-    streamingChatIdRef.current = chatId;
+    // Kunci kirim hanya untuk chat yang sedang streaming — sesi lain tetap bisa kirim paralel
+    if (isChatStreaming(chatId)) return;
     addMessage(chatId, { role: 'user', content: text });
     setInput('');
     if (textareaRef.current) textareaRef.current.style.height = 'auto';
@@ -246,7 +243,7 @@ export default function ChatPage() {
     addMessage(chatId, { role: 'assistant', content: '' });
 
     try {
-      chatOp.start();
+      chatOp.start('chat-' + chatId);
 
       const endpoint = tutorMode ? '/api/tutor/chat' : '/api/chat';
       const body = tutorMode
@@ -271,6 +268,7 @@ export default function ChatPage() {
       let headerStripped = !tutorMode; // normal mode has no TYPE header to strip
 
       await streamChat({
+        chatId,
         endpoint,
         body,
         onChunk: (chunk) => {
@@ -328,13 +326,8 @@ export default function ChatPage() {
         updateLastMessage(chatId, '⚠ Terjadi kesalahan. Coba lagi.');
       }
     } finally {
-      // Reset streaming hanya jika stream yang selesai ini masih stream aktif.
-      // Saat pindah sesi, ref sudah milik chat baru — jangan clobber stream-nya.
-      if (streamingChatIdRef.current === chatId) {
-        streamingChatIdRef.current = null;
-        setStreaming(false, null);
-      }
-      chatOp.finish();
+      setStreaming(false, chatId);
+      chatOp.finish('chat-' + chatId);
     }
   }, [currentChatId, selectedDocs, chat, addMessage, updateLastMessage, patchLastMessage, chatOp, tutorMode, tutorSubject, tutorLevel, setStreaming, setTutorBadge]);
 
@@ -684,7 +677,7 @@ export default function ChatPage() {
               {chat.messages.map((m, i) => (
                 <MessageBubble key={i} message={m} isLast={i === chat.messages.length - 1} tutorMode={tutorMode} onFeedback={handleFeedback} />
               ))}
-              {isStreaming && streamingChatId === currentChatId && chat.messages[chat.messages.length - 1]?.content === '' && (
+              {isCurrentChatStreaming && chat.messages[chat.messages.length - 1]?.content === '' && (
                 <TypingIndicator />
               )}
             </>
@@ -775,7 +768,7 @@ export default function ChatPage() {
                 </button>
               </div>
               <button
-                onClick={() => isCurrentChatStreaming ? abortActiveStream() : sendMessage(input)}
+                onClick={() => isCurrentChatStreaming ? abortActiveStream(currentChatId) : sendMessage(input)}
                 disabled={!isCurrentChatStreaming && !input.trim()}
                 className={cn(
                   'w-8 h-8 rounded-xl flex items-center justify-center transition-all',
