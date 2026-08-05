@@ -11,9 +11,21 @@ from sqlalchemy.orm import Session
 from database import get_db
 import models
 from services.storage_cleanup_service import get_storage_usage
+from services.usage_service import get_usage
 from exceptions import AppError
 
 router = APIRouter()
+
+
+@router.get("/api/usage")
+async def usage_summary(db: Session = Depends(get_db)):
+    """Pemakaian Groq API per fitur + total (token estimasi & jumlah panggilan)."""
+    try:
+        return JSONResponse(get_usage(db))
+    except AppError:
+        raise
+    except Exception as exc:
+        raise AppError(str(exc), status_code=500)
 
 
 @router.get("/api/data/overview")

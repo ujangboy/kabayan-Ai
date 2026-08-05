@@ -1,10 +1,12 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
   BookOpen, FileText, MessageSquare, BookMarked, CreditCard,
   HelpCircle, Brain, LayoutTemplate, Database as DatabaseIcon, HardDrive,
+  Trash2, Loader2,
 } from 'lucide-react';
 import { dataAPI, materiAPI } from '@/services/api';
+import { useToast } from '@/components/Toast';
 import { formatDate } from '@/utils';
 import { cn } from '@/utils';
 
@@ -25,6 +27,8 @@ const STATUS_BADGE = {
 
 export default function DataTab() {
   const { t } = useTranslation();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: overview, isLoading } = useQuery({
     queryKey: ['data-overview'],
@@ -35,6 +39,22 @@ export default function DataTab() {
     queryKey: ['materials', 'all'],
     queryFn: () => materiAPI.getAll().then((r) => r.data),
   });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id) => materiAPI.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['materials', 'all']);
+      queryClient.invalidateQueries(['data-overview']);
+      toast.success(t('settings.data.deleted'));
+    },
+    onError: () => toast.error(t('settings.data.deleteError')),
+  });
+
+  const handleDelete = (m) => {
+    if (window.confirm(t('settings.data.deleteConfirm').replace('{name}', m.filename || `#${m.id}`))) {
+      deleteMutation.mutate(m.id);
+    }
+  };
 
   if (isLoading) {
     return <div className="text-text-muted text-sm py-10">{t('common.loading')}</div>;
@@ -119,7 +139,8 @@ export default function DataTab() {
                   <th className="py-2 pr-3 font-medium">{t('settings.data.materialType')}</th>
                   <th className="py-2 pr-3 font-medium">{t('settings.data.materialStatus')}</th>
                   <th className="py-2 pr-3 font-medium">{t('settings.data.materialSize')}</th>
-                  <th className="py-2 font-medium">{t('settings.data.materialUploaded')}</th>
+                  <th className="py-2 pr-3 font-medium">{t('settings.data.materialUploaded')}</th>
+                  <th className="py-2 font-medium w-16"></th>
                 </tr>
               </thead>
               <tbody>
@@ -137,8 +158,22 @@ export default function DataTab() {
                       </span>
                     </td>
                     <td className="py-2 pr-3 text-text-secondary">{formatBytes(m.size_bytes)}</td>
-                    <td className="py-2 text-text-secondary">
+                    <td className="py-2 pr-3 text-text-secondary">
                       {m.upload_date ? formatDate(m.upload_date) : '—'}
+                    </td>
+                    <td className="py-2 text-right">
+                      <button
+                        onClick={() => handleDelete(m)}
+                        disabled={deleteMutation.isPending}
+                        title={t('common.delete')}
+                        className="p-1.5 rounded-lg text-text-muted hover:text-danger hover:bg-danger/10 transition-colors"
+                      >
+                        {deleteMutation.isPending && deleteMutation.variables === m.id ? (
+                          <Loader2 size={14} className="animate-spin" />
+                        ) : (
+                          <Trash2 size={14} />
+                        )}
+                      </button>
                     </td>
                   </tr>
                 ))}

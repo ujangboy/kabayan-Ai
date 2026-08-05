@@ -214,4 +214,6 @@ export const infoAPI = {
 export const dataAPI = {
   // ringkasan jumlah data per kategori + storage
   overview: () => api.get('/data/overview'),
+  // pemakaian Groq API per fitur + total (limit AI)
+  usage: () => api.get('/usage'),
 };

@@ -191,6 +191,14 @@ class TutorService:
         # Normalize math delimiters on complete response (same as ai_service)
         _normalize_math(full_response)
 
+        # Catat pemakaian Groq untuk fitur tutor (agregat global).
+        try:
+            from services.usage_service import record_usage
+            import asyncio as _asyncio
+            _asyncio.create_task(_asyncio.to_thread(record_usage, db, "tutor", full_response))
+        except Exception:
+            pass  # pencatatan usage non-kritikal
+
         # Cache the response for future identical queries
         try:
             cache_service.set_cache(db, cache_key, "", "", full_response)

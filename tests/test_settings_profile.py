@@ -71,6 +71,35 @@ class TestProfileEndpoint:
         assert not os.path.exists(old)
 
 
+# ─── /api/usage ───────────────────────────────────────────────────────
+
+class TestUsageEndpoint:
+    def test_usage_defaults(self, client):
+        resp = client.get("/api/usage")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["total_tokens"] == 0
+        assert data["total_calls"] == 0
+        assert data["features"] == []
+
+    def test_usage_records_and_aggregates(self, client, db_session):
+        from services.usage_service import record_usage
+        record_usage(db_session, "quiz", "a" * 400)   # ~100 token
+        record_usage(db_session, "quiz", "b" * 400)   # ~100 token, fitur sama
+        record_usage(db_session, "tutor", "x" * 100)  # ~25 token, fitur beda
+
+        resp = client.get("/api/usage")
+        data = resp.json()
+        assert data["total_tokens"] == 225
+        assert data["total_calls"] == 3
+
+        by_feature = {f["feature"]: f for f in data["features"]}
+        assert by_feature["quiz"]["tokens"] == 200
+        assert by_feature["quiz"]["calls"] == 2
+        assert by_feature["tutor"]["tokens"] == 25
+        assert by_feature["tutor"]["calls"] == 1
+
+
 # ─── /api/profile/photo ───────────────────────────────────────────────
 
 class TestProfilePhotoEndpoint:

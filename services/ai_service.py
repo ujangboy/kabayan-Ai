@@ -11,6 +11,7 @@ import config
 from database import SessionLocal
 from services.cache_service import cache_service
 from services.settings_service import settings_service
+from services.usage_service import record_usage
 
 logger = logging.getLogger(__name__)
 
@@ -181,7 +182,8 @@ class AIService:
                     if use_cache:
                         cache_service.set_cache(db, prompt_str, "", setting_hash, str(result))
                     if isinstance(result, BaseModel):
-                        return result.model_dump()
+                        result = result.model_dump()
+                    record_usage(db, capability, str(result))
                     return result
                 except Exception as exc:
                     logger.warning("Structured output failed for %s, falling back to text: %s", capability, exc)
@@ -200,6 +202,7 @@ class AIService:
 
             if use_cache:
                 cache_service.set_cache(db, prompt_str, "", setting_hash, response_text)
+            record_usage(db, capability, response_text)
             return _normalize_math(response_text)
         finally:
             db.close()
@@ -249,6 +252,7 @@ class AIService:
             response_text = response.content
 
             cache_service.set_cache(db, prompt_str, context, setting_hash, response_text)
+            record_usage(db, "chat", response_text)
             return response_text
         finally:
             db.close()
@@ -325,6 +329,7 @@ class AIService:
             await asyncio.to_thread(
                 cache_service.set_cache, db, prompt_str, context, setting_hash, normalized_response
             )
+            await asyncio.to_thread(record_usage, db, "chat", full_response)
         finally:
             db.close()
 

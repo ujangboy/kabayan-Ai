@@ -82,18 +82,27 @@
       "materialSubject": "Mata Pelajaran",
       "materialUploaded": "Diunggah",
       "materialSize": "Ukuran",
-      "noMaterials": "Can aya materi anu diunggah."
+      "noMaterials": "Can aya materi anu diunggah.",
+      "deleted": "Materi hasil dihapus",
+      "deleteError": "Gagal ngahapus materi",
+      "deleteConfirm": "Hapus materi '{name}'? Ieu bakal ngahapus file sareng audio sareng turunanna."
     },
     "aiLimit": {
       "title": "Pamakéan AI",
       "subtitle": "Ringkesan pamakéan tutor AI anjeun.",
+      "totalTokensAll": "Total Token AI",
+      "totalCalls": "Total Telepon",
       "totalTokens": "Total Token",
       "totalMessages": "Total Pesen",
       "totalSessions": "Total Sési",
       "helpfulCount": "Waleran Ngabantuan",
       "notHelpfulCount": "Waleran Kurang Ngabantuan",
       "helpfulRate": "Tingkat Keanggunan",
-      "note": "Statistik diitung tina sési tutor AI. Can aya watesan poéan anu diterapkeun ayeuna."
+      "breakdownTitle": "Pamakéan per Fitur",
+      "emptyBreakdown": "Acuk can aya pamakéan AI kacatet.",
+      "tokensUnit": "token",
+      "callsUnit": "telepon",
+      "note": "Total token AI = akumulasi sakabéh pamakéan Groq (chat, tutor, kuis, ujian simulasi, flashcard, notebook, jsb). Token diitung tina panjang waleran; sanés tagihan resmi."
     },
     "about": {
       "title": "Ngeunaan Aplikasi",

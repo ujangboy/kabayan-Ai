@@ -82,18 +82,27 @@
       "materialSubject": "Mata Kuliah",
       "materialUploaded": "Diunggah",
       "materialSize": "Ukuran",
-      "noMaterials": "Belum ada materi yang diunggah."
+      "noMaterials": "Belum ada materi yang diunggah.",
+      "deleted": "Materi berhasil dihapus",
+      "deleteError": "Gagal menghapus materi",
+      "deleteConfirm": "Hapus materi '{name}'? Ini akan menghapus file beserta audio dan turunannya."
     },
     "aiLimit": {
       "title": "Pemakaian AI",
       "subtitle": "Ringkasan pemakaian AI tutor Anda.",
+      "totalTokensAll": "Total Token AI",
+      "totalCalls": "Total Panggilan",
       "totalTokens": "Total Token",
       "totalMessages": "Total Pesan",
       "totalSessions": "Total Sesi",
       "helpfulCount": "Respons Membantu",
       "notHelpfulCount": "Respons Kurang Membantu",
       "helpfulRate": "Tingkat Kebergunaan",
-      "note": "Statistik dihitung dari sesi tutor AI. Tidak ada batas harian yang diberlakukan saat ini."
+      "breakdownTitle": "Pemakaian per Fitur",
+      "emptyBreakdown": "Belum ada pemakaian AI tercatat.",
+      "tokensUnit": "token",
+      "callsUnit": "call",
+      "note": "Total token AI = akumulasi seluruh pemakaian Groq (chat, tutor, kuis, ujian simulasi, flashcard, notebook, dst). Token diperkirakan dari panjang respons; bukan penagihan resmi."
     },
     "about": {
       "title": "Tentang Aplikasi",

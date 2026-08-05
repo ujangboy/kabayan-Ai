@@ -82,18 +82,27 @@
       "materialSubject": "Subject",
       "materialUploaded": "Uploaded",
       "materialSize": "Size",
-      "noMaterials": "No materials uploaded yet."
+      "noMaterials": "No materials uploaded yet.",
+      "deleted": "Material deleted",
+      "deleteError": "Failed to delete material",
+      "deleteConfirm": "Delete material '{name}'? This will remove the file along with its audio and related data."
     },
     "aiLimit": {
       "title": "AI Usage",
       "subtitle": "Summary of your AI tutor usage.",
+      "totalTokensAll": "Total AI Tokens",
+      "totalCalls": "Total Calls",
       "totalTokens": "Total Tokens",
       "totalMessages": "Total Messages",
       "totalSessions": "Total Sessions",
       "helpfulCount": "Helpful Responses",
       "notHelpfulCount": "Unhelpful Responses",
       "helpfulRate": "Helpfulness Rate",
-      "note": "Statistics are calculated from AI tutor sessions. No daily limit is currently enforced."
+      "breakdownTitle": "Usage per Feature",
+      "emptyBreakdown": "No AI usage recorded yet.",
+      "tokensUnit": "tokens",
+      "callsUnit": "calls",
+      "note": "Total AI tokens = accumulation of all Groq usage (chat, tutor, quiz, simulation exam, flashcard, notebook, etc.). Tokens are estimated from response length; not official billing."
     },
     "about": {
       "title": "About",
