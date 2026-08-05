@@ -29,6 +29,10 @@ from repositories.chat_repository import chat_repository
 from services.tutor_service import tutor_service
 from services.faq_service import faq_service
 from services.feedback_service import feedback_service
+from services.tutor_profile_service import (
+    get_or_create_profile,
+    record_message,
+)
 from exceptions import AppError
 
 logger = logging.getLogger(__name__)
@@ -154,6 +158,7 @@ async def tutor_chat(request: TutorChatRequest, db: Session = Depends(get_db)):
                         db.commit()
                         db.refresh(msg)
                         saved_message_id = msg.id
+                        record_message(db, tokens=_estimate_tokens(full_response))
                     except Exception as persist_exc:
                         logger.warning("Failed to persist tutor message: %s", persist_exc)
                         db.rollback()
@@ -242,6 +247,33 @@ async def list_faq(
                 }
                 for f in faqs
             ],
+        })
+    except Exception as exc:
+        raise AppError(str(exc), status_code=500)
+
+
+@router.get("/api/tutor/profile")
+async def get_tutor_profile(db: Session = Depends(get_db)):
+    """Return the adaptive tutor profile for the current user."""
+    try:
+        profile = get_or_create_profile(db)
+        return JSONResponse({
+            "user_key": profile.user_key,
+            "estimated_level": profile.estimated_level,
+            "topics_mastery": profile.topics_mastery,
+            "weak_topics": profile.weak_topics,
+            "strong_topics": profile.strong_topics,
+            "explanation_depth": profile.explanation_depth,
+            "response_length": profile.response_length,
+            "use_formulas": profile.use_formulas,
+            "use_examples": profile.use_examples,
+            "use_step_by_step": profile.use_step_by_step,
+            "total_sessions": profile.total_sessions,
+            "total_messages": profile.total_messages,
+            "total_tokens": profile.total_tokens,
+            "helpful_count": profile.helpful_count,
+            "not_helpful_count": profile.not_helpful_count,
+            "helpful_rate": profile.helpful_rate,
         })
     except Exception as exc:
         raise AppError(str(exc), status_code=500)

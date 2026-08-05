@@ -22,6 +22,7 @@ import config
 from services.ai_service import ai_service, _normalize_math, _trim_history, _wrap_data
 from services.tutor_classifier import classify, TierType
 from services.faq_service import faq_service
+from services.tutor_profile_service import get_or_create_profile
 from prompts.tutor import build_tutor_prompt, TUTOR_FAQ_WRAPPER_PROMPT
 
 logger = logging.getLogger(__name__)
@@ -65,18 +66,23 @@ class TutorService:
         # Yield type header as the very first chunk so the router can read it
         yield f"\x00TYPE:{tier}\x00"
 
+        # Load adaptive profile
+        profile = get_or_create_profile(db)
+
         # 2. Route
         if tier == "SIMPLE":
             async for chunk in self._handle_simple(db, message, mata_kuliah, student_level):
                 yield chunk
         elif tier == "MEDIUM":
             async for chunk in self._handle_ai(
-                message, history, mata_kuliah, student_level, capability="chat"
+                message, history, mata_kuliah, student_level, capability="chat",
+                profile=profile,
             ):
                 yield chunk
         else:  # COMPLEX
             async for chunk in self._handle_ai(
-                message, history, mata_kuliah, student_level, capability="reasoning"
+                message, history, mata_kuliah, student_level, capability="reasoning",
+                profile=profile,
             ):
                 yield chunk
 
@@ -139,6 +145,7 @@ class TutorService:
         mata_kuliah: Optional[str],
         student_level: str,
         capability: str,
+        profile=None,
     ) -> AsyncIterator[str]:
         """Stream an AI tutor response using the Socratic prompt."""
         import time
@@ -148,7 +155,7 @@ class TutorService:
             f"{m['role']}: {m['content']}" for m in trimmed_history
         )
 
-        prompt_template = build_tutor_prompt(student_level)
+        prompt_template = build_tutor_prompt(student_level, profile=profile)
         wrapped_input = _wrap_data("pesan_siswa", message)
 
         sys_content = prompt_template.format(

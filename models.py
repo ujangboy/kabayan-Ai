@@ -1,5 +1,5 @@
 import enum
-from sqlalchemy import Column, Integer, String, Text, DateTime, Date, ForeignKey, Enum, UniqueConstraint, Boolean
+from sqlalchemy import Column, Integer, String, Text, DateTime, Date, ForeignKey, Enum, UniqueConstraint, Boolean, Float
 from sqlalchemy.orm import relationship
 import datetime
 from database import Base
@@ -419,6 +419,40 @@ class TutorFeedback(Base):
     comment = Column(Text, nullable=True)
     flag = Column(String, nullable=True)              # incorrect / unclear / irrelevant / inappropriate
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+
+class TutorUserProfile(Base):
+    """
+    Profil adaptif siswa untuk personalisasi respons tutor.
+
+    Aplikasi single-user lokal → user_key default "local" (singleton).
+    Nilai-nilai di bawah ini memengaruhi prompt system tutor agar respons
+    disesuaikan dengan kebutuhan dan tingkat penguasaan siswa.
+    """
+    __tablename__ = "tutor_user_profile"
+    id = Column(Integer, primary_key=True, index=True)
+    user_key = Column(String, default="local", unique=True, index=True)
+
+    estimated_level = Column(Integer, default=50)          # 0-100, semakin tinggi semakin mahir
+    topics_mastery = Column(Text, nullable=True)            # JSON {topic: score 0-100}
+    weak_topics = Column(Text, nullable=True)               # JSON [topic, ...]
+    strong_topics = Column(Text, nullable=True)             # JSON [topic, ...]
+
+    explanation_depth = Column(String, default="medium")    # brief / medium / detailed
+    response_length = Column(String, default="medium")      # short / medium / long
+    use_formulas = Column(Boolean, default=True)
+    use_examples = Column(Boolean, default=True)
+    use_step_by_step = Column(Boolean, default=True)
+
+    total_sessions = Column(Integer, default=0)
+    total_messages = Column(Integer, default=0)
+    total_tokens = Column(Integer, default=0)
+    helpful_count = Column(Integer, default=0)
+    not_helpful_count = Column(Integer, default=0)
+    helpful_rate = Column(Float, nullable=True)
+
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
 
 # ─── Question Bank Model ─────────────────────────────────────────────────────

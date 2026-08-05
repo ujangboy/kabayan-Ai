@@ -155,10 +155,14 @@ Respon kamu:""",
 # ─── Template prompt ─────────────────────────────────────────────────────────
 # Build the main tutor prompt template dynamically based on level
 
-def build_tutor_prompt(student_level: str = "intermediate") -> PromptTemplate:
+def build_tutor_prompt(student_level: str = "intermediate", profile=None) -> PromptTemplate:
     """Build a PromptTemplate with the correct level instruction embedded."""
     level_instruction = LEVEL_INSTRUCTIONS.get(student_level, LEVEL_INSTRUCTIONS["intermediate"])
-    filled = TUTOR_SYSTEM_PROMPT.replace("{level_instruction}", level_instruction)
+    adaptive = ""
+    if profile is not None:
+        from services.tutor_profile_service import build_adaptive_prompt_section
+        adaptive = build_adaptive_prompt_section(profile)
+    filled = TUTOR_SYSTEM_PROMPT.replace("{level_instruction}", level_instruction + adaptive)
     return PromptTemplate(
         input_variables=["mata_kuliah", "student_level", "history", "input"],
         template=filled,
