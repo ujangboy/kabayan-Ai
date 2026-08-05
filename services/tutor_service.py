@@ -156,7 +156,7 @@ class TutorService:
                 messages.append(AIMessage(content=msg["content"]))
         messages.append(HumanMessage(content=wrapped_input))
 
-        llm = ai_service._get_llm(capability)
+        llm = ai_service._get_llm(capability, max_tokens=2000)
 
         # Cache lookup — keyed by message + capability + level + subject
         cache_key = f"{message}:{capability}:{student_level}:{mata_kuliah or 'umum'}"

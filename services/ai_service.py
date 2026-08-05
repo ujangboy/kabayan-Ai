@@ -132,7 +132,7 @@ class CapabilityRouter:
 # ─── AI Service ──────────────────────────────────────────────────────────────
 class AIService:
 
-    def _get_llm(self, capability: str, temperature: float = None) -> ChatGroq:
+    def _get_llm(self, capability: str, temperature: float = None, max_tokens: int = 4000) -> ChatGroq:
         global_rate_limiter.check_limit(capability)
         # Exam-related capabilities need longer timeout (multi-topic generation)
         exam_caps = {"exam_analysis", "exam_blueprint", "exam_question", "exam_evaluate", "reasoning", "quiz"}
@@ -141,7 +141,7 @@ class AIService:
             api_key=config.GROQ_API_KEY,
             model_name=CapabilityRouter.get_model(capability),
             temperature=temperature if temperature is not None else config.TEMPERATURE,
-            max_tokens=4000,
+            max_tokens=max_tokens,
             max_retries=2,
             timeout=timeout,
         )
