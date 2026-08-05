@@ -145,6 +145,7 @@ function ModalShell({ children }) {
 }
 
 function OverviewTab({ data }) {
+   const { t } = useTranslation();
    const attempts = data.attempts || [];
    const hasGrowth = attempts.length >= 2;
 
@@ -222,6 +223,7 @@ function OverviewTab({ data }) {
 }
 
 function ReviewTab({ attempt }) {
+  const { t } = useTranslation();
   const [expandedIdx, setExpandedIdx] = useState(null);
   const [explanations, setExplanations] = useState({});
   const reviews = attempt?.reviews || [];
@@ -345,6 +347,7 @@ function ReviewTab({ attempt }) {
 }
 
 function InlinePractice({ questions, topic, onComplete, onClose, onRetryTopic }) {
+  const { t } = useTranslation();
   const [idx, setIdx]             = useState(0);
   const [answers, setAnswers]     = useState({});
   const [results, setResults]     = useState({});
@@ -636,6 +639,7 @@ function StudyPlanTab({ plan, sessionId, onToggle, onPlanSaved,
   loadingItemId, setLoadingItemId,
   onPracticeClose,
 }) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const today = new Date().toISOString().split('T')[0];
   const [startDate, setStartDate] = useState(plan?.start_date || today);
