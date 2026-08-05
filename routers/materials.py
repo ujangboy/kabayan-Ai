@@ -2,6 +2,8 @@ from fastapi import APIRouter, Depends, UploadFile, File, Form, BackgroundTasks,
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
+import os
+import config
 from database import get_db
 import models
 from services.material_service import material_service
@@ -9,6 +11,23 @@ from services.audio_service import audio_service
 from repositories.material_repository import material_repository
 
 router = APIRouter()
+
+
+def _material_size_bytes(m) -> int | None:
+    """Ukuran file materi dari disk (bytes). Return None jika tidak tersedia."""
+    if not m.filepath:
+        return None
+    # Cadangan utk menangani jalur relatif maupun absolut dari storage/uploads.
+    candidates = [m.filepath]
+    if not os.path.isabs(m.filepath):
+        candidates.append(os.path.join(config.BASE_DIR, m.filepath))
+    for path in candidates:
+        try:
+            if os.path.isfile(path):
+                return os.path.getsize(path)
+        except (OSError, ValueError):
+            continue
+    return None
 
 @router.get("/api/materials")
 async def get_materials_json(
@@ -26,13 +45,20 @@ async def get_materials_json(
         results.append({
             "id": m.id,
             "filename": m.filename,
-            "material_type": m.material_type,
+            "material_type": m.material_type.value if m.material_type else m.material_type,
             "status": m.status,
             "failure_reason": m.failure_reason,
             "progress": m.progress,
             "stage": m.stage,
             "upload_date": m.upload_date.isoformat() if m.upload_date else None,
-            "subject": {"id": m.subject.id, "name": m.subject.name} if m.subject else None
+            "subject": {"id": m.subject.id, "name": m.subject.name} if m.subject else None,
+            # Detail tambahan untuk halaman Pengaturan > Data
+            "filepath": m.filepath,
+            "source_url": m.source_url,
+            "external_id": m.external_id,
+            "thumbnail": m.thumbnail,
+            "language": m.language,
+            "size_bytes": _material_size_bytes(m),
         })
     return JSONResponse({"materials": results, "skip": skip, "limit": limit})
 
