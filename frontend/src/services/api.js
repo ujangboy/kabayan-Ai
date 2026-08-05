@@ -102,6 +102,7 @@ export const flashcardAPI = {
   }).then(r => r.data),
   getDue: (subjectId) => api.get('/flashcards/review/due', { params: subjectId ? { subject_id: subjectId } : {} }).then(r => r.data),
   getStats: (subjectId) => api.get('/flashcards/stats', { params: subjectId ? { subject_id: subjectId } : {} }).then(r => r.data),
+  getReviews: (cardIds) => api.get('/flashcards/reviews', { params: { card_ids: cardIds.join(',') } }).then(r => r.data),
 };
 
 // --- QUIZ ---

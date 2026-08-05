@@ -98,3 +98,81 @@ class TestReviewDueQueue:
         data = resp.json()
         assert data["due_count"] == 1
         assert data["flashcards"][0]["subject_id"] == subj_a.id
+
+
+class TestReviewHistory:
+    """Test untuk GET /api/flashcards/reviews — riwayat review per kartu."""
+
+    def _make_flashcard(self, db_session, subject_id, **kwargs):
+        fc = models.Flashcard(subject_id=subject_id, question="q", answer="a", **kwargs)
+        db_session.add(fc)
+        db_session.commit()
+        db_session.refresh(fc)
+        return fc
+
+    def test_riwayat_kosong_untuk_kartu_baru(self, client, db_session, make_subject):
+        """Kartu yang belum pernah direview → reviews kosong."""
+        subject = make_subject()
+        fc = self._make_flashcard(db_session, subject.id)
+
+        resp = client.get("/api/flashcards/reviews", params={"card_ids": str(fc.id)})
+        assert resp.status_code == 200
+        assert resp.json()["reviews"] == {}
+
+    def test_riwayat_terkumpul_per_kartu(self, client, db_session, make_subject):
+        """Beberapa review untuk kartu yang sama terkelompok dan terurut."""
+        subject = make_subject()
+        fc = self._make_flashcard(db_session, subject.id)
+        now = datetime.datetime.utcnow()
+        for rating in (0, 2, 3):
+            review = models.FlashcardReview(
+                flashcard_id=fc.id,
+                rating=rating,
+                reviewed_at=now,
+                next_review=now + datetime.timedelta(days=1),
+            )
+            db_session.add(review)
+        db_session.commit()
+
+        resp = client.get("/api/flashcards/reviews", params={"card_ids": str(fc.id)})
+        data = resp.json()
+        rows = data["reviews"].get(str(fc.id))
+        assert len(rows) == 3
+        assert [r["rating"] for r in rows] == [0, 2, 3]
+
+    def test_multiple_kartu_terpisah(self, client, db_session, make_subject):
+        """Review dari dua kartu berbeda tidak tercampur."""
+        subject = make_subject()
+        fc1 = self._make_flashcard(db_session, subject.id)
+        fc2 = self._make_flashcard(db_session, subject.id)
+        now = datetime.datetime.utcnow()
+        for fid in (fc1.id, fc2.id):
+            db_session.add(models.FlashcardReview(
+                flashcard_id=fid, rating=2,
+                reviewed_at=now, next_review=now + datetime.timedelta(days=2),
+            ))
+        db_session.commit()
+
+        resp = client.get("/api/flashcards/reviews", params={"card_ids": f"{fc1.id},{fc2.id}"})
+        data = resp.json()["reviews"]
+        assert len(data[str(fc1.id)]) == 1
+        assert len(data[str(fc2.id)]) == 1
+
+    def test_card_ids_invalid_abaikan(self, client, db_session, make_subject):
+        """ID non-numerik diabaikan tanpa error."""
+        subject = make_subject()
+        fc = self._make_flashcard(db_session, subject.id)
+        db_session.add(models.FlashcardReview(
+            flashcard_id=fc.id, rating=2,
+            reviewed_at=datetime.datetime.utcnow(),
+            next_review=datetime.datetime.utcnow() + datetime.timedelta(days=1),
+        ))
+        db_session.commit()
+
+        resp = client.get("/api/flashcards/reviews", params={"card_ids": "abc,,xyz"})
+        assert resp.status_code == 200
+        assert resp.json()["reviews"] == {}
+
+        resp = client.get("/api/flashcards/reviews", params={"card_ids": f"{fc.id},abc"})
+        assert resp.status_code == 200
+        assert len(resp.json()["reviews"]) == 1

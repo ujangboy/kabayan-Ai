@@ -11,7 +11,7 @@ import { useToast } from '@/components/Toast';
 import { extractErrorMessage } from '@/utils/errors';
 import MathMarkdown from '@/components/MathMarkdown';
 import MaterialPicker from '@/components/MaterialPicker';
-import { formatDate, formatTimeOnly } from '@/utils';
+import { formatDate, formatDateTime, formatTimeOnly } from '@/utils';
 import { usePendingOperation } from '@/hooks/usePendingOperation';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -24,6 +24,7 @@ export default function FlashcardPage() {
   const [isAIModalOpen, setIsAIModalOpen] = useState(false);
   const [isManualModalOpen, setIsManualModalOpen] = useState(false);
   const [activeBatchId, setActiveBatchId] = useState(null); // null = list view
+  const [historyBatchId, setHistoryBatchId] = useState(null); // null = no history modal
 
   const { data: flashcardData, isLoading } = useQuery({
     queryKey: ['flashcards'],
@@ -145,6 +146,7 @@ export default function FlashcardPage() {
                 group={group}
                 onStart={() => setActiveBatchId(group.batch_id)}
                 onReview={() => navigate(`/flashcard/review?subject_id=${group.subject.id}`)}
+                onHistory={() => setHistoryBatchId(group.batch_id)}
                 onDeleteAll={() => {
                   if (confirm(`Hapus deck ini (${group.cards.length} kartu)?`)) {
                     const ids = group.cards.map(c => c.id);
@@ -182,6 +184,12 @@ export default function FlashcardPage() {
             }}
           />
         )}
+        {historyBatchId !== null && (
+          <ReviewHistoryModal
+            group={groups.find(g => g.batch_id === historyBatchId)}
+            onClose={() => setHistoryBatchId(null)}
+          />
+        )}
       </AnimatePresence>
     </div>
   );
@@ -190,7 +198,7 @@ export default function FlashcardPage() {
 // ─────────────────────────────────────────────────────────────────────────────
 // Card component for each batch (deck) — setiap generate = satu card
 // ─────────────────────────────────────────────────────────────────────────────
-function BatchFlashcardCard({ group, onStart, onReview, onDeleteAll }) {
+function BatchFlashcardCard({ group, onStart, onReview, onHistory, onDeleteAll }) {
   const { subject, cards } = group;
   // Ambil created_at terbaru dari kartu dalam deck
   const latestCard = cards.reduce((a, b) =>
@@ -312,6 +320,14 @@ function BatchFlashcardCard({ group, onStart, onReview, onDeleteAll }) {
           <Play size={12} /> Mulai Belajar
         </button>
       </div>
+
+      {/* Riwayat review per kartu */}
+      <button
+        onClick={onHistory}
+        className="mt-2 w-full flex items-center justify-center gap-1 text-[11px] text-text-muted hover:text-accent-teal transition-colors py-1"
+      >
+        <Clock size={11} /> Riwayat Review
+      </button>
     </motion.div>
   );
 }
@@ -854,6 +870,96 @@ function CreateFlashcardModal({ subjects, onClose, onSuccess }) {
             </button>
           </div>
         </form>
+      </motion.div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Riwayat Review per kartu (log Lupa/Ingat/Hafal + jadwal next_review)
+// ─────────────────────────────────────────────────────────────────────────────
+const RATING_META = {
+  0: { label: '😕 Lupa',  cls: 'text-danger border-danger/30 bg-danger/5' },
+  1: { label: '😕 Lupa',  cls: 'text-danger border-danger/30 bg-danger/5' },
+  2: { label: '🙂 Ingat', cls: 'text-accent-blue border-accent-blue/30 bg-accent-blue/5' },
+  3: { label: '🎯 Hafal', cls: 'text-success border-success/30 bg-success/5' },
+  4: { label: '🎯 Hafal', cls: 'text-success border-success/30 bg-success/5' },
+};
+
+function ReviewHistoryModal({ group, onClose }) {
+  const { subject, cards } = group || {};
+  const cardIds = (cards || []).map(c => c.id);
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['flashcard-reviews', cardIds.join(',')],
+    queryFn: () => flashcardAPI.getReviews(cardIds),
+    enabled: cardIds.length > 0,
+  });
+
+  const reviewsMap = data?.reviews || {};
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        className="w-full max-w-2xl card-base shadow-2xl max-h-[85vh] flex flex-col"
+      >
+        <div className="flex items-center justify-between p-4 border-b border-border shrink-0">
+          <div className="flex items-center gap-2">
+            <Brain size={18} className="text-accent-purple" />
+            <h3 className="font-semibold text-text">Riwayat Review — {subject?.name || 'Flashcard'}</h3>
+          </div>
+          <button onClick={onClose} className="text-text-muted hover:text-text"><X size={18} /></button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          {isLoading && <p className="text-center text-text-muted py-8">Memuat riwayat...</p>}
+          {error && <p className="text-center text-danger py-8">Gagal memuat riwayat: {error?.message}</p>}
+          {!isLoading && !error && (cards || []).length === 0 && (
+            <p className="text-center text-text-muted py-8">Tidak ada kartu dalam deck ini.</p>
+          )}
+          {(cards || []).map(card => {
+            const history = reviewsMap[card.id] || [];
+            return (
+              <div key={card.id} className="border border-border rounded-xl p-3 bg-background">
+                <div className="flex items-start justify-between gap-3">
+                  <MathMarkdown className="text-sm font-medium text-text">{card.question}</MathMarkdown>
+                  <span className={`shrink-0 text-[10px] px-2 py-0.5 rounded-full border font-semibold ${card.mastered ? 'text-success border-success/30 bg-success/5' : 'text-text-muted border-border'}`}>
+                    {card.mastered ? 'Dikuasai' : 'Diproses'}
+                  </span>
+                </div>
+                <div className="mt-2 flex items-center gap-3 text-[11px] text-text-muted">
+                  <span>Direview: <b className="text-text">{card.times_seen || 0}×</b></span>
+                  {card.last_reviewed && <span>Terakhir: {formatDateTime(card.last_reviewed)}</span>}
+                </div>
+                {history.length === 0 ? (
+                  <p className="mt-2 text-xs text-text-muted">Belum pernah direview.</p>
+                ) : (
+                  <ul className="mt-2 space-y-1">
+                    {history.map(r => {
+                      const meta = RATING_META[r.rating] || RATING_META[0];
+                      return (
+                        <li key={r.id} className={`flex items-center justify-between text-xs rounded-lg border px-2 py-1 ${meta.cls}`}>
+                          <span className="font-medium">{meta.label}</span>
+                          <span className="flex items-center gap-3 text-text-muted">
+                            <span className="capitalize">{formatDate(r.reviewed_at)} · {formatTimeOnly(r.reviewed_at)}</span>
+                            {r.next_review && <span>Next: {formatDate(r.next_review)}</span>}
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="p-3 border-t border-border shrink-0 flex justify-end">
+          <button onClick={onClose} className="btn-ghost border border-border text-sm">Tutup</button>
+        </div>
       </motion.div>
     </div>
   );

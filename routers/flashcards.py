@@ -114,6 +114,37 @@ async def get_due_flashcards(subject_id: int = Query(None), db: Session = Depend
     return JSONResponse({"due_count": len(results), "flashcards": results})
 
 
+@router.get("/api/flashcards/reviews")
+async def get_flashcard_reviews(card_ids: str = Query(..., description="Comma-separated flashcard IDs"), db: Session = Depends(get_db)):
+    """Riwayat review per kartu (log Lupa/Ingat/Hafal + jadwal next_review)."""
+    from models import FlashcardReview
+    ids: list[int] = []
+    for part in card_ids.split(","):
+        part = part.strip()
+        if part.isdigit():
+            ids.append(int(part))
+    if not ids:
+        return JSONResponse({"reviews": {}})
+
+    reviews = (
+        db.query(FlashcardReview)
+        .filter(FlashcardReview.flashcard_id.in_(ids))
+        .order_by(FlashcardReview.flashcard_id.asc(), FlashcardReview.reviewed_at.asc())
+        .all()
+    )
+
+    grouped: dict[int, list[dict]] = {}
+    for r in reviews:
+        grouped.setdefault(r.flashcard_id, []).append({
+            "id": r.id,
+            "rating": r.rating,
+            "reviewed_at": r.reviewed_at.isoformat() if r.reviewed_at else None,
+            "next_review": r.next_review.isoformat() if r.next_review else None,
+            "response_time_ms": r.response_time_ms,
+        })
+    return JSONResponse({"reviews": grouped})
+
+
 @router.get("/api/flashcards/stats")
 async def get_flashcard_stats(subject_id: int = Query(None), db: Session = Depends(get_db)):
     """Statistik flashcard: total, mastered, perlu review, dll."""
