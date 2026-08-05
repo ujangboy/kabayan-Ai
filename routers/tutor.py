@@ -158,7 +158,10 @@ async def tutor_chat(request: TutorChatRequest, db: Session = Depends(get_db)):
                         db.commit()
                         db.refresh(msg)
                         saved_message_id = msg.id
-                        record_message(db, tokens=_estimate_tokens(full_response))
+                        try:
+                            record_message(db, tokens=_estimate_tokens(full_response))
+                        except Exception as rec_exc:
+                            logger.warning("Failed to record message stats: %s", rec_exc)
                     except Exception as persist_exc:
                         logger.warning("Failed to persist tutor message: %s", persist_exc)
                         db.rollback()

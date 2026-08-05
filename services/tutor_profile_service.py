@@ -121,8 +121,10 @@ def get_adaptive_instructions(profile: TutorUserProfile) -> str:
     return "\n".join(parts)
 
 
-def build_adaptive_prompt_section(profile: TutorUserProfile) -> str:
+def build_adaptive_prompt_section(profile: TutorUserProfile | None) -> str:
     """Build a full adaptive section to inject into the tutor system prompt."""
+    if profile is None:
+        return ""
     instructions = get_adaptive_instructions(profile)
     if not instructions:
         return ""

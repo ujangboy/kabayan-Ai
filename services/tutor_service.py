@@ -72,7 +72,7 @@ class TutorService:
 
         # 2. Route
         if tier == "SIMPLE":
-            async for chunk in self._handle_simple(db, message, mata_kuliah, student_level):
+            async for chunk in self._handle_simple(db, message, mata_kuliah, student_level, profile=profile):
                 yield chunk
         elif tier == "MEDIUM":
             async for chunk in self._handle_ai(
@@ -95,6 +95,7 @@ class TutorService:
         message: str,
         mata_kuliah: Optional[str],
         student_level: str,
+        profile=None,
     ) -> AsyncIterator[str]:
         """Look up FAQ and return the answer directly (0 token)."""
         faq = faq_service.find_best_match(db, message, mata_kuliah=mata_kuliah)
@@ -102,7 +103,8 @@ class TutorService:
         if faq is None:
             logger.debug("No FAQ match for '%s', escalating to MEDIUM.", message[:60])
             async for chunk in self._handle_ai(
-                message, [], mata_kuliah, student_level, capability="chat"
+                message, [], mata_kuliah, student_level, capability="chat",
+                profile=profile,
             ):
                 yield chunk
             return
@@ -160,7 +162,7 @@ class TutorService:
         cache_key = f"{message}:{capability}:{student_level}:{mata_kuliah or 'umum'}"
         cached = cache_service.get_cache(db, cache_key, "", "")
         if cached:
-            yield cached
+            yield _normalize_math(cached)
             return
 
         full_response = ""
