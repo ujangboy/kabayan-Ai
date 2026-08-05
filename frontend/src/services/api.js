@@ -177,6 +177,12 @@ export const tutorAPI = {
   // list FAQ entries (debug/admin)
   listFAQ: (mata_kuliah = null, limit = 50) =>
     api.get('/tutor/faq', { params: { ...(mata_kuliah ? { mata_kuliah } : {}), limit } }),
+
+  // kirim rating feedback untuk satu respons tutor
+  feedback: (payload) => api.post('/tutor/feedback', payload),
+
+  // ambil profil adaptif siswa
+  profile: () => api.get('/tutor/profile'),
 };
 
 export default api;

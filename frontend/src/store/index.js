@@ -54,6 +54,24 @@ export const useChatStore = create(
         ),
       })),
 
+      // Patch metadata (msgId, tier, dst.) pada pesan terakhir tanpa mengubah konten
+      patchLastMessage: (chatId, patch) => set((s) => ({
+        chats: s.chats.map((c) =>
+          c.id === chatId
+            ? { ...c, messages: c.messages.map((m, i) => i === c.messages.length - 1 ? { ...m, ...patch } : m) }
+            : c
+        ),
+      })),
+
+      // Simpan hasil feedback pada pesan tertentu (dicari berdasarkan msgId dari backend)
+      setMessageFeedback: (chatId, msgId, rating) => set((s) => ({
+        chats: s.chats.map((c) =>
+          c.id === chatId
+            ? { ...c, messages: c.messages.map((m) => m.msgId === msgId ? { ...m, feedback: rating } : m) }
+            : c
+        ),
+      })),
+
       getCurrentChat: () => {
         const { chats, currentChatId } = get();
         return chats.find((c) => c.id === currentChatId);

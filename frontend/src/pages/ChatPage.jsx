@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, X, BookOpen, Trash2, Bot, User, Copy, Check, Pin, Edit3, GraduationCap } from 'lucide-react';
+import { Send, X, BookOpen, Trash2, Bot, User, Copy, Check, Pin, Edit3, GraduationCap, ThumbsUp, ThumbsDown, Hand } from 'lucide-react';
 import MathMarkdown from '@/components/MathMarkdown';
 import { useChatStore } from '@/store';
 import { cn, formatDateTime } from '@/utils';
@@ -30,8 +30,57 @@ function CopyButton({ text }) {
   );
 }
 
-function MessageBubble({ message, isLast }) {
+function FeedbackButtons({ onFeedback }) {
+  const [status, setStatus] = useState('idle'); // idle | sending | done
+  const submit = async (rating) => {
+    if (status !== 'idle') return;
+    setStatus('sending');
+    try {
+      await onFeedback(rating);
+      setStatus('done');
+    } catch {
+      setStatus('idle');
+    }
+  };
+
+  if (status === 'done') {
+    return <div className="mt-2 text-[10px] text-success">Terima kasih atas feedback-nya!</div>;
+  }
+
+  return (
+    <div className="mt-2 flex items-center gap-1.5">
+      <span className="text-[10px] text-text-muted select-none">Feedback:</span>
+      <button
+        onClick={() => submit('helpful')}
+        disabled={status === 'sending'}
+        title="Membantu"
+        className="p-1 rounded-md bg-background border border-border text-text-muted hover:text-success hover:border-success/50 transition-colors"
+      >
+        <ThumbsUp size={12} />
+      </button>
+      <button
+        onClick={() => submit('somewhat')}
+        disabled={status === 'sending'}
+        title="Cukup membantu"
+        className="p-1 rounded-md bg-background border border-border text-text-muted hover:text-amber-400 hover:border-amber-400/50 transition-colors"
+      >
+        <Hand size={12} />
+      </button>
+      <button
+        onClick={() => submit('not_helpful')}
+        disabled={status === 'sending'}
+        title="Tidak membantu"
+        className="p-1 rounded-md bg-background border border-border text-text-muted hover:text-danger hover:border-danger/50 transition-colors"
+      >
+        <ThumbsDown size={12} />
+      </button>
+    </div>
+  );
+}
+
+function MessageBubble({ message, _isLast, tutorMode, onFeedback }) {
   const isUser = message.role === 'user';
+  const showFeedback = !isUser && tutorMode && message.msgId && !message.feedback;
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
@@ -59,6 +108,10 @@ function MessageBubble({ message, isLast }) {
           <div className="prose-dark text-sm">
             <MathMarkdown>{message.content}</MathMarkdown>
           </div>
+        )}
+        {/* Feedback — hanya untuk respons tutor yang sudah tersimpan (punya msgId) */}
+        {showFeedback && (
+          <FeedbackButtons onFeedback={(rating) => onFeedback(message, rating)} />
         )}
         {/* Timestamp */}
         {message.timestamp && (
@@ -103,7 +156,7 @@ function TypingIndicator() {
 export default function ChatPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { chats, currentChatId, setCurrentChat, createChat, deleteChat, deleteAllChats, togglePinChat, renameChat, addMessage, updateLastMessage, getCurrentChat, selectedDocs, clearSelectedDocs } = useChatStore();
+  const { chats, currentChatId, setCurrentChat, createChat, deleteChat, deleteAllChats, togglePinChat, renameChat, addMessage, updateLastMessage, patchLastMessage, setMessageFeedback, getCurrentChat, selectedDocs, clearSelectedDocs } = useChatStore();
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showQuickPrompts, setShowQuickPrompts] = useState(false);
@@ -238,6 +291,25 @@ export default function ChatPage() {
         full += chunk;
         updateLastMessage(chatId, full);
       }
+
+      // Strip trailing "\x00MSGID:<id>\x00" metadata (tutor mode) and simpan
+      // message id ke store agar tombol feedback bisa mengirimnya ke backend.
+      if (tutorMode) {
+        const NULL = '\u0000';
+        const marker = NULL + 'MSGID:';
+        const idx = full.lastIndexOf(marker);
+        if (idx !== -1) {
+          const close = full.indexOf(NULL, idx + marker.length);
+          if (close !== -1) {
+            const msgId = Number(full.slice(idx + marker.length, close));
+            if (Number.isInteger(msgId) && msgId > 0) {
+              full = full.slice(0, idx);
+              patchLastMessage(chatId, { msgId });
+              updateLastMessage(chatId, full);
+            }
+          }
+        }
+      }
     } catch {
       updateLastMessage(chatId, '⚠️ Terjadi kesalahan. Coba lagi.');
     } finally {
@@ -245,7 +317,19 @@ export default function ChatPage() {
       setIsLoading(false);
       chatOp.finish();
     }
-  }, [currentChatId, selectedDocs, chat, addMessage, updateLastMessage, chatOp, tutorMode, tutorSubject, tutorLevel]);
+  }, [currentChatId, selectedDocs, chat, addMessage, updateLastMessage, patchLastMessage, chatOp, tutorMode, tutorSubject, tutorLevel]);
+
+  // Kirim rating feedback untuk satu respons tutor
+  const handleFeedback = useCallback(async (message, rating) => {
+    if (!message.msgId) throw new Error('Pesan belum tersimpan di server.');
+    const res = await tutorAPI.feedback({
+      message_id: message.msgId,
+      rating,
+      mata_kuliah: tutorSubject || undefined,
+    });
+    setMessageFeedback(currentChatId, message.msgId, rating);
+    return res;
+  }, [currentChatId, tutorSubject, setMessageFeedback]);
 
   // Simpan respons AI terakhir ke Notebook — auto-detect mata kuliah + auto-judul
   const generateAndSaveNote = useCallback(async () => {
@@ -576,7 +660,7 @@ export default function ChatPage() {
           ) : (
             <>
               {chat.messages.map((m, i) => (
-                <MessageBubble key={i} message={m} isLast={i === chat.messages.length - 1} />
+                <MessageBubble key={i} message={m} isLast={i === chat.messages.length - 1} tutorMode={tutorMode} onFeedback={handleFeedback} />
               ))}
               {isLoading && chat.messages[chat.messages.length - 1]?.content === '' && (
                 <TypingIndicator />

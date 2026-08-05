@@ -9,7 +9,7 @@ Endpoints:
 Streaming shape is identical to /api/chat:
   - StreamingResponse with media_type="text/plain"
   - Header X-Tutor-Type: SIMPLE | MEDIUM | COMPLEX
-  - First bytes contain "\x00TYPE:<type>\x00" which the client strips before UI display
+  - First bytes contain "\x00TYPE:<type>\x00" which the service strips before UI display
 
 Chat history persistence reuses the existing Chat/Message tables (via chat_repository).
 Messages get the new nullable `type` and `tokens_used` columns populated.
@@ -28,6 +28,7 @@ from database import get_db
 from repositories.chat_repository import chat_repository
 from services.tutor_service import tutor_service
 from services.faq_service import faq_service
+from services.feedback_service import feedback_service
 from exceptions import AppError
 
 logger = logging.getLogger(__name__)
@@ -53,6 +54,14 @@ class TutorChatRequest(BaseModel):
 class TutorClassifyRequest(BaseModel):
     message: str
     history: List[TutorMessage] = Field(default_factory=list)
+
+
+class TutorFeedbackRequest(BaseModel):
+    message_id: int
+    rating: str
+    comment: Optional[str] = None
+    flag: Optional[str] = None
+    mata_kuliah: Optional[str] = None
 
 
 # ─── Helper: estimate token count ────────────────────────────────────────────
@@ -96,6 +105,7 @@ async def tutor_chat(request: TutorChatRequest, db: Session = Depends(get_db)):
         async def stream_and_persist():
             full_response = ""
             first_chunk = True
+            saved_message_id: Optional[int] = None
 
             try:
                 async for chunk in tutor_service.achat_stream(
@@ -143,9 +153,16 @@ async def tutor_chat(request: TutorChatRequest, db: Session = Depends(get_db)):
                         db.add(msg)
                         db.commit()
                         db.refresh(msg)
+                        saved_message_id = msg.id
                     except Exception as persist_exc:
                         logger.warning("Failed to persist tutor message: %s", persist_exc)
                         db.rollback()
+
+            # Trailing metadata with the saved message id — emitted only when the
+            # stream completed normally (client disconnect raises GeneratorExit
+            # inside the generator, so this line never runs in that case).
+            if saved_message_id is not None:
+                yield f"\x00MSGID:{saved_message_id}\x00"
 
         headers = {
             "X-Chat-Id": str(chat_id) if chat_id else "",
@@ -174,6 +191,31 @@ async def tutor_classify(request: TutorClassifyRequest):
         result = tutor_service.classify_message(request.message, hist_dicts)
         return JSONResponse(result)
     except Exception as exc:
+        raise AppError(str(exc), status_code=500)
+
+
+@router.post("/api/tutor/feedback")
+async def tutor_feedback(request: TutorFeedbackRequest, db: Session = Depends(get_db)):
+    """
+    Simpan rating siswa terhadap satu respons tutor.
+
+    Request: {"message_id", "rating", "comment"?, "flag"?, "mata_kuliah"?}
+    Rating: helpful | somewhat | not_helpful
+    Flag:   incorrect | unclear | irrelevant | inappropriate
+    """
+    try:
+        result = feedback_service.save_feedback(
+            db,
+            message_id=request.message_id,
+            rating=request.rating,
+            comment=request.comment,
+            flag=request.flag,
+        )
+        return JSONResponse(result)
+    except ValueError as exc:
+        raise AppError(str(exc), status_code=400)
+    except Exception as exc:
+        logger.exception("feedback endpoint error")
         raise AppError(str(exc), status_code=500)
 
 

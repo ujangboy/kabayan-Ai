@@ -402,6 +402,25 @@ class TutorTemplate(Base):
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
 
+class TutorFeedback(Base):
+    """
+    Feedback siswa terhadap respons tutor (rating + flag opsional).
+
+    Aplikasi ini single-user lokal (tidak ada tabel users), sehingga user_key
+    memakai nilai default "local". message_id menjadi kunci utama; chat_id
+    diturunkan dari pesan agar tidak pernah melanggar foreign key.
+    """
+    __tablename__ = "tutor_feedback"
+    id = Column(Integer, primary_key=True, index=True)
+    message_id = Column(Integer, ForeignKey("messages.id", ondelete="CASCADE"), index=True)
+    chat_id = Column(Integer, ForeignKey("chats.id", ondelete="CASCADE"), index=True, nullable=True)
+    user_key = Column(String, default="local", index=True)
+    rating = Column(String, nullable=False)           # helpful / somewhat / not_helpful
+    comment = Column(Text, nullable=True)
+    flag = Column(String, nullable=True)              # incorrect / unclear / irrelevant / inappropriate
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+
 # ─── Question Bank Model ─────────────────────────────────────────────────────
 
 class QuestionBank(Base):
