@@ -11,6 +11,8 @@ export const useChatStore = create(
       streamingChatId: null,
       tutorMode: false,
       tutorBadge: null,
+      tutorSubject: '',
+      tutorLevel: 'intermediate',
 
       createChat: () => {
         const chat = { id: Date.now(), title: 'Chat Baru', messages: [], pinned: false, createdAt: new Date().toISOString() };
@@ -93,6 +95,8 @@ export const useChatStore = create(
 
       setTutorMode: (tutorMode) => set({ tutorMode }),
       setTutorBadge: (tutorBadge) => set({ tutorBadge }),
+      setTutorSubject: (tutorSubject) => set({ tutorSubject }),
+      setTutorLevel: (tutorLevel) => set({ tutorLevel }),
     }),
     {
       name: 'kabayan-chat-store',

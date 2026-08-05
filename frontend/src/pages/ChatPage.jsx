@@ -175,7 +175,7 @@ function TypingIndicator() {
 export default function ChatPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { chats, currentChatId, setCurrentChat, createChat, deleteChat, deleteAllChats, togglePinChat, renameChat, addMessage, updateLastMessage, patchLastMessage, setMessageFeedback, getCurrentChat, selectedDocs, clearSelectedDocs, isStreaming, streamingChatId, tutorMode, tutorBadge, setStreaming, setTutorMode, setTutorBadge } = useChatStore();
+  const { chats, currentChatId, setCurrentChat, createChat, deleteChat, deleteAllChats, togglePinChat, renameChat, addMessage, updateLastMessage, patchLastMessage, setMessageFeedback, getCurrentChat, selectedDocs, clearSelectedDocs, isStreaming, streamingChatId, tutorMode, tutorBadge, tutorSubject, tutorLevel, setStreaming, setTutorMode, setTutorBadge, setTutorSubject, setTutorLevel } = useChatStore();
   const [input, setInput] = useState('');
   const [showQuickPrompts, setShowQuickPrompts] = useState(false);
   const [editingChatId, setEditingChatId] = useState(null);
@@ -183,8 +183,6 @@ export default function ChatPage() {
   const [noteToast, setNoteToast] = useState(null);
   const [isNoteSaving, setIsNoteSaving] = useState(false);
   // Tutor Mode state (persisted di store agar bertahan saat pindah menu)
-  const [tutorSubject, setTutorSubject] = useState('');
-  const [tutorLevel, setTutorLevel] = useState('intermediate');
   const [subjects, setSubjects] = useState([]);
   // Mutex ref — mencegah double-call karena React state update async
   const isNoteSavingRef = useRef(false);
