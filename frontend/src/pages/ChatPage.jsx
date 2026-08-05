@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, X, BookOpen, Trash2, Bot, User, Copy, Check, Pin, Edit3, GraduationCap, ThumbsUp, ThumbsDown, Hand } from 'lucide-react';
+import { Send, X, BookOpen, Trash2, Bot, User, Copy, Check, Pin, Edit3, GraduationCap, ThumbsUp, ThumbsDown, Hand, Lightbulb, Target, FileText, Clipboard } from 'lucide-react';
 import MathMarkdown from '@/components/MathMarkdown';
 import { useChatStore } from '@/store';
 import { cn, formatDateTime } from '@/utils';
@@ -9,11 +9,11 @@ import { notesAPI, subjectAPI, tutorAPI } from '@/services/api';
 import { usePendingOperation } from '@/hooks/usePendingOperation';
 
 const QUICK_PROMPTS = [
-  { label: '📝 Ringkas', prompt: 'Buatkan ringkasan yang komprehensif dari materi yang saya pilih.' },
-  { label: '💡 Jelaskan', prompt: 'Jelaskan konsep utama dari materi ini dengan bahasa yang mudah dipahami.' },
-  { label: '🎯 Analogi', prompt: 'Berikan analogi sederhana untuk menjelaskan materi ini.' },
-  { label: '📖 Contoh', prompt: 'Berikan contoh nyata dari konsep-konsep dalam materi ini.' },
-  { label: '📌 Simpan ke Notebook', toNotebook: true },
+  { label: <><FileText size={12} className="mr-1" />Ringkas</>, prompt: 'Buatkan ringkasan yang komprehensif dari materi yang saya pilih.' },
+  { label: <><Lightbulb size={12} className="mr-1" />Jelaskan</>, prompt: 'Jelaskan konsep utama dari materi ini dengan bahasa yang mudah dipahami.' },
+  { label: <><Target size={12} className="mr-1" />Analogi</>, prompt: 'Berikan analogi sederhana untuk menjelaskan materi ini.' },
+  { label: <><BookOpen size={12} className="mr-1" />Contoh</>, prompt: 'Berikan contoh nyata dari konsep-konsep dalam materi ini.' },
+  { label: <><Clipboard size={12} className="mr-1" />Simpan ke Notebook</>, toNotebook: true },
 ];
 
 function CopyButton({ text }) {
@@ -78,7 +78,7 @@ function FeedbackButtons({ onFeedback }) {
   );
 }
 
-function MessageBubble({ message, _isLast, tutorMode, onFeedback }) {
+function MessageBubble({ message, tutorMode, onFeedback }) {
   const isUser = message.role === 'user';
   const showFeedback = !isUser && tutorMode && message.msgId && !message.feedback;
   return (
@@ -107,6 +107,24 @@ function MessageBubble({ message, _isLast, tutorMode, onFeedback }) {
         ) : (
           <div className="prose-dark text-sm">
             <MathMarkdown>{message.content}</MathMarkdown>
+          </div>
+        )}
+        {/* Tier badge + token count untuk respons tutor */}
+        {!isUser && message.type && (
+          <div className="flex items-center gap-2 mt-1">
+            <span className={cn(
+              'px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide',
+              message.type === 'simple' && 'bg-green-500/15 text-green-400',
+              message.type === 'medium' && 'bg-blue-500/15 text-blue-400',
+              message.type === 'complex' && 'bg-purple-500/15 text-purple-400',
+            )}>
+              {message.type}
+            </span>
+            {message.tokens_used != null && (
+              <span className="text-[10px] text-text-muted">
+                {message.tokens_used} token
+              </span>
+            )}
           </div>
         )}
         {/* Feedback — hanya untuk respons tutor yang sudah tersimpan (punya msgId) */}
@@ -311,7 +329,7 @@ export default function ChatPage() {
         }
       }
     } catch {
-      updateLastMessage(chatId, '⚠️ Terjadi kesalahan. Coba lagi.');
+      updateLastMessage(chatId, '⚠ Terjadi kesalahan. Coba lagi.');
     } finally {
       isLoadingRef.current = false;
       setIsLoading(false);
@@ -345,7 +363,7 @@ export default function ChatPage() {
     setIsNoteSaving(true);
     setShowQuickPrompts(false);
     notebookOp.start();
-    setNoteToast({ type: 'success', msg: '⏳ Menyiapkan catatan...' });
+    setNoteToast({ type: 'success', msg: 'Menyiapkan catatan...' });
     try {
       // Step 1: Detect context (mata kuliah, topic, subject_id)
       const detectRes = await notesAPI.detectContext(chat.messages);
@@ -359,7 +377,7 @@ export default function ChatPage() {
       const saveRes = await notesAPI.create(title, lastAssistant.content, detectedSubjectId || undefined);
       if (saveRes.data) {
         const subjectName = mata_kuliah && mata_kuliah !== 'tidak_diketahui' ? mata_kuliah : 'Notebook';
-        setNoteToast({ type: 'success', msg: `✅ Tersimpan ke Notebook — ${subjectName}` });
+        setNoteToast({ type: 'success', msg: `✓ Tersimpan ke Notebook — ${subjectName}` });
       } else {
         setNoteToast({ type: 'error', msg: 'Gagal menyimpan catatan.' });
       }
@@ -645,7 +663,10 @@ export default function ChatPage() {
               </div>
               <div>
                 <h2 className="text-xl font-bold text-text mb-1">
-                  {tutorMode ? '📚 Tutor Mode Aktif!' : 'Halo! Saya Kabayan AI 👋'}
+                  {tutorMode
+                    ? <><BookOpen size={18} className="inline mr-1 align-middle" />Tutor Mode Aktif!</>
+                    : <><GraduationCap size={18} className="inline mr-1 align-middle" />Halo! Saya Kabayan AI</>
+                  }
                 </h2>
                 <p className="text-text-secondary text-sm">
                   {tutorMode
@@ -654,7 +675,7 @@ export default function ChatPage() {
                 </p>
               </div>
               <p className="text-xs text-text-muted">
-                {tutorMode ? 'Ketik "reveal" untuk minta jawaban penuh' : 'Klik ⚡ di bawah untuk quick prompts'}
+                {!tutorMode && 'Klik di bawah untuk quick prompts'}
               </p>
             </motion.div>
           ) : (
@@ -682,7 +703,7 @@ export default function ChatPage() {
                 noteToast.type === 'success' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30'
               )}
             >
-              {noteToast.type === 'success' ? '✅ ' : '❌ '}{noteToast.msg}
+              {noteToast.type === 'success' ? '✓ ' : '✗ '}{noteToast.msg}
             </motion.div>
           )}
         </AnimatePresence>
@@ -720,7 +741,7 @@ export default function ChatPage() {
                     )}
                     title={q.toNotebook ? 'Simpan respons AI terakhir ke Notebook' : undefined}
                   >
-                    {q.toNotebook && isNoteSaving ? '⏳ Menyimpan ke Notebook...' : q.label}
+                    {q.toNotebook && isNoteSaving ? 'Menyimpan ke Notebook...' : q.label}
                   </button>
                 ))}
               </motion.div>
