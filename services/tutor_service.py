@@ -133,17 +133,17 @@ class TutorService:
         import time
 
         trimmed_history = _trim_history(history, max_turns=6)
-        hist_str = "\n".join(
-            f"{m['role']}: {m['content']}" for m in trimmed_history
-        )
 
         prompt_template = build_tutor_prompt(student_level, profile=profile)
         wrapped_input = _wrap_data("pesan_siswa", message)
 
+        # History dimasukkan sebagai objek pesan (Human/AI) di bawah — JANGAN
+        # diulang di system prompt via {history} agar tidak membuang token
+        # (double history sebelumnya memperlambat first-token).
         sys_content = prompt_template.format(
             mata_kuliah=mata_kuliah or "Umum",
             student_level=student_level,
-            history=hist_str,
+            history="",
             input=wrapped_input,
         )
 
