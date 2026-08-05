@@ -117,6 +117,22 @@ export const useChatStore = create(
   )
 );
 
+// Filter mata kuliah per halaman — persist agar tidak reset saat pindah menu
+export const useUiStore = create(
+  persist(
+    (set) => ({
+      subjectFilterMateri: '',
+      subjectFilterFlashcard: '',
+      setSubjectFilter: (page, value) => set(
+        page === 'flashcard'
+          ? { subjectFilterFlashcard: String(value || '') }
+          : { subjectFilterMateri: String(value || '') }
+      ),
+    }),
+    { name: 'kabayan-ui-store' }
+  )
+);
+
 export const useAppStore = create((set) => ({
   sidebarOpen: true,
   searchOpen: false,

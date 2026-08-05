@@ -7,6 +7,7 @@ import {
   Trash2, ChevronLeft, ChevronRight, RotateCcw, Trophy, Clock, Calendar, FileText, Brain, Sparkles
 } from 'lucide-react';
 import { flashcardAPI, subjectAPI } from '@/services/api';
+import { useUiStore } from '@/store';
 import { useToast } from '@/components/Toast';
 import { extractErrorMessage } from '@/utils/errors';
 import MathMarkdown from '@/components/MathMarkdown';
@@ -25,6 +26,8 @@ export default function FlashcardPage() {
   const [isManualModalOpen, setIsManualModalOpen] = useState(false);
   const [activeBatchId, setActiveBatchId] = useState(null); // null = list view
   const [historyBatchId, setHistoryBatchId] = useState(null); // null = no history modal
+  const subjectFilter = useUiStore((s) => s.subjectFilterFlashcard);
+  const setSubjectFilter = useUiStore((s) => s.setSubjectFilter);
 
   const { data: flashcardData, isLoading } = useQuery({
     queryKey: ['flashcards'],
@@ -58,6 +61,9 @@ export default function FlashcardPage() {
     const bTime = new Date(b.cards[0]?.created_at || 0);
     return bTime - aTime;
   });
+  const filteredGroups = subjectFilter
+    ? groups.filter((g) => String(g.subject?.id) === subjectFilter)
+    : groups;
 
   const clearAllMutation = useMutation({
     mutationFn: () => flashcardAPI.clear(),
@@ -100,7 +106,7 @@ export default function FlashcardPage() {
           </div>
           <div className="flex items-center gap-3 flex-wrap">
             {(() => {
-              const totalDue = groups.reduce((sum, g) =>
+              const totalDue = filteredGroups.reduce((sum, g) =>
                 sum + g.cards.filter(c => !c.mastered && (c.times_seen === 0 || (c.next_review && new Date(c.next_review) <= new Date()))).length, 0
               );
               return (
@@ -127,6 +133,25 @@ export default function FlashcardPage() {
           </div>
         </div>
 
+        {/* Filter Mata Kuliah */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <select
+              value={subjectFilter}
+              onChange={(e) => setSubjectFilter('flashcard', e.target.value)}
+              className="px-3 py-2 bg-card border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary transition-colors"
+            >
+              <option value="">-- Semua Mata Kuliah --</option>
+              {[...subjects].sort((a, b) => a.name.localeCompare(b.name, 'id', { sensitivity: 'base' })).map(s => (
+                <option key={s.id} value={String(s.id)}>{s.name}</option>
+              ))}
+            </select>
+            <span className="text-xs text-text-muted">
+              Menampilkan {filteredGroups.length} dari {groups.length} deck
+            </span>
+          </div>
+        </div>
+
         {/* Group Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {isLoading ? (
@@ -139,8 +164,12 @@ export default function FlashcardPage() {
                 <Zap size={14} /> Generate AI
               </button>
             </div>
+          ) : filteredGroups.length === 0 ? (
+            <div className="col-span-full card-base p-10 text-center">
+              <p className="text-text-muted">Tidak ada deck pada mata kuliah ini.</p>
+            </div>
           ) : (
-            groups.map((group) => (
+            filteredGroups.map((group) => (
               <BatchFlashcardCard
                 key={group.batch_id}
                 group={group}

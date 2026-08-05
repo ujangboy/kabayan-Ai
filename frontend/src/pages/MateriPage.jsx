@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useChatStore } from '@/store';
+import { useChatStore, useUiStore } from '@/store';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FileText, Upload, Plus, Trash2, Headphones, Play, X, Video } from 'lucide-react';
 import { materiAPI, subjectAPI, audioAPI } from '@/services/api';
@@ -17,7 +17,8 @@ export default function MateriPage() {
   const processOp = usePendingOperation('process');
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isYoutubeModalOpen, setIsYoutubeModalOpen] = useState(false);
-  const [subjectFilter, setSubjectFilter] = useState('');
+  const subjectFilter = useUiStore((s) => s.subjectFilterMateri);
+  const setSubjectFilter = useUiStore((s) => s.setSubjectFilter);
 
   const { data: materiData, isLoading } = useQuery({
     queryKey: ['materials'],
@@ -178,7 +179,7 @@ export default function MateriPage() {
           <div className="flex items-center gap-3">
             <select
               value={subjectFilter}
-              onChange={(e) => setSubjectFilter(e.target.value)}
+              onChange={(e) => setSubjectFilter('materi', e.target.value)}
               className="px-3 py-2 bg-card border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary transition-colors"
             >
               <option value="">-- Semua Mata Kuliah --</option>

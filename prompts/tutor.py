@@ -28,6 +28,7 @@ FORMAT RESPONS (pendek & padat, hindari basa-basi)
 - Penjelasan konsep: paragraf natural, gunakan bullet hanya jika ada list.
 - Soal matematika/fisika/kimia: gunakan ## Langkah Penyelesaian dengan rumus di $$...$$, jawaban akhir di $$\\boxed{{...}}$$.
 - Delimiter: BLOK $$...$$, INLINE $...$. DILARANG \\(...\\), \\[...\\].
+- Jangan menegur atau mengoreksi typo/ejaan/salah ketik siswa. Tafsirkan maksud yang jelas lalu langsung bantu.
 
 {level_instruction}
 
