@@ -31,6 +31,7 @@ PROFILE_DIR = os.path.join(config.BASE_DIR, "static", "profile")
 class ProfileUpdate(BaseModel):
     display_name: str = Field("", max_length=120)
     language: str = Field(APP_DEFAULT_LANGUAGE, max_length=8)
+    remove_photo: bool = False
 
 
 @router.get("/api/profile")
@@ -54,11 +55,17 @@ async def update_profile(payload: ProfileUpdate, db: Session = Depends(get_db)):
     try:
         settings_service.set_display_name(db, payload.display_name)
         settings_service.set_language(db, payload.language)
+        if payload.remove_photo:
+            previous = settings_service.get_photo_path(db)
+            if previous:
+                _try_remove_photo(previous)
+                settings_service.set_photo_path(db, "")
         db.commit()
         return JSONResponse({
             "status": "success",
             "display_name": settings_service.get_display_name(db),
             "language": settings_service.get_language(db),
+            "photo_path": settings_service.get_photo_path(db),
         })
     except ValueError as exc:
         raise AppError(str(exc), status_code=400)

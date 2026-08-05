@@ -1,0 +1,106 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "chat": "Chat AI",
+    "subjects": "Mata Kuliah",
+    "materi": "Materi",
+    "notebook": "Notebook",
+    "flashcard": "Flashcard",
+    "quiz": "Quiz",
+    "exam": "Ujian Simulasi",
+    "settings": "Pengaturan"
+  },
+  "common": {
+    "save": "Simpan",
+    "cancel": "Batal",
+    "loading": "Memuat...",
+    "delete": "Hapus",
+    "close": "Tutup",
+    "search": "Cari...",
+    "back": "Kembali",
+    "all": "Semua",
+    "empty": "Belum ada data",
+    "yes": "Ya",
+    "no": "Tidak"
+  },
+  "settings": {
+    "title": "Pengaturan",
+    "subtitle": "Kelola profil, bahasa, data, dan pemakaian AI aplikasi Anda.",
+    "tabs": {
+      "profile": "Profil",
+      "language": "Bahasa",
+      "data": "Data",
+      "aiLimit": "Limit AI",
+      "about": "Tentang"
+    },
+    "profile": {
+      "title": "Profil",
+      "subtitle": "Nama tampilan dan foto profil Anda.",
+      "photo": "Foto Profil",
+      "uploadPhoto": "Unggah Foto",
+      "changePhoto": "Ganti Foto",
+      "removePhoto": "Hapus Foto",
+      "displayName": "Nama Tampilan",
+      "displayNamePlaceholder": "Masukkan nama Anda",
+      "saved": "Profil berhasil disimpan",
+      "uploadError": "Gagal mengunggah foto",
+      "saveError": "Gagal menyimpan profil",
+      "photoHint": "PNG, JPG, WEBP, atau GIF. Maksimal 5MB."
+    },
+    "language": {
+      "title": "Bahasa Aplikasi",
+      "subtitle": "Pilih bahasa yang digunakan pada aplikasi.",
+      "saved": "Preferensi bahasa disimpan",
+      "saveError": "Gagal menyimpan preferensi bahasa",
+      "id": "Bahasa Indonesia",
+      "en": "Bahasa Inggris",
+      "su": "Bahasa Sunda"
+    },
+    "data": {
+      "title": "Data Aplikasi",
+      "subtitle": "Ringkasan seluruh data yang tersimpan di aplikasi.",
+      "storage": "Penyimpanan",
+      "storageUploads": "Materi",
+      "storageAudio": "Audio",
+      "storageTrash": "Sampah",
+      "subjects": "Mata Kuliah",
+      "materials": "Materi",
+      "materialsReady": "Siap",
+      "materialsPending": "Diproses",
+      "materialsFailed": "Gagal",
+      "chats": "Chat",
+      "messages": "Pesan",
+      "notes": "Notebook",
+      "flashcards": "Flashcard",
+      "quizzes": "Quiz",
+      "examSessions": "Sesi Ujian",
+      "examBlueprints": "Blueprint Ujian",
+      "questionBank": "Bank Soal",
+      "items": "item",
+      "materialType": "Tipe",
+      "materialStatus": "Status",
+      "materialSubject": "Mata Kuliah",
+      "materialUploaded": "Diunggah",
+      "materialSize": "Ukuran",
+      "noMaterials": "Belum ada materi yang diunggah."
+    },
+    "aiLimit": {
+      "title": "Pemakaian AI",
+      "subtitle": "Ringkasan pemakaian AI tutor Anda.",
+      "totalTokens": "Total Token",
+      "totalMessages": "Total Pesan",
+      "totalSessions": "Total Sesi",
+      "helpfulCount": "Respons Membantu",
+      "notHelpfulCount": "Respons Kurang Membantu",
+      "helpfulRate": "Tingkat Kebergunaan",
+      "note": "Statistik dihitung dari sesi tutor AI. Tidak ada batas harian yang diberlakukan saat ini."
+    },
+    "about": {
+      "title": "Tentang Aplikasi",
+      "subtitle": "Informasi versi dan aplikasi.",
+      "appName": "Kabayan AI",
+      "version": "Versi",
+      "description": "Ruang belajar cerdas berbasis AI: materi, chat, flashcard, quiz, dan simulasi ujian."
+    }
+  }
+}

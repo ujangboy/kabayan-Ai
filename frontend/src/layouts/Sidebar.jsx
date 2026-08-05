@@ -1,5 +1,6 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { useAppStore, useChatStore } from '@/store';
 import {
   LayoutDashboard, MessageSquare, BookOpen, FileText,
@@ -8,18 +9,18 @@ import {
 } from 'lucide-react';
 import { cn } from '@/utils';
 
-const NAV = [
-  { to: '/dashboard',     icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/chat',          icon: MessageSquare,   label: 'Chat AI' },
-  { to: '/subjects',      icon: BookOpen,        label: 'Mata Kuliah' },
-  { to: '/materi',        icon: FileText,        label: 'Materi' },
-  { to: '/notebook',      icon: BookMarked,      label: 'Notebook' },
-  { to: '/flashcard',     icon: CreditCard,      label: 'Flashcard' },
-  { to: '/quiz',          icon: HelpCircle,      label: 'Quiz' },
-  { to: '/exam-analyzer', icon: Brain,           label: 'Ujian Simulasi' },
-];
-
 export default function Sidebar() {
+  const { t } = useTranslation();
+  const NAV = [
+    { to: '/dashboard',     icon: LayoutDashboard, label: t('nav.dashboard') },
+    { to: '/chat',          icon: MessageSquare,   label: t('nav.chat') },
+    { to: '/subjects',      icon: BookOpen,        label: t('nav.subjects') },
+    { to: '/materi',        icon: FileText,        label: t('nav.materi') },
+    { to: '/notebook',      icon: BookMarked,      label: t('nav.notebook') },
+    { to: '/flashcard',     icon: CreditCard,      label: t('nav.flashcard') },
+    { to: '/quiz',          icon: HelpCircle,      label: t('nav.quiz') },
+    { to: '/exam-analyzer', icon: Brain,           label: t('nav.exam') },
+  ];
   const { sidebarOpen, toggleSidebar, setSearchOpen } = useAppStore();
   const { createChat } = useChatStore();
   const navigate = useNavigate();

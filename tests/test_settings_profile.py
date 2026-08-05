@@ -46,6 +46,30 @@ class TestProfileEndpoint:
         resp = client.put("/api/profile", json={"display_name": "", "language": "xx"})
         assert resp.status_code == 400
 
+    def test_remove_photo_flag(self, client, db_session, tmp_path, monkeypatch):
+        # Arahkan direktori foto ke temp, simulasikan foto lama tersimpan.
+        import config
+        fake_dir = tmp_path / "profile"
+        fake_dir.mkdir()
+        monkeypatch.setattr("routers.profile.PROFILE_DIR", str(fake_dir))
+        # _try_remove_photo membangun path dari config.BASE_DIR (dirujuk ke tmp_path oleh conftest).
+        import os
+        real_dir = os.path.join(config.BASE_DIR, "static", "profile")
+        os.makedirs(real_dir, exist_ok=True)
+        old = os.path.join(real_dir, "old.png")
+        with open(old, "wb") as f:
+            f.write(b"\x89PNG\r\n\x1a\n" + b"\x00" * 40)
+        settings_service.set_photo_path(db_session, "/static/profile/old.png")
+
+        resp = client.put("/api/profile", json={
+            "display_name": "Andi",
+            "language": "id",
+            "remove_photo": True,
+        })
+        assert resp.status_code == 200
+        assert resp.json()["photo_path"] == ""
+        assert not os.path.exists(old)
+
 
 # ─── /api/profile/photo ───────────────────────────────────────────────
 

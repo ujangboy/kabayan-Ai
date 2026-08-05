@@ -184,6 +184,34 @@ export const tutorAPI = {
 
   // ambil profil adaptif siswa
   profile: () => api.get('/tutor/profile'),
+
+  // statistik pemakaian (token, pesan, sesi)
+  stats: () => api.get('/tutor/stats'),
 };
 
 export default api;
+
+// --- PROFILE (Pengaturan) ---
+export const profileAPI = {
+  // ambil profil: nama tampilan, foto, bahasa
+  get: () => api.get('/profile'),
+  // perbarui nama tampilan + bahasa
+  update: (payload) => api.put('/profile', payload),
+  // unggah foto profil (multipart)
+  uploadPhoto: (file) => {
+    const fd = new FormData();
+    fd.append('file', file);
+    return api.post('/profile/photo', fd, { timeout: 15000 });
+  },
+};
+
+// --- INFO (Tentang) ---
+export const infoAPI = {
+  get: () => api.get('/info'),
+};
+
+// --- DATA (Pengaturan > Data) ---
+export const dataAPI = {
+  // ringkasan jumlah data per kategori + storage
+  overview: () => api.get('/data/overview'),
+};

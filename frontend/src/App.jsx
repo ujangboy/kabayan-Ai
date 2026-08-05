@@ -13,9 +13,7 @@ import FlashcardReviewPage from './pages/FlashcardReviewPage';
 import QuizPage from './pages/QuizPage';
 import ExamAnalyzerPage from './pages/ExamAnalyzerPage';
 import StudyPlanPage from './pages/StudyPlanPage';
-
-// Placeholders for other pages
-const SettingsPage = () => <div className="p-10 text-text">Settings Page (WIP)</div>;
+import SettingsPage from './pages/SettingsPage';
 
 // Isolasi error per-halaman: satu halaman crash tidak mematikan seluruh UI (B6)
 const PageBoundary = ({ children }) => <ErrorBoundary>{children}</ErrorBoundary>;

@@ -1,0 +1,106 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "chat": "Chat AI",
+    "subjects": "Mata Pelajaran",
+    "materi": "Materi",
+    "notebook": "Catetan",
+    "flashcard": "Flashcard",
+    "quiz": "Kuis",
+    "exam": "Ujian Simulasi",
+    "settings": "Setélan"
+  },
+  "common": {
+    "save": "Simpen",
+    "cancel": "Bolay",
+    "loading": "Ngamuat...",
+    "delete": "Hapus",
+    "close": "Tutup",
+    "search": "Paluruh...",
+    "back": "Balik",
+    "all": "Kabéh",
+    "empty": "Can aya data",
+    "yes": "Enya",
+    "no": "Henteu"
+  },
+  "settings": {
+    "title": "Setélan",
+    "subtitle": "Atur profil, basa, data, sareng pamakéan AI aplikasi anjeun.",
+    "tabs": {
+      "profile": "Profil",
+      "language": "Basa",
+      "data": "Data",
+      "aiLimit": "Pamakéan AI",
+      "about": "Ngeunaan"
+    },
+    "profile": {
+      "title": "Profil",
+      "subtitle": "Ngaran tampilan sareng poto profil anjeun.",
+      "photo": "Poto Profil",
+      "uploadPhoto": "Unggah Poto",
+      "changePhoto": "Ganti Poto",
+      "removePhoto": "Hapus Poto",
+      "displayName": "Ngaran Tampilan",
+      "displayNamePlaceholder": "Lebetkeun nami anjeun",
+      "saved": "Profil hasil disimpen",
+      "uploadError": "Gagal unggah poto",
+      "saveError": "Gagal nyimpen profil",
+      "photoHint": "PNG, JPG, WEBP, atanapi GIF. Maksimal 5MB."
+    },
+    "language": {
+      "title": "Basa Aplikasi",
+      "subtitle": "Pilih basa anu dianggo dina aplikasi.",
+      "saved": "Pilérén basa parantos disimpen",
+      "saveError": "Gagal nyimpen pilérén basa",
+      "id": "Basa Indonésia",
+      "en": "Basa Inggris",
+      "su": "Basa Sunda"
+    },
+    "data": {
+      "title": "Data Aplikasi",
+      "subtitle": "Ringkesan sadaya data anu disimpen dina aplikasi.",
+      "storage": "Panyimpenan",
+      "storageUploads": "Materi",
+      "storageAudio": "Audio",
+      "storageTrash": "Sampah",
+      "subjects": "Mata Pelajaran",
+      "materials": "Materi",
+      "materialsReady": "Siap",
+      "materialsPending": "Diprosés",
+      "materialsFailed": "Gagal",
+      "chats": "Chat",
+      "messages": "Pesen",
+      "notes": "Catetan",
+      "flashcards": "Flashcard",
+      "quizzes": "Kuis",
+      "examSessions": "Sési Ujian",
+      "examBlueprints": "Blueprint Ujian",
+      "questionBank": "Bank Soal",
+      "items": "item",
+      "materialType": "Tipe",
+      "materialStatus": "Status",
+      "materialSubject": "Mata Pelajaran",
+      "materialUploaded": "Diunggah",
+      "materialSize": "Ukuran",
+      "noMaterials": "Can aya materi anu diunggah."
+    },
+    "aiLimit": {
+      "title": "Pamakéan AI",
+      "subtitle": "Ringkesan pamakéan tutor AI anjeun.",
+      "totalTokens": "Total Token",
+      "totalMessages": "Total Pesen",
+      "totalSessions": "Total Sési",
+      "helpfulCount": "Waleran Ngabantuan",
+      "notHelpfulCount": "Waleran Kurang Ngabantuan",
+      "helpfulRate": "Tingkat Keanggunan",
+      "note": "Statistik diitung tina sési tutor AI. Can aya watesan poéan anu diterapkeun ayeuna."
+    },
+    "about": {
+      "title": "Ngeunaan Aplikasi",
+      "subtitle": "Inpormasi vérsi sareng aplikasi.",
+      "appName": "Kabayan AI",
+      "version": "Vérsi",
+      "description": "Ruang diajar pinter dumasar AI: materi, chat, flashcard, kuis, sareng simulasi ujian."
+    }
+  }
+}

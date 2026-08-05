@@ -1,0 +1,106 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "chat": "AI Chat",
+    "subjects": "Subjects",
+    "materi": "Materials",
+    "notebook": "Notebook",
+    "flashcard": "Flashcards",
+    "quiz": "Quiz",
+    "exam": "Exam Simulator",
+    "settings": "Settings"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "loading": "Loading...",
+    "delete": "Delete",
+    "close": "Close",
+    "search": "Search...",
+    "back": "Back",
+    "all": "All",
+    "empty": "No data yet",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Manage your profile, language, data, and AI usage.",
+    "tabs": {
+      "profile": "Profile",
+      "language": "Language",
+      "data": "Data",
+      "aiLimit": "AI Usage",
+      "about": "About"
+    },
+    "profile": {
+      "title": "Profile",
+      "subtitle": "Your display name and profile photo.",
+      "photo": "Profile Photo",
+      "uploadPhoto": "Upload Photo",
+      "changePhoto": "Change Photo",
+      "removePhoto": "Remove Photo",
+      "displayName": "Display Name",
+      "displayNamePlaceholder": "Enter your name",
+      "saved": "Profile saved successfully",
+      "uploadError": "Failed to upload photo",
+      "saveError": "Failed to save profile",
+      "photoHint": "PNG, JPG, WEBP, or GIF. Max 5MB."
+    },
+    "language": {
+      "title": "App Language",
+      "subtitle": "Choose the language used by the app.",
+      "saved": "Language preference saved",
+      "saveError": "Failed to save language preference",
+      "id": "Indonesian",
+      "en": "English",
+      "su": "Sundanese"
+    },
+    "data": {
+      "title": "App Data",
+      "subtitle": "Summary of all data stored in the app.",
+      "storage": "Storage",
+      "storageUploads": "Materials",
+      "storageAudio": "Audio",
+      "storageTrash": "Trash",
+      "subjects": "Subjects",
+      "materials": "Materials",
+      "materialsReady": "Ready",
+      "materialsPending": "Processing",
+      "materialsFailed": "Failed",
+      "chats": "Chats",
+      "messages": "Messages",
+      "notes": "Notes",
+      "flashcards": "Flashcards",
+      "quizzes": "Quizzes",
+      "examSessions": "Exam Sessions",
+      "examBlueprints": "Exam Blueprints",
+      "questionBank": "Question Bank",
+      "items": "items",
+      "materialType": "Type",
+      "materialStatus": "Status",
+      "materialSubject": "Subject",
+      "materialUploaded": "Uploaded",
+      "materialSize": "Size",
+      "noMaterials": "No materials uploaded yet."
+    },
+    "aiLimit": {
+      "title": "AI Usage",
+      "subtitle": "Summary of your AI tutor usage.",
+      "totalTokens": "Total Tokens",
+      "totalMessages": "Total Messages",
+      "totalSessions": "Total Sessions",
+      "helpfulCount": "Helpful Responses",
+      "notHelpfulCount": "Unhelpful Responses",
+      "helpfulRate": "Helpfulness Rate",
+      "note": "Statistics are calculated from AI tutor sessions. No daily limit is currently enforced."
+    },
+    "about": {
+      "title": "About",
+      "subtitle": "Version and app information.",
+      "appName": "Kabayan AI",
+      "version": "Version",
+      "description": "An AI-powered study space: materials, chat, flashcards, quiz, and exam simulator."
+    }
+  }
+}

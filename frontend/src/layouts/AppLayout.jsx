@@ -1,8 +1,11 @@
+import { useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import CommandSearch from '@/components/search/CommandSearch';
 import BackgroundProcessSync from '@/components/BackgroundProcessSync';
 import { useAppStore } from '@/store';
+import { profileAPI } from '@/services/api';
+import { setAppLanguage, STORAGE_KEY } from '@/i18n';
 
 const OP_LABELS = [
   ['chat', 'AI sedang berpikir…'],
@@ -40,6 +43,22 @@ function PendingBanner() {
 
 export default function AppLayout() {
   const { searchOpen } = useAppStore();
+
+  // Sinkronkan bahasa dari backend saat aplikasi pertama dibuka.
+  // localStorage adalah sumber instant untuk i18n; backend adalah sumber persisten.
+  useEffect(() => {
+    let cancelled = false;
+    profileAPI.get()
+      .then((res) => {
+        if (cancelled) return;
+        const lang = res.data?.language;
+        if (lang && !localStorage.getItem(STORAGE_KEY)) {
+          setAppLanguage(lang);
+        }
+      })
+      .catch(() => { /* abaikan — default 'id' */ });
+    return () => { cancelled = true; };
+  }, []);
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
