@@ -10,11 +10,11 @@ import { streamChat } from '@/services/tutorStream';
 import { usePendingOperation } from '@/hooks/usePendingOperation';
 
 const QUICK_PROMPTS = [
-  { label: <><FileText size={12} className="mr-1" />Ringkas</>, prompt: 'Buatkan ringkasan yang komprehensif dari materi yang saya pilih.' },
-  { label: <><Lightbulb size={12} className="mr-1" />Jelaskan</>, prompt: 'Jelaskan konsep utama dari materi ini dengan bahasa yang mudah dipahami.' },
-  { label: <><Target size={12} className="mr-1" />Analogi</>, prompt: 'Berikan analogi sederhana untuk menjelaskan materi ini.' },
-  { label: <><BookOpen size={12} className="mr-1" />Contoh</>, prompt: 'Berikan contoh nyata dari konsep-konsep dalam materi ini.' },
-  { label: <><Clipboard size={12} className="mr-1" />Simpan ke Notebook</>, toNotebook: true },
+  { id: 'ringkas', label: <><FileText size={12} className="mr-1" />Ringkas</>, prompt: 'Buatkan ringkasan yang komprehensif dari materi yang saya pilih.' },
+  { id: 'jelaskan', label: <><Lightbulb size={12} className="mr-1" />Jelaskan</>, prompt: 'Jelaskan konsep utama dari materi ini dengan bahasa yang mudah dipahami.' },
+  { id: 'analogi', label: <><Target size={12} className="mr-1" />Analogi</>, prompt: 'Berikan analogi sederhana untuk menjelaskan materi ini.' },
+  { id: 'contoh', label: <><BookOpen size={12} className="mr-1" />Contoh</>, prompt: 'Berikan contoh nyata dari konsep-konsep dalam materi ini.' },
+  { id: 'notebook', label: <><Clipboard size={12} className="mr-1" />Simpan ke Notebook</>, toNotebook: true },
 ];
 
 function CopyButton({ text }) {
@@ -714,7 +714,7 @@ export default function ChatPage() {
               >
                 {QUICK_PROMPTS.map((q) => (
                   <button
-                    key={q.label}
+                    key={q.id}
                     disabled={q.toNotebook && isNoteSaving}
                     onClick={() => {
                       if (q.toNotebook) {
