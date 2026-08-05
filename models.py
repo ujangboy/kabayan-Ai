@@ -168,6 +168,26 @@ class Setting(Base):
     value = Column(String)
     description = Column(Text)
 
+
+class TrashItem(Base):
+    """Metadata file yang dipindah ke folder sampah — agar bisa di-restore.
+
+    Saat materi dihapus (soft-delete), record `Material` ditandai status
+    "Trashed" (row tetap ada) sementara file fisik (+ audio) dipindah ke
+    storage/trash dengan nama unik. Tabel ini mencatat pemetaan nama unik di
+    trash <-> path asli sehingga restore bisa mengembalikan file & status.
+    """
+    __tablename__ = "trash_items"
+    id = Column(Integer, primary_key=True, index=True)
+    material_id = Column(Integer, nullable=True, index=True)  # jika berasal dari materi
+    source_type = Column(String, default="material")          # material / audio / orphan
+    original_path = Column(String)                            # path asli (uploads/audio/...)
+    trash_path = Column(String)                               # path file di storage/trash
+    original_filename = Column(String)                        # nama asli untuk ditampilkan
+    original_status = Column(String, nullable=True)           # status Materi saat di-soft-delete
+    size_bytes = Column(Integer, default=0)
+    trashed_at = Column(DateTime, default=datetime.datetime.utcnow)
+
 class YoutubeMetadata(Base):
     __tablename__ = "youtube_metadata"
     id = Column(Integer, primary_key=True, index=True)

@@ -17,7 +17,7 @@ def compute_subject_stats(db: Session, subject: Subject) -> dict:
     quiz_rows = db.query(Quiz).filter(Quiz.subject_id == subject.id).all()
     sessions = db.query(ExamSession).filter(ExamSession.subject_id == subject.id).all()
     flashcard_count = db.query(Flashcard).filter(Flashcard.subject_id == subject.id).count()
-    material_count = db.query(Material).filter(Material.subject_id == subject.id).count()
+    material_count = db.query(Material).filter(Material.subject_id == subject.id, Material.status != "Trashed").count()
 
     scores: List[int] = []
     for q in quiz_rows:

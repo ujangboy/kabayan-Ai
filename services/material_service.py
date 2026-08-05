@@ -132,24 +132,13 @@ class MaterialService:
         return False
 
     def delete(self, db: Session, id: int) -> bool:
-        mat = material_repository.get(db, id)
-        if mat:
-            # C1: hapus file audio fisik semua generasi materi ini sebelum row dihapus
-            self._delete_audio_files(db, mat.id)
-            doc_id = f"mat_{mat.id}"
-            rag_service.delete_document_chunks(doc_id)
-            if rag_service._should_rebuild():
-                import threading
-                threading.Thread(target=rag_service.rebuild_index, daemon=True).start()
-            self._remove_file(mat.filepath)
-            success = material_repository.delete(db, id)
-            if success:
-                cache_service.invalidate_all(db)
-                # C5: sweep file yatim setelah menghapus materi
-                from services.storage_cleanup_service import cleanup_orphan_files
-                cleanup_orphan_files(db)
-            return success
-        return False
+        """Soft-delete: pindahkan materi ke sampah (trash) — bisa di-restore.
+
+        Record Materi tetap ada (status 'Trashed'); file fisik + audio dipindah
+        ke storage/trash dan pemetaannya dicatat di TrashItem.
+        """
+        from services.trash_service import trash_material
+        return trash_material(db, id)
 
     def get_by_subject(self, db: Session, subject_id: int):
         """Kembalikan SEMUA materi (untuk UI/listing)."""

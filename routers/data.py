@@ -12,6 +12,7 @@ from database import get_db
 import models
 from services.storage_cleanup_service import get_storage_usage
 from services.usage_service import get_usage
+from services.trash_service import get_trash_count
 from exceptions import AppError
 
 router = APIRouter()
@@ -36,13 +37,17 @@ async def data_overview(db: Session = Depends(get_db)):
 
         stats = {
             "subjects": db.query(models.Subject).count(),
-            "materials": db.query(models.Material).count(),
+            "materials": db.query(models.Material)
+                .filter(models.Material.status != "Trashed").count(),
             "materials_ready": db.query(models.Material)
                 .filter(models.Material.status == "Ready").count(),
             "materials_pending": db.query(models.Material)
                 .filter(models.Material.status.in_(["Pending", "Processing"])).count(),
             "materials_failed": db.query(models.Material)
                 .filter(models.Material.status == "Failed").count(),
+            "materials_trashed": db.query(models.Material)
+                .filter(models.Material.status == "Trashed").count(),
+            "trash_items": get_trash_count(db),
             "chats": db.query(models.Chat).count(),
             "messages": db.query(models.Message).count(),
             "notes": db.query(models.Note).count(),

@@ -5,7 +5,7 @@ from fastapi.responses import RedirectResponse, JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 import os
 
-from routers import dashboard, subjects, materials, chat, notes, flashcards, quizzes, youtube, settings, exam_analyzer, tutor, profile, info, data
+from routers import dashboard, subjects, materials, chat, notes, flashcards, quizzes, youtube, settings, exam_analyzer, tutor, profile, info, data, trash
 from database import engine, Base, SessionLocal
 import config
 from services.error_handler import register_all_handlers
@@ -358,6 +358,7 @@ app.include_router(tutor.router)
 app.include_router(profile.router)
 app.include_router(info.router)
 app.include_router(data.router)
+app.include_router(trash.router)
 
 @app.get("/")
 async def get_home():

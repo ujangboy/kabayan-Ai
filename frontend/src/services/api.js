@@ -217,3 +217,13 @@ export const dataAPI = {
   // pemakaian Groq API per fitur + total (limit AI)
   usage: () => api.get('/usage'),
 };
+
+// --- SAMPAH (Pengaturan > Data, recycle bin) ---
+export const trashAPI = {
+  list: () => api.get('/trash'),
+  restore: (itemId) => api.post(`/trash/${itemId}/restore`),
+  delete: (itemId) => api.post(`/trash/${itemId}/delete`),
+  restoreMaterial: (materialId) => api.post(`/trash/materials/${materialId}/restore`),
+  deleteMaterial: (materialId) => api.post(`/trash/materials/${materialId}/delete`),
+  empty: () => api.post('/trash/empty'),
+};

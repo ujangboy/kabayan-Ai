@@ -3,9 +3,9 @@ import { useTranslation } from 'react-i18next';
 import {
   BookOpen, FileText, MessageSquare, BookMarked, CreditCard,
   HelpCircle, Brain, LayoutTemplate, Database as DatabaseIcon, HardDrive,
-  Trash2, Loader2,
+  Trash2, Loader2, RotateCcw, Trash as TrashIcon, XCircle,
 } from 'lucide-react';
-import { dataAPI, materiAPI } from '@/services/api';
+import { dataAPI, materiAPI, trashAPI } from '@/services/api';
 import { useToast } from '@/components/Toast';
 import { formatDate } from '@/utils';
 import { cn } from '@/utils';
@@ -45,6 +45,7 @@ export default function DataTab() {
     onSuccess: () => {
       queryClient.invalidateQueries(['materials', 'all']);
       queryClient.invalidateQueries(['data-overview']);
+      queryClient.invalidateQueries(['trash']);
       toast.success(t('settings.data.deleted'));
     },
     onError: () => toast.error(t('settings.data.deleteError')),
@@ -53,6 +54,59 @@ export default function DataTab() {
   const handleDelete = (m) => {
     if (window.confirm(t('settings.data.deleteConfirm').replace('{name}', m.filename || `#${m.id}`))) {
       deleteMutation.mutate(m.id);
+    }
+  };
+
+  const { data: trashData } = useQuery({
+    queryKey: ['trash'],
+    queryFn: () => trashAPI.list().then((r) => r.data),
+  });
+
+  const restoreMutation = useMutation({
+    mutationFn: (item) => (item.material_id ? trashAPI.restoreMaterial(item.material_id) : trashAPI.restore(item.id)),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['trash']);
+      queryClient.invalidateQueries(['materials', 'all']);
+      queryClient.invalidateQueries(['data-overview']);
+      toast.success(t('settings.data.trashRestored'));
+    },
+    onError: () => toast.error(t('settings.data.trashError')),
+  });
+
+  const deleteTrashMutation = useMutation({
+    mutationFn: (item) => (item.material_id ? trashAPI.deleteMaterial(item.material_id) : trashAPI.delete(item.id)),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['trash']);
+      queryClient.invalidateQueries(['data-overview']);
+      toast.success(t('settings.data.trashDeleted'));
+    },
+    onError: () => toast.error(t('settings.data.trashError')),
+  });
+
+  const emptyTrashMutation = useMutation({
+    mutationFn: () => trashAPI.empty(),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['trash']);
+      queryClient.invalidateQueries(['data-overview']);
+      toast.success(t('settings.data.trashEmptied'));
+    },
+    onError: () => toast.error(t('settings.data.trashError')),
+  });
+
+  const handleRestore = (item) => {
+    restoreMutation.mutate(item);
+  };
+
+  const handleDeleteTrash = (item) => {
+    const name = item.original_filename || `#${item.id}`;
+    if (window.confirm(t('settings.data.trashDeleteConfirm').replace('{name}', name))) {
+      deleteTrashMutation.mutate(item);
+    }
+  };
+
+  const handleEmptyTrash = () => {
+    if (window.confirm(t('settings.data.trashEmptyConfirm'))) {
+      emptyTrashMutation.mutate();
     }
   };
 
@@ -173,6 +227,80 @@ export default function DataTab() {
                         ) : (
                           <Trash2 size={14} />
                         )}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Trash (Sampah) */}
+      <div className="card-base p-5">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-semibold text-text flex items-center gap-2">
+            <TrashIcon size={15} className="text-danger" />
+            {t('settings.data.trash')} ({trashData?.items?.length || 0})
+          </h3>
+          {(trashData?.items?.length || 0) > 0 && (
+            <button
+              onClick={handleEmptyTrash}
+              disabled={emptyTrashMutation.isPending}
+              className="text-xs text-text-muted hover:text-danger transition-colors"
+            >
+              {emptyTrashMutation.isPending ? <Loader2 size={13} className="animate-spin inline" /> : t('settings.data.trashEmpty')}
+            </button>
+          )}
+        </div>
+
+        {(trashData?.items?.length || 0) === 0 ? (
+          <p className="text-text-muted text-sm">{t('settings.data.noTrash')}</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="text-left text-text-muted border-b border-border">
+                  <th className="py-2 pr-3 font-medium">{t('settings.data.trashName')}</th>
+                  <th className="py-2 pr-3 font-medium">{t('settings.data.trashOrigin')}</th>
+                  <th className="py-2 pr-3 font-medium">{t('settings.data.trashSize')}</th>
+                  <th className="py-2 pr-3 font-medium">{t('settings.data.trashDate')}</th>
+                  <th className="py-2 font-medium w-20"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {trashData.items.map((item) => (
+                  <tr key={item.id} className="border-b border-border/60 last:border-0">
+                    <td className="py-2 pr-3 text-text max-w-[220px] truncate" title={item.original_filename}>
+                      {item.original_filename}
+                    </td>
+                    <td className="py-2 pr-3 text-text-secondary">
+                      <span className={cn('px-1.5 py-0.5 rounded border text-[10px] font-medium',
+                        item.material_id ? 'bg-warning/15 text-warning border-warning/30' : 'bg-card border-border text-text-secondary')}>
+                        {item.material_id ? t('settings.data.trashFromMaterial') : t('settings.data.trashOrphan')}
+                      </span>
+                    </td>
+                    <td className="py-2 pr-3 text-text-secondary">{formatBytes(item.size_bytes)}</td>
+                    <td className="py-2 pr-3 text-text-secondary">
+                      {item.trashed_at ? formatDate(item.trashed_at) : '—'}
+                    </td>
+                    <td className="py-2 text-right whitespace-nowrap">
+                      <button
+                        onClick={() => handleRestore(item)}
+                        disabled={restoreMutation.isPending}
+                        title={t('settings.data.trashRestore')}
+                        className="p-1.5 rounded-lg text-text-muted hover:text-success hover:bg-success/10 transition-colors mr-1"
+                      >
+                        <RotateCcw size={14} />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteTrash(item)}
+                        disabled={deleteTrashMutation.isPending}
+                        title={t('settings.data.trashDeleteForever')}
+                        className="p-1.5 rounded-lg text-text-muted hover:text-danger hover:bg-danger/10 transition-colors"
+                      >
+                        <XCircle size={14} />
                       </button>
                     </td>
                   </tr>
