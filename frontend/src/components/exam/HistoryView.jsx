@@ -369,7 +369,7 @@ function HistoryCard({ session: s, onDetail, onDelete, t }) {
               <Chip label={Q_TYPE_LABEL[s.question_type] || s.question_type} size="xs" color="purple" />
             )}
              {s.question_type === 'mixed' && (
-               <Chip label={t('exam.history.mixed')} size="xs" color="teal"
+               <Chip label={t('exam.history.mixed')} size="xs" color="teal" />
              )}
             <Chip label={meta.label} size="xs" color={meta.color} />
             {s.status === 'mastered' && <Star size={11} className="text-warning fill-warning" />}

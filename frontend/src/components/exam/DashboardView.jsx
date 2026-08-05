@@ -64,7 +64,7 @@ export default function DashboardView({ subjectId, subjects, analysis, onAnalysi
     <div className="space-y-6">
       {/* Overview Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {{[
+        {[
           { label: t('exam.dashboard.statMateri'), value: stats.material_count ?? 0,  icon: FileText,   color:'text-accent-blue' },
           { label: t('exam.dashboard.statTopic'), value: overview.total_topics ?? 0,  icon: Target,     color:'text-primary' },
           { label: t('exam.dashboard.statNotes'), value: stats.note_count ?? 0,       icon: BookMarked, color:'text-success' },

@@ -1,7 +1,7 @@
 import { Component } from 'react';
 import { withTranslation } from 'react-i18next';
 
-export default class ErrorBoundary extends Component {
+class ErrorBoundary extends Component {
   constructor(props) {
     super(props);
     this.state = { hasError: false, error: null };

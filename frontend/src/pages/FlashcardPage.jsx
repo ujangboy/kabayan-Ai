@@ -914,7 +914,6 @@ if (!formData.question || !formData.answer || !formData.subject_id) {
 function ReviewHistoryModal({ group, onClose }) {
   const { t } = useTranslation();
   const { subject, cards } = group || {};
-  const cardIds = (cards || []).map(c => c.id);
   const RATING_META = {
     0: { label: t('flashcard.ratingLupa'),  cls: 'text-danger border-danger/30 bg-danger/5' },
     1: { label: t('flashcard.ratingLupa'),  cls: 'text-danger border-danger/30 bg-danger/5' },
