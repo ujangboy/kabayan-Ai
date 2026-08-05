@@ -750,7 +750,6 @@ export default function ChatPage() {
                 : 'Tanyakan apa saja… (Enter kirim, Shift+Enter baris baru)'}
               className="w-full bg-transparent text-text text-sm placeholder:text-text-muted px-4 pt-3 pb-1 outline-none resize-none min-h-[40px] max-h-[140px] leading-relaxed"
               rows={1}
-              disabled={isStreaming}
             />
             <div className="flex items-center justify-between px-3 pb-2">
               <div className="flex items-center gap-1">
