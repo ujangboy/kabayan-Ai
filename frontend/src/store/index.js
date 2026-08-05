@@ -7,6 +7,10 @@ export const useChatStore = create(
       chats: [],
       currentChatId: null,
       selectedDocs: [],
+      isStreaming: false,
+      streamingChatId: null,
+      tutorMode: false,
+      tutorBadge: null,
 
       createChat: () => {
         const chat = { id: Date.now(), title: 'Chat Baru', messages: [], pinned: false, createdAt: new Date().toISOString() };
@@ -79,8 +83,24 @@ export const useChatStore = create(
 
       setSelectedDocs: (docs) => set({ selectedDocs: docs }),
       clearSelectedDocs: () => set({ selectedDocs: [] }),
+
+      // Streaming state — diluar lifecycle komponen agar stream tetap hidup
+      // saat user pindah menu (komponen ChatPage ter-unmount).
+      setStreaming: (isStreaming, chatId) => set({
+        isStreaming,
+        streamingChatId: isStreaming ? chatId : null,
+      }),
+
+      setTutorMode: (tutorMode) => set({ tutorMode }),
+      setTutorBadge: (tutorBadge) => set({ tutorBadge }),
     }),
-    { name: 'kabayan-chat-store' }
+    {
+      name: 'kabayan-chat-store',
+      partialize: (state) => {
+        const { isStreaming: _is, streamingChatId: _scid, tutorBadge: _badge, ...rest } = state;
+        return rest;
+      },
+    }
   )
 );
 

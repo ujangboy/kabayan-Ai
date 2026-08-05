@@ -6,6 +6,7 @@ import { useChatStore } from '@/store';
 import { cn, formatDateTime } from '@/utils';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { notesAPI, subjectAPI, tutorAPI } from '@/services/api';
+import { streamChat } from '@/services/tutorStream';
 import { usePendingOperation } from '@/hooks/usePendingOperation';
 
 const QUICK_PROMPTS = [
@@ -174,19 +175,16 @@ function TypingIndicator() {
 export default function ChatPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { chats, currentChatId, setCurrentChat, createChat, deleteChat, deleteAllChats, togglePinChat, renameChat, addMessage, updateLastMessage, patchLastMessage, setMessageFeedback, getCurrentChat, selectedDocs, clearSelectedDocs } = useChatStore();
+  const { chats, currentChatId, setCurrentChat, createChat, deleteChat, deleteAllChats, togglePinChat, renameChat, addMessage, updateLastMessage, patchLastMessage, setMessageFeedback, getCurrentChat, selectedDocs, clearSelectedDocs, isStreaming, streamingChatId, tutorMode, tutorBadge, setStreaming, setTutorMode, setTutorBadge } = useChatStore();
   const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const [showQuickPrompts, setShowQuickPrompts] = useState(false);
   const [editingChatId, setEditingChatId] = useState(null);
   const [editingTitle, setEditingTitle] = useState('');
   const [noteToast, setNoteToast] = useState(null);
   const [isNoteSaving, setIsNoteSaving] = useState(false);
-  // Tutor Mode state
-  const [tutorMode, setTutorMode] = useState(false);
+  // Tutor Mode state (persisted di store agar bertahan saat pindah menu)
   const [tutorSubject, setTutorSubject] = useState('');
   const [tutorLevel, setTutorLevel] = useState('intermediate');
-  const [tutorBadge, setTutorBadge] = useState(null); // SIMPLE | MEDIUM | COMPLEX
   const [subjects, setSubjects] = useState([]);
   // Mutex ref — mencegah double-call karena React state update async
   const isNoteSavingRef = useRef(false);
@@ -219,7 +217,7 @@ export default function ChatPage() {
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [chat?.messages, isLoading]);
+  }, [chat?.messages, isStreaming]);
 
   // Load subjects for Tutor Mode subject selector
   useEffect(() => {
@@ -235,7 +233,7 @@ export default function ChatPage() {
     addMessage(chatId, { role: 'user', content: text });
     setInput('');
     if (textareaRef.current) textareaRef.current.style.height = 'auto';
-    setIsLoading(true);
+    setStreaming(true, chatId);
     setShowQuickPrompts(false);
     setTutorBadge(null);
 
@@ -262,55 +260,47 @@ export default function ChatPage() {
             session_id: String(currentChatId || ''),
           };
 
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
-
-      if (!res.ok) { throw new Error('Server error'); }
-
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
+      // Stream berjalan lewat layanan level-modul (tutorStream) sehingga tetap
+      // hidup walau komponen ChatPage ter-unmount saat user pindah menu.
       let full = '';
       let headerStripped = !tutorMode; // normal mode has no TYPE header to strip
 
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-        const chunk = decoder.decode(value, { stream: true });
-
-        // Strip the TYPE:XXX metadata header from tutor responses (null byte delimited)
-        if (!headerStripped) {
-          const combined = full + chunk;
-          const NULL = '\u0000';
-          if (combined.startsWith(NULL + 'TYPE:')) {
-            const endIdx = combined.indexOf(NULL, 1);
-            if (endIdx !== -1) {
-              const tierType = combined.slice(6, endIdx); // 6 = len('\u0000TYPE:')
-              setTutorBadge(tierType);
-              const stripped = combined.slice(endIdx + 1);
-              full = stripped;
+      await streamChat({
+        endpoint,
+        body,
+        onChunk: (chunk) => {
+          // Strip the TYPE:XXX metadata header from tutor responses (null byte delimited)
+          if (!headerStripped) {
+            const combined = full + chunk;
+            const NULL = '\u0000';
+            if (combined.startsWith(NULL + 'TYPE:')) {
+              const endIdx = combined.indexOf(NULL, 1);
+              if (endIdx !== -1) {
+                const tierType = combined.slice(6, endIdx); // 6 = len('\u0000TYPE:')
+                setTutorBadge(tierType);
+                const stripped = combined.slice(endIdx + 1);
+                full = stripped;
+                headerStripped = true;
+                updateLastMessage(chatId, full);
+                return;
+              }
+            }
+            // Header may arrive split across chunks — buffer until found
+            full += chunk;
+            // If we have > 20 chars and still no header, assume no header (fallback)
+            if (full.length > 20) {
               headerStripped = true;
               updateLastMessage(chatId, full);
-              continue;
             }
+            return;
           }
-          // Header may arrive split across chunks — buffer until found
+
           full += chunk;
-          // If we have > 20 chars and still no header, assume no header (fallback)
-          if (full.length > 20) {
-            headerStripped = true;
-            updateLastMessage(chatId, full);
-          }
-          continue;
-        }
+          updateLastMessage(chatId, full);
+        },
+      });
 
-        full += chunk;
-        updateLastMessage(chatId, full);
-      }
-
-      // Strip trailing "\x00MSGID:<id>\x00" metadata (tutor mode) and simpan
+      // Strip trailing "\x00MSGID:<id>\x00" metadata (tutor mode) dan simpan
       // message id ke store agar tombol feedback bisa mengirimnya ke backend.
       if (tutorMode) {
         const NULL = '\u0000';
@@ -328,14 +318,17 @@ export default function ChatPage() {
           }
         }
       }
-    } catch {
-      updateLastMessage(chatId, '⚠ Terjadi kesalahan. Coba lagi.');
+      setStreaming(false, null);
+    } catch (err) {
+      if (err?.name !== 'AbortError') {
+        updateLastMessage(chatId, '⚠ Terjadi kesalahan. Coba lagi.');
+        setStreaming(false, null);
+      }
     } finally {
       isLoadingRef.current = false;
-      setIsLoading(false);
       chatOp.finish();
     }
-  }, [currentChatId, selectedDocs, chat, addMessage, updateLastMessage, patchLastMessage, chatOp, tutorMode, tutorSubject, tutorLevel]);
+  }, [currentChatId, selectedDocs, chat, addMessage, updateLastMessage, patchLastMessage, chatOp, tutorMode, tutorSubject, tutorLevel, setStreaming, setTutorBadge]);
 
   // Kirim rating feedback untuk satu respons tutor
   const handleFeedback = useCallback(async (message, rating) => {
@@ -623,7 +616,7 @@ export default function ChatPage() {
 
             {/* Tutor Mode toggle */}
             <button
-              onClick={() => { setTutorMode(v => !v); setTutorBadge(null); }}
+              onClick={() => { setTutorMode(!tutorMode); setTutorBadge(null); }}
               title={tutorMode ? 'Kembali ke Chat Biasa' : 'Aktifkan Tutor Mode'}
               className={cn(
                 'flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-medium border transition-all',
@@ -683,7 +676,7 @@ export default function ChatPage() {
               {chat.messages.map((m, i) => (
                 <MessageBubble key={i} message={m} isLast={i === chat.messages.length - 1} tutorMode={tutorMode} onFeedback={handleFeedback} />
               ))}
-              {isLoading && chat.messages[chat.messages.length - 1]?.content === '' && (
+              {isStreaming && streamingChatId === currentChatId && chat.messages[chat.messages.length - 1]?.content === '' && (
                 <TypingIndicator />
               )}
             </>
@@ -759,7 +752,7 @@ export default function ChatPage() {
                 : 'Tanyakan apa saja… (Enter kirim, Shift+Enter baris baru)'}
               className="w-full bg-transparent text-text text-sm placeholder:text-text-muted px-4 pt-3 pb-1 outline-none resize-none min-h-[40px] max-h-[140px] leading-relaxed"
               rows={1}
-              disabled={isLoading}
+              disabled={isStreaming}
             />
             <div className="flex items-center justify-between px-3 pb-2">
               <div className="flex items-center gap-1">
@@ -776,10 +769,10 @@ export default function ChatPage() {
               </div>
               <button
                 onClick={() => sendMessage(input)}
-                disabled={!input.trim() || isLoading}
+                disabled={!input.trim() || isStreaming}
                 className={cn(
                   'w-8 h-8 rounded-xl flex items-center justify-center transition-all',
-                  input.trim() && !isLoading
+                  input.trim() && !isStreaming
                     ? 'bg-primary text-white hover:bg-primary-hover active:scale-95'
                     : 'bg-card text-text-muted cursor-not-allowed'
                 )}
