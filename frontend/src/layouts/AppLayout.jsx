@@ -4,28 +4,29 @@ import Sidebar from './Sidebar';
 import CommandSearch from '@/components/search/CommandSearch';
 import BackgroundProcessSync from '@/components/BackgroundProcessSync';
 import { useAppStore } from '@/store';
+import { useTranslation } from 'react-i18next';
 import { profileAPI } from '@/services/api';
 import { setAppLanguage, STORAGE_KEY } from '@/i18n';
 
 const OP_LABELS = [
-  ['chat', 'AI sedang berpikir…'],
-  ['notebook', 'Menyimpan ke Notebook…'],
-  ['audio', 'Membuat audio…'],
-  ['process', 'Memproses materi…'],
-  ['youtube', 'Memproses YouTube…'],
-  ['quiz', 'Membuat quiz…'],
-  ['flashcard', 'Membuat flashcard…'],
+  ['chat', 'appLayout.opChat'],
+  ['notebook', 'appLayout.opNotebook'],
+  ['audio', 'appLayout.opAudio'],
+  ['process', 'appLayout.opProcess'],
+  ['youtube', 'appLayout.opYoutube'],
+  ['quiz', 'appLayout.opQuiz'],
+  ['flashcard', 'appLayout.opFlashcard'],
 ];
 
-function getOpLabel(op) {
+function getOpLabel(op, t) {
   if (typeof op !== 'string') op = String(op);
-  for (const [prefix, label] of OP_LABELS) {
-    if (op.startsWith(prefix)) return label;
+  for (const [prefix, key] of OP_LABELS) {
+    if (op.startsWith(prefix)) return t(key);
   }
-  return 'Memproses…';
+  return t('appLayout.opFallback');
 }
 
-function PendingBanner() {
+function PendingBanner({ t }) {
   const pendingOperations = useAppStore((s) => s.pendingOperations);
   if (pendingOperations.size === 0) return null;
 
@@ -35,7 +36,7 @@ function PendingBanner() {
     <div className="flex items-center gap-2 px-4 py-2 bg-amber-500/10 border-b border-amber-500/30 text-amber-400 text-xs">
       <span className="animate-spin inline-block">⏳</span>
       <span>
-        {ops.length === 1 ? getOpLabel(ops[0]) : `${ops.length} proses berjalan…`}
+        {ops.length === 1 ? getOpLabel(ops[0], t) : t('appLayout.opRunningMultiple', { count: ops.length })}
       </span>
     </div>
   );
@@ -43,6 +44,7 @@ function PendingBanner() {
 
 export default function AppLayout() {
   const { searchOpen } = useAppStore();
+  const { t } = useTranslation();
 
   // Sinkronkan bahasa dari backend saat aplikasi pertama dibuka.
   // localStorage adalah sumber instant untuk i18n; backend adalah sumber persisten.
@@ -65,7 +67,7 @@ export default function AppLayout() {
       <BackgroundProcessSync />
       <Sidebar />
       <main className="flex-1 overflow-hidden flex flex-col min-w-0">
-        <PendingBanner />
+        <PendingBanner t={t} />
         <Outlet />
       </main>
       {searchOpen && <CommandSearch />}

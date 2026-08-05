@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Brain, ChevronLeft, Zap } from 'lucide-react';
@@ -16,6 +17,7 @@ import HistoryView from '@/components/exam/HistoryView';
 
 // ─── Main Page ───────────────────────────────────────────────────────────────
 export default function ExamAnalyzerPage() {
+  const { t } = useTranslation();
   const location  = useLocation();
   const navigate  = useNavigate();
   const [view, setView]               = useState(VIEW.HISTORY);
@@ -83,7 +85,7 @@ export default function ExamAnalyzerPage() {
               <button onClick={() => {
                 if (view === VIEW.GENERATING) return;
                 if (view === VIEW.QUIZ) {
-                  if (!confirm('Yakin ingin keluar? Progres ujian ini akan hilang.')) return;
+                  if (!confirm(t('exam.confirmExit'))) return;
                   setSubjectId(''); setSessionData(null); go(VIEW.HISTORY); return;
                 }
                 const back = {
@@ -102,10 +104,10 @@ export default function ExamAnalyzerPage() {
             <div>
               <h1 className="text-2xl font-bold text-text flex items-center gap-2">
                 <Brain size={22} className="text-primary" />
-                Exam Analyzer
+                {t('exam.title')}
               </h1>
               <p className="text-text-secondary text-sm mt-0.5">
-                Analisis cerdas seluruh materi &amp; simulasi ujian berbasis AI
+                {t('exam.subtitle')}
               </p>
             </div>
           </div>
@@ -116,12 +118,12 @@ export default function ExamAnalyzerPage() {
               onChange={e => { setSubjectId(e.target.value); setAnalysis(null); setBlueprint(null); setSessionData(null); setEvalData(null); setRecommend(null); go(VIEW.HISTORY); }}
               className="px-3 py-2 bg-card border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary"
             >
-              <option value="">-- Pilih Mata Kuliah --</option>
+              <option value="">{t('exam.selectSubjectPlaceholder')}</option>
               {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
             {(view === VIEW.DASHBOARD || view === VIEW.HISTORY) && subjectId && (
               <button onClick={resetToConfig} className="btn-primary text-xs">
-                <Zap size={13} /> Buat Simulasi
+                <Zap size={13} /> {t('exam.createSimulation')}
               </button>
             )}
           </div>

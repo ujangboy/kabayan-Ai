@@ -5,6 +5,7 @@ import {
   BookMarked, Zap, TrendingUp, Clock, BookOpen, Trophy, Database
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useChatStore } from '@/store';
 import { formatDate, fileIcon } from '@/utils';
 import api from '@/services/api';
@@ -16,11 +17,11 @@ const formatBytes = (bytes) => {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 };
 
-const QUICK_ACTIONS = [
-  { icon: MessageSquare, label: 'Chat AI',       desc: 'Tanyakan apa saja',     to: '/chat',      color: 'bg-primary/10 text-primary' },
-  { icon: FileText,      label: 'Upload Materi', desc: 'PDF, DOCX, YouTube',    to: '/materi',    color: 'bg-accent-blue/10 text-accent-blue' },
-  { icon: CreditCard,    label: 'Buat Flashcard',desc: 'Dari materi terpilih',  to: '/flashcard', color: 'bg-accent-purple/10 text-accent-purple' },
-  { icon: HelpCircle,    label: 'Mulai Quiz',    desc: 'Latihan soal AI',        to: '/quiz',      color: 'bg-accent-teal/10 text-accent-teal' },
+const QUICK_ACTIONS = (t) => [
+  { icon: MessageSquare, label: t('dashboard.quickChat'),       desc: t('dashboard.quickChatDesc'),     to: '/chat',      color: 'bg-primary/10 text-primary' },
+  { icon: FileText,      label: t('dashboard.quickUpload'),     desc: t('dashboard.quickUploadDesc'),    to: '/materi',    color: 'bg-accent-blue/10 text-accent-blue' },
+  { icon: CreditCard,    label: t('dashboard.quickFlashcard'),  desc: t('dashboard.quickFlashcardDesc'),  to: '/flashcard', color: 'bg-accent-purple/10 text-accent-purple' },
+  { icon: HelpCircle,    label: t('dashboard.quickQuiz'),       desc: t('dashboard.quickQuizDesc'),        to: '/quiz',      color: 'bg-accent-teal/10 text-accent-teal' },
 ];
 
 function StatCard({ icon: Icon, label, value, color, loading }) {
@@ -41,6 +42,7 @@ function StatCard({ icon: Icon, label, value, color, loading }) {
 
 export default function DashboardPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { createChat } = useChatStore();
 
   const { data, isLoading } = useQuery({
@@ -52,7 +54,7 @@ export default function DashboardPage() {
 
   const now = new Date();
   const hour = now.getHours();
-  const greeting = hour < 12 ? 'Selamat pagi' : hour < 15 ? 'Selamat siang' : hour < 18 ? 'Selamat sore' : 'Selamat malam';
+  const greeting = hour < 12 ? t('dashboard.greetingMorning') : hour < 15 ? t('dashboard.greetingAfternoon') : hour < 18 ? t('dashboard.greetingEvening') : t('dashboard.greetingNight');
 
   const stats = {
     materials:  data?.materials  ?? null,
@@ -85,8 +87,8 @@ export default function DashboardPage() {
             <h1 className="text-3xl font-bold text-text">{greeting}!</h1>
           </div>
           <p className="text-text-secondary">
-            Kabayan AI siap membantu belajar hari ini.
-            {stats.subjects > 0 && ` Kamu punya ${stats.subjects} mata kuliah aktif.`}
+            {t('dashboard.tagline')}
+            {stats.subjects > 0 && ` ${t('dashboard.activeSubjects', { count: stats.subjects })}`}
           </p>
         </motion.div>
 
@@ -94,10 +96,10 @@ export default function DashboardPage() {
         <motion.section initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
           <div className="flex items-center gap-2 mb-4">
             <Zap size={16} className="text-warning" />
-            <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">Aksi Cepat</h2>
+            <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('dashboard.sectionQuickActions')}</h2>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {QUICK_ACTIONS.map(({ icon: Icon, label, desc, to, color }) => (
+            {QUICK_ACTIONS(t).map(({ icon: Icon, label, desc, to, color }) => (
               <motion.button
                 key={to}
                 whileHover={{ scale: 1.03 }}
@@ -121,25 +123,25 @@ export default function DashboardPage() {
         <motion.section initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
           <div className="flex items-center gap-2 mb-4">
             <TrendingUp size={16} className="text-success" />
-            <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">Statistik</h2>
+            <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('dashboard.sectionStats')}</h2>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <StatCard icon={FileText}   label="Materi"    value={stats.materials}  color="text-accent-blue"   loading={isLoading} />
-            <StatCard icon={BookMarked} label="Catatan"   value={stats.notes}      color="text-success"       loading={isLoading} />
-            <StatCard icon={CreditCard} label="Flashcard" value={stats.flashcards} color="text-accent-purple" loading={isLoading} />
-            <StatCard icon={HelpCircle} label="Quiz"      value={stats.quizzes}    color="text-accent-teal"   loading={isLoading} />
+            <StatCard icon={FileText}   label={t('dashboard.statMaterials')}    value={stats.materials}  color="text-accent-blue"   loading={isLoading} />
+            <StatCard icon={BookMarked} label={t('dashboard.statNotes')}       value={stats.notes}      color="text-success"       loading={isLoading} />
+            <StatCard icon={CreditCard} label={t('dashboard.statFlashcards')}  value={stats.flashcards} color="text-accent-purple" loading={isLoading} />
+            <StatCard icon={HelpCircle} label={t('dashboard.statQuizzes')}     value={stats.quizzes}    color="text-accent-teal"   loading={isLoading} />
           </div>
           {/* D6: badge observability storage */}
           {data?.storage && (
             <div className="mt-3 flex items-center gap-2 text-xs text-text-secondary">
               <Database size={14} className="text-accent-blue" />
-              <span>Penyimpanan: <span className="text-text font-medium">{formatBytes(data.storage.total)}</span></span>
+              <span>{t('dashboard.storageLabel')}: <span className="text-text font-medium">{formatBytes(data.storage.total)}</span></span>
               <span className="opacity-50">·</span>
-              <span>Upload {formatBytes(data.storage.uploads)}</span>
+              <span>{t('dashboard.storageUploads', { size: formatBytes(data.storage.uploads) })}</span>
               <span className="opacity-50">·</span>
-              <span>Audio {formatBytes(data.storage.audio)}</span>
+              <span>{t('dashboard.storageAudio', { size: formatBytes(data.storage.audio) })}</span>
               <span className="opacity-50">·</span>
-              <span>Trash {formatBytes(data.storage.trash)}</span>
+              <span>{t('dashboard.storageTrash', { size: formatBytes(data.storage.trash) })}</span>
             </div>
           )}
         </motion.section>
@@ -156,10 +158,10 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <Clock size={14} className="text-text-secondary" />
-                <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">Materi Terbaru</h2>
+                <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('dashboard.sectionRecentMaterials')}</h2>
               </div>
               <button onClick={() => navigate('/materi')} className="text-xs text-primary hover:text-primary/80 transition-colors">
-                Lihat semua →
+                {t('dashboard.viewAll')}
               </button>
             </div>
             <div className="card-base overflow-hidden p-0">
@@ -170,7 +172,7 @@ export default function DashboardPage() {
                   ))}
                 </div>
               ) : recentMaterials.length === 0 ? (
-                <div className="p-6 text-center text-xs text-text-muted">Belum ada materi</div>
+                <div className="p-6 text-center text-xs text-text-muted">{t('dashboard.noMaterials')}</div>
               ) : (
                 <table className="w-full text-sm">
                   <tbody>
@@ -201,10 +203,10 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <Trophy size={14} className="text-text-secondary" />
-                <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">Quiz Terbaru</h2>
+                <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('dashboard.sectionRecentQuizzes')}</h2>
               </div>
               <button onClick={() => navigate('/quiz')} className="text-xs text-primary hover:text-primary/80 transition-colors">
-                Lihat semua →
+                {t('dashboard.viewAll')}
               </button>
             </div>
             <div className="card-base overflow-hidden p-0">
@@ -215,7 +217,7 @@ export default function DashboardPage() {
                   ))}
                 </div>
               ) : recentQuizzes.length === 0 ? (
-                <div className="p-6 text-center text-xs text-text-muted">Belum ada quiz</div>
+                <div className="p-6 text-center text-xs text-text-muted">{t('dashboard.noQuizzes')}</div>
               ) : (
                 <table className="w-full text-sm">
                   <tbody>
@@ -231,7 +233,7 @@ export default function DashboardPage() {
                               {q.score}
                             </span>
                           ) : (
-                            <span className="text-[10px] text-text-muted">Belum dimainkan</span>
+                            <span className="text-[10px] text-text-muted">{t('dashboard.notPlayed')}</span>
                           )}
                         </td>
                         <td className="px-4 py-2.5 text-text-muted text-[10px]">{formatDate(q.created_at)}</td>
@@ -253,13 +255,13 @@ export default function DashboardPage() {
             className="card-base text-center py-16"
           >
             <div className="text-6xl mb-4">🎓</div>
-            <h3 className="text-xl font-bold text-text mb-2">Selamat Datang di Kabayan AI!</h3>
+            <h3 className="text-xl font-bold text-text mb-2">{t('dashboard.welcomeTitle')}</h3>
             <p className="text-text-secondary mb-6 max-w-sm mx-auto">
-              Mulai dengan membuat Mata Kuliah dan mengunggah materi pertama kamu.
+              {t('dashboard.welcomeText')}
             </p>
             <div className="flex gap-3 justify-center">
-              <button onClick={() => navigate('/subjects')} className="btn-primary">Buat Mata Kuliah</button>
-              <button onClick={() => navigate('/materi')} className="btn-ghost border border-border">Upload Materi</button>
+              <button onClick={() => navigate('/subjects')} className="btn-primary">{t('dashboard.createSubject')}</button>
+              <button onClick={() => navigate('/materi')} className="btn-ghost border border-border">{t('dashboard.uploadMaterial')}</button>
             </div>
           </motion.div>
         )}

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, X, BookOpen, Trash2, Bot, User, Copy, Check, Pin, Edit3, GraduationCap, ThumbsUp, ThumbsDown, Hand, Lightbulb, Target, FileText, Clipboard, Square } from 'lucide-react';
 import MathMarkdown from '@/components/MathMarkdown';
@@ -8,14 +9,6 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { notesAPI, subjectAPI, tutorAPI } from '@/services/api';
 import { streamChat, abortActiveStream, isChatStreaming } from '@/services/tutorStream';
 import { usePendingOperation } from '@/hooks/usePendingOperation';
-
-const QUICK_PROMPTS = [
-  { id: 'ringkas', label: <><FileText size={12} className="mr-1" />Ringkas</>, prompt: 'Buatkan ringkasan yang komprehensif dari materi yang saya pilih.' },
-  { id: 'jelaskan', label: <><Lightbulb size={12} className="mr-1" />Jelaskan</>, prompt: 'Jelaskan konsep utama dari materi ini dengan bahasa yang mudah dipahami.' },
-  { id: 'analogi', label: <><Target size={12} className="mr-1" />Analogi</>, prompt: 'Berikan analogi sederhana untuk menjelaskan materi ini.' },
-  { id: 'contoh', label: <><BookOpen size={12} className="mr-1" />Contoh</>, prompt: 'Berikan contoh nyata dari konsep-konsep dalam materi ini.' },
-  { id: 'notebook', label: <><Clipboard size={12} className="mr-1" />Simpan ke Notebook</>, toNotebook: true },
-];
 
 function CopyButton({ text }) {
   const [copied, setCopied] = useState(false);
@@ -32,6 +25,7 @@ function CopyButton({ text }) {
 }
 
 function FeedbackButtons({ onFeedback }) {
+  const { t } = useTranslation();
   const [status, setStatus] = useState('idle'); // idle | sending | done
   const submit = async (rating) => {
     if (status !== 'idle') return;
@@ -45,7 +39,7 @@ function FeedbackButtons({ onFeedback }) {
   };
 
   if (status === 'done') {
-    return <div className="mt-2 text-[10px] text-success">Terima kasih atas feedback-nya!</div>;
+    return <div className="mt-2 text-[10px] text-success">{t('chat.feedbackThanks')}</div>;
   }
 
   return (
@@ -54,7 +48,7 @@ function FeedbackButtons({ onFeedback }) {
       <button
         onClick={() => submit('helpful')}
         disabled={status === 'sending'}
-        title="Membantu"
+        title={t('chat.feedbackHelpful')}
         className="p-1 rounded-md bg-background border border-border text-text-muted hover:text-success hover:border-success/50 transition-colors"
       >
         <ThumbsUp size={12} />
@@ -62,7 +56,7 @@ function FeedbackButtons({ onFeedback }) {
       <button
         onClick={() => submit('somewhat')}
         disabled={status === 'sending'}
-        title="Cukup membantu"
+        title={t('chat.feedbackSomewhat')}
         className="p-1 rounded-md bg-background border border-border text-text-muted hover:text-amber-400 hover:border-amber-400/50 transition-colors"
       >
         <Hand size={12} />
@@ -70,7 +64,7 @@ function FeedbackButtons({ onFeedback }) {
       <button
         onClick={() => submit('not_helpful')}
         disabled={status === 'sending'}
-        title="Tidak membantu"
+        title={t('chat.feedbackNotHelpful')}
         className="p-1 rounded-md bg-background border border-border text-text-muted hover:text-danger hover:border-danger/50 transition-colors"
       >
         <ThumbsDown size={12} />
@@ -173,6 +167,7 @@ function TypingIndicator() {
 }
 
 export default function ChatPage() {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { chats, currentChatId, setCurrentChat, createChat, deleteChat, deleteAllChats, togglePinChat, renameChat, addMessage, updateLastMessage, patchLastMessage, setMessageFeedback, getCurrentChat, selectedDocs, clearSelectedDocs, streamingChatIds, tutorBadge, setStreaming, setTutorBadge, setChatTutor } = useChatStore();
@@ -188,6 +183,14 @@ export default function ChatPage() {
   const isNoteSavingRef = useRef(false);
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
+
+  const QUICK_PROMPTS = [
+    { id: 'ringkas', label: <><FileText size={12} className="mr-1" />{t('chat.quickRingkas')}</>, prompt: t('chat.quickRingkasPrompt') },
+    { id: 'jelaskan', label: <><Lightbulb size={12} className="mr-1" />{t('chat.quickJelaskan')}</>, prompt: t('chat.quickJelaskanPrompt') },
+    { id: 'analogi', label: <><Target size={12} className="mr-1" />{t('chat.quickAnalogi')}</>, prompt: t('chat.quickAnalogiPrompt') },
+    { id: 'contoh', label: <><BookOpen size={12} className="mr-1" />{t('chat.quickContoh')}</>, prompt: t('chat.quickContohPrompt') },
+    { id: 'notebook', label: <><Clipboard size={12} className="mr-1" />{t('chat.quickSimpanKeNotebook')}</>, toNotebook: true },
+  ];
 
   const chatOp = usePendingOperation('chat');
   const notebookOp = usePendingOperation('notebook');
@@ -323,7 +326,7 @@ export default function ChatPage() {
       }
     } catch (err) {
       if (err?.name !== 'AbortError') {
-        updateLastMessage(chatId, '⚠ Terjadi kesalahan. Coba lagi.');
+        updateLastMessage(chatId, '⚠ ' + t('chat.errorRetry'));
       }
     } finally {
       setStreaming(false, chatId);
@@ -333,7 +336,7 @@ export default function ChatPage() {
 
   // Kirim rating feedback untuk satu respons tutor
   const handleFeedback = useCallback(async (message, rating) => {
-    if (!message.msgId) throw new Error('Pesan belum tersimpan di server.');
+    if (!message.msgId) throw new Error(t('chat.feedbackNotSaved'));
     const res = await tutorAPI.feedback({
       message_id: message.msgId,
       rating,
@@ -349,7 +352,7 @@ export default function ChatPage() {
     const assistantMessages = (chat?.messages || []).filter((m) => m.role === 'assistant');
     const lastAssistant = assistantMessages.length > 0 ? assistantMessages[assistantMessages.length - 1] : null;
     if (!lastAssistant || !lastAssistant.content.trim()) {
-      setNoteToast({ type: 'error', msg: 'Belum ada respons AI untuk disimpan.' });
+      setNoteToast({ type: 'error', msg: t('chat.noAiResponse') });
       setTimeout(() => setNoteToast(null), 3000);
       return;
     }
@@ -357,7 +360,7 @@ export default function ChatPage() {
     setIsNoteSaving(true);
     setShowQuickPrompts(false);
     notebookOp.start();
-    setNoteToast({ type: 'success', msg: 'Menyiapkan catatan...' });
+    setNoteToast({ type: 'success', msg: t('chat.preparingNote') });
     try {
       // Step 1: Detect context (mata kuliah, topic, subject_id)
       const detectRes = await notesAPI.detectContext(chat.messages);
@@ -365,18 +368,18 @@ export default function ChatPage() {
 
       // Step 2: Generate title
       const titleRes = await notesAPI.generateTitle(lastAssistant.content);
-      const title = titleRes.data?.title || `Catatan — ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}`;
+      const title = titleRes.data?.title || t('chat.noteTitleDefault', { date: new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) });
 
       // Step 3: Save to notebook
       const saveRes = await notesAPI.create(title, lastAssistant.content, detectedSubjectId || undefined);
       if (saveRes.data) {
         const subjectName = mata_kuliah && mata_kuliah !== 'tidak_diketahui' ? mata_kuliah : 'Notebook';
-        setNoteToast({ type: 'success', msg: `✓ Tersimpan ke Notebook — ${subjectName}` });
+        setNoteToast({ type: 'success', msg: '✓ ' + t('chat.noteSavedToNotebook', { subjectName }) });
       } else {
-        setNoteToast({ type: 'error', msg: 'Gagal menyimpan catatan.' });
+        setNoteToast({ type: 'error', msg: t('chat.noteSaveFailed') });
       }
     } catch {
-      setNoteToast({ type: 'error', msg: 'Gagal menyimpan ke Notebook.' });
+      setNoteToast({ type: 'error', msg: t('chat.noteSaveToNotebookFailed') });
     } finally {
       notebookOp.finish();
       isNoteSavingRef.current = false;
@@ -404,7 +407,7 @@ export default function ChatPage() {
             onClick={() => { const id = createChat(); navigate(`/chat?id=${id}`); }}
             className="btn-primary w-full text-xs justify-center"
           >
-            + Chat Baru
+            + {t('chat.newChat')}
           </button>
         </div>
 
@@ -419,9 +422,9 @@ export default function ChatPage() {
 
             const getGroup = (createdAt) => {
               const d = new Date(createdAt || 0);
-              if (d >= today)     return 'Hari Ini';
-              if (d >= yesterday) return 'Kemarin';
-              if (d >= lastWeek)  return '7 Hari Terakhir';
+              if (d >= today)     return t('chat.groupToday');
+              if (d >= yesterday) return t('chat.groupYesterday');
+              if (d >= lastWeek)  return t('chat.groupLast7Days');
               const yr = d.getFullYear();
               return yr === now.getFullYear()
                 ? d.toLocaleDateString('id-ID', { month: 'long' })
@@ -434,10 +437,10 @@ export default function ChatPage() {
               const diffMin = Math.floor(diffMs / 60000);
               const diffH   = Math.floor(diffMs / 3600000);
               const diffD   = Math.floor(diffMs / 86400000);
-              if (diffMin < 1)   return 'Baru saja';
-              if (diffMin < 60)  return `${diffMin} mnt lalu`;
-              if (diffH   < 24)  return `${diffH} jam lalu`;
-              if (diffD   < 7)   return `${diffD} hari lalu`;
+              if (diffMin < 1)   return t('chat.relJustNow');
+              if (diffMin < 60)  return t('chat.relMinutesAgo', { count: diffMin });
+              if (diffH   < 24)  return t('chat.relHoursAgo', { count: diffH });
+              if (diffD   < 7)   return t('chat.relDaysAgo', { count: diffD });
               return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
             };
 
@@ -492,7 +495,7 @@ export default function ChatPage() {
                         <span className="flex items-center gap-1 min-w-0 flex-1">
                           {c.pinned && <Pin size={8} className="text-primary shrink-0" />}
                           <span className={cn('truncate', c.id === currentChatId ? 'text-primary font-medium' : 'text-text-secondary')}>
-                            {c.title || 'Chat Baru'}
+                            {c.title || t('chat.newChat')}
                           </span>
                         </span>
                         {/* Waktu relatif — tersembunyi saat hover, diganti tombol aksi */}
@@ -514,7 +517,7 @@ export default function ChatPage() {
                         </button>
                         <button
                           onClick={(e) => { e.stopPropagation(); setEditingChatId(c.id); setEditingTitle(c.title || ''); }}
-                          title="Ganti Nama"
+                          title={t('chat.renameChat')}
                           className="p-1 rounded text-text-muted hover:text-text transition-colors"
                         >
                           <Edit3 size={11} />
@@ -529,7 +532,7 @@ export default function ChatPage() {
                               else { const newId = createChat(); navigate(`/chat?id=${newId}`); }
                             }
                           }}
-                          title="Hapus"
+                          title={t('common.delete')}
                           className="p-1 rounded text-text-muted hover:text-danger transition-colors"
                         >
                           <X size={11} />
@@ -548,7 +551,7 @@ export default function ChatPage() {
           <div className="p-2 border-t border-border">
             <button
               onClick={() => {
-                if (confirm('Hapus semua riwayat chat?')) {
+                if (confirm(t('chat.confirmDeleteAllChats'))) {
                   deleteAllChats();
                   const newId = createChat();
                   navigate(`/chat?id=${newId}`);
@@ -556,7 +559,7 @@ export default function ChatPage() {
               }}
               className="w-full text-[11px] text-text-muted hover:text-danger transition-colors py-1.5 flex items-center justify-center gap-1"
             >
-              <Trash2 size={11} /> Hapus Semua
+              <Trash2 size={11} /> {t('chat.deleteAll')}
             </button>
           </div>
         )}
@@ -590,9 +593,9 @@ export default function ChatPage() {
                   value={tutorSubject}
                   onChange={e => setChatTutor(currentChatId, { tutorSubject: e.target.value })}
                   className="text-[11px] bg-card border border-border rounded-lg px-2 py-1 text-text-secondary outline-none cursor-pointer hover:border-amber-400/40 transition-colors"
-                  title="Pilih mata pelajaran"
+                  title={t('chat.selectSubjectTitle')}
                 >
-                  <option value="">Semua mapel</option>
+                  <option value="">{t('chat.allSubjects')}</option>
                   {subjects.map(s => (
                     <option key={s.id} value={s.name}>{s.name}</option>
                   ))}
@@ -606,11 +609,11 @@ export default function ChatPage() {
                   value={tutorLevel}
                   onChange={e => setChatTutor(currentChatId, { tutorLevel: e.target.value })}
                   className="text-[11px] bg-card border border-border rounded-lg px-2 py-1 text-text-secondary outline-none cursor-pointer hover:border-amber-400/40 transition-colors"
-                  title="Level siswa"
+                  title={t('chat.selectLevelTitle')}
                 >
-                  <option value="beginner">Pemula</option>
-                  <option value="intermediate">Menengah</option>
-                  <option value="advanced">Mahir</option>
+                  <option value="beginner">{t('chat.levelBeginner')}</option>
+                  <option value="intermediate">{t('chat.levelIntermediate')}</option>
+                  <option value="advanced">{t('chat.levelAdvanced')}</option>
                 </select>
               </div>
             )}
@@ -618,7 +621,7 @@ export default function ChatPage() {
             {/* Tutor Mode toggle */}
             <button
               onClick={() => { setChatTutor(currentChatId, { tutorEnabled: !tutorMode }); setTutorBadge(null); }}
-              title={tutorMode ? 'Kembali ke Chat Biasa' : 'Aktifkan Tutor Mode'}
+              title={tutorMode ? t('chat.backToNormalChat') : t('chat.enableTutorMode')}
               className={cn(
                 'flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-medium border transition-all',
                 tutorMode
@@ -634,9 +637,9 @@ export default function ChatPage() {
             {!tutorMode && selectedDocs.length > 0 && (
               <div className="flex items-center gap-2">
                 <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[11px] font-medium">
-                  <BookOpen size={10} /> {selectedDocs.length} materi aktif
+                  <BookOpen size={10} /> {t('chat.documentsActive', { count: selectedDocs.length })}
                 </span>
-                <button onClick={clearSelectedDocs} className="text-text-muted hover:text-text transition-colors" title="Hapus pilihan materi">
+                <button onClick={clearSelectedDocs} className="text-text-muted hover:text-text transition-colors" title={t('chat.clearDocumentSelection')}>
                   <X size={14} />
                 </button>
               </div>
@@ -658,18 +661,18 @@ export default function ChatPage() {
               <div>
                 <h2 className="text-xl font-bold text-text mb-1">
                   {tutorMode
-                    ? <><BookOpen size={18} className="inline mr-1 align-middle" />Tutor Mode Aktif!</>
-                    : <><GraduationCap size={18} className="inline mr-1 align-middle" />Halo! Saya Kabayan AI</>
+                    ? <><BookOpen size={18} className="inline mr-1 align-middle" />{t('chat.tutorModeActive')}</>
+                    : <><GraduationCap size={18} className="inline mr-1 align-middle" />{t('chat.greetingKabayan')}</>
                   }
                 </h2>
                 <p className="text-text-secondary text-sm">
                   {tutorMode
-                    ? `Tanyakan konsep, minta penjelasan langkah-langkah, atau minta saya membuktikan sesuatu.${tutorSubject ? ` Fokus: ${tutorSubject}.` : ''}`
-                    : 'Tanyakan apa saja, atau pilih materi untuk diskusi berbasis dokumen.'}
+                    ? t('chat.tutorModeHint') + (tutorSubject ? ` ${t('chat.tutorModeFocus', { subject: tutorSubject })}` : '')
+                    : t('chat.normalModeHint')}
                 </p>
               </div>
               <p className="text-xs text-text-muted">
-                {!tutorMode && 'Klik di bawah untuk quick prompts'}
+                {!tutorMode && t('chat.quickPromptsHint')}
               </p>
             </motion.div>
           ) : (
@@ -733,9 +736,9 @@ export default function ChatPage() {
                           : 'border-amber-500/30 text-amber-400 hover:bg-amber-500/10 hover:border-amber-400/50'
                         : 'border-border text-text-secondary hover:text-text hover:border-primary/40 hover:bg-primary/5'
                     )}
-                    title={q.toNotebook ? 'Simpan respons AI terakhir ke Notebook' : undefined}
+                    title={q.toNotebook ? t('chat.saveToNotebookTitle') : undefined}
                   >
-                    {q.toNotebook && isNoteSaving ? 'Menyimpan ke Notebook...' : q.label}
+                    {q.toNotebook && isNoteSaving ? t('chat.savingToNotebook') : q.label}
                   </button>
                 ))}
               </motion.div>
@@ -749,8 +752,10 @@ export default function ChatPage() {
               onChange={(e) => { setInput(e.target.value); autoResize(e); }}
               onKeyDown={handleKeyDown}
               placeholder={tutorMode
-                ? `Tanya ke Tutor AI${tutorSubject ? ` tentang ${tutorSubject}` : ''}… (Enter kirim)`
-                : 'Tanyakan apa saja… (Enter kirim, Shift+Enter baris baru)'}
+                ? (tutorSubject
+                  ? t('chat.inputPlaceholderTutorWithSubject', { subject: tutorSubject })
+                  : t('chat.inputPlaceholderTutor'))
+                : t('chat.inputPlaceholderNormal')}
               className="w-full bg-transparent text-text text-sm placeholder:text-text-muted px-4 pt-3 pb-1 outline-none resize-none min-h-[40px] max-h-[140px] leading-relaxed"
               rows={1}
             />
@@ -778,7 +783,7 @@ export default function ChatPage() {
                       ? 'bg-primary text-white hover:bg-primary-hover active:scale-95'
                       : 'bg-card text-text-muted cursor-not-allowed'
                 )}
-                title={isCurrentChatStreaming ? 'Hentikan AI' : 'Kirim'}
+                title={isCurrentChatStreaming ? t('chat.stopAI') : t('chat.send')}
               >
                 {isCurrentChatStreaming ? <Square size={12} fill="currentColor" /> : <Send size={14} />}
               </button>
@@ -786,8 +791,8 @@ export default function ChatPage() {
           </div>
           <p className="text-center text-[10px] text-text-muted mt-2">
             {tutorMode
-              ? 'Tutor Mode aktif — respons menggunakan metode Socratic. Ketik "reveal" untuk jawaban penuh.'
-              : 'Kabayan AI dapat membuat kesalahan. Periksa informasi penting.'}
+              ? t('chat.tutorModeNote')
+              : t('chat.disclaimerNote')}
           </p>
         </div>
       </div>

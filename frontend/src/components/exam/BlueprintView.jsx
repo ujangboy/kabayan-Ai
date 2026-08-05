@@ -1,9 +1,11 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ClipboardList, Loader2, Play, ChevronLeft } from 'lucide-react';
 import { examAPI } from '@/services/api';
 import { Chip, SectionHeader } from './shared';
 
 export default function BlueprintView({ blueprint, onGenerate, onBack }) {
+  const { t } = useTranslation();
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState('');
 
@@ -17,7 +19,7 @@ export default function BlueprintView({ blueprint, onGenerate, onBack }) {
       if (r.data?.detail) throw new Error(r.data.detail);
       onGenerate(r.data);
     } catch (e) {
-      setError(e.response?.data?.detail || e.message || 'Gagal membuat soal.');
+      setError(e.response?.data?.detail || e.message || t('exam.blueprint.failedGenerate'));
       setIsGenerating(false);
     }
   };
@@ -26,10 +28,9 @@ export default function BlueprintView({ blueprint, onGenerate, onBack }) {
     return (
       <div className="card-base p-20 text-center">
         <Loader2 size={48} className="animate-spin text-primary mx-auto mb-6" />
-        <h3 className="text-lg font-semibold text-text mb-2">Membuat Soal Ujian...</h3>
+        <h3 className="text-lg font-semibold text-text mb-2">{t('exam.blueprint.generatingTitle')}</h3>
         <p className="text-text-muted text-sm max-w-sm mx-auto mb-4">
-          AI sedang menyusun soal, jawaban, pembahasan, dan referensi materi untuk setiap topik.
-          Proses ini membutuhkan <strong className="text-text">1–3 menit</strong> — mohon tunggu dan jangan tutup halaman.
+          {t('exam.blueprint.generatingDesc', { strong: <strong className="text-text">1–3 menit</strong> })}
         </p>
         <div className="flex justify-center gap-1.5 mt-4">
           {[0,1,2].map(i => (
@@ -44,19 +45,19 @@ export default function BlueprintView({ blueprint, onGenerate, onBack }) {
   return (
     <div className="space-y-5">
       <div className="card-base p-5">
-        <SectionHeader icon={ClipboardList} title={blueprint?.title || 'Blueprint Ujian'}
-          subtitle={`${items.length} topik · Total bobot: ${totalW}%`} />
+        <SectionHeader icon={ClipboardList} title={blueprint?.title || t('exam.blueprint.title')}
+          subtitle={t('exam.blueprint.subtitle', { count: items.length, total: totalW })} />
 
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border text-xs text-text-muted uppercase tracking-wider">
-                <th className="text-left py-2 px-2 font-semibold">Topik</th>
-                <th className="text-center py-2 px-2 font-semibold">Bobot</th>
-                <th className="text-center py-2 px-2 font-semibold">Soal</th>
-                <th className="text-center py-2 px-2 font-semibold">Jenis</th>
-                <th className="text-center py-2 px-2 font-semibold">Bloom</th>
-                <th className="text-center py-2 px-2 font-semibold">Kesulitan</th>
+                <th className="text-left py-2 px-2 font-semibold">{t('exam.blueprint.topic')}</th>
+                <th className="text-center py-2 px-2 font-semibold">{t('exam.blueprint.weight')}</th>
+                <th className="text-center py-2 px-2 font-semibold">{t('exam.blueprint.questions')}</th>
+                <th className="text-center py-2 px-2 font-semibold">{t('exam.blueprint.type')}</th>
+                <th className="text-center py-2 px-2 font-semibold">{t('exam.blueprint.bloom')}</th>
+                <th className="text-center py-2 px-2 font-semibold">{t('exam.blueprint.difficulty')}</th>
               </tr>
             </thead>
             <tbody>
@@ -104,10 +105,10 @@ export default function BlueprintView({ blueprint, onGenerate, onBack }) {
 
       <div className="flex gap-3 justify-between">
         <button onClick={onBack} className="btn-ghost text-sm border border-border">
-          <ChevronLeft size={14} /> Ubah Konfigurasi
+          <ChevronLeft size={14} /> {t('exam.blueprint.changeConfig')}
         </button>
         <button onClick={handleGenerate} className="btn-primary">
-          <Play size={14} /> Generate Soal Ujian
+          <Play size={14} /> {t('exam.blueprint.generateQuestions')}
         </button>
       </div>
     </div>

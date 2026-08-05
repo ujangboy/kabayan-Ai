@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FileText, Plus, Trash2, Pin, Save, ChevronLeft, MoreHorizontal, Sparkles, X } from 'lucide-react';
@@ -32,8 +33,7 @@ function extractTitle(content) {
 }
 
 // ─── Placeholder title generator ──────────────────────────────────────────
-function nextPlaceholderTitle(notes) {
-  const base = 'Catatan Baru';
+function nextPlaceholderTitle(notes, base) {
   const existing = new Set(notes.map(n => (n.title || '').toLowerCase()));
   if (!existing.has(base.toLowerCase())) return base;
   let i = 2;
@@ -42,6 +42,7 @@ function nextPlaceholderTitle(notes) {
 }
 
 export default function NotebookPage() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [selectedNote, setSelectedNote] = useState(null);
   const [isCreating, setIsCreating] = useState(false);
@@ -127,7 +128,7 @@ export default function NotebookPage() {
     createMutexRef.current = true;
     setIsCreating(true);
     try {
-      const title = nextPlaceholderTitle(notesRef.current);
+      const title = nextPlaceholderTitle(notesRef.current, t('notebook.newNoteTitle'));
       const res = await notesAPI.create(title, '');
       const noteId = res.data?.note_id;
       queryClient.invalidateQueries(['notes']);
@@ -143,7 +144,7 @@ export default function NotebookPage() {
       setIsCreating(false);
       createMutexRef.current = false;
     }
-  }, [queryClient]);
+  }, [queryClient, t]);
 
   // ── Auto-title from content ────────────────────────────────────────────
   const handleAutoTitle = useCallback((noteId, content) => {
@@ -151,14 +152,15 @@ export default function NotebookPage() {
     if (!note) return;
 
     // Only auto-update if title is a placeholder
-    const placeholderPattern = /^Catatan Baru(\s\d+)?$/i;
+    const baseTitle = t('notebook.newNoteTitle');
+    const placeholderPattern = new RegExp('^' + baseTitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(\\s\\d+)?$', 'i');
     if (!placeholderPattern.test(note.title || '')) return;
 
     const newTitle = extractTitle(content);
     if (newTitle && newTitle !== note.title) {
       renameMutateRef.current?.({ id: noteId, title: newTitle });
     }
-  }, []);
+  }, [t]);
 
   // ── Content save (debounced) ───────────────────────────────────────────
   const handleContentSave = useCallback((html) => {
@@ -169,11 +171,11 @@ export default function NotebookPage() {
 
   const handleDelete = (id, e) => {
     e.stopPropagation();
-    if (confirm('Hapus catatan ini?')) deleteMutation.mutate(id);
+    if (confirm(t('notebook.confirmDeleteNote'))) deleteMutation.mutate(id);
   };
 
   const handleClearAll = () => {
-    if (confirm('Hapus SEMUA catatan?')) clearMutation.mutate();
+    if (confirm(t('notebook.confirmClearAll'))) clearMutation.mutate();
   };
 
   // ── Note card ──────────────────────────────────────────────────────────
@@ -208,7 +210,7 @@ export default function NotebookPage() {
               'text-sm font-medium truncate',
               isSelected ? 'text-primary' : 'text-text'
             )}>
-              {n.title || 'Tanpa Judul'}
+              {n.title || t('notebook.untitled')}
             </span>
           </div>
           {snippet && (
@@ -225,7 +227,7 @@ export default function NotebookPage() {
         <div className="absolute right-1.5 top-2 hidden group-hover:flex items-center gap-0.5">
           <button
             onClick={(e) => { e.stopPropagation(); pinMutation.mutate(n.id); }}
-            title={n.is_pinned ? 'Unpin' : 'Sematkan'}
+            title={n.is_pinned ? t('notebook.unpin') : t('notebook.pin')}
             className={cn(
               'p-1 rounded-md transition-colors',
               n.is_pinned ? 'text-primary' : 'text-text-muted hover:text-primary'
@@ -235,7 +237,7 @@ export default function NotebookPage() {
           </button>
           <button
             onClick={(e) => handleDelete(n.id, e)}
-            title="Hapus"
+            title={t('common.delete')}
             className="p-1 rounded-md text-text-muted hover:text-danger transition-colors"
           >
             <Trash2 size={11} />
@@ -252,12 +254,12 @@ export default function NotebookPage() {
       <div className="w-72 border-r border-border bg-sidebar flex flex-col shrink-0 hidden md:flex">
         {/* Sidebar header */}
         <div className="px-4 pt-4 pb-3 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-text">Catatan</h2>
+          <h2 className="text-sm font-semibold text-text">{t('notebook.notes')}</h2>
           <div className="flex items-center gap-1">
             <button
               onClick={() => setShowGeneratePanel(true)}
               className="p-1.5 rounded-lg transition-all duration-150 text-primary hover:bg-primary/10"
-              title="Generate dengan AI"
+              title={t('notebook.generateWithAi')}
             >
               <Sparkles size={15} />
             </button>
@@ -269,7 +271,7 @@ export default function NotebookPage() {
                 'text-primary hover:bg-primary/10',
                 isCreating && 'opacity-50 pointer-events-none'
               )}
-              title="Catatan Baru"
+              title={t('notebook.newNoteTitle')}
             >
               <Plus size={16} />
             </button>
@@ -279,18 +281,18 @@ export default function NotebookPage() {
         {/* Note list */}
         <div className="flex-1 overflow-y-auto px-2 pb-2 space-y-0.5">
           {isLoading ? (
-            <p className="text-text-muted text-xs p-3 text-center">Memuat...</p>
+            <p className="text-text-muted text-xs p-3 text-center">{t('common.loading')}</p>
           ) : notes.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <div className="w-12 h-12 rounded-2xl bg-card border border-border flex items-center justify-center mb-3">
                 <FileText size={20} className="text-text-muted" />
               </div>
-              <p className="text-xs text-text-muted">Belum ada catatan</p>
+              <p className="text-xs text-text-muted">{t('notebook.noNotes')}</p>
               <button
                 onClick={handleCreateNote}
                 className="mt-2 text-xs text-primary hover:text-primary/80 transition-colors"
               >
-                + Buat Catatan
+                {t('notebook.createNote')}
               </button>
             </div>
           ) : (
@@ -298,7 +300,7 @@ export default function NotebookPage() {
               {pinnedNotes.length > 0 && (
                 <div>
                   <p className="px-2 pt-2 pb-1 text-[10px] font-medium text-text-muted/60 uppercase tracking-wider select-none">
-                    Disematkan
+                    {t('notebook.pinned')}
                   </p>
                   {pinnedNotes.map(renderNoteCard)}
                 </div>
@@ -307,7 +309,7 @@ export default function NotebookPage() {
                 <div>
                   {pinnedNotes.length > 0 && (
                     <p className="px-2 pt-3 pb-1 text-[10px] font-medium text-text-muted/60 uppercase tracking-wider select-none">
-                      Catatan
+                      {t('notebook.notes')}
                     </p>
                   )}
                   {unpinnedNotes.map(renderNoteCard)}
@@ -324,7 +326,7 @@ export default function NotebookPage() {
               onClick={handleClearAll}
               className="w-full text-[11px] text-text-muted hover:text-danger transition-colors py-1.5 rounded-lg hover:bg-danger/5"
             >
-              Hapus Semua
+              {t('notebook.deleteAll')}
             </button>
           </div>
         )}
@@ -340,7 +342,7 @@ export default function NotebookPage() {
             onSave={handleContentSave}
             onPin={() => pinMutation.mutate(selectedNote.id)}
             onDelete={() => {
-              if (confirm('Hapus catatan ini?')) deleteMutation.mutate(selectedNote.id);
+              if (confirm(t('notebook.confirmDeleteNote'))) deleteMutation.mutate(selectedNote.id);
             }}
           />
         ) : (
@@ -368,6 +370,7 @@ export default function NotebookPage() {
 
 // ─── Note view (editor + minimal header) ──────────────────────────────────
 function NoteView({ note, onBack, onSave, onPin, onDelete }) {
+  const { t } = useTranslation();
   const [title, setTitle] = useState(note.title || '');
   const [showMenu, setShowMenu] = useState(false);
   const [saveStatus, setSaveStatus] = useState('saved');
@@ -419,7 +422,7 @@ function NoteView({ note, onBack, onSave, onPin, onDelete }) {
             className="hidden md:flex items-center gap-1 text-xs text-text-muted hover:text-text transition-colors px-2 py-1 rounded-lg hover:bg-card"
           >
             <ChevronLeft size={14} />
-            <span>Kembali</span>
+            <span>{t('common.back')}</span>
           </button>
         </div>
 
@@ -430,8 +433,8 @@ function NoteView({ note, onBack, onSave, onPin, onDelete }) {
             saveStatus === 'saving' && 'text-warning',
             saveStatus === 'saved' && 'text-success/70',
           )}>
-            {saveStatus === 'saving' && <><span className="animate-pulse">●</span> Menyimpan</>}
-            {saveStatus === 'saved' && <><Save size={10} /> Tersimpan</>}
+            {saveStatus === 'saving' && <><span className="animate-pulse">●</span> {t('notebook.saving')}</>}
+            {saveStatus === 'saved' && <><Save size={10} /> {t('notebook.saved')}</>}
           </span>
 
           <button
@@ -440,7 +443,7 @@ function NoteView({ note, onBack, onSave, onPin, onDelete }) {
               'p-1.5 rounded-lg transition-colors',
               note.is_pinned ? 'text-primary' : 'text-text-muted hover:text-primary'
             )}
-            title={note.is_pinned ? 'Unpin' : 'Sematkan'}
+            title={note.is_pinned ? t('notebook.unpin') : t('notebook.pin')}
           >
             <Pin size={15} />
           </button>
@@ -460,7 +463,7 @@ function NoteView({ note, onBack, onSave, onPin, onDelete }) {
                     onClick={() => { onDelete(); setShowMenu(false); }}
                     className="w-full text-left px-3 py-2 text-xs text-danger hover:bg-danger/5 transition-colors"
                   >
-                    Hapus Catatan
+                    {t('notebook.deleteNote')}
                   </button>
                 </div>
               </>
@@ -478,7 +481,7 @@ function NoteView({ note, onBack, onSave, onPin, onDelete }) {
           onBlur={handleTitleBlur}
           onKeyDown={handleTitleKeyDown}
           className="w-full text-2xl font-bold text-text bg-transparent outline-none placeholder:text-text-muted/40"
-          placeholder="Judul Catatan"
+          placeholder={t('notebook.noteTitlePlaceholder')}
         />
         <div className="flex items-center gap-2 mt-1.5 text-[11px] text-text-muted/60">
           {note.subject && (
@@ -508,14 +511,15 @@ function NoteView({ note, onBack, onSave, onPin, onDelete }) {
 
 // ─── Empty state ──────────────────────────────────────────────────────────
 function EmptyState({ onCreate, isCreating }) {
+  const { t } = useTranslation();
   return (
     <div className="h-full flex flex-col items-center justify-center text-center px-4">
       <div className="w-16 h-16 rounded-2xl bg-card border border-border flex items-center justify-center mb-4">
         <FileText size={28} className="text-text-muted/40" />
       </div>
-      <h2 className="text-base font-semibold text-text mb-1">Notebook</h2>
+      <h2 className="text-base font-semibold text-text mb-1">{t('notebook.emptyTitle')}</h2>
       <p className="text-xs text-text-muted mb-5 max-w-[240px] leading-relaxed">
-        Pilih catatan dari samping, atau buat catatan baru untuk mulai menulis.
+        {t('notebook.emptyDescription')}
       </p>
       <button
         onClick={onCreate}
@@ -527,7 +531,7 @@ function EmptyState({ onCreate, isCreating }) {
         )}
       >
         <Plus size={15} />
-        {isCreating ? 'Membuat...' : 'Catatan Baru'}
+        {isCreating ? t('notebook.creating') : t('notebook.newNoteTitle')}
       </button>
     </div>
   );
@@ -535,6 +539,7 @@ function EmptyState({ onCreate, isCreating }) {
 
 // ─── Generate Panel (slide from right) ─────────────────────────────────────
 function GeneratePanel({ subjects, onClose, onNoteCreated }) {
+  const { t } = useTranslation();
   const [subjectId, setSubjectId] = useState('');
   const [selectedMaterialIds, setSelectedMaterialIds] = useState([]);
   const [topic, setTopic] = useState('');
@@ -543,8 +548,8 @@ function GeneratePanel({ subjects, onClose, onNoteCreated }) {
   const panelRef = useRef(null);
 
   const handleGenerate = async () => {
-    if (!subjectId) { setError('Pilih mata kuliah terlebih dahulu.'); return; }
-    if (selectedMaterialIds.length === 0) { setError('Pilih minimal satu materi.'); return; }
+    if (!subjectId) { setError(t('notebook.selectSubjectError')); return; }
+    if (selectedMaterialIds.length === 0) { setError(t('notebook.selectMaterialError')); return; }
 
     setError('');
     setIsGenerating(true);
@@ -560,7 +565,7 @@ function GeneratePanel({ subjects, onClose, onNoteCreated }) {
       const result = res.data;
 
       // Title comes from AI-generated content (extracted by backend)
-      const noteTitle = result.title || 'Catatan AI';
+      const noteTitle = result.title || t('notebook.aiNoteTitle');
 
       // Save the generated note to DB
       const saveRes = await notesAPI.create(
@@ -571,7 +576,7 @@ function GeneratePanel({ subjects, onClose, onNoteCreated }) {
       const noteId = saveRes.data?.note_id;
 
       if (!noteId) {
-        setError('Catatan berhasil dibuat tapi gagal dimuat. Muat ulang halaman.');
+        setError(t('notebook.generateLoadError'));
         return;
       }
 
@@ -585,7 +590,7 @@ function GeneratePanel({ subjects, onClose, onNoteCreated }) {
         // Fallback: construct note from what we have
         onNoteCreated({
           id: noteId,
-          title: result.title || topic.trim() || 'Catatan AI',
+          title: result.title || topic.trim() || t('notebook.aiNoteTitle'),
           content: result.content || '',
           created_at: new Date().toISOString(),
           is_pinned: false,
@@ -593,7 +598,7 @@ function GeneratePanel({ subjects, onClose, onNoteCreated }) {
         });
       }
     } catch (err) {
-      setError(err.message || 'Gagal generate catatan.');
+      setError(err.message || t('notebook.generateError'));
     } finally {
       setIsGenerating(false);
     }
@@ -624,7 +629,7 @@ function GeneratePanel({ subjects, onClose, onNoteCreated }) {
         <div className="flex items-center justify-between px-5 py-4 border-b border-border shrink-0">
           <div className="flex items-center gap-2">
             <Sparkles size={18} className="text-primary" />
-            <h3 className="font-semibold text-text text-sm">Generate dengan AI</h3>
+            <h3 className="font-semibold text-text text-sm">{t('notebook.generateWithAi')}</h3>
           </div>
           <button
             onClick={onClose}
@@ -639,7 +644,7 @@ function GeneratePanel({ subjects, onClose, onNoteCreated }) {
           {/* Subject selector */}
           <div>
             <label className="text-xs font-medium text-text-secondary mb-1.5 block">
-              Mata Kuliah *
+              {t('notebook.subjectLabel')}
             </label>
             <select
               value={subjectId}
@@ -650,7 +655,7 @@ function GeneratePanel({ subjects, onClose, onNoteCreated }) {
               }}
               className="w-full px-3 py-2 bg-background border border-border rounded-xl text-sm text-text focus:outline-none focus:border-primary transition-colors"
             >
-              <option value="">-- Pilih Mata Kuliah --</option>
+              <option value="">{t('notebook.selectSubjectPlaceholder')}</option>
               {subjects.map(s => (
                 <option key={s.id} value={s.id}>{s.name}</option>
               ))}
@@ -669,13 +674,13 @@ function GeneratePanel({ subjects, onClose, onNoteCreated }) {
           {/* Topic input */}
           <div>
             <label className="text-xs font-medium text-text-secondary mb-1.5 block">
-              Topik <span className="text-text-muted font-normal">(opsional — jadi panduan AI)</span>
+              {t('notebook.topicLabel')} <span className="text-text-muted font-normal">{t('notebook.topicOptionalHint')}</span>
             </label>
             <input
               type="text"
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
-              placeholder="Contoh: Hukum Newton, Sistem Reproduksi..."
+              placeholder={t('notebook.topicPlaceholder')}
               className="w-full px-3 py-2 bg-background border border-border rounded-xl text-sm text-text focus:outline-none focus:border-primary transition-colors placeholder:text-text-muted/40"
               onKeyDown={(e) => { if (e.key === 'Enter' && !isGenerating) handleGenerate(); }}
             />
@@ -701,12 +706,12 @@ function GeneratePanel({ subjects, onClose, onNoteCreated }) {
             {isGenerating ? (
               <>
                 <span className="animate-spin">⏳</span>
-                AI sedang menulis...
+                {t('notebook.aiWriting')}
               </>
             ) : (
               <>
                 <Sparkles size={15} />
-                Generate Catatan
+                {t('notebook.generateNote')}
               </>
             )}
           </button>

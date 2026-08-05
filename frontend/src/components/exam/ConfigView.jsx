@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ClipboardList, Loader2, Brain } from 'lucide-react';
 import { examAPI } from '@/services/api';
 import { cn } from '@/utils';
@@ -9,6 +10,7 @@ import {
 } from './shared';
 
 export default function ConfigView({ subjectId, analysis, onDone }) {
+  const { t } = useTranslation();
   const [form, setForm] = useState({
     exam_type: 'UTS',
     total_questions: 20,
@@ -26,8 +28,8 @@ export default function ConfigView({ subjectId, analysis, onDone }) {
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
 
   const handleSubmit = async () => {
-    if (!subjectId) return setError('Pilih mata kuliah terlebih dahulu.');
-    if (selectedMaterialIds.length === 0) return setError('Harap pilih materi terlebih dahulu.');
+    if (!subjectId) return setError(t('exam.config.selectSubjectFirst'));
+    if (selectedMaterialIds.length === 0) return setError(t('exam.config.selectMaterialFirst'));
     setError(''); setIsLoading(true);
     try {
       const totalQ = form.total_questions === 'custom'
@@ -50,7 +52,7 @@ export default function ConfigView({ subjectId, analysis, onDone }) {
       if (r.data?.detail) throw new Error(r.data.detail);
       onDone(r.data);
     } catch (e) {
-      setError(e.response?.data?.detail || e.message || 'Gagal membuat blueprint.');
+      setError(e.response?.data?.detail || e.message || t('exam.config.failedBlueprint'));
     } finally { setIsLoading(false); }
   };
 
@@ -76,12 +78,12 @@ export default function ConfigView({ subjectId, analysis, onDone }) {
 
   return (
     <div className="card-base p-6 space-y-6">
-      <SectionHeader icon={ClipboardList} title="Konfigurasi Simulasi"
-        subtitle="Tentukan jenis, format, dan tingkat kesulitan ujian" />
+      <SectionHeader icon={ClipboardList} title={t('exam.config.title')}
+        subtitle={t('exam.config.subtitle')} />
 
-      <OptionGroup label="Jenis Ujian" options={EXAM_TYPES} field="exam_type" />
+      <OptionGroup label={t('exam.config.examTypeLabel')} options={EXAM_TYPES} field="exam_type" />
       <div>
-        <p className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">Jumlah Soal</p>
+        <p className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">{t('exam.config.questionCountLabel')}</p>
         <div className="flex flex-wrap gap-2">
           {[...COUNTS, 'custom'].map(c => (
             <button key={c} onClick={() => set('total_questions', c)}
@@ -94,15 +96,15 @@ export default function ConfigView({ subjectId, analysis, onDone }) {
         {form.total_questions === 'custom' && (
           <input type="number" min="1" max="100" value={form.custom_count}
             onChange={e => set('custom_count', e.target.value)}
-            placeholder="Jumlah soal..."
+            placeholder={t('exam.config.questionCountPlaceholder')}
             className="mt-2 w-32 px-3 py-1.5 bg-background border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary" />
         )}
       </div>
-      <OptionGroup label="Tingkat Kesulitan" options={DIFFICULTIES} field="difficulty" />
-      <OptionGroup label="Level Bloom Taxonomy" options={BLOOMS} field="bloom_level" />
-      <OptionGroup label="Jenis Soal" options={Q_TYPES} field="question_type" />
-      <OptionGroup label="Fokus Materi" options={FOCUSES} field="focus_material" />
-      <OptionGroup label="Waktu Pengerjaan" options={DURATIONS} field="duration"
+      <OptionGroup label={t('exam.config.difficultyLabel')} options={DIFFICULTIES} field="difficulty" />
+      <OptionGroup label={t('exam.config.bloomLabel')} options={BLOOMS} field="bloom_level" />
+      <OptionGroup label={t('exam.config.questionTypeLabel')} options={Q_TYPES} field="question_type" />
+      <OptionGroup label={t('exam.config.focusLabel')} options={FOCUSES} field="focus_material" />
+      <OptionGroup label={t('exam.config.durationLabel')} options={DURATIONS} field="duration"
         renderLabel={d => d.label} />
 
       <MaterialPicker
@@ -116,8 +118,8 @@ export default function ConfigView({ subjectId, analysis, onDone }) {
       <div className="flex justify-end pt-2">
         <button onClick={handleSubmit} disabled={isLoading || selectedMaterialIds.length === 0} className="btn-primary">
           {isLoading
-            ? <><Loader2 size={14} className="animate-spin" /> Membuat Blueprint...</>
-            : <><Brain size={14} /> Generate Blueprint</>}
+            ? <><Loader2 size={14} className="animate-spin" /> {t('exam.config.creatingBlueprint')}</>
+            : <><Brain size={14} /> {t('exam.config.generateBlueprint')}</>}
         </button>
       </div>
     </div>

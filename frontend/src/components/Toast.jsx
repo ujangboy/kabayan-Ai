@@ -13,6 +13,7 @@
  */
 import { createContext, useContext, useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { CheckCircle, XCircle, AlertTriangle, Info, X } from 'lucide-react';
 
 // ─── Context ──────────────────────────────────────────────────────────────────
@@ -90,7 +91,8 @@ function ToastContainer({ toasts, onDismiss }) {
 }
 
 // ─── Single toast ─────────────────────────────────────────────────────────────
-function ToastItem({ toast: t, onDismiss }) {
+function ToastItem({ toast, onDismiss }) {
+  const { t } = useTranslation();
   return (
     <motion.div
       layout
@@ -99,14 +101,14 @@ function ToastItem({ toast: t, onDismiss }) {
       exit={{    opacity: 0, y: 8,  scale: 0.97 }}
       transition={{ duration: 0.22, ease: 'easeOut' }}
       className={`pointer-events-auto flex items-start gap-3 px-4 py-3 rounded-xl
-        bg-card border shadow-xl text-sm text-text ${BORDER[t.type] || BORDER.info}`}
+        bg-card border shadow-xl text-sm text-text ${BORDER[toast.type] || BORDER.info}`}
     >
-      {ICONS[t.type] || ICONS.info}
-      <p className="flex-1 leading-snug">{t.message}</p>
+      {ICONS[toast.type] || ICONS.info}
+      <p className="flex-1 leading-snug">{toast.message}</p>
       <button
-        onClick={() => onDismiss(t.id)}
+        onClick={() => onDismiss(toast.id)}
         className="shrink-0 p-0.5 rounded text-text-muted hover:text-text transition-colors"
-        aria-label="Tutup"
+        aria-label={t('common.close')}
       >
         <X size={13} />
       </button>

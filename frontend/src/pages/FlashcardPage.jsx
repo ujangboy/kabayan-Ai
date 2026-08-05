@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -19,6 +20,7 @@ import { usePendingOperation } from '@/hooks/usePendingOperation';
 // Main Page
 // ─────────────────────────────────────────────────────────────────────────────
 export default function FlashcardPage() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -69,13 +71,13 @@ export default function FlashcardPage() {
     mutationFn: () => flashcardAPI.clear(),
     onSuccess: () => {
       queryClient.invalidateQueries(['flashcards']);
-      toast.success('Semua flashcard berhasil dihapus.');
+      toast.success(t('flashcard.allDeleted'));
     },
     onError: (err) => toast.error(extractErrorMessage(err)),
   });
 
   const handleClearAll = () => {
-    if (confirm('Hapus SEMUA flashcard?')) clearAllMutation.mutate();
+    if (confirm(t('flashcard.confirmClearAll'))) clearAllMutation.mutate();
   };
 
   // Jika deck aktif, tampilkan session view
@@ -85,7 +87,7 @@ export default function FlashcardPage() {
     return (
       <FlashcardSession
         cards={cards}
-        subjectName={group?.subject?.name || 'Flashcard'}
+        subjectName={group?.subject?.name || t('flashcard.defaultName')}
         onClose={() => {
           setActiveBatchId(null);
           queryClient.invalidateQueries(['flashcards']);
@@ -101,8 +103,8 @@ export default function FlashcardPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-text">Flashcard</h1>
-            <p className="text-text-secondary text-sm mt-1">Hafalkan materi dengan teknik Active Recall.</p>
+            <h1 className="text-2xl font-bold text-text">{t('flashcard.pageTitle')}</h1>
+            <p className="text-text-secondary text-sm mt-1">{t('flashcard.pageSubtitle')}</p>
           </div>
           <div className="flex items-center gap-3 flex-wrap">
             {(() => {
@@ -115,19 +117,19 @@ export default function FlashcardPage() {
                   className="btn-ghost border border-accent-purple/40 text-accent-purple text-xs"
                 >
                   <Brain size={14} />
-                  {totalDue > 0 ? `Review (${totalDue} kartu)` : 'Review SRS'}
+                  {totalDue > 0 ? t('flashcard.reviewCount', { count: totalDue }) : t('flashcard.reviewSrs')}
                 </button>
               );
             })()}
             <button onClick={() => setIsAIModalOpen(true)} className="btn-primary text-xs">
-              <Zap size={14} /> Generate AI
+              <Zap size={14} /> {t('flashcard.generateAi')}
             </button>
             <button onClick={() => setIsManualModalOpen(true)} className="btn-ghost border border-border text-xs">
-              <Plus size={14} /> Manual
+              <Plus size={14} /> {t('flashcard.manual')}
             </button>
             {allFlashcards.length > 0 && (
               <button onClick={handleClearAll} className="btn-ghost text-danger border border-danger/20 text-xs">
-                Hapus Semua
+                {t('flashcard.deleteAll')}
               </button>
             )}
           </div>
@@ -141,13 +143,13 @@ export default function FlashcardPage() {
               onChange={(e) => setSubjectFilter('flashcard', e.target.value)}
               className="px-3 py-2 bg-card border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary transition-colors"
             >
-              <option value="">-- Semua Mata Kuliah --</option>
+              <option value="">{t('flashcard.filterAllSubjects')}</option>
               {[...subjects].sort((a, b) => a.name.localeCompare(b.name, 'id', { sensitivity: 'base' })).map(s => (
                 <option key={s.id} value={String(s.id)}>{s.name}</option>
               ))}
             </select>
             <span className="text-xs text-text-muted">
-              Menampilkan {filteredGroups.length} dari {groups.length} deck
+              {t('flashcard.showingCount', { shown: filteredGroups.length, total: groups.length })}
             </span>
           </div>
         </div>
@@ -155,18 +157,18 @@ export default function FlashcardPage() {
         {/* Group Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {isLoading ? (
-            <div className="col-span-full text-center py-10 text-text-muted">Memuat flashcard...</div>
+            <div className="col-span-full text-center py-10 text-text-muted">{t('flashcard.loading')}</div>
           ) : groups.length === 0 ? (
             <div className="col-span-full card-base p-10 text-center">
               <CreditCard size={48} className="mx-auto mb-4 text-text-muted opacity-50" />
-              <p className="text-text-muted mb-4">Belum ada flashcard. Generate dari materi kuliah Anda.</p>
+<p className="text-text-muted mb-4">{t('flashcard.emptyState')}</p>
               <button onClick={() => setIsAIModalOpen(true)} className="btn-primary text-sm">
-                <Zap size={14} /> Generate AI
+                <Zap size={14} /> {t('flashcard.generateAi')}
               </button>
             </div>
           ) : filteredGroups.length === 0 ? (
             <div className="col-span-full card-base p-10 text-center">
-              <p className="text-text-muted">Tidak ada deck pada mata kuliah ini.</p>
+              <p className="text-text-muted">{t('flashcard.noDeckForSubject')}</p>
             </div>
           ) : (
             filteredGroups.map((group) => (
@@ -177,7 +179,7 @@ export default function FlashcardPage() {
                 onReview={() => navigate(`/flashcard/review?subject_id=${group.subject.id}`)}
                 onHistory={() => setHistoryBatchId(group.batch_id)}
                 onDeleteAll={() => {
-                  if (confirm(`Hapus deck ini (${group.cards.length} kartu)?`)) {
+                  if (confirm(t('flashcard.confirmDeleteDeck', { count: group.cards.length }))) {
                     const ids = group.cards.map(c => c.id);
                     flashcardAPI.batchDelete(ids)
                       .then(() => queryClient.invalidateQueries(['flashcards']));
@@ -228,6 +230,7 @@ export default function FlashcardPage() {
 // Card component for each batch (deck) — setiap generate = satu card
 // ─────────────────────────────────────────────────────────────────────────────
 function BatchFlashcardCard({ group, onStart, onReview, onHistory, onDeleteAll }) {
+  const { t } = useTranslation();
   const { subject, cards } = group;
   // Ambil created_at terbaru dari kartu dalam deck
   const latestCard = cards.reduce((a, b) =>
@@ -254,14 +257,14 @@ function BatchFlashcardCard({ group, onStart, onReview, onHistory, onDeleteAll }
         <div className="flex-1 min-w-0">
           {/* Label "Mata Kuliah" */}
           <div className="text-[10px] font-semibold text-accent-teal uppercase tracking-wider mb-1">
-            Mata Kuliah
+            {t('flashcard.subjectLabel')}
           </div>
           <h3 className="font-semibold text-text text-sm truncate">{subject.name}</h3>
         </div>
         <button
           onClick={onDeleteAll}
           className="p-1 text-text-muted hover:text-danger transition-colors shrink-0 ml-2"
-          title="Hapus semua flashcard ini"
+          title={t('flashcard.deleteAllCardsTitle')}
         >
           <Trash2 size={14} />
         </button>
@@ -270,22 +273,22 @@ function BatchFlashcardCard({ group, onStart, onReview, onHistory, onDeleteAll }
       <div className="flex items-center gap-3 mb-2 text-xs text-text-secondary flex-wrap">
         <span className="flex items-center gap-1">
           <CreditCard size={12} />
-          {cards.length} kartu
+          {t('flashcard.cardCount', { count: cards.length })}
         </span>
         <span className="flex items-center gap-1">
           <Book size={12} />
-          Flip &amp; Recall
+          {t('flashcard.flipRecall')}
         </span>
         {masteredCount > 0 && (
           <span className="flex items-center gap-1 text-success">
             <Trophy size={11} />
-            {masteredCount} dikuasai
+            {t('flashcard.masteredCount', { count: masteredCount })}
           </span>
         )}
         {newCount > 0 && (
           <span className="flex items-center gap-1 text-accent-blue">
             <Sparkles size={11} />
-            {newCount} baru
+            {t('flashcard.newCount', { count: newCount })}
           </span>
         )}
       </div>
@@ -293,7 +296,7 @@ function BatchFlashcardCard({ group, onStart, onReview, onHistory, onDeleteAll }
       {dueCount > 0 && (
         <div className="flex items-center gap-1.5 mb-2">
           <span className="badge badge-warning text-[10px]">
-            {dueCount} kartu perlu review
+            {t('flashcard.dueCount', { count: dueCount })}
           </span>
         </div>
       )}
@@ -307,7 +310,7 @@ function BatchFlashcardCard({ group, onStart, onReview, onHistory, onDeleteAll }
             </span>
           ))}
           {allMaterialNames.length > 3 && (
-            <span className="text-[10px] text-text-muted self-center">+{allMaterialNames.length - 3} lagi</span>
+            <span className="text-[10px] text-text-muted self-center">{t('flashcard.moreMaterials', { count: allMaterialNames.length - 3 })}</span>
           )}
         </div>
       )}
@@ -339,14 +342,14 @@ function BatchFlashcardCard({ group, onStart, onReview, onHistory, onDeleteAll }
             onClick={onReview}
             className="flex-1 justify-center text-xs px-3 py-2 rounded-lg border border-accent-purple/40 text-accent-purple font-semibold hover:bg-accent-purple/10 transition-colors flex items-center gap-1.5"
           >
-            <Brain size={12} /> Review
+            <Brain size={12} /> {t('flashcard.review')}
           </button>
         )}
         <button
           onClick={onStart}
           className={`${dueCount > 0 ? 'flex-[2]' : 'flex-1'} btn-primary justify-center text-xs px-3 py-2`}
         >
-          <Play size={12} /> Mulai Belajar
+          <Play size={12} /> {t('flashcard.startLearning')}
         </button>
       </div>
 
@@ -355,7 +358,7 @@ function BatchFlashcardCard({ group, onStart, onReview, onHistory, onDeleteAll }
         onClick={onHistory}
         className="mt-2 w-full flex items-center justify-center gap-1 text-[11px] text-text-muted hover:text-accent-teal transition-colors py-1"
       >
-        <Clock size={11} /> Riwayat Review
+        <Clock size={11} /> {t('flashcard.reviewHistory')}
       </button>
     </motion.div>
   );
@@ -365,6 +368,7 @@ function BatchFlashcardCard({ group, onStart, onReview, onHistory, onDeleteAll }
 // Session view — study mode
 // ─────────────────────────────────────────────────────────────────────────────
 function FlashcardSession({ cards, subjectName, onClose }) {
+  const { t } = useTranslation();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [known, setKnown] = useState(new Set());
@@ -490,7 +494,7 @@ function FlashcardSession({ cards, subjectName, onClose }) {
   };
 
   const handleDeleteCard = () => {
-    if (confirm('Hapus flashcard ini?')) {
+    if (confirm(t('flashcard.confirmDeleteCard'))) {
       clearTimeout(autoAdvanceTimerRef.current);
       clearInterval(autoAdvanceIntervalRef.current);
       deleteMutation.mutate(currentCard.id);
@@ -515,18 +519,18 @@ function FlashcardSession({ cards, subjectName, onClose }) {
           className="card-base text-center max-w-sm w-full p-8"
         >
           <Trophy size={48} className="mx-auto text-warning mb-4" />
-          <h2 className="text-xl font-bold text-text mb-1">Sesi Selesai!</h2>
+          <h2 className="text-xl font-bold text-text mb-1">{t('flashcard.sessionComplete')}</h2>
           <p className="text-text-secondary text-sm mb-6">{subjectName}</p>
           <div className="text-5xl font-bold text-primary mb-2">{pct}%</div>
           <p className="text-sm text-text-secondary mb-6">
-            Hafal <span className="text-success font-semibold">{knownCount}</span> dari {total} kartu
+            {t('flashcard.sessionResult', { knownCount, total })}
           </p>
           <div className="flex gap-2">
             <button onClick={handleRestart} className="btn-primary flex-1 justify-center text-sm">
-              <RotateCcw size={14} /> Ulangi
+              <RotateCcw size={14} /> {t('flashcard.retry')}
             </button>
             <button onClick={onClose} className="btn-ghost flex-1 justify-center text-sm border border-border">
-              Selesai
+              {t('flashcard.done')}
             </button>
           </div>
         </motion.div>
@@ -538,8 +542,8 @@ function FlashcardSession({ cards, subjectName, onClose }) {
     return (
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center text-text-muted">
-          <p className="mb-4">Tidak ada kartu.</p>
-          <button onClick={onClose} className="btn-ghost border border-border">Kembali</button>
+          <p className="mb-4">{t('flashcard.noCards')}</p>
+          <button onClick={onClose} className="btn-ghost border border-border">{t('common.back')}</button>
         </div>
       </div>
     );
@@ -550,7 +554,7 @@ function FlashcardSession({ cards, subjectName, onClose }) {
       {/* Top bar */}
       <div className="flex items-center justify-between mb-6 shrink-0">
         <button onClick={onClose} className="btn-ghost text-sm text-text-muted">
-          <ChevronLeft size={16} /> Kembali
+          <ChevronLeft size={16} /> {t('common.back')}
         </button>
         <div className="text-sm text-text-secondary font-medium">{subjectName}</div>
         <span className="px-3 py-1 bg-card rounded-full text-sm font-medium text-text-secondary border border-border">
@@ -580,16 +584,16 @@ function FlashcardSession({ cards, subjectName, onClose }) {
           >
             {/* Front */}
             <div className="absolute inset-0 backface-hidden card-base flex flex-col items-center justify-center p-8 text-center border-t-4 border-t-primary shadow-xl">
-              <span className="text-xs font-semibold text-text-secondary uppercase tracking-widest mb-4">Pertanyaan</span>
+              <span className="text-xs font-semibold text-text-secondary uppercase tracking-widest mb-4">{t('flashcard.question')}</span>
               <MathMarkdown className="text-xl font-bold text-text leading-snug text-center">{currentCard.question}</MathMarkdown>
-              <p className="absolute bottom-4 text-[11px] text-text-muted">Klik untuk lihat jawaban</p>
+              <p className="absolute bottom-4 text-[11px] text-text-muted">{t('flashcard.clickToSeeAnswer')}</p>
             </div>
             {/* Back */}
             <div
               className="absolute inset-0 backface-hidden card-base flex flex-col items-center justify-center p-8 text-center border-t-4 border-t-success shadow-xl"
               style={{ transform: 'rotateY(180deg)' }}
             >
-              <span className="text-xs font-semibold text-text-secondary uppercase tracking-widest mb-4">Jawaban</span>
+              <span className="text-xs font-semibold text-text-secondary uppercase tracking-widest mb-4">{t('flashcard.answer')}</span>
               <MathMarkdown className="text-lg text-text leading-relaxed text-center">{currentCard.answer}</MathMarkdown>
             </div>
           </motion.div>
@@ -612,13 +616,13 @@ function FlashcardSession({ cards, subjectName, onClose }) {
                   : 'bg-danger/10 border border-danger/30'
               }`}>
                 <span className={`text-sm font-semibold ${feedback.known ? 'text-success' : 'text-danger'}`}>
-                  {feedback.known ? '✅ Hafal' : '❌ Belum Hafal'}
+                  {feedback.known ? t('flashcard.known') : t('flashcard.unknown')}
                 </span>
                 <button
                   onClick={handleSkipAutoAdvance}
                   className="text-xs text-text-muted hover:text-text transition-colors ml-4 shrink-0"
                 >
-                  Lanjut sekarang →
+                  {t('flashcard.skipAdvance')}
                 </button>
               </div>
               {/* Auto-advance progress bar */}
@@ -642,13 +646,13 @@ function FlashcardSession({ cards, subjectName, onClose }) {
                 onClick={handleDontKnow}
                 className="px-6 py-2.5 rounded-xl border border-danger/40 text-danger text-sm font-medium hover:bg-danger/10 transition-colors"
               >
-                Belum Hafal
+                {t('flashcard.dontKnow')}
               </button>
               <button
                 onClick={handleKnow}
                 className="px-6 py-2.5 rounded-xl border border-success/40 text-success text-sm font-medium hover:bg-success/10 transition-colors"
               >
-                Sudah Hafal ✓
+                {t('flashcard.known')}
               </button>
             </motion.div>
           )}
@@ -662,12 +666,12 @@ function FlashcardSession({ cards, subjectName, onClose }) {
           disabled={currentIndex === 0}
           className="btn-ghost disabled:opacity-30 disabled:cursor-not-allowed text-sm"
         >
-          <ChevronLeft size={16} /> Prev
+          <ChevronLeft size={16} /> {t('flashcard.prev')}
         </button>
         <button
           onClick={handleDeleteCard}
           className="p-2 text-text-muted hover:text-danger transition-colors"
-          title="Hapus kartu ini"
+          title={t('flashcard.deleteCardTitle')}
         >
           <Trash2 size={15} />
         </button>
@@ -675,7 +679,7 @@ function FlashcardSession({ cards, subjectName, onClose }) {
           onClick={goNext}
           className="btn-ghost text-sm"
         >
-          Skip <ChevronRight size={16} />
+          {t('flashcard.skip')} <ChevronRight size={16} />
         </button>
       </div>
     </div>
@@ -697,8 +701,8 @@ function GenerateAIModal({ subjects, onClose, onSuccess }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!subjectId) return setError('Pilih mata kuliah terlebih dahulu.');
-    if (selectedMaterialIds.length === 0) return setError('Harap pilih materi terlebih dahulu.');
+    if (!subjectId) return setError(t('flashcard.selectSubjectFirst'));
+    if (selectedMaterialIds.length === 0) return setError(t('flashcard.selectMaterialFirst'));
     setError('');
     setIsGenerating(true);
     flashcardOp.start();
@@ -731,7 +735,7 @@ function GenerateAIModal({ subjects, onClose, onSuccess }) {
         <div className="flex items-center justify-between p-4 border-b border-border">
           <div className="flex items-center gap-2">
             <Zap size={18} className="text-primary" />
-            <h3 className="font-semibold text-text">Generate Flashcard AI</h3>
+            <h3 className="font-semibold text-text">{t('flashcard.generateAiModalTitle')}</h3>
           </div>
           <button onClick={onClose} disabled={isGenerating} className="text-text-muted hover:text-text disabled:opacity-40">
             <X size={18} />
@@ -744,7 +748,7 @@ function GenerateAIModal({ subjects, onClose, onSuccess }) {
             </div>
           )}
           <div>
-            <label className="block text-xs font-medium text-text-secondary mb-1">Sumber Materi (Mata Kuliah) *</label>
+            <label className="block text-xs font-medium text-text-secondary mb-1">{t('flashcard.materialSourceLabel')}</label>
             <select
               required
               value={subjectId}
@@ -752,13 +756,13 @@ function GenerateAIModal({ subjects, onClose, onSuccess }) {
               disabled={isGenerating}
               className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary transition-colors disabled:opacity-60"
             >
-              <option value="">-- Pilih Mata Kuliah --</option>
+              <option value="">{t('flashcard.selectSubjectPlaceholder')}</option>
               {subjects.map(s => (
                 <option key={s.id} value={s.id}>{s.name}</option>
               ))}
             </select>
             <p className="text-[10px] text-text-muted mt-1">
-              Pastikan materi sudah diupload dan status <span className="text-success">Ready</span>.
+              {t('flashcard.materialReadyHint')}
             </p>
           </div>
           <MaterialPicker
@@ -767,7 +771,7 @@ function GenerateAIModal({ subjects, onClose, onSuccess }) {
             onSelectionChange={setSelectedMaterialIds}
           />
           <div>
-            <label className="block text-xs font-medium text-text-secondary mb-1">Jumlah Flashcard</label>
+            <label className="block text-xs font-medium text-text-secondary mb-1">{t('flashcard.countLabel')}</label>
             <div className="flex gap-2">
               {PRESETS.map(p => (
                 <button
@@ -785,21 +789,21 @@ function GenerateAIModal({ subjects, onClose, onSuccess }) {
                 </button>
               ))}
             </div>
-            <p className="text-[10px] text-text-muted mt-1">Setiap generate membuat deck baru yang terpisah.</p>
+            <p className="text-[10px] text-text-muted mt-1">{t('flashcard.generatePerDeckHint')}</p>
           </div>
           {isGenerating && (
             <div className="flex items-center gap-2 text-sm text-primary py-1">
               <Loader2 size={16} className="animate-spin" />
-              <span>AI sedang menganalisis materi...</span>
+              <span>{t('flashcard.aiAnalyzing')}</span>
             </div>
           )}
           <div className="flex justify-end gap-2 pt-1">
-            <button type="button" onClick={onClose} disabled={isGenerating} className="btn-ghost disabled:opacity-40">
-              Batal
-            </button>
-            <button type="submit" disabled={isGenerating || !subjectId || selectedMaterialIds.length === 0} className="btn-primary disabled:opacity-40">
-              {isGenerating ? 'Generating...' : 'Generate'}
-            </button>
+<button type="button" onClick={onClose} disabled={isGenerating} className="btn-ghost disabled:opacity-40">
+               {t('common.cancel')}
+             </button>
+             <button type="submit" disabled={isGenerating || !subjectId || selectedMaterialIds.length === 0} className="btn-primary disabled:opacity-40">
+               {isGenerating ? t('flashcard.generating') : t('flashcard.generate')}
+             </button>
           </div>
         </form>
       </motion.div>
@@ -817,9 +821,9 @@ function CreateFlashcardModal({ subjects, onClose, onSuccess }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.question || !formData.answer || !formData.subject_id) {
-      return setError('Lengkapi semua data terlebih dahulu.');
-    }
+if (!formData.question || !formData.answer || !formData.subject_id) {
+       return setError(t('flashcard.fillAllFields'));
+     }
     setIsSubmitting(true);
     const data = new URLSearchParams();
     data.append('question', formData.question);
@@ -850,7 +854,7 @@ function CreateFlashcardModal({ subjects, onClose, onSuccess }) {
         <div className="flex items-center justify-between p-4 border-b border-border">
           <div className="flex items-center gap-2">
             <CreditCard size={18} className="text-primary" />
-            <h3 className="font-semibold text-text">Flashcard Manual</h3>
+            <h3 className="font-semibold text-text">{t('flashcard.manualModalTitle')}</h3>
           </div>
           <button onClick={onClose} className="text-text-muted hover:text-text"><X size={18} /></button>
         </div>
@@ -859,21 +863,21 @@ function CreateFlashcardModal({ subjects, onClose, onSuccess }) {
             <div className="text-xs text-danger bg-danger/10 border border-danger/20 rounded-lg px-3 py-2">{error}</div>
           )}
           <div>
-            <label className="block text-xs font-medium text-text-secondary mb-1">Mata Kuliah *</label>
-            <select
-              required
-              value={formData.subject_id}
-              onChange={(e) => setFormData(p => ({ ...p, subject_id: e.target.value }))}
-              className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary transition-colors"
-            >
-              <option value="">-- Pilih Mata Kuliah --</option>
+<label className="block text-xs font-medium text-text-secondary mb-1">{t('flashcard.subjectLabel')}</label>
+             <select
+               required
+               value={formData.subject_id}
+               onChange={(e) => setFormData(p => ({ ...p, subject_id: e.target.value }))}
+               className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary transition-colors"
+             >
+               <option value="">{t('flashcard.selectSubjectPlaceholder')}</option>
               {subjects.map(s => (
                 <option key={s.id} value={s.id}>{s.name}</option>
               ))}
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-text-secondary mb-1">Pertanyaan (Depan) *</label>
+            <label className="block text-xs font-medium text-text-secondary mb-1">{t('flashcard.questionFrontLabel')}</label>
             <textarea
               required
               rows={2}
@@ -883,7 +887,7 @@ function CreateFlashcardModal({ subjects, onClose, onSuccess }) {
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-text-secondary mb-1">Jawaban (Belakang) *</label>
+            <label className="block text-xs font-medium text-text-secondary mb-1">{t('flashcard.answerBackLabel')}</label>
             <textarea
               required
               rows={3}
@@ -893,10 +897,10 @@ function CreateFlashcardModal({ subjects, onClose, onSuccess }) {
             />
           </div>
           <div className="flex justify-end gap-2 pt-2">
-            <button type="button" onClick={onClose} className="btn-ghost">Batal</button>
-            <button type="submit" disabled={isSubmitting || !formData.question} className="btn-primary disabled:opacity-40">
-              {isSubmitting ? 'Menyimpan...' : 'Simpan'}
-            </button>
+<button type="button" onClick={onClose} className="btn-ghost">{t('common.cancel')}</button>
+             <button type="submit" disabled={isSubmitting || !formData.question} className="btn-primary disabled:opacity-40">
+               {isSubmitting ? t('flashcard.saving') : t('common.save')}
+             </button>
           </div>
         </form>
       </motion.div>
@@ -907,16 +911,17 @@ function CreateFlashcardModal({ subjects, onClose, onSuccess }) {
 // ─────────────────────────────────────────────────────────────────────────────
 // Riwayat Review per kartu (log Lupa/Ingat/Hafal + jadwal next_review)
 // ─────────────────────────────────────────────────────────────────────────────
-const RATING_META = {
-  0: { label: '😕 Lupa',  cls: 'text-danger border-danger/30 bg-danger/5' },
-  1: { label: '😕 Lupa',  cls: 'text-danger border-danger/30 bg-danger/5' },
-  2: { label: '🙂 Ingat', cls: 'text-accent-blue border-accent-blue/30 bg-accent-blue/5' },
-  3: { label: '🎯 Hafal', cls: 'text-success border-success/30 bg-success/5' },
-  4: { label: '🎯 Hafal', cls: 'text-success border-success/30 bg-success/5' },
-};
-
 function ReviewHistoryModal({ group, onClose }) {
+  const { t } = useTranslation();
   const { subject, cards } = group || {};
+  const cardIds = (cards || []).map(c => c.id);
+  const RATING_META = {
+    0: { label: t('flashcard.ratingLupa'),  cls: 'text-danger border-danger/30 bg-danger/5' },
+    1: { label: t('flashcard.ratingLupa'),  cls: 'text-danger border-danger/30 bg-danger/5' },
+    2: { label: t('flashcard.ratingIngat'), cls: 'text-accent-blue border-accent-blue/30 bg-accent-blue/5' },
+    3: { label: t('flashcard.ratingHafal'), cls: 'text-success border-success/30 bg-success/5' },
+    4: { label: t('flashcard.ratingHafal'), cls: 'text-success border-success/30 bg-success/5' },
+  };
   const cardIds = (cards || []).map(c => c.id);
 
   const { data, isLoading, error } = useQuery({
@@ -938,16 +943,16 @@ function ReviewHistoryModal({ group, onClose }) {
         <div className="flex items-center justify-between p-4 border-b border-border shrink-0">
           <div className="flex items-center gap-2">
             <Brain size={18} className="text-accent-purple" />
-            <h3 className="font-semibold text-text">Riwayat Review — {subject?.name || 'Flashcard'}</h3>
+            <h3 className="font-semibold text-text">{t('flashcard.reviewHistoryTitle', { subjectName: subject?.name || t('flashcard.defaultName') })}</h3>
           </div>
           <button onClick={onClose} className="text-text-muted hover:text-text"><X size={18} /></button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
-          {isLoading && <p className="text-center text-text-muted py-8">Memuat riwayat...</p>}
-          {error && <p className="text-center text-danger py-8">Gagal memuat riwayat: {error?.message}</p>}
+          {isLoading && <p className="text-center text-text-muted py-8">{t('common.loading')}</p>}
+          {error && <p className="text-center text-danger py-8">{t('flashcard.loadHistoryError', { message: error?.message })}</p>}
           {!isLoading && !error && (cards || []).length === 0 && (
-            <p className="text-center text-text-muted py-8">Tidak ada kartu dalam deck ini.</p>
+            <p className="text-center text-text-muted py-8">{t('flashcard.noCardsInDeck')}</p>
           )}
           {(cards || []).map(card => {
             const history = reviewsMap[card.id] || [];
@@ -956,7 +961,7 @@ function ReviewHistoryModal({ group, onClose }) {
                 <div className="flex items-start justify-between gap-3">
                   <MathMarkdown className="text-sm font-medium text-text">{card.question}</MathMarkdown>
                   <span className={`shrink-0 text-[10px] px-2 py-0.5 rounded-full border font-semibold ${card.mastered ? 'text-success border-success/30 bg-success/5' : 'text-text-muted border-border'}`}>
-                    {card.mastered ? 'Dikuasai' : 'Diproses'}
+                    {card.mastered ? t('flashcard.mastered') : t('flashcard.processing')}
                   </span>
                 </div>
                 <div className="mt-2 flex items-center gap-3 text-[11px] text-text-muted">
@@ -964,7 +969,7 @@ function ReviewHistoryModal({ group, onClose }) {
                   {card.last_reviewed && <span>Terakhir: {formatDateTime(card.last_reviewed)}</span>}
                 </div>
                 {history.length === 0 ? (
-                  <p className="mt-2 text-xs text-text-muted">Belum pernah direview.</p>
+                  <p className="mt-2 text-xs text-text-muted">{t('flashcard.neverReviewed')}</p>
                 ) : (
                   <ul className="mt-2 space-y-1">
                     {history.map(r => {
@@ -987,7 +992,7 @@ function ReviewHistoryModal({ group, onClose }) {
         </div>
 
         <div className="p-3 border-t border-border shrink-0 flex justify-end">
-          <button onClick={onClose} className="btn-ghost border border-border text-sm">Tutup</button>
+          <button onClick={onClose} className="btn-ghost border border-border text-sm">{t('common.close')}</button>
         </div>
       </motion.div>
     </div>

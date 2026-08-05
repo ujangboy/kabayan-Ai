@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { HelpCircle, Play, X, Zap, Trophy, Trash2, CheckCircle, XCircle, Loader2, Clock, Calendar, FileText, PenLine } from 'lucide-react';
@@ -11,21 +12,22 @@ import { formatDate, formatTimeOnly } from '@/utils';
 import { usePendingOperation } from '@/hooks/usePendingOperation';
 import { useUiStore } from '@/store';
 
-const QTYPE_LABEL = { mcq: 'Pilihan Ganda', essay: 'Essay', mixed: 'Campuran' };
+const QTYPE_LABEL = { mcq: 'quiz.qtypeMcq', essay: 'quiz.qtypeEssay', mixed: 'quiz.qtypeMixed' };
 const DIFFICULTY_BADGE = {
-  mudah:  { label: 'Mudah',  cls: 'bg-success/15 text-success border-success/30' },
-  sedang: { label: 'Sedang', cls: 'bg-warning/15 text-warning border-warning/30' },
-  sulit:  { label: 'Sulit',  cls: 'bg-danger/15 text-danger border-danger/30' },
+  mudah:  { label: 'quiz.difficultyEasy',   cls: 'bg-success/15 text-success border-success/30' },
+  sedang: { label: 'quiz.difficultyMedium', cls: 'bg-warning/15 text-warning border-warning/30' },
+  sulit:  { label: 'quiz.difficultyHard',   cls: 'bg-danger/15 text-danger border-danger/30' },
 };
 
-function formatDuration(seconds) {
+function formatDuration(seconds, t) {
   if (seconds == null) return null;
   const m = Math.floor(seconds / 60);
   const s = seconds % 60;
-  return `${m} mnt ${String(s).padStart(2, '0')} dtk`;
+  return t('quiz.durationFormat', { minutes: m, seconds: String(s).padStart(2, '0') });
 }
 
 export default function QuizPage() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const selectedSubject = useUiStore((s) => s.subjectFilterMateri);
   const setSubjectFilter = useUiStore((s) => s.setSubjectFilter);
@@ -71,13 +73,13 @@ export default function QuizPage() {
   });
 
   const handleDelete = (id) => {
-    if (confirm('Hapus quiz ini?')) {
+    if (confirm(t('quiz.confirmDeleteSingle'))) {
       deleteMutation.mutate(id);
     }
   };
 
   const handleClearAll = () => {
-    if (confirm('Hapus SEMUA quiz?')) {
+    if (confirm(t('quiz.confirmDeleteAll'))) {
       clearMutation.mutate();
     }
   };
@@ -104,8 +106,8 @@ export default function QuizPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-text">Quiz Interaktif</h1>
-            <p className="text-text-secondary text-sm mt-1">Buat quiz AI dari materi dan uji pemahaman Anda.</p>
+            <h1 className="text-2xl font-bold text-text">{t('quiz.title')}</h1>
+            <p className="text-text-secondary text-sm mt-1">{t('quiz.subtitle')}</p>
           </div>
           <div className="flex items-center gap-3">
             <select
@@ -113,17 +115,17 @@ export default function QuizPage() {
               onChange={(e) => setSubjectFilter('materi', e.target.value)}
               className="px-3 py-2 bg-card border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary transition-colors"
             >
-              <option value="">Semua Mata Kuliah</option>
+              <option value="">{t('quiz.allSubjects')}</option>
               {subjects.map(s => (
                 <option key={s.id} value={s.id}>{s.name}</option>
               ))}
             </select>
             <button onClick={() => setIsGeneratorOpen(true)} className="btn-primary text-xs">
-              <Zap size={14} /> Buat Quiz AI
+              <Zap size={14} /> {t('quiz.generateButton')}
             </button>
             {allQuizzes.length > 0 && (
               <button onClick={handleClearAll} className="btn-ghost text-danger border border-danger/20 text-xs">
-                Hapus Semua
+                {t('quiz.deleteAll')}
               </button>
             )}
           </div>
@@ -132,13 +134,13 @@ export default function QuizPage() {
         {/* Quiz List */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {isLoading ? (
-            <div className="col-span-full text-center py-10 text-text-muted">Memuat quiz...</div>
+            <div className="col-span-full text-center py-10 text-text-muted">{t('quiz.loading')}</div>
           ) : quizzes.length === 0 ? (
             <div className="col-span-full card-base p-10 text-center">
               <HelpCircle size={48} className="mx-auto mb-4 text-text-muted opacity-50" />
-              <p className="text-text-muted mb-4">Belum ada quiz{selectedSubject ? ' untuk mata kuliah ini' : ''}.</p>
+              <p className="text-text-muted mb-4">{selectedSubject ? t('quiz.emptyForSubject') : t('quiz.empty')}</p>
               <button onClick={() => setIsGeneratorOpen(true)} className="btn-primary text-sm">
-                <Zap size={14} /> Buat Quiz Pertama
+                <Zap size={14} /> {t('quiz.generateFirst')}
               </button>
             </div>
           ) : (
@@ -154,16 +156,16 @@ export default function QuizPage() {
                     {/* Nama materi / mata kuliah */}
                     <div className="flex items-center gap-1 mb-1">
                       <span className="text-[10px] font-semibold text-accent-blue uppercase tracking-wider truncate">
-                        {quiz.subject?.name || 'Umum'}
+                        {quiz.subject?.name || t('quiz.genericSubject')}
                       </span>
                       {quiz.question_type && (
                         <span className="text-[9px] px-1.5 py-0.5 rounded bg-card border border-border text-text-secondary shrink-0">
-                          {QTYPE_LABEL[quiz.question_type] || quiz.question_type}
+                          {QTYPE_LABEL[quiz.question_type] ? t(QTYPE_LABEL[quiz.question_type]) : quiz.question_type}
                         </span>
                       )}
                       {quiz.difficulty && DIFFICULTY_BADGE[quiz.difficulty] && (
                         <span className={`text-[9px] px-1.5 py-0.5 rounded border shrink-0 font-medium ${DIFFICULTY_BADGE[quiz.difficulty].cls}`}>
-                          {DIFFICULTY_BADGE[quiz.difficulty].label}
+                          {t(DIFFICULTY_BADGE[quiz.difficulty].label)}
                         </span>
                       )}
                     </div>
@@ -174,7 +176,7 @@ export default function QuizPage() {
                   <button
                     onClick={() => handleDelete(quiz.id)}
                     className="p-1 text-text-muted hover:text-danger transition-colors shrink-0 ml-2"
-                    title="Hapus"
+                    title={t('common.delete')}
                   >
                     <Trash2 size={14} />
                   </button>
@@ -183,7 +185,7 @@ export default function QuizPage() {
                 <div className="flex items-center gap-3 mb-2 text-xs text-text-secondary flex-wrap">
                   <span className="flex items-center gap-1">
                     <HelpCircle size={12} />
-                    {quiz.question_count || 0} soal
+                    {t('quiz.questionCount', { count: quiz.question_count || 0 })}
                   </span>
                   {quiz.score !== null && quiz.score !== undefined && (
                     <span className="flex items-center gap-1 text-warning">
@@ -192,12 +194,12 @@ export default function QuizPage() {
                     </span>
                   )}
                   {(quiz.attempt_count || 0) > 0 && (
-                    <span className="text-[10px] text-text-muted">dimainkan {quiz.attempt_count}x</span>
+                    <span className="text-[10px] text-text-muted">{t('quiz.playedCount', { count: quiz.attempt_count })}</span>
                   )}
                   {quiz.time_taken != null && (
                     <span className="flex items-center gap-1 text-[10px] text-text-muted">
                       <Clock size={9} />
-                      {formatDuration(quiz.time_taken)}
+                      {formatDuration(quiz.time_taken, t)}
                     </span>
                   )}
                 </div>
@@ -211,7 +213,7 @@ export default function QuizPage() {
                       </span>
                     ))}
                     {(quiz.material_names || []).length > 3 && (
-                      <span className="text-[10px] text-text-muted">+{quiz.material_names.length - 3} lagi</span>
+                      <span className="text-[10px] text-text-muted">{t('quiz.moreMaterials', { count: quiz.material_names.length - 3 })}</span>
                     )}
                   </div>
                 )}
@@ -234,7 +236,7 @@ export default function QuizPage() {
                   onClick={() => handleStartQuiz(quiz.id)}
                   className="bg-warning text-black font-bold w-full justify-center text-xs mt-auto px-4 py-2 rounded-lg hover:bg-warning/80 transition-colors flex items-center gap-1.5"
                 >
-                  <Play size={12} /> {quiz.score !== null ? 'Main Lagi' : 'Mulai'}
+                  <Play size={12} /> {quiz.score !== null ? t('quiz.playAgain') : t('quiz.start')}
                 </button>
               </motion.div>
             ))
@@ -263,6 +265,7 @@ export default function QuizPage() {
 }
 
 function GenerateQuizModal({ onClose, subjects, onSuccess }) {
+  const { t } = useTranslation();
   const [subjectId, setSubjectId] = useState('');
   const [mcqCount, setMcqCount] = useState(5);
   const [essayCount, setEssayCount] = useState(0);
@@ -273,16 +276,16 @@ function GenerateQuizModal({ onClose, subjects, onSuccess }) {
   const quizOp = usePendingOperation('quiz');
 
   const DIFFICULTIES = [
-    { value: 'mudah',  label: 'Mudah',  desc: 'Faktual & ingatan dasar' },
-    { value: 'sedang', label: 'Sedang', desc: 'Pemahaman & penerapan' },
-    { value: 'sulit',  label: 'Sulit',  desc: 'HOTS & analisis kritis' },
+    { value: 'mudah',  label: 'quiz.difficultyEasy',   desc: 'quiz.difficultyEasyDesc' },
+    { value: 'sedang', label: 'quiz.difficultyMedium', desc: 'quiz.difficultyMediumDesc' },
+    { value: 'sulit',  label: 'quiz.difficultyHard',   desc: 'quiz.difficultyHardDesc' },
   ];
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!subjectId) return setError('Pilih mata kuliah terlebih dahulu');
-    if (selectedMaterialIds.length === 0) return setError('Harap pilih materi terlebih dahulu.');
-    if (!mcqCount && !essayCount) return setError('Minimal 1 soal.');
+    if (!subjectId) return setError(t('quiz.errorSubjectRequired'));
+    if (selectedMaterialIds.length === 0) return setError(t('quiz.errorMaterialRequired'));
+    if (!mcqCount && !essayCount) return setError(t('quiz.errorMinQuestions'));
     setError('');
     setIsGenerating(true);
     quizOp.start();
@@ -295,10 +298,10 @@ function GenerateQuizModal({ onClose, subjects, onSuccess }) {
         material_ids: selectedMaterialIds.length > 0 ? selectedMaterialIds.join(',') : '',
       });
       if (result.detail) throw new Error(result.detail);
-      if (!result.id) throw new Error('Quiz ID tidak ditemukan di response.');
+      if (!result.id) throw new Error(t('quiz.errorMissingId'));
       onSuccess(result.id);
     } catch (err) {
-      setError(err.message || 'Gagal membuat quiz. Coba lagi.');
+      setError(err.message || t('quiz.errorGenerateFailed'));
       setIsGenerating(false);
     } finally {
       quizOp.finish();
@@ -316,7 +319,7 @@ function GenerateQuizModal({ onClose, subjects, onSuccess }) {
         <div className="flex items-center justify-between p-4 border-b border-border">
           <div className="flex items-center gap-2">
             <Zap size={18} className="text-primary" />
-            <h3 className="font-semibold text-text">Generate AI Quiz</h3>
+            <h3 className="font-semibold text-text">{t('quiz.modalTitle')}</h3>
           </div>
           <button onClick={onClose} disabled={isGenerating} className="text-text-muted hover:text-text disabled:opacity-40">
             <X size={18} />
@@ -329,7 +332,7 @@ function GenerateQuizModal({ onClose, subjects, onSuccess }) {
             </div>
           )}
           <div>
-            <label className="block text-xs font-medium text-text-secondary mb-1">Sumber (Mata Kuliah) *</label>
+            <label className="block text-xs font-medium text-text-secondary mb-1">{t('quiz.sourceLabel')}</label>
             <select
               required
               value={subjectId}
@@ -337,7 +340,7 @@ function GenerateQuizModal({ onClose, subjects, onSuccess }) {
               disabled={isGenerating}
               className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary transition-colors disabled:opacity-60"
             >
-              <option value="">-- Pilih --</option>
+              <option value="">{t('quiz.selectPlaceholder')}</option>
               {subjects.map(s => (
                 <option key={s.id} value={s.id}>{s.name}</option>
               ))}
@@ -350,7 +353,7 @@ function GenerateQuizModal({ onClose, subjects, onSuccess }) {
           />
           {/* Tingkat Kesulitan */}
           <div>
-            <label className="block text-xs font-medium text-text-secondary mb-2">Tingkat Kesulitan</label>
+            <label className="block text-xs font-medium text-text-secondary mb-2">{t('quiz.difficultyLabel')}</label>
             <div className="flex gap-2">
               {DIFFICULTIES.map(d => (
                 <button
@@ -358,7 +361,7 @@ function GenerateQuizModal({ onClose, subjects, onSuccess }) {
                   type="button"
                   disabled={isGenerating}
                   onClick={() => setDifficulty(d.value)}
-                  title={d.desc}
+                  title={t(d.desc)}
                   className={`flex-1 py-2 px-1 rounded-lg text-xs font-semibold border transition-colors disabled:opacity-50 ${
                     difficulty === d.value
                       ? d.value === 'mudah'
@@ -369,11 +372,11 @@ function GenerateQuizModal({ onClose, subjects, onSuccess }) {
                       : 'bg-background text-text-secondary border-border hover:border-primary/40 hover:text-text'
                   }`}
                 >
-                  {d.label}
+                  {t(d.label)}
                 </button>
               ))}
             </div>
-            <p className="text-[10px] text-text-muted mt-1">{DIFFICULTIES.find(d => d.value === difficulty)?.desc}</p>
+            <p className="text-[10px] text-text-muted mt-1">{t(DIFFICULTIES.find(d => d.value === difficulty)?.desc)}</p>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>

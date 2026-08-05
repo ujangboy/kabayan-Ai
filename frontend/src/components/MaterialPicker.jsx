@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { materiAPI } from '@/services/api';
 
 export default function MaterialPicker({ subjectId, selectedMaterialIds, onSelectionChange }) {
+  const { t } = useTranslation();
   const [materials, setMaterials] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -18,7 +20,7 @@ export default function MaterialPicker({ subjectId, selectedMaterialIds, onSelec
         const all = res.data?.materials || [];
         setMaterials(all);
       })
-      .catch((err) => setError(err.message || 'Gagal memuat materi'))
+      .catch((err) => setError(err.message || t('materialPicker.errorLoad')))
       .finally(() => setLoading(false));
   }, [subjectId]);
 
@@ -34,7 +36,7 @@ export default function MaterialPicker({ subjectId, selectedMaterialIds, onSelec
   if (loading) {
     return (
       <div className="mt-3 p-3 rounded-xl bg-background border border-border">
-        <p className="text-xs text-text-muted">Memuat daftar materi...</p>
+        <p className="text-xs text-text-muted">{t('materialPicker.loading')}</p>
       </div>
     );
   }
@@ -50,7 +52,7 @@ export default function MaterialPicker({ subjectId, selectedMaterialIds, onSelec
   if (materials.length === 0) {
     return (
       <div className="mt-3 p-3 rounded-xl bg-background border border-border">
-        <p className="text-xs text-text-muted">Tidak ada materi untuk mata kuliah ini.</p>
+        <p className="text-xs text-text-muted">{t('materialPicker.empty')}</p>
       </div>
     );
   }
@@ -59,7 +61,7 @@ export default function MaterialPicker({ subjectId, selectedMaterialIds, onSelec
     <div className="mt-3">
       <div className="flex items-center justify-between mb-1.5">
         <label className="text-xs font-medium text-text-secondary">
-          Sumber Materi *
+          {t('materialPicker.sourceLabel')}
         </label>
         <button
           type="button"
@@ -72,10 +74,10 @@ export default function MaterialPicker({ subjectId, selectedMaterialIds, onSelec
           }}
           className="text-[10px] font-medium text-primary hover:text-primary-focus transition-colors"
         >
-          {selectedMaterialIds.length > 0 ? "Batalkan Pilihan" : "Pilih Semua Materi"}
+          {selectedMaterialIds.length > 0 ? t('materialPicker.cancelSelection') : t('materialPicker.selectAll')}
         </button>
       </div>
-      <p className="text-[10px] text-text-muted mb-2">Pilih minimal satu materi untuk generate.</p>
+      <p className="text-[10px] text-text-muted mb-2">{t('materialPicker.hint')}</p>
       <div className="max-h-40 overflow-y-auto space-y-1.5 rounded-xl bg-background border border-border p-2">
         {materials.map((m) => {
           const isReady = m.status === 'Ready';
@@ -87,7 +89,7 @@ export default function MaterialPicker({ subjectId, selectedMaterialIds, onSelec
                 !isReady ? 'opacity-60 cursor-not-allowed bg-card/50' : 
                 checked ? 'bg-primary/10 cursor-pointer' : 'hover:bg-card cursor-pointer'
               }`}
-              title={!isReady ? `Materi ini masih ${m.status}` : ''}
+              title={!isReady ? t('materialPicker.notReadyTitle', { status: m.status }) : ''}
             >
               <input
                 type="checkbox"
@@ -113,7 +115,7 @@ export default function MaterialPicker({ subjectId, selectedMaterialIds, onSelec
       </div>
       {selectedMaterialIds.length > 0 && (
         <p className="text-[10px] text-text-muted mt-1">
-          {selectedMaterialIds.length} materi dipilih
+          {t('materialPicker.selectedCount', { count: selectedMaterialIds.length })}
         </p>
       )}
     </div>

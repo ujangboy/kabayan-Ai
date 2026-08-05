@@ -2,17 +2,19 @@ import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, FileText, MessageSquare, BookMarked, CreditCard, HelpCircle, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAppStore } from '@/store';
 
 const QUICK_LINKS = [
-  { icon: MessageSquare, label: 'Chat AI', to: '/chat', desc: 'Mulai percakapan baru' },
-  { icon: FileText, label: 'Materi', to: '/materi', desc: 'Kelola materi kuliah' },
-  { icon: BookMarked, label: 'Notebook', to: '/notebook', desc: 'Catatan dan ringkasan' },
-  { icon: CreditCard, label: 'Flashcard', to: '/flashcard', desc: 'Kartu hafalan' },
-  { icon: HelpCircle, label: 'Quiz', to: '/quiz', desc: 'Latihan soal' },
+  { icon: MessageSquare, labelKey: 'chatAI', to: '/chat', descKey: 'chatDesc' },
+  { icon: FileText, labelKey: 'materi', to: '/materi', descKey: 'materiDesc' },
+  { icon: BookMarked, labelKey: 'notebook', to: '/notebook', descKey: 'notebookDesc' },
+  { icon: CreditCard, labelKey: 'flashcard', to: '/flashcard', descKey: 'flashcardDesc' },
+  { icon: HelpCircle, labelKey: 'quiz', to: '/quiz', descKey: 'quizDesc' },
 ];
 
 export default function CommandSearch() {
+  const { t } = useTranslation();
   const { setSearchOpen } = useAppStore();
   const [query, setQuery] = useState('');
   const navigate = useNavigate();
@@ -27,7 +29,7 @@ export default function CommandSearch() {
   }, [setSearchOpen]);
 
   const filtered = QUICK_LINKS.filter(
-    (l) => !query || l.label.toLowerCase().includes(query.toLowerCase())
+    (l) => !query || t(`commandSearch.${l.labelKey}`).toLowerCase().includes(query.toLowerCase())
   );
 
   const go = (to) => { navigate(to); setSearchOpen(false); };
@@ -56,7 +58,7 @@ export default function CommandSearch() {
               autoFocus
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Cari halaman, materi, catatan..."
+              placeholder={t('commandSearch.searchPlaceholder')}
               className="flex-1 bg-transparent text-text text-sm placeholder:text-text-muted outline-none"
             />
             <button onClick={() => setSearchOpen(false)} className="text-text-muted hover:text-text transition-colors">
@@ -67,11 +69,11 @@ export default function CommandSearch() {
           {/* Results */}
           <div className="py-2 max-h-72 overflow-y-auto">
             {filtered.length === 0 ? (
-              <p className="text-center text-text-muted text-sm py-8">Tidak ada hasil ditemukan</p>
+              <p className="text-center text-text-muted text-sm py-8">{t('commandSearch.noResults')}</p>
             ) : (
               <>
-                <p className="px-4 py-1 text-xs text-text-muted font-medium uppercase tracking-wider">Navigasi Cepat</p>
-                {filtered.map(({ icon: Icon, label, to, desc }) => (
+                <p className="px-4 py-1 text-xs text-text-muted font-medium uppercase tracking-wider">{t('commandSearch.quickNav')}</p>
+                {filtered.map(({ icon: Icon, labelKey, to, descKey }) => (
                   <button
                     key={to}
                     onClick={() => go(to)}
@@ -81,8 +83,8 @@ export default function CommandSearch() {
                       <Icon size={15} className="text-primary" />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-text">{label}</p>
-                      <p className="text-xs text-text-muted">{desc}</p>
+                      <p className="text-sm font-medium text-text">{t(`commandSearch.${labelKey}`)}</p>
+                      <p className="text-xs text-text-muted">{t(`commandSearch.${descKey}`)}</p>
                     </div>
                   </button>
                 ))}
@@ -92,9 +94,9 @@ export default function CommandSearch() {
 
           {/* Footer */}
           <div className="px-4 py-2.5 border-t border-border flex items-center gap-3 text-[11px] text-text-muted">
-            <span><kbd className="bg-background border border-border px-1.5 py-0.5 rounded text-[10px]">↑↓</kbd> navigasi</span>
-            <span><kbd className="bg-background border border-border px-1.5 py-0.5 rounded text-[10px]">↵</kbd> buka</span>
-            <span><kbd className="bg-background border border-border px-1.5 py-0.5 rounded text-[10px]">Esc</kbd> tutup</span>
+            <span><kbd className="bg-background border border-border px-1.5 py-0.5 rounded text-[10px]">↑↓</kbd> {t('commandSearch.navHint')}</span>
+            <span><kbd className="bg-background border border-border px-1.5 py-0.5 rounded text-[10px]">↵</kbd> {t('commandSearch.openHint')}</span>
+            <span><kbd className="bg-background border border-border px-1.5 py-0.5 rounded text-[10px]">Esc</kbd> {t('commandSearch.closeHint')}</span>
           </div>
         </motion.div>
       </motion.div>

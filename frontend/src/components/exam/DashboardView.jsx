@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Brain, BookOpen, Target, Map, AlertTriangle, ChevronDown,
@@ -10,19 +12,20 @@ import { cn } from '@/utils';
 import { Chip, SectionHeader, StarRating } from './shared';
 
 export default function DashboardView({ subjectId, subjects, analysis, onAnalysisDone, onStartConfig }) {
+  const { t } = useTranslation();
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState('');
   const [expandedNode, setExpandedNode] = useState(null);
 
   const runAnalysis = async () => {
-    if (!subjectId) return setError('Pilih mata kuliah terlebih dahulu.');
+    if (!subjectId) return setError(t('exam.dashboard.selectSubjectFirst'));
     setError(''); setIsAnalyzing(true);
     try {
       const r = await examAPI.analyze(subjectId);
       if (r.data?.detail) throw new Error(r.data.detail);
       onAnalysisDone(r.data);
     } catch (e) {
-      setError(e.response?.data?.detail || e.message || 'Analisis gagal.');
+      setError(e.response?.data?.detail || e.message || t('exam.dashboard.analysisFailed'));
     } finally { setIsAnalyzing(false); }
   };
 
@@ -30,9 +33,9 @@ export default function DashboardView({ subjectId, subjects, analysis, onAnalysi
     return (
       <div className="card-base p-16 text-center">
         <Brain size={56} className="mx-auto mb-4 text-primary opacity-40" />
-        <h3 className="text-lg font-semibold text-text mb-2">Exam Analyzer</h3>
+        <h3 className="text-lg font-semibold text-text mb-2">{t('exam.dashboard.title')}</h3>
         <p className="text-text-muted text-sm max-w-md mx-auto">
-          Pilih mata kuliah di atas untuk mulai menganalisis materi dan membuat simulasi ujian.
+          {t('exam.dashboard.selectSubjectPrompt')}
         </p>
       </div>
     );
@@ -43,13 +46,13 @@ export default function DashboardView({ subjectId, subjects, analysis, onAnalysi
     return (
       <div className="card-base p-16 text-center">
         <Brain size={56} className="mx-auto mb-4 text-primary opacity-60" />
-        <h3 className="text-lg font-semibold text-text mb-2">Analisis Materi — {subjectName}</h3>
+        <h3 className="text-lg font-semibold text-text mb-2">{t('exam.dashboard.analysisTitle', { subjectname: subjectName })}</h3>
         <p className="text-text-muted text-sm max-w-md mx-auto mb-6">
-          AI akan membaca seluruh sumber belajar (PDF, catatan, flashcard, quiz) dan menyusun peta pengetahuan serta prioritas topik.
+          {t('exam.dashboard.analysisDesc')}
         </p>
         {error && <p className="text-danger text-sm mb-4">{error}</p>}
         <button onClick={runAnalysis} disabled={isAnalyzing} className="btn-primary mx-auto">
-          {isAnalyzing ? <><Loader2 size={15} className="animate-spin" /> Menganalisis...</> : <><Brain size={15} /> Mulai Analisis</>}
+          {isAnalyzing ? <><Loader2 size={15} className="animate-spin" /> {t('exam.dashboard.analyzing')}</> : <><Brain size={15} /> {t('exam.dashboard.startAnalysis')}</>}
         </button>
       </div>
     );
@@ -61,11 +64,11 @@ export default function DashboardView({ subjectId, subjects, analysis, onAnalysi
     <div className="space-y-6">
       {/* Overview Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {[
-          { label:'Materi',     value: stats.material_count ?? 0,  icon: FileText,   color:'text-accent-blue' },
-          { label:'Topik',      value: overview.total_topics ?? 0,  icon: Target,     color:'text-primary' },
-          { label:'Catatan',    value: stats.note_count ?? 0,       icon: BookMarked, color:'text-success' },
-          { label:'Est. Jam',   value: `${overview.estimated_study_hours ?? 0}j`, icon: Clock, color:'text-warning' },
+        {{[
+          { label: t('exam.dashboard.statMateri'), value: stats.material_count ?? 0,  icon: FileText,   color:'text-accent-blue' },
+          { label: t('exam.dashboard.statTopic'), value: overview.total_topics ?? 0,  icon: Target,     color:'text-primary' },
+          { label: t('exam.dashboard.statNotes'), value: stats.note_count ?? 0,       icon: BookMarked, color:'text-success' },
+          { label: t('exam.dashboard.statEstHours'), value: `${overview.estimated_study_hours ?? 0}j`, icon: Clock, color:'text-warning' },
         ].map(({ label, value, icon: Icon, color }) => (
           <div key={label} className="card-base p-4 flex items-center gap-3">
             <div className={`w-9 h-9 rounded-xl bg-card border border-border flex items-center justify-center shrink-0 ${color}`}>
@@ -86,7 +89,7 @@ export default function DashboardView({ subjectId, subjects, analysis, onAnalysi
           <div>
             <p className="text-sm text-text">{overview.summary}</p>
             <div className="mt-2">
-              <Chip label={`Kompleksitas: ${overview.complexity_level || '-'}`}
+              <Chip label={t('exam.dashboard.complexityLabel', { level: overview.complexity_level || '-' })}
                 color={overview.complexity_level === 'Tinggi' ? 'danger' : overview.complexity_level === 'Menengah' ? 'warning' : 'success'} />
             </div>
           </div>
@@ -95,7 +98,7 @@ export default function DashboardView({ subjectId, subjects, analysis, onAnalysi
 
       {/* Topic Priority */}
       <div className="card-base p-5">
-        <SectionHeader icon={Target} title="Topic Priority" subtitle="Topik paling penting berdasarkan analisis AI" />
+        <SectionHeader icon={Target} title={t('exam.dashboard.topicPriority')} subtitle={t('exam.dashboard.topicPrioritySubtitle')} />
         <div className="space-y-3">
           {topic_priority.slice(0, 8).map((t, i) => (
             <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-background hover:bg-card/60 transition-colors">
@@ -120,7 +123,7 @@ export default function DashboardView({ subjectId, subjects, analysis, onAnalysi
       {/* Knowledge Map */}
       {knowledge_map.length > 0 && (
         <div className="card-base p-5">
-          <SectionHeader icon={Map} title="Knowledge Relationship" subtitle="Klik node untuk melihat penjelasan hubungan konsep" />
+          <SectionHeader icon={Map} title={t('exam.dashboard.knowledgeMap')} subtitle={t('exam.dashboard.knowledgeMapSubtitle')} />
           <div className="space-y-2">
             {knowledge_map.map((node, i) => (
               <div key={i}>
@@ -165,7 +168,7 @@ export default function DashboardView({ subjectId, subjects, analysis, onAnalysi
       {/* Weakness Analysis */}
       {weakness_indicators.length > 0 && (
         <div className="card-base p-5">
-          <SectionHeader icon={AlertTriangle} title="Weakness Analysis" subtitle="Topik yang perlu perhatian lebih" />
+          <SectionHeader icon={AlertTriangle} title={t('exam.dashboard.weaknessAnalysis')} subtitle={t('exam.dashboard.weaknessSubtitle')} />
           <div className="space-y-3">
             {weakness_indicators.map((w, i) => (
               <div key={i} className="p-3 rounded-xl bg-danger/5 border border-danger/15">
@@ -189,10 +192,10 @@ export default function DashboardView({ subjectId, subjects, analysis, onAnalysi
       <div className="flex gap-3">
         <button onClick={runAnalysis} disabled={isAnalyzing} className="btn-ghost text-xs border border-border">
           {isAnalyzing ? <Loader2 size={13} className="animate-spin" /> : <RefreshCw size={13} />}
-          Refresh Analisis
+          {t('exam.dashboard.refreshAnalysis')}
         </button>
         <button onClick={onStartConfig} className="btn-primary text-xs">
-          <Zap size={13} /> Generate Simulasi
+          <Zap size={13} /> {t('exam.dashboard.generateSimulation')}
         </button>
       </div>
     </div>

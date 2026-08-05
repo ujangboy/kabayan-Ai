@@ -21,6 +21,7 @@ import TableRow from '@tiptap/extension-table-row';
 import TableCell from '@tiptap/extension-table-cell';
 import TableHeader from '@tiptap/extension-table-header';
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { createPortal } from 'react-dom';
 import { marked } from 'marked';
 import {
@@ -139,6 +140,7 @@ function Sep() {
 
 // ─── Font size dropdown (top toolbar + floating bubble) ───────────────────
 function FontSizeDropdown({ editor, floating = false }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState('bottom');
   const [liveSize, setLiveSize] = useState(14);
@@ -214,7 +216,7 @@ function FontSizeDropdown({ editor, floating = false }) {
         type="button"
         onMouseDown={(e) => e.preventDefault()}
         onClick={() => setOpen(v => !v)}
-        title="Ukuran Font"
+        title={t('noteEditor.fontSize')}
         className={cn(
           'rounded-lg transition-all select-none flex items-center justify-center gap-0.5 font-medium',
           floating ? 'w-7 h-6 text-[10px]' : 'w-9 h-7 text-[11px]',
@@ -268,6 +270,7 @@ function FontSizeDropdown({ editor, floating = false }) {
 
 // ─── Top toolbar (edit mode) ──────────────────────────────────────────────
 function Toolbar({ editor, onPreview, onInsertMath }) {
+  const { t } = useTranslation();
   if (!editor) return null;
   const ia = (n, a) => editor.isActive(n, a);
 
@@ -276,63 +279,63 @@ function Toolbar({ editor, onPreview, onInsertMath }) {
       <button
         type="button"
         onClick={onPreview}
-        title="Mode Baca"
+        title={t('noteEditor.readMode')}
         className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-primary/15 text-primary border border-primary/30 transition-colors shrink-0 mr-1 hover:bg-primary/25"
       >
-        <Eye size={12} /> Pratinjau
+        <Eye size={12} /> {t('noteEditor.preview')}
       </button>
 
       <Sep />
       <FontSizeDropdown editor={editor} />
       <Sep />
-      <ToolBtn onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} title="Undo">
+      <ToolBtn onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} title={t('noteEditor.undo')}>
         <Undo2 size={14} />
       </ToolBtn>
-      <ToolBtn onClick={() => editor.chain().focus().redo().run()} disabled={!editor.can().redo()} title="Redo">
+      <ToolBtn onClick={() => editor.chain().focus().redo().run()} disabled={!editor.can().redo()} title={t('noteEditor.redo')}>
         <Redo2 size={14} />
       </ToolBtn>
 
       <Sep />
-      <ToolBtn onClick={() => editor.chain().focus().toggleBold().run()} active={ia('bold')} title="Bold">
+      <ToolBtn onClick={() => editor.chain().focus().toggleBold().run()} active={ia('bold')} title={t('noteEditor.bold')}>
         <Bold size={14} />
       </ToolBtn>
-      <ToolBtn onClick={() => editor.chain().focus().toggleItalic().run()} active={ia('italic')} title="Italic">
+      <ToolBtn onClick={() => editor.chain().focus().toggleItalic().run()} active={ia('italic')} title={t('noteEditor.italic')}>
         <Italic size={14} />
       </ToolBtn>
-      <ToolBtn onClick={() => editor.chain().focus().toggleUnderline().run()} active={ia('underline')} title="Underline">
+      <ToolBtn onClick={() => editor.chain().focus().toggleUnderline().run()} active={ia('underline')} title={t('noteEditor.underline')}>
         <UnderlineIcon size={14} />
       </ToolBtn>
-      <ToolBtn onClick={() => editor.chain().focus().toggleStrike().run()} active={ia('strike')} title="Coret">
+      <ToolBtn onClick={() => editor.chain().focus().toggleStrike().run()} active={ia('strike')} title={t('noteEditor.strike')}>
         <Strikethrough size={14} />
       </ToolBtn>
 
       <Sep />
-      <ToolBtn onClick={() => editor.chain().focus().setTextAlign('left').run()} active={ia({ textAlign: 'left' })} title="Rata Kiri">
+      <ToolBtn onClick={() => editor.chain().focus().setTextAlign('left').run()} active={ia({ textAlign: 'left' })} title={t('noteEditor.alignLeft')}>
         <AlignLeft size={14} />
       </ToolBtn>
-      <ToolBtn onClick={() => editor.chain().focus().setTextAlign('center').run()} active={ia({ textAlign: 'center' })} title="Tengah">
+      <ToolBtn onClick={() => editor.chain().focus().setTextAlign('center').run()} active={ia({ textAlign: 'center' })} title={t('noteEditor.alignCenter')}>
         <AlignCenter size={14} />
       </ToolBtn>
-      <ToolBtn onClick={() => editor.chain().focus().setTextAlign('right').run()} active={ia({ textAlign: 'right' })} title="Rata Kanan">
+      <ToolBtn onClick={() => editor.chain().focus().setTextAlign('right').run()} active={ia({ textAlign: 'right' })} title={t('noteEditor.alignRight')}>
         <AlignRight size={14} />
       </ToolBtn>
-      <ToolBtn onClick={() => editor.chain().focus().setTextAlign('justify').run()} active={ia({ textAlign: 'justify' })} title="Rata Kiri-Kanan">
+      <ToolBtn onClick={() => editor.chain().focus().setTextAlign('justify').run()} active={ia({ textAlign: 'justify' })} title={t('noteEditor.alignJustify')}>
         <AlignJustify size={14} />
       </ToolBtn>
 
       <Sep />
-      <ToolBtn onClick={() => editor.chain().focus().toggleBulletList().run()} active={ia('bulletList')} title="Daftar Titik">
+      <ToolBtn onClick={() => editor.chain().focus().toggleBulletList().run()} active={ia('bulletList')} title={t('noteEditor.bulletList')}>
         <List size={14} />
       </ToolBtn>
-      <ToolBtn onClick={() => editor.chain().focus().toggleOrderedList().run()} active={ia('orderedList')} title="Daftar Bernomor">
+      <ToolBtn onClick={() => editor.chain().focus().toggleOrderedList().run()} active={ia('orderedList')} title={t('noteEditor.orderedList')}>
         <ListOrdered size={14} />
       </ToolBtn>
-      <ToolBtn onClick={() => editor.chain().focus().toggleTaskList().run()} active={ia('taskList')} title="To-Do List">
+      <ToolBtn onClick={() => editor.chain().focus().toggleTaskList().run()} active={ia('taskList')} title={t('noteEditor.todoList')}>
         <ListChecks size={14} />
       </ToolBtn>
 
       <Sep />
-      <ToolBtn onClick={onInsertMath} title="Sisipkan Rumus LaTeX">
+      <ToolBtn onClick={onInsertMath} title={t('noteEditor.insertMath')}>
         <Pi size={14} />
       </ToolBtn>
     </div>
@@ -341,19 +344,20 @@ function Toolbar({ editor, onPreview, onInsertMath }) {
 
 // ─── Color palette ────────────────────────────────────────────────────────
 const COLOR_PALETTE = [
-  { color: '#FFFFFF', label: 'Putih (Default)' },
-  { color: '#F87171', label: 'Merah' },
-  { color: '#FB923C', label: 'Oranye' },
-  { color: '#FBBF24', label: 'Kuning' },
-  { color: '#34D399', label: 'Hijau' },
-  { color: '#818CF8', label: 'Ungu' },
-  { color: '#38BDF8', label: 'Biru' },
-  { color: '#F472B6', label: 'Pink' },
-  { color: '#A3A3A3', label: 'Abu' },
+  { color: '#FFFFFF', labelKey: 'colorWhite' },
+  { color: '#F87171', labelKey: 'colorRed' },
+  { color: '#FB923C', labelKey: 'colorOrange' },
+  { color: '#FBBF24', labelKey: 'colorYellow' },
+  { color: '#34D399', labelKey: 'colorGreen' },
+  { color: '#818CF8', labelKey: 'colorPurple' },
+  { color: '#38BDF8', labelKey: 'colorBlue' },
+  { color: '#F472B6', labelKey: 'colorPink' },
+  { color: '#A3A3A3', labelKey: 'colorGray' },
 ];
 
 // ─── Custom floating toolbar (selection-based, pure React) ─────────────────
 function FloatingToolbar({ editor, editorMode }) {
+  const { t } = useTranslation();
   const [pos, setPos] = useState(null);
   const [showColors, setShowColors] = useState(false);
   const toolbarRef = useRef(null);
@@ -446,42 +450,42 @@ function FloatingToolbar({ editor, editorMode }) {
         <div className="w-px h-5 bg-white/10 mx-1 shrink-0" />
 
         {/* ── Text formatting ── */}
-        <ToolBtn className="!w-6 !h-6" onClick={() => editor.chain().focus().toggleBold().run()} active={ia('bold')} title="Bold">
+        <ToolBtn className="!w-6 !h-6" onClick={() => editor.chain().focus().toggleBold().run()} active={ia('bold')} title={t('noteEditor.bold')}>
           <Bold size={12} strokeWidth={2.5} />
         </ToolBtn>
-        <ToolBtn className="!w-6 !h-6" onClick={() => editor.chain().focus().toggleItalic().run()} active={ia('italic')} title="Italic">
+        <ToolBtn className="!w-6 !h-6" onClick={() => editor.chain().focus().toggleItalic().run()} active={ia('italic')} title={t('noteEditor.italic')}>
           <Italic size={12} />
         </ToolBtn>
-        <ToolBtn className="!w-6 !h-6" onClick={() => editor.chain().focus().toggleUnderline().run()} active={ia('underline')} title="Underline">
+        <ToolBtn className="!w-6 !h-6" onClick={() => editor.chain().focus().toggleUnderline().run()} active={ia('underline')} title={t('noteEditor.underline')}>
           <UnderlineIcon size={12} />
         </ToolBtn>
-        <ToolBtn className="!w-6 !h-6" onClick={() => editor.chain().focus().toggleStrike().run()} active={ia('strike')} title="Coret">
+        <ToolBtn className="!w-6 !h-6" onClick={() => editor.chain().focus().toggleStrike().run()} active={ia('strike')} title={t('noteEditor.strike')}>
           <Strikethrough size={12} />
         </ToolBtn>
 
         <div className="w-px h-5 bg-white/10 mx-1 shrink-0" />
 
         {/* ── Alignment ── */}
-        <ToolBtn className="!w-6 !h-6" onClick={() => editor.chain().focus().setTextAlign('left').run()} active={ia({ textAlign: 'left' })} title="Kiri">
+        <ToolBtn className="!w-6 !h-6" onClick={() => editor.chain().focus().setTextAlign('left').run()} active={ia({ textAlign: 'left' })} title={t('noteEditor.left')}>
           <AlignLeft size={12} />
         </ToolBtn>
-        <ToolBtn className="!w-6 !h-6" onClick={() => editor.chain().focus().setTextAlign('center').run()} active={ia({ textAlign: 'center' })} title="Tengah">
+        <ToolBtn className="!w-6 !h-6" onClick={() => editor.chain().focus().setTextAlign('center').run()} active={ia({ textAlign: 'center' })} title={t('noteEditor.alignCenter')}>
           <AlignCenter size={12} />
         </ToolBtn>
-        <ToolBtn className="!w-6 !h-6" onClick={() => editor.chain().focus().setTextAlign('right').run()} active={ia({ textAlign: 'right' })} title="Kanan">
+        <ToolBtn className="!w-6 !h-6" onClick={() => editor.chain().focus().setTextAlign('right').run()} active={ia({ textAlign: 'right' })} title={t('noteEditor.right')}>
           <AlignRight size={12} />
         </ToolBtn>
 
         <div className="w-px h-5 bg-white/10 mx-1 shrink-0" />
 
         {/* ── Lists ── */}
-        <ToolBtn className="!w-6 !h-6" onClick={() => editor.chain().focus().toggleBulletList().run()} active={ia('bulletList')} title="Daftar Titik">
+        <ToolBtn className="!w-6 !h-6" onClick={() => editor.chain().focus().toggleBulletList().run()} active={ia('bulletList')} title={t('noteEditor.bulletList')}>
           <List size={12} />
         </ToolBtn>
-        <ToolBtn className="!w-6 !h-6" onClick={() => editor.chain().focus().toggleOrderedList().run()} active={ia('orderedList')} title="Daftar Nomor">
+        <ToolBtn className="!w-6 !h-6" onClick={() => editor.chain().focus().toggleOrderedList().run()} active={ia('orderedList')} title={t('noteEditor.numberedList')}>
           <ListOrdered size={12} />
         </ToolBtn>
-        <ToolBtn className="!w-6 !h-6" onClick={() => editor.chain().focus().toggleTaskList().run()} active={ia('taskList')} title="To-Do List">
+        <ToolBtn className="!w-6 !h-6" onClick={() => editor.chain().focus().toggleTaskList().run()} active={ia('taskList')} title={t('noteEditor.todoList')}>
           <ListChecks size={12} />
         </ToolBtn>
 
@@ -493,7 +497,7 @@ function FloatingToolbar({ editor, editorMode }) {
             className="!w-6 !h-6"
             onClick={() => setShowColors(v => !v)}
             active={showColors}
-            title="Warna Teks"
+            title={t('noteEditor.textColor')}
           >
             <div className="w-3 h-3 rounded-full bg-gradient-to-br from-red-400 via-yellow-400 to-blue-400 ring-1 ring-white/20" />
           </ToolBtn>
@@ -502,12 +506,12 @@ function FloatingToolbar({ editor, editorMode }) {
               className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 flex items-center gap-1 px-2 py-1.5 bg-[#1a1b2e]/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.5)]"
               onMouseDown={(e) => e.preventDefault()}
             >
-              {COLOR_PALETTE.map(({ color, label }) => (
+              {COLOR_PALETTE.map(({ color, labelKey }) => (
                 <button
                   key={color}
                   type="button"
                   onClick={() => applyColor(color)}
-                  title={label}
+                  title={t('noteEditor.' + labelKey)}
                   className="w-5 h-5 rounded-full border-2 border-transparent hover:border-white/60 hover:scale-125 transition-all duration-150 shadow-md"
                   style={{ backgroundColor: color }}
                 />
@@ -516,7 +520,7 @@ function FloatingToolbar({ editor, editorMode }) {
               <button
                 type="button"
                 onClick={clearColor}
-                title="Hapus warna"
+                title={t('noteEditor.clearColor')}
                 className="w-5 h-5 rounded-full border-2 border-dashed border-white/20 flex items-center justify-center text-[8px] text-white/40 hover:border-white/50 hover:text-white/70 transition-all"
               >
                 ✕
@@ -537,6 +541,7 @@ function FloatingToolbar({ editor, editorMode }) {
 
 // ─── Main component ───────────────────────────────────────────────────────
 export default function NoteEditor({ content, onSave, noteId, defaultMode = 'view' }) {
+  const { t } = useTranslation();
   const [mode, setMode] = useState(defaultMode);
   const saveTimerRef = useRef(null);
   const lastSavedRef = useRef(null);
@@ -607,11 +612,11 @@ export default function NoteEditor({ content, onSave, noteId, defaultMode = 'vie
 
   const handleInsertMath = useCallback(() => {
     if (!editor) return;
-    const latex = prompt('Masukkan rumus LaTeX:', 'E = mc^2');
+    const latex = prompt(t('noteEditor.mathPrompt'), 'E = mc^2');
     if (latex !== null && latex.trim()) {
       editor.chain().focus().insertMathInline(latex.trim()).run();
     }
-  }, [editor]);
+  }, [editor, t]);
 
   return (
     <div className="flex flex-col h-full">
@@ -622,7 +627,7 @@ export default function NoteEditor({ content, onSave, noteId, defaultMode = 'vie
           <div
             className="max-w-3xl mx-auto px-10 py-8 cursor-text min-h-full"
             onDoubleClick={handleToggle}
-            title="Klik dua kali untuk mengedit"
+            title={t('noteEditor.doubleClickToEdit')}
           >
             <MathMarkdown>{content || ''}</MathMarkdown>
           </div>
@@ -654,7 +659,7 @@ export default function NoteEditor({ content, onSave, noteId, defaultMode = 'vie
           'bg-primary text-white hover:bg-primary/90',
           'transition-all hover:scale-105'
         )}
-        title={mode === 'view' ? 'Edit catatan' : 'Pratinjau'}
+        title={mode === 'view' ? t('noteEditor.editNote') : t('noteEditor.preview')}
       >
         {mode === 'view' ? <Edit3 size={18} /> : <Eye size={18} />}
       </button>

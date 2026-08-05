@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -9,21 +10,22 @@ import {
 import { subjectAPI } from '@/services/api';
 import { formatDate, fileIcon } from '@/utils';
 
-const TOPIC_STATUS_META = {
-  dikuasai:      { label: 'Dikuasai',     cls: 'badge-success' },
-  berjalan:      { label: 'Sedang Berjalan', cls: 'badge-warning' },
-  perlu_latihan: { label: 'Perlu Latihan',   cls: 'badge-danger' },
-};
+const TOPIC_STATUS_META = (t) => ({
+  dikuasai:      { label: t('subjectDashboard.topicMastered'),     cls: 'badge-success' },
+  berjalan:      { label: t('subjectDashboard.topicInProgress'),   cls: 'badge-warning' },
+  perlu_latihan: { label: t('subjectDashboard.topicNeedsPractice'), cls: 'badge-danger' },
+});
 
 function ScoreChart({ history }) {
+  const { t } = useTranslation();
   const data = (history || []).filter(d => d && d.score != null).slice(-10);
 
   if (data.length < 2) {
     return (
       <div className="text-center py-8 text-text-muted text-sm">
         {data.length === 1
-          ? 'Satu skor tercatat — mainkan quiz atau ujian lagi untuk melihat grafik.'
-          : 'Belum ada skor. Selesaikan quiz atau ujian simulasi untuk melihat perkembangan.'}
+          ? t('subjectDashboard.chartOneScore')
+          : t('subjectDashboard.chartNoScores')}
       </div>
     );
   }
@@ -75,6 +77,7 @@ function ScoreChart({ history }) {
 }
 
 function EditSubjectModal({ subject, onClose, onSuccess }) {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     name: subject?.name || '',
     semester: subject?.semester || '',
@@ -91,7 +94,7 @@ function EditSubjectModal({ subject, onClose, onSuccess }) {
       await subjectAPI.update(subject.id, formData);
       onSuccess();
     } catch (err) {
-      alert(err.message || 'Gagal menyimpan');
+      alert(err.message || t('subjectDashboard.editError'));
       setIsSubmitting(false);
     }
   };
@@ -107,13 +110,13 @@ function EditSubjectModal({ subject, onClose, onSuccess }) {
         <div className="flex items-center justify-between p-4 border-b border-border">
           <div className="flex items-center gap-2">
             <Book size={18} className="text-primary" />
-            <h3 className="font-semibold text-text">Edit Mata Kuliah</h3>
+            <h3 className="font-semibold text-text">{t('subjectDashboard.editTitle')}</h3>
           </div>
           <button onClick={onClose} className="text-text-muted hover:text-text"><X size={18} /></button>
         </div>
         <form onSubmit={handleSubmit} className="p-4 space-y-4">
           <div>
-            <label className="block text-xs font-medium text-text-secondary mb-1">Nama Mata Kuliah *</label>
+            <label className="block text-xs font-medium text-text-secondary mb-1">{t('subjectDashboard.formNameLabel')}</label>
             <input
               type="text"
               required
@@ -124,7 +127,7 @@ function EditSubjectModal({ subject, onClose, onSuccess }) {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-text-secondary mb-1">Semester</label>
+              <label className="block text-xs font-medium text-text-secondary mb-1">{t('subjectDashboard.formSemesterLabel')}</label>
               <input
                 type="text"
                 value={formData.semester}
@@ -133,7 +136,7 @@ function EditSubjectModal({ subject, onClose, onSuccess }) {
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-text-secondary mb-1">Dosen Pengampu</label>
+              <label className="block text-xs font-medium text-text-secondary mb-1">{t('subjectDashboard.formLecturerLabel')}</label>
               <input
                 type="text"
                 value={formData.lecturer}
@@ -143,7 +146,7 @@ function EditSubjectModal({ subject, onClose, onSuccess }) {
             </div>
           </div>
           <div>
-            <label className="block text-xs font-medium text-text-secondary mb-1">Catatan Tambahan</label>
+            <label className="block text-xs font-medium text-text-secondary mb-1">{t('subjectDashboard.formNotesLabel')}</label>
             <textarea
               value={formData.description}
               onChange={(e) => setFormData(p => ({ ...p, description: e.target.value }))}
@@ -152,9 +155,9 @@ function EditSubjectModal({ subject, onClose, onSuccess }) {
             />
           </div>
           <div className="flex justify-end gap-2 pt-2">
-            <button type="button" onClick={onClose} className="btn-ghost">Batal</button>
+            <button type="button" onClick={onClose} className="btn-ghost">{t('common.cancel')}</button>
             <button type="submit" disabled={isSubmitting || !formData.name} className="btn-primary">
-              {isSubmitting ? 'Menyimpan...' : 'Simpan'}
+              {isSubmitting ? t('subjectDashboard.saving') : t('common.save')}
             </button>
           </div>
         </form>
@@ -177,16 +180,17 @@ function StatCard({ icon: Icon, label, value, color, suffix }) {
   );
 }
 
-const ACTIVITY_META = {
-  quiz:      { icon: HelpCircle, label: 'Quiz',         cls: 'bg-accent-teal/10 text-accent-teal' },
-  ujian:     { icon: Trophy,     label: 'Ujian Simulasi', cls: 'bg-primary/10 text-primary' },
-  flashcard: { icon: CreditCard, label: 'Flashcard',    cls: 'bg-accent-purple/10 text-accent-purple' },
-  materi:    { icon: FileText,   label: 'Materi',       cls: 'bg-accent-blue/10 text-accent-blue' },
-};
+const ACTIVITY_META = (t) => ({
+  quiz:      { icon: HelpCircle, label: t('subjectDashboard.activityQuiz'),      cls: 'bg-accent-teal/10 text-accent-teal' },
+  ujian:     { icon: Trophy,     label: t('subjectDashboard.activityExam'),      cls: 'bg-primary/10 text-primary' },
+  flashcard: { icon: CreditCard, label: t('subjectDashboard.activityFlashcard'), cls: 'bg-accent-purple/10 text-accent-purple' },
+  materi:    { icon: FileText,   label: t('subjectDashboard.activityMaterial'),  cls: 'bg-accent-blue/10 text-accent-blue' },
+});
 
 export default function SubjectDashboardPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const subjectId = Number(id);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -215,7 +219,7 @@ export default function SubjectDashboardPage() {
   const activePlan = data?.active_study_plan;
 
   const handleDelete = () => {
-    if (confirm('Hapus mata kuliah ini? PERHATIAN: Ini juga akan MENGHAPUS SEMUA materi, catatan, flashcard, dan quiz yang terkait!')) {
+    if (confirm(t('subjectDashboard.deleteConfirm'))) {
       deleteMutation.mutate();
     }
   };
@@ -233,12 +237,14 @@ export default function SubjectDashboardPage() {
   if (error || !subject) {
     return (
       <div className="flex-1 overflow-y-auto p-6 md:p-10">
-        <div className="max-w-5xl mx-auto card-base p-8 text-center text-text-muted">Mata kuliah tidak ditemukan.</div>
+        <div className="max-w-5xl mx-auto card-base p-8 text-center text-text-muted">{t('subjectDashboard.notFound')}</div>
       </div>
     );
   }
 
   const masteryPct = subject.best_score != null ? Math.min(100, Math.round((subject.best_score / 75) * 100)) : 0;
+  const topicMeta = TOPIC_STATUS_META(t);
+  const activityMeta = ACTIVITY_META(t);
 
   return (
     <div className="flex-1 overflow-y-auto p-6 md:p-10">
@@ -247,17 +253,17 @@ export default function SubjectDashboardPage() {
         {/* ─── Header ─── */}
         <div className="flex items-center gap-3 flex-wrap">
           <button onClick={() => navigate('/subjects')} className="btn-ghost px-3 py-2 rounded-xl text-sm">
-            <ArrowLeft size={16} /> Kembali
+            <ArrowLeft size={16} /> {t('common.back')}
           </button>
           <div className="flex-1 min-w-[200px]">
             <h1 className="text-2xl font-bold text-text">{subject.name}</h1>
             <p className="text-text-secondary text-sm mt-0.5">
-              {[subject.semester, subject.lecturer && `Dosen: ${subject.lecturer}`].filter(Boolean).join(' • ') || 'Mata Kuliah'}
+              {[subject.semester, subject.lecturer && t('subjectDashboard.headerLecturer', { name: subject.lecturer })].filter(Boolean).join(' • ') || t('subjectDashboard.headerFallback')}
             </p>
           </div>
           <div className="flex gap-2">
             <button onClick={() => setIsEditOpen(true)} className="btn-ghost px-3 py-2 rounded-xl text-sm border border-border">
-              <Pencil size={14} /> Edit
+              <Pencil size={14} /> {t('subjectDashboard.editButton')}
             </button>
             <button onClick={handleDelete} className="btn-ghost px-3 py-2 rounded-xl text-sm text-danger border border-border">
               <Trash2 size={14} />
@@ -272,10 +278,10 @@ export default function SubjectDashboardPage() {
         {/* ─── Quick Actions ─── */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
-            { icon: Zap,    label: 'Ujian Simulasi', to: '/exam-analyzer', color: 'bg-primary/10 text-primary' },
-            { icon: HelpCircle, label: 'Quiz',        to: '/quiz',          color: 'bg-accent-teal/10 text-accent-teal' },
-            { icon: CreditCard, label: 'Flashcard',   to: '/flashcard',     color: 'bg-accent-purple/10 text-accent-purple' },
-            { icon: FileText, label: 'Upload Materi', to: '/materi',        color: 'bg-accent-blue/10 text-accent-blue' },
+            { icon: Zap,    label: t('subjectDashboard.quickExam'),    to: '/exam-analyzer', color: 'bg-primary/10 text-primary' },
+            { icon: HelpCircle, label: t('subjectDashboard.quickQuiz'),        to: '/quiz',          color: 'bg-accent-teal/10 text-accent-teal' },
+            { icon: CreditCard, label: t('subjectDashboard.quickFlashcard'),   to: '/flashcard',     color: 'bg-accent-purple/10 text-accent-purple' },
+            { icon: FileText, label: t('subjectDashboard.quickUpload'), to: '/materi',        color: 'bg-accent-blue/10 text-accent-blue' },
           ].map(({ icon: Icon, label, to, color }) => (
             <motion.button
               key={to}
@@ -294,10 +300,10 @@ export default function SubjectDashboardPage() {
 
         {/* ─── Stats ─── */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard icon={FileText}   label="Materi"    value={subject.total_materials}  color="text-accent-blue" />
-          <StatCard icon={HelpCircle} label="Quiz"      value={subject.total_quizzes}    color="text-accent-teal" />
-          <StatCard icon={CreditCard} label="Flashcard" value={subject.total_flashcards} color="text-accent-purple" />
-          <StatCard icon={TrendingUp} label="Rata-rata Skor" value={subject.avg_score}   color="text-success" suffix={subject.avg_score != null ? '/100' : ''} />
+          <StatCard icon={FileText}   label={t('subjectDashboard.statMaterials')}    value={subject.total_materials}  color="text-accent-blue" />
+          <StatCard icon={HelpCircle} label={t('subjectDashboard.statQuizzes')}      value={subject.total_quizzes}    color="text-accent-teal" />
+          <StatCard icon={CreditCard} label={t('subjectDashboard.statFlashcards')}   value={subject.total_flashcards} color="text-accent-purple" />
+          <StatCard icon={TrendingUp} label={t('subjectDashboard.statAvgScore')}     value={subject.avg_score}       color="text-success" suffix={subject.avg_score != null ? '/100' : ''} />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -307,7 +313,7 @@ export default function SubjectDashboardPage() {
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="card-base p-6">
               <div className="flex items-center gap-2 mb-5">
                 <Target size={16} className="text-warning" />
-                <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">Target Penguasaan</h2>
+                <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('subjectDashboard.masteryTitle')}</h2>
               </div>
               <div className="flex items-center gap-6 flex-wrap">
                 <div className="relative w-28 h-28 shrink-0">
@@ -322,23 +328,23 @@ export default function SubjectDashboardPage() {
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
                     <span className="text-2xl font-bold text-text">{subject.best_score != null ? subject.best_score : '—'}</span>
-                    <span className="text-[10px] text-text-muted">best / target 75</span>
+                    <span className="text-[10px] text-text-muted">{t('subjectDashboard.bestTargetLabel')}</span>
                   </div>
                 </div>
                 <div className="space-y-2 text-sm">
                   <p className="text-text-secondary">
                     {subject.best_score == null
-                      ? 'Belum ada skor. Kerjakan quiz atau ujian simulasi pertama kamu.'
+                      ? t('subjectDashboard.masteryNoScore')
                       : masteryPct >= 70
-                        ? 'Penguasaan materi sudah bagus — pertahankan dengan review rutin.'
+                        ? t('subjectDashboard.masteryGood')
                         : masteryPct >= 40
-                          ? 'Sedang menuju target — fokus latihan pada topik yang masih lemah.'
-                          : 'Masih jauh dari target — mulai dengan latihan soal dari topik paling lemah.'}
+                          ? t('subjectDashboard.masteryOnTrack')
+                          : t('subjectDashboard.masteryFar')}
                   </p>
                   <div className="flex items-center gap-2">
                     <CalendarCheck size={14} className="text-text-muted" />
                     <span className="text-xs text-text-muted">
-                      {subject.last_activity_at ? `Aktivitas terakhir: ${formatDate(subject.last_activity_at)}` : 'Belum ada aktivitas'}
+                      {subject.last_activity_at ? t('subjectDashboard.lastActivity', { date: formatDate(subject.last_activity_at) }) : t('subjectDashboard.noActivity')}
                     </span>
                   </div>
                 </div>
@@ -349,22 +355,22 @@ export default function SubjectDashboardPage() {
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="card-base p-6">
               <div className="flex items-center gap-2 mb-4">
                 <BookOpen size={16} className="text-success" />
-                <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">Progress per Topik</h2>
+                <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('subjectDashboard.topicProgressTitle')}</h2>
               </div>
               {topicProgress.length === 0 ? (
                 <p className="text-center py-6 text-text-muted text-sm">
-                  Belum ada data topik. Selesaikan ujian simulasi untuk melihat penguasaan per topik.
+                  {t('subjectDashboard.topicProgressEmpty')}
                 </p>
               ) : (
                 <div className="space-y-4">
-                  {topicProgress.map((t) => {
-                    const meta = TOPIC_STATUS_META[t.status] || TOPIC_STATUS_META.berjalan;
+                  {topicProgress.map((tp) => {
+                    const meta = topicMeta[tp.status] || topicMeta.berjalan;
                     return (
-                      <div key={t.topic}>
+                      <div key={tp.topic}>
                         <div className="flex items-center justify-between mb-1.5">
-                          <span className="text-sm font-medium text-text truncate mr-2">{t.topic}</span>
+                          <span className="text-sm font-medium text-text truncate mr-2">{tp.topic}</span>
                           <div className="flex items-center gap-2 shrink-0">
-                            <span className="text-xs text-text-secondary">{t.accuracy}%</span>
+                            <span className="text-xs text-text-secondary">{tp.accuracy}%</span>
                             <span className={`badge text-[10px] ${meta.cls}`}>{meta.label}</span>
                           </div>
                         </div>
@@ -373,7 +379,7 @@ export default function SubjectDashboardPage() {
                             initial={{ width: 0 }}
                             animate={{ width: `${t.accuracy}%` }}
                             transition={{ duration: 0.6 }}
-                            className={`h-full rounded-full ${t.accuracy >= 70 ? 'bg-success' : t.accuracy >= 40 ? 'bg-warning' : 'bg-danger'}`}
+                            className={`h-full rounded-full ${tp.accuracy >= 70 ? 'bg-success' : tp.accuracy >= 40 ? 'bg-warning' : 'bg-danger'}`}
                           />
                         </div>
                       </div>
@@ -387,7 +393,7 @@ export default function SubjectDashboardPage() {
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="card-base p-6">
               <div className="flex items-center gap-2 mb-4">
                 <TrendingUp size={16} className="text-primary" />
-                <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">Perkembangan Skor</h2>
+                <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('subjectDashboard.scoreHistoryTitle')}</h2>
               </div>
               <ScoreChart history={scoreHistory} />
             </motion.div>
@@ -399,14 +405,14 @@ export default function SubjectDashboardPage() {
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="card-base p-6">
               <div className="flex items-center gap-2 mb-4">
                 <CalendarCheck size={16} className="text-accent-blue" />
-                <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">Rencana Belajar</h2>
+                <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('subjectDashboard.studyPlanTitle')}</h2>
               </div>
               {activePlan ? (
                 <div>
                   <p className="text-sm font-semibold text-text mb-1">{activePlan.title}</p>
                   <p className="text-xs text-text-muted mb-3">
-                    Hari {activePlan.completed_days}/{activePlan.total_days} selesai
-                    {activePlan.start_date ? ` • mulai ${formatDate(activePlan.start_date)}` : ''}
+                    {t('subjectDashboard.planProgress', { completed: activePlan.completed_days, total: activePlan.total_days })}
+                    {activePlan.start_date ? ` ${t('subjectDashboard.planStarted', { date: formatDate(activePlan.start_date) })}` : ''}
                   </p>
                   <div className="h-2 bg-background rounded-full overflow-hidden border border-border/50 mb-3">
                     <motion.div
@@ -420,12 +426,12 @@ export default function SubjectDashboardPage() {
                     onClick={() => navigate('/exam-analyzer')}
                     className="w-full text-xs text-primary hover:text-primary/80 transition-colors text-left"
                   >
-                    Lanjutkan belajar di Ujian Simulasi →
+                    {t('subjectDashboard.continueLearning')}
                   </button>
                 </div>
               ) : (
                 <p className="text-sm text-text-muted">
-                  Belum ada rencana belajar. Setelah selesai ujian simulasi, rencana otomatis dibuat untuk topik yang masih lemah.
+                  {t('subjectDashboard.planEmpty')}
                 </p>
               )}
             </motion.div>
@@ -434,14 +440,14 @@ export default function SubjectDashboardPage() {
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="card-base p-6">
               <div className="flex items-center gap-2 mb-4">
                 <Clock size={16} className="text-text-secondary" />
-                <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">Aktivitas Terbaru</h2>
+                <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('subjectDashboard.recentActivityTitle')}</h2>
               </div>
               {recentActivity.length === 0 ? (
-                <p className="text-sm text-text-muted">Belum ada aktivitas.</p>
+                <p className="text-sm text-text-muted">{t('subjectDashboard.recentActivityEmpty')}</p>
               ) : (
                 <div className="space-y-3">
                   {recentActivity.map((a, i) => {
-                    const meta = ACTIVITY_META[a.type] || ACTIVITY_META.materi;
+                    const meta = activityMeta[a.type] || activityMeta.materi;
                     const Icon = meta.icon;
                     return (
                       <div key={i} className="flex items-start gap-3">
@@ -468,13 +474,13 @@ export default function SubjectDashboardPage() {
         <div className="card-base overflow-x-auto p-0">
           <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
             <FileText size={14} className="text-text-secondary" />
-            <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">Materi ({subject.total_materials})</h2>
+            <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('subjectDashboard.materialsTitle', { count: subject.total_materials })}</h2>
           </div>
           <table className="w-full text-sm">
             <tbody>
               {subject.materials.length === 0 ? (
                 <tr>
-                  <td className="text-center py-10 text-text-muted">Belum ada materi untuk mata kuliah ini.</td>
+                  <td className="text-center py-10 text-text-muted">{t('subjectDashboard.materialsEmpty')}</td>
                 </tr>
               ) : (
                 subject.materials.map((m, idx) => (

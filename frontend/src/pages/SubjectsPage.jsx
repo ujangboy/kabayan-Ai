@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Book, Plus, Trash2, X, FileText, HelpCircle, CreditCard, Trophy, Calendar, Clock } from 'lucide-react';
 import { subjectAPI } from '@/services/api';
 import { formatDate, formatTimeOnly } from '@/utils';
 
 export default function SubjectsPage() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -28,7 +30,7 @@ export default function SubjectsPage() {
   });
 
   const handleDelete = (id) => {
-    if (confirm('Hapus mata kuliah ini? PERHATIAN: Ini juga akan MENGHAPUS SEMUA materi, catatan, flashcard, dan quiz yang terkait!')) {
+    if (confirm(t('subjects.deleteConfirm'))) {
       deleteMutation.mutate(id);
     }
   };
@@ -39,25 +41,25 @@ export default function SubjectsPage() {
         
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-text">Mata Kuliah</h1>
-            <p className="text-text-secondary text-sm mt-1">Kelola daftar mata kuliah atau topik belajar Bapak.</p>
+            <h1 className="text-2xl font-bold text-text">{t('subjects.title')}</h1>
+            <p className="text-text-secondary text-sm mt-1">{t('subjects.subtitle')}</p>
           </div>
           <button
             onClick={() => setIsModalOpen(true)}
             className="btn-primary text-xs"
           >
             <Plus size={14} />
-            Mata Kuliah Baru
+            {t('subjects.addNew')}
           </button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {isLoading ? (
-            <p className="text-text-muted text-sm">Memuat data...</p>
+            <p className="text-text-muted text-sm">{t('common.loading')}</p>
           ) : subjects.length === 0 ? (
             <div className="col-span-full card-base text-center py-10">
-              <p className="text-text-muted mb-2">Belum ada mata kuliah.</p>
-              <button onClick={() => setIsModalOpen(true)} className="text-primary hover:underline text-sm">Buat sekarang</button>
+              <p className="text-text-muted mb-2">{t('subjects.empty')}</p>
+              <button onClick={() => setIsModalOpen(true)} className="text-primary hover:underline text-sm">{t('subjects.createNow')}</button>
             </div>
           ) : (
             subjects.map((s, idx) => (
@@ -83,8 +85,8 @@ export default function SubjectsPage() {
                     </button>
                   </div>
                   <div className="space-y-1 text-sm text-text-secondary pl-2 mb-3 flex-1">
-                    {s.semester && <p><span className="text-text-muted text-xs">Semester:</span> {s.semester}</p>}
-                    {s.lecturer && <p><span className="text-text-muted text-xs">Dosen:</span> {s.lecturer}</p>}
+                    {s.semester && <p><span className="text-text-muted text-xs">{t('subjects.semesterLabel')}:</span> {s.semester}</p>}
+                    {s.lecturer && <p><span className="text-text-muted text-xs">{t('subjects.lecturerLabel')}:</span> {s.lecturer}</p>}
                     {s.description && <p className="text-xs line-clamp-2 mt-2 italic">"{s.description}"</p>}
                   </div>
                   {/* Tanggal + waktu dibuat */}
@@ -97,19 +99,19 @@ export default function SubjectsPage() {
                   <div className="grid grid-cols-4 gap-1 px-2 pb-3 text-center">
                     <div className="rounded-lg bg-background/60 py-1.5 px-1">
                       <p className="text-sm font-bold text-text flex items-center justify-center gap-1"><Trophy size={11} className="text-warning" />{s.best_score ?? '—'}</p>
-                      <p className="text-[9px] text-text-muted uppercase tracking-wide">Skor</p>
+                      <p className="text-[9px] text-text-muted uppercase tracking-wide">{t('subjects.statScore')}</p>
                     </div>
                     <div className="rounded-lg bg-background/60 py-1.5 px-1">
                       <p className="text-sm font-bold text-text flex items-center justify-center gap-1"><HelpCircle size={11} className="text-accent-teal" />{s.total_quizzes ?? 0}</p>
-                      <p className="text-[9px] text-text-muted uppercase tracking-wide">Quiz</p>
+                      <p className="text-[9px] text-text-muted uppercase tracking-wide">{t('subjects.statQuizzes')}</p>
                     </div>
                     <div className="rounded-lg bg-background/60 py-1.5 px-1">
                       <p className="text-sm font-bold text-text flex items-center justify-center gap-1"><CreditCard size={11} className="text-accent-purple" />{s.total_flashcards ?? 0}</p>
-                      <p className="text-[9px] text-text-muted uppercase tracking-wide">Flashcard</p>
+                      <p className="text-[9px] text-text-muted uppercase tracking-wide">{t('subjects.statFlashcards')}</p>
                     </div>
                     <div className="rounded-lg bg-background/60 py-1.5 px-1">
                       <p className="text-sm font-bold text-text flex items-center justify-center gap-1"><FileText size={11} className="text-accent-blue" />{s.total_materials ?? 0}</p>
-                      <p className="text-[9px] text-text-muted uppercase tracking-wide">Materi</p>
+                      <p className="text-[9px] text-text-muted uppercase tracking-wide">{t('subjects.statMaterials')}</p>
                     </div>
                   </div>
                 </motion.div>
@@ -136,6 +138,7 @@ export default function SubjectsPage() {
 }
 
 function CreateSubjectModal({ onClose, onSuccess }) {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({ name: '', semester: '', lecturer: '', description: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -156,7 +159,7 @@ function CreateSubjectModal({ onClose, onSuccess }) {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: data.toString(),
       });
-      if (!res.ok) throw new Error('Gagal membuat');
+      if (!res.ok) throw new Error(t('subjects.createError'));
       onSuccess();
     } catch (err) {
       alert(err.message);
@@ -175,58 +178,58 @@ function CreateSubjectModal({ onClose, onSuccess }) {
         <div className="flex items-center justify-between p-4 border-b border-border">
           <div className="flex items-center gap-2">
             <Book size={18} className="text-primary" />
-            <h3 className="font-semibold text-text">Mata Kuliah Baru</h3>
+            <h3 className="font-semibold text-text">{t('subjects.addNew')}</h3>
           </div>
           <button onClick={onClose} className="text-text-muted hover:text-text"><X size={18} /></button>
         </div>
         <form onSubmit={handleSubmit} className="p-4 space-y-4">
           <div>
-            <label className="block text-xs font-medium text-text-secondary mb-1">Nama Mata Kuliah *</label>
+            <label className="block text-xs font-medium text-text-secondary mb-1">{t('subjects.formNameLabel')}</label>
             <input
               type="text"
               required
               value={formData.name}
               onChange={(e) => setFormData(p => ({ ...p, name: e.target.value }))}
               className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary transition-colors"
-              placeholder="Cth: Algoritma & Struktur Data"
+              placeholder={t('subjects.formNamePlaceholder')}
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-text-secondary mb-1">Semester</label>
+              <label className="block text-xs font-medium text-text-secondary mb-1">{t('subjects.formSemesterLabel')}</label>
               <input
                 type="text"
                 value={formData.semester}
                 onChange={(e) => setFormData(p => ({ ...p, semester: e.target.value }))}
                 className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary transition-colors"
-                placeholder="Cth: Ganjil 2026"
+                placeholder={t('subjects.formSemesterPlaceholder')}
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-text-secondary mb-1">Dosen Pengampu</label>
+              <label className="block text-xs font-medium text-text-secondary mb-1">{t('subjects.formLecturerLabel')}</label>
               <input
                 type="text"
                 value={formData.lecturer}
                 onChange={(e) => setFormData(p => ({ ...p, lecturer: e.target.value }))}
                 className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary transition-colors"
-                placeholder="Nama Dosen"
+                placeholder={t('subjects.formLecturerPlaceholder')}
               />
             </div>
           </div>
           <div>
-            <label className="block text-xs font-medium text-text-secondary mb-1">Catatan Tambahan</label>
+            <label className="block text-xs font-medium text-text-secondary mb-1">{t('subjects.formNotesLabel')}</label>
             <textarea
               value={formData.description}
               onChange={(e) => setFormData(p => ({ ...p, description: e.target.value }))}
               rows={2}
               className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary transition-colors resize-none"
-              placeholder="Deskripsi opsional..."
+              placeholder={t('subjects.formNotesPlaceholder')}
             />
           </div>
           <div className="flex justify-end gap-2 pt-2">
-            <button type="button" onClick={onClose} className="btn-ghost">Batal</button>
+            <button type="button" onClick={onClose} className="btn-ghost">{t('common.cancel')}</button>
             <button type="submit" disabled={isSubmitting || !formData.name} className="btn-primary">
-              {isSubmitting ? 'Menyimpan...' : 'Simpan'}
+              {isSubmitting ? t('subjects.saving') : t('common.save')}
             </button>
           </div>
         </form>

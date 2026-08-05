@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -14,7 +15,8 @@ import { Chip, ProgressBar, STATUS_META, getBadge, getGradeColor } from './share
 
 // ─── Detail Modal ─────────────────────────────────────────────────────────────
 export default function DetailModal({ historySessionId, onClose, onResume, pendingPlanTab, setPendingPlanTab }) {
-  const queryClient = useQueryClient();
+   const { t } = useTranslation();
+   const queryClient = useQueryClient();
   const [tab, setTab] = useState(pendingPlanTab ? 'plan' : 'overview');
 
   // Lifted up from StudyPlanTab so refetch() doesn't reset these states
@@ -64,7 +66,7 @@ export default function DetailModal({ historySessionId, onClose, onResume, pendi
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1 flex-wrap">
-              <Chip label={data.exam_type?.toUpperCase() || 'SIMULASI'} size="xs" color="blue" />
+               <Chip label={data.exam_type?.toUpperCase() || t('exam.history.defaultExamType')} size="xs" color="blue" />
               <Chip label={meta.label} size="xs" color={meta.color} />
               <Chip label={badge.label} size="xs" color={badge.color} />
             </div>
@@ -79,10 +81,10 @@ export default function DetailModal({ historySessionId, onClose, onResume, pendi
 
         <div className="flex gap-1 mt-4">
           {[
-            { id:'overview', label:'Ringkasan',  icon: BarChart2 },
-            { id:'review',   label:'Review',     icon: BookOpen  },
-            { id:'plan',     label:'Study Plan', icon: Calendar  },
-            { id:'attempts', label:'Attempts',   icon: RotateCcw },
+            { id:'overview', label:t('exam.detail.overview'),  icon: BarChart2 },
+            { id:'review',   label:t('exam.detail.review'),     icon: BookOpen  },
+            { id:'plan',     label:t('exam.detail.studyPlan'),   icon: Calendar  },
+            { id:'attempts', label:t('exam.detail.attempts'),    icon: RotateCcw },
           ].map(({ id, label, icon: Icon }) => (
             <button type="button" key={id} onClick={() => setTab(id)}
               className={cn('flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
@@ -118,9 +120,9 @@ export default function DetailModal({ historySessionId, onClose, onResume, pendi
 
       <div className="p-4 border-t border-border shrink-0 flex gap-2 flex-wrap">
         <RetryButton historySessionId={historySessionId} sessionData={data} onClose={onClose} onResume={onResume} />
-        <button type="button" onClick={onClose} className="btn-ghost text-sm border border-border ml-auto">
-          Tutup
-        </button>
+         <button type="button" onClick={onClose} className="btn-ghost text-sm border border-border ml-auto">
+           {t('common.close')}
+         </button>
       </div>
     </ModalShell>
   );
@@ -143,14 +145,14 @@ function ModalShell({ children }) {
 }
 
 function OverviewTab({ data }) {
-  const attempts = data.attempts || [];
-  const hasGrowth = attempts.length >= 2;
+   const attempts = data.attempts || [];
+   const hasGrowth = attempts.length >= 2;
 
-  return (
-    <div className="space-y-4">
-      <div className="card-base p-4">
-        <div className="flex justify-between mb-2">
-          <span className="text-xs font-semibold text-text-secondary uppercase tracking-wider">Progress Keseluruhan</span>
+   return (
+     <div className="space-y-4">
+       <div className="card-base p-4">
+         <div className="flex justify-between mb-2">
+           <span className="text-xs font-semibold text-text-secondary uppercase tracking-wider">{t('exam.detail.overallProgress')}</span>
           <span className="text-xs font-bold text-text">{data.progress || 0}%</span>
         </div>
         <ProgressBar value={data.progress || 0}
@@ -162,7 +164,7 @@ function OverviewTab({ data }) {
 
       {hasGrowth && (
         <div className="card-base p-4">
-          <p className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-3">Perkembangan Nilai</p>
+           <p className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-3">{t('exam.detail.gradeProgression')}</p>
           <div className="flex items-end gap-3 h-16">
             {attempts.map((a, i) => {
               const h = Math.max(8, ((a.score||0)/100)*64);
@@ -189,9 +191,9 @@ function OverviewTab({ data }) {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {(data.strong_topics || []).length > 0 && (
           <div className="p-3 rounded-xl bg-success/5 border border-success/15">
-            <p className="text-xs font-semibold text-success mb-2 flex items-center gap-1">
-              <TrendingUp size={11} /> Topik Dikuasai
-            </p>
+             <p className="text-xs font-semibold text-success mb-2 flex items-center gap-1">
+               <TrendingUp size={11} /> {t('exam.detail.strongTopics')}
+             </p>
             {(data.strong_topics || []).slice(0,5).map((t,i) => (
               <div key={i} className="flex items-center justify-between py-1 border-b border-success/10 last:border-0">
                 <span className="text-xs text-text">{typeof t === 'string' ? t : t.topic || ''}</span>
@@ -202,9 +204,9 @@ function OverviewTab({ data }) {
         )}
         {(data.weak_topics || []).length > 0 && (
           <div className="p-3 rounded-xl bg-danger/5 border border-danger/15">
-            <p className="text-xs font-semibold text-danger mb-2 flex items-center gap-1">
-              <AlertTriangle size={11} /> Topik Lemah
-            </p>
+             <p className="text-xs font-semibold text-danger mb-2 flex items-center gap-1">
+               <AlertTriangle size={11} /> {t('exam.detail.weakTopics')}
+             </p>
             {(data.weak_topics || []).slice(0,5).map((t,i) => (
               <div key={i} className="flex items-center justify-between py-1 border-b border-danger/10 last:border-0">
                 <span className="text-xs text-text">{typeof t === 'string' ? t : t.topic || ''}</span>
@@ -224,8 +226,8 @@ function ReviewTab({ attempt }) {
   const [explanations, setExplanations] = useState({});
   const reviews = attempt?.reviews || [];
 
-  if (!attempt) return <p className="text-text-muted text-sm py-8 text-center">Belum ada data review.</p>;
-  if (reviews.length === 0) return <p className="text-text-muted text-sm py-8 text-center">Data review tidak tersedia untuk attempt ini.</p>;
+  if (!attempt) return <p className="text-text-muted text-sm py-8 text-center">{t('exam.detail.noReviewData')}</p>;
+  if (reviews.length === 0) return <p className="text-text-muted text-sm py-8 text-center">{t('exam.detail.noReviewForAttempt')}</p>;
 
   const correct = reviews.filter(r => r.is_correct).length;
   const total   = reviews.length;
@@ -248,12 +250,12 @@ function ReviewTab({ attempt }) {
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border text-sm">
-        <CheckCircle size={14} className="text-success" />
-        <span className="text-text">{correct}/{total} benar</span>
-        <span className="text-text-muted">·</span>
-        <span className="text-text-muted">Attempt #{attempt.attempt_number}</span>
-      </div>
+       <div className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border text-sm">
+         <CheckCircle size={14} className="text-success" />
+         <span className="text-text">{correct}/{total} {t('exam.detail.correct')}</span>
+         <span className="text-text-muted">·</span>
+         <span className="text-text-muted">{t('exam.detail.attemptLabel')} #{attempt.attempt_number}</span>
+       </div>
 
       {reviews.map((r, i) => {
         const expl = explanations[i];
@@ -283,14 +285,14 @@ function ReviewTab({ attempt }) {
                   <div className="px-4 pb-4 space-y-2 border-t border-border/40 pt-3">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
                       <div className="p-2 rounded-lg bg-background">
-                        <p className="text-[10px] text-text-muted mb-0.5">Jawaban Kamu</p>
+                         <p className="text-[10px] text-text-muted mb-0.5">{t('exam.detail.yourAnswer')}</p>
                         <div className={cn('font-medium text-sm', r.is_correct ? 'text-success' : 'text-danger')}>
                           <MathMarkdown>{r.user_answer || '(Tidak dijawab)'}</MathMarkdown>
                         </div>
                       </div>
                       {!r.is_correct && (
                         <div className="p-2 rounded-lg bg-success/5 border border-success/15">
-                          <p className="text-[10px] text-text-muted mb-0.5">Jawaban Benar</p>
+                           <p className="text-[10px] text-text-muted mb-0.5">{t('exam.detail.correctAnswer')}</p>
                           <div className="font-medium text-sm text-success">
                             <MathMarkdown>{r.correct_answer}</MathMarkdown>
                           </div>
@@ -300,20 +302,20 @@ function ReviewTab({ attempt }) {
 
                     {r.ai_explanation && !expl?.text && (
                       <div className="p-2 rounded-lg bg-primary/5 border border-primary/15 text-xs text-text">
-                        <p className="font-semibold text-primary mb-0.5">Penjelasan AI</p>
-                        <MathMarkdown>{r.ai_explanation}</MathMarkdown>
-                      </div>
-                    )}
+                         <p className="font-semibold text-primary mb-0.5">{t('exam.detail.aiExplanation')}</p>
+                         <MathMarkdown>{r.ai_explanation}</MathMarkdown>
+                       </div>
+                     )}
 
-                    {expl?.text && (
-                      <div className="p-2 rounded-lg bg-accent-teal/5 border border-accent-teal/20 text-xs text-text">
-                        <p className="font-semibold text-accent-teal mb-0.5 flex items-center gap-1">
-                          <Lightbulb size={10} /> Penjelasan AI
+                     {expl?.text && (
+                       <div className="p-2 rounded-lg bg-accent-teal/5 border border-accent-teal/20 text-xs text-text">
+                         <p className="font-semibold text-accent-teal mb-0.5 flex items-center gap-1">
+                           <Lightbulb size={10} /> {t('exam.detail.aiExplanation')}
                         </p>
                         <MathMarkdown>{expl.text}</MathMarkdown>
                       </div>
                     )}
-                    {expl?.error && <p className="text-[10px] text-danger">{expl.error}</p>}
+                       {expl?.error && <p className="text-[10px] text-danger">{t('exam.detail.explanationError')}</p>}
 
                     <div className="flex items-center gap-3 text-[10px] text-text-muted flex-wrap">
                       {r.material_ref && <span className="flex items-center gap-1"><FileText size={10}/>{r.material_ref}</span>}
@@ -325,9 +327,9 @@ function ReviewTab({ attempt }) {
                           disabled={expl?.loading}
                           className="ml-auto flex items-center gap-1 px-2 py-0.5 rounded-lg bg-accent-teal/10 text-accent-teal border border-accent-teal/20 hover:bg-accent-teal/20 transition-colors disabled:opacity-50"
                         >
-                          {expl?.loading
-                            ? <><Loader2 size={10} className="animate-spin" /> Memuat...</>
-                            : <><Lightbulb size={10} /> Jelaskan</>}
+                           {expl?.loading
+                             ? <><Loader2 size={10} className="animate-spin" /> {t('common.loading')}</>
+                             : <><Lightbulb size={10} /> {t('exam.detail.explainBtn')}</>}
                         </button>
                       )}
                     </div>
@@ -376,10 +378,10 @@ function InlinePractice({ questions, topic, onComplete, onClose, onRetryTopic })
         correct_answer: q.answer || '',
         topic: q.topic || '',
       });
-      const text = r.data?.explanation || 'Penjelasan tidak tersedia.';
-      setExplanations(p => ({ ...p, [String(q.id)]: text }));
-    } catch {
-      setExplanations(p => ({ ...p, [String(q.id)]: 'Penjelasan tidak tersedia.' }));
+       const text = r.data?.explanation || t('exam.detail.explanationUnavailable');
+       setExplanations(p => ({ ...p, [String(q.id)]: text }));
+     } catch {
+       setExplanations(p => ({ ...p, [String(q.id)]: t('exam.detail.explanationUnavailable') }));
     } finally { setFetchingExpl(false); }
   };
 
@@ -424,7 +426,7 @@ function InlinePractice({ questions, topic, onComplete, onClose, onRetryTopic })
 
         {/* Breakdown per soal */}
         <div className="space-y-1">
-          <p className="text-xs font-semibold text-text-secondary uppercase tracking-wider">Detail Jawaban</p>
+          <p className="text-xs font-semibold text-text-secondary uppercase tracking-wider">{t('exam.detail.answerDetail')}</p>
           {questions.map((question, i) => {
             const qid = String(question.id);
             const isCorrect = results[qid];
@@ -433,9 +435,9 @@ function InlinePractice({ questions, topic, onComplete, onClose, onRetryTopic })
                 {isCorrect
                   ? <CheckCircle size={11} className="text-success shrink-0" />
                   : <XCircle size={11} className="text-danger shrink-0" />}
-                <span className="text-text-muted">Soal {i + 1}</span>
+                 <span className="text-text-muted">{t('exam.detail.question')} {i + 1}</span>
                 <span className="text-text-secondary truncate flex-1">{question.topic}</span>
-                {!isCorrect && <span className="text-danger text-[10px]">Jawaban: {question.answer}</span>}
+                 {!isCorrect && <span className="text-danger text-[10px]">{t('exam.detail.answer')}: {question.answer}</span>}
               </div>
             );
           })}
@@ -444,9 +446,9 @@ function InlinePractice({ questions, topic, onComplete, onClose, onRetryTopic })
         {/* Recommendations — satu baris per topik lemah dengan tombol latih individual */}
         {weakTopics.length > 0 && (
           <div className="p-3 rounded-lg bg-warning/5 border border-warning/20 space-y-2">
-            <p className="text-xs font-semibold text-text-secondary flex items-center gap-1">
-              <Target size={11} /> Rekomendasi Pembelajaran
-            </p>
+             <p className="text-xs font-semibold text-text-secondary flex items-center gap-1">
+               <Target size={11} /> {t('exam.detail.learningRecommendation')}
+             </p>
             {weakTopics.map(([weakTopic, data]) => (
               <div key={weakTopic} className="text-xs text-text-secondary space-y-1">
                 <div className="flex items-center justify-between gap-2">

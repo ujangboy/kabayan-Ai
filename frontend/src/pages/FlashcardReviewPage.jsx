@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -8,22 +9,10 @@ import {
 import { flashcardAPI } from '@/services/api';
 import MathMarkdown from '@/components/MathMarkdown';
 
-// 3 tombol sederhana — mapped ke rating SM-2 internal
-const SIMPLE_RATINGS = [
-  { value: 0, emoji: '😕', label: 'Lupa',  cls: 'border-danger/50 text-danger hover:bg-danger/10 active:bg-danger/20' },
-  { value: 2, emoji: '🙂', label: 'Ingat', cls: 'border-accent-blue/50 text-accent-blue hover:bg-accent-blue/10 active:bg-accent-blue/20' },
-  { value: 3, emoji: '🎯', label: 'Hafal', cls: 'border-success/50 text-success hover:bg-success/10 active:bg-success/20' },
-];
-
-const FEEDBACK_META = {
-  0: { color: 'border-danger/30 bg-danger/5',       label: '😕 Lupa',  msg: 'Tidak masalah — kartu ini akan muncul lagi dalam sesi ini.' },
-  2: { color: 'border-accent-blue/30 bg-accent-blue/5', label: '🙂 Ingat', msg: 'Cukup diingat. Interval review diperpanjang sedikit.' },
-  3: { color: 'border-success/30 bg-success/5',      label: '🎯 Hafal', msg: 'Bagus! Kartu ini dijadwalkan lebih jauh ke depan.' },
-};
-
 const AUTO_ADVANCE_MS = 1200;
 
 export default function FlashcardReviewPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const queryClient = useQueryClient();
@@ -43,6 +32,18 @@ export default function FlashcardReviewPage() {
   const autoIntervalRef = useRef(null);
 
   const MAX_RERUN = 3;
+
+  const SIMPLE_RATINGS = [
+    { value: 0, emoji: '😕', label: t('flashcard.ratingLupa'),  cls: 'border-danger/50 text-danger hover:bg-danger/10 active:bg-danger/20' },
+    { value: 2, emoji: '🙂', label: t('flashcard.ratingIngat'), cls: 'border-accent-blue/50 text-accent-blue hover:bg-accent-blue/10 active:bg-accent-blue/20' },
+    { value: 3, emoji: '🎯', label: t('flashcard.ratingHafal'), cls: 'border-success/50 text-success hover:bg-success/10 active:bg-success/20' },
+  ];
+
+  const FEEDBACK_META = {
+    0: { color: 'border-danger/30 bg-danger/5',       label: t('flashcard.feedbackLupa'),  msg: t('flashcard.feedbackLupaMsg') },
+    2: { color: 'border-accent-blue/30 bg-accent-blue/5', label: t('flashcard.feedbackIngat'), msg: t('flashcard.feedbackIngatMsg') },
+    3: { color: 'border-success/30 bg-success/5',      label: t('flashcard.feedbackHafal'), msg: t('flashcard.feedbackHafalMsg') },
+  };
 
   // Bersihkan timer saat unmount
   useEffect(() => {
@@ -164,8 +165,8 @@ export default function FlashcardReviewPage() {
   if (error) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-        <p className="text-danger mb-4">Gagal memuat kartu review: {error?.message || 'Unknown error'}</p>
-        <button onClick={() => navigate('/flashcard')} className="btn-ghost border border-border">Kembali</button>
+        <p className="text-danger mb-4">{t('flashcard.loadError', { message: error?.message || 'Unknown error' })}</p>
+        <button onClick={() => navigate('/flashcard')} className="btn-ghost border border-border">{t('common.back')}</button>
       </div>
     );
   }
@@ -176,11 +177,11 @@ export default function FlashcardReviewPage() {
       <div className="flex-1 flex flex-col items-center justify-center p-6">
         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="card-base text-center max-w-sm w-full p-8">
           <CheckCircle2 size={48} className="mx-auto text-success mb-4" />
-          <h2 className="text-xl font-bold text-text mb-2">Tidak Ada Kartu Perlu Review!</h2>
-          <p className="text-sm text-text-secondary mb-6">
-            Semua kartu sudah direview hari ini. Datang lagi besok sesuai jadwal spaced repetition.
-          </p>
-          <button onClick={handleDone} className="btn-primary w-full justify-center text-sm">Kembali ke Flashcard</button>
+<h2 className="text-xl font-bold text-text mb-2">{t('flashcard.noCardsTitle')}</h2>
+           <p className="text-sm text-text-secondary mb-6">
+             {t('flashcard.noCardsMessage')}
+           </p>
+           <button onClick={handleDone} className="btn-primary w-full justify-center text-sm">{t('flashcard.backToFlashcard')}</button>
         </motion.div>
       </div>
     );
@@ -200,25 +201,25 @@ export default function FlashcardReviewPage() {
       <div className="flex-1 flex items-center justify-center p-6">
         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="card-base text-center max-w-sm w-full p-8">
           <Trophy size={48} className="mx-auto text-warning mb-4" />
-          <h2 className="text-xl font-bold text-text mb-1">Review Selesai!</h2>
-          <p className="text-text-secondary text-sm mb-4">{results.length} kartu direview</p>
-          <div className="text-5xl font-bold text-primary mb-2">{pct}%</div>
-          <p className="text-sm text-text-secondary mb-5">
-            Ingat <span className="text-success font-semibold">{remembered}</span> dari {results.length} kartu
-          </p>
-          <div className="flex justify-center gap-3 mb-6 text-xs">
-            {counts.lupa > 0 && <span className="px-2 py-1 rounded-full bg-danger/10 text-danger border border-danger/20">😕 Lupa: {counts.lupa}</span>}
-            {counts.ingat > 0 && <span className="px-2 py-1 rounded-full bg-accent-blue/10 text-accent-blue border border-accent-blue/20">🙂 Ingat: {counts.ingat}</span>}
-            {counts.hafal > 0 && <span className="px-2 py-1 rounded-full bg-success/10 text-success border border-success/20">🎯 Hafal: {counts.hafal}</span>}
-          </div>
-          <div className="flex gap-2">
-            <button onClick={handleRestart} className="btn-primary flex-1 justify-center text-sm">
-              <RotateCcw size={14} /> Ulangi
-            </button>
-            <button onClick={handleDone} className="btn-ghost flex-1 justify-center text-sm border border-border">
-              Selesai
-            </button>
-          </div>
+<h2 className="text-xl font-bold text-text mb-1">{t('flashcard.reviewComplete')}</h2>
+           <p className="text-text-secondary text-sm mb-4">{t('flashcard.cardsReviewed', { count: results.length })}</p>
+           <div className="text-5xl font-bold text-primary mb-2">{pct}%</div>
+           <p className="text-sm text-text-secondary mb-5">
+             {t('flashcard.rememberedOf', { remembered, total: results.length })}
+           </p>
+           <div className="flex justify-center gap-3 mb-6 text-xs">
+             {counts.lupa > 0 && <span className="px-2 py-1 rounded-full bg-danger/10 text-danger border border-danger/20">{t('flashcard.lupaCount', { count: counts.lupa })}</span>}
+             {counts.ingat > 0 && <span className="px-2 py-1 rounded-full bg-accent-blue/10 text-accent-blue border border-accent-blue/20">{t('flashcard.ingatCount', { count: counts.ingat })}</span>}
+             {counts.hafal > 0 && <span className="px-2 py-1 rounded-full bg-success/10 text-success border border-success/20">{t('flashcard.hafalCount', { count: counts.hafal })}</span>}
+           </div>
+           <div className="flex gap-2">
+             <button onClick={handleRestart} className="btn-primary flex-1 justify-center text-sm">
+               <RotateCcw size={14} /> {t('flashcard.repeat')}
+             </button>
+             <button onClick={handleDone} className="btn-ghost flex-1 justify-center text-sm border border-border">
+               {t('flashcard.done')}
+             </button>
+           </div>
         </motion.div>
       </div>
     );
@@ -228,8 +229,8 @@ export default function FlashcardReviewPage() {
     return (
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center text-text-muted">
-          <p className="mb-4">Tidak ada kartu.</p>
-          <button onClick={handleDone} className="btn-ghost border border-border">Kembali</button>
+<p className="mb-4">{t('flashcard.noCards')}</p>
+           <button onClick={handleDone} className="btn-ghost border border-border">{t('common.back')}</button>
         </div>
       </div>
     );
@@ -243,22 +244,23 @@ export default function FlashcardReviewPage() {
       {/* Top bar */}
       <div className="flex items-center justify-between mb-4 shrink-0">
         <button onClick={() => navigate('/flashcard')} className="btn-ghost text-sm text-text-muted">
-          <ChevronLeft size={16} /> Kembali
+          <ChevronLeft size={16} /> {t('common.back')}
         </button>
-        <div className="flex items-center gap-2 text-sm text-text-secondary font-medium">
-          <Brain size={15} className="text-accent-purple" />
-          Review Harian
-        </div>
+<div className="flex items-center gap-2 text-sm text-text-secondary font-medium">
+           <Brain size={15} className="text-accent-purple" />
+           {t('flashcard.reviewDaily')}
+         </div>
         <span className="px-3 py-1 bg-card rounded-full text-sm font-medium text-text-secondary border border-border">
           {currentIdx + 1} / {total}
         </span>
       </div>
 
       {/* Info header SRS — singkat dan jelas */}
-      <div className="mb-5 px-4 py-2.5 rounded-xl bg-accent-purple/8 border border-accent-purple/20 text-xs text-text-secondary shrink-0">
-        Ini kartu yang sudah waktunya diulang berdasarkan jadwal belajarmu.
-        Jawab sejujurnya — sistem akan menyesuaikan jadwal review berikutnya otomatis.
-      </div>
+<div className="mb-5 px-4 py-2.5 rounded-xl bg-accent-purple/8 border border-accent-purple/20 text-xs text-text-secondary shrink-0">
+         {t('flashcard.srsInfo')}
+         <br />
+         {t('flashcard.srsInfo2')}
+       </div>
 
       {/* Progress bar */}
       <div className="w-full h-1.5 bg-border rounded-full mb-8 shrink-0">
@@ -282,16 +284,16 @@ export default function FlashcardReviewPage() {
           >
             {/* Front */}
             <div className="absolute inset-0 backface-hidden card-base flex flex-col items-center justify-center p-8 text-center border-t-4 border-t-accent-purple shadow-xl">
-              <span className="text-xs font-semibold text-text-secondary uppercase tracking-widest mb-4">Pertanyaan</span>
+              <span className="text-xs font-semibold text-text-secondary uppercase tracking-widest mb-4">{t('flashcard.question')}</span>
               <MathMarkdown className="text-xl font-bold text-text leading-snug text-center">{currentCard.question}</MathMarkdown>
-              <p className="absolute bottom-4 text-[11px] text-text-muted">Klik untuk lihat jawaban</p>
+              <p className="absolute bottom-4 text-[11px] text-text-muted">{t('flashcard.clickToSeeAnswer')}</p>
             </div>
             {/* Back */}
             <div
               className="absolute inset-0 backface-hidden card-base flex flex-col items-center justify-center p-8 text-center border-t-4 border-t-success shadow-xl"
               style={{ transform: 'rotateY(180deg)' }}
             >
-              <span className="text-xs font-semibold text-text-secondary uppercase tracking-widest mb-4">Jawaban</span>
+              <span className="text-xs font-semibold text-text-secondary uppercase tracking-widest mb-4">{t('flashcard.answer')}</span>
               <MathMarkdown className="text-lg text-text leading-relaxed text-center">{currentCard.answer}</MathMarkdown>
             </div>
           </motion.div>
@@ -304,7 +306,7 @@ export default function FlashcardReviewPage() {
             animate={{ opacity: 1, y: 0 }}
             className="mt-8 w-full max-w-xl"
           >
-            <p className="text-center text-xs text-text-muted mb-4">Seberapa mudah kamu mengingat jawabannya?</p>
+            <p className="text-center text-xs text-text-muted mb-4">{t('flashcard.howWell')}</p>
             <div className="grid grid-cols-3 gap-3">
               {SIMPLE_RATINGS.map(r => (
                 <button
@@ -334,7 +336,7 @@ export default function FlashcardReviewPage() {
                 onClick={handleSkipAutoAdvance}
                 className="text-xs text-text-muted hover:text-text transition-colors ml-4 shrink-0"
               >
-                Lanjut sekarang →
+                {t('flashcard.skipAdvance')}
               </button>
             </div>
             {/* Auto-advance progress bar */}

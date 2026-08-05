@@ -1,4 +1,5 @@
 import { Component } from 'react';
+import { withTranslation } from 'react-i18next';
 
 export default class ErrorBoundary extends Component {
   constructor(props) {
@@ -19,15 +20,16 @@ export default class ErrorBoundary extends Component {
   };
 
   render() {
+    const { t } = this.props;
     if (this.state.hasError) {
       return (
         <div className="flex-1 flex items-center justify-center p-6">
           <div className="card-base text-center max-w-sm w-full p-8">
-            <p className="text-danger text-lg font-semibold mb-2">Terjadi kesalahan</p>
-            <p className="text-sm text-text-secondary mb-4">{this.state.error?.message || 'Kesalahan tidak diketahui'}</p>
+            <p className="text-danger text-lg font-semibold mb-2">{t('errorBoundary.title')}</p>
+            <p className="text-sm text-text-secondary mb-4">{this.state.error?.message || t('errorBoundary.message')}</p>
             <div className="flex justify-center gap-2">
-              <button onClick={this.reset} className="btn-ghost text-sm">Coba Lagi</button>
-              <button onClick={() => window.location.reload()} className="btn-primary text-sm">Muat Ulang</button>
+              <button onClick={this.reset} className="btn-ghost text-sm">{t('errorBoundary.retry')}</button>
+              <button onClick={() => window.location.reload()} className="btn-primary text-sm">{t('errorBoundary.reload')}</button>
             </div>
           </div>
         </div>
@@ -36,3 +38,5 @@ export default class ErrorBoundary extends Component {
     return this.props.children;
   }
 }
+
+export default withTranslation('errorBoundary')(ErrorBoundary);

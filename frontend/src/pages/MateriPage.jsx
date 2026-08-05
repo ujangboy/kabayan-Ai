@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useChatStore, useUiStore } from '@/store';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -11,6 +12,7 @@ import { usePendingOperation } from '@/hooks/usePendingOperation';
 import AudioStatus from '@/components/AudioStatus';
 
 export default function MateriPage() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const audioOp = usePendingOperation('audio');
@@ -69,7 +71,7 @@ export default function MateriPage() {
       audioOp.start(`audio-${id}`);
       queryClient.invalidateQueries(['audioStatus']);
       queryClient.invalidateQueries(['audioStatuses']);
-      toast.info('Audio sedang dibuat di latar belakang. Cek kembali dalam beberapa menit.');
+      toast.info(t('materi.audioGeneratingBackground'));
     },
     onError: (err, id) => {
       audioOp.finish(`audio-${id}`);
@@ -82,7 +84,7 @@ export default function MateriPage() {
     onSuccess: (_, id) => {
       processOp.finish(`process-${id}`);
       queryClient.invalidateQueries(['materials']);
-      toast.info('Pemrosesan dibatalkan.');
+      toast.info(t('materi.processingCancelled'));
     },
     onError: (err) => {
       toast.error(extractErrorMessage(err));
@@ -96,7 +98,7 @@ export default function MateriPage() {
       queryClient.invalidateQueries(['materials']);
       queryClient.invalidateQueries(['audioStatus']);
       queryClient.invalidateQueries(['audioStatuses']);
-      toast.success('Audio dihapus.');
+      toast.success(t('materi.audioDeleted'));
     },
     onError: (err) => {
       toast.error(extractErrorMessage(err));
@@ -109,7 +111,7 @@ export default function MateriPage() {
       audioOp.finish(`audio-${id}`);
       queryClient.invalidateQueries(['audioStatus']);
       queryClient.invalidateQueries(['audioStatuses']);
-      toast.info('Pembuatan audio dibatalkan.');
+      toast.info(t('materi.audioGenerationCancelled'));
     },
     onError: (err) => {
       toast.error(extractErrorMessage(err));
@@ -117,13 +119,13 @@ export default function MateriPage() {
   });
 
   const handleDelete = (id) => {
-    if (confirm('Hapus materi ini? Semua data terkait (catatan, quiz) yang bersumber dari materi ini tidak akan terhapus, tetapi sumbernya hilang.')) {
+    if (confirm(t('materi.confirmDelete'))) {
       deleteMutation.mutate(id);
     }
   };
 
   const handleAudio = (id) => {
-    if (confirm('Buat audio podcast (Ringkasan suara) dari materi ini?')) {
+    if (confirm(t('materi.confirmAudio'))) {
       generateAudioMutation.mutate(id);
     }
   };
@@ -142,14 +144,14 @@ export default function MateriPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-text">Materi Belajar</h1>
-            <p className="text-text-secondary text-sm mt-1">Kelola dokumen, PDF, dan video YouTube sebagai sumber belajar AI.</p>
+            <h1 className="text-2xl font-bold text-text">{t('materi.pageTitle')}</h1>
+            <p className="text-text-secondary text-sm mt-1">{t('materi.pageSubtitle')}</p>
             {(() => {
               const activeCount = selectedDocs.filter(docId => materials.some(m => `mat_${m.id}` === docId && m.status === 'Ready')).length;
               if (activeCount > 0) {
                 return (
                   <div className="mt-2 inline-flex items-center gap-2">
-                    <span className="badge badge-primary text-[11px]">RAG Aktif ({activeCount} materi)</span>
+                    <span className="badge badge-primary text-[11px]">{t('materi.ragActive', { count: activeCount })}</span>
                   </div>
                 );
               }
@@ -162,14 +164,14 @@ export default function MateriPage() {
               className="btn-ghost border border-border text-xs"
             >
               <Video size={14} className="text-red-500" />
-              Import YouTube
+              {t('materi.importYoutube')}
             </button>
             <button
               onClick={() => setIsUploadModalOpen(true)}
               className="btn-primary text-xs"
             >
               <Upload size={14} />
-              Upload Materi
+              {t('materi.uploadMateri')}
             </button>
           </div>
         </div>
@@ -182,13 +184,13 @@ export default function MateriPage() {
               onChange={(e) => setSubjectFilter('materi', e.target.value)}
               className="px-3 py-2 bg-card border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary transition-colors"
             >
-              <option value="">-- Semua Mata Kuliah --</option>
+              <option value="">{t('materi.filterAllSubjects')}</option>
               {sortedSubjects.map(s => (
                 <option key={s.id} value={String(s.id)}>{s.name}</option>
               ))}
             </select>
             <span className="text-xs text-text-muted">
-              Menampilkan {filteredMaterials.length} dari {materials.length} materi
+              {t('materi.showingCount', { shown: filteredMaterials.length, total: materials.length })}
             </span>
           </div>
         </div>
@@ -200,25 +202,25 @@ export default function MateriPage() {
               <tr className="border-b border-border">
                 <th className="px-4 py-3 text-left font-semibold text-text-secondary w-4"></th>
                 <th className="px-4 py-3 text-left font-semibold text-text-secondary w-5">#</th>
-                <th className="px-4 py-3 text-left font-semibold text-text-secondary">Nama File</th>
-                <th className="px-4 py-3 text-left font-semibold text-text-secondary">Mata Kuliah</th>
-                <th className="px-4 py-3 text-left font-semibold text-text-secondary">Tanggal</th>
-                <th className="px-4 py-3 text-left font-semibold text-text-secondary">Status</th>
-                <th className="px-4 py-3 text-right font-semibold text-text-secondary">Aksi</th>
+                <th className="px-4 py-3 text-left font-semibold text-text-secondary">{t('materi.colFilename')}</th>
+                <th className="px-4 py-3 text-left font-semibold text-text-secondary">{t('materi.colSubject')}</th>
+                <th className="px-4 py-3 text-left font-semibold text-text-secondary">{t('materi.colDate')}</th>
+                <th className="px-4 py-3 text-left font-semibold text-text-secondary">{t('materi.colStatus')}</th>
+                <th className="px-4 py-3 text-right font-semibold text-text-secondary">{t('materi.colActions')}</th>
               </tr>
             </thead>
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan="6" className="text-center py-10 text-text-muted">Memuat data...</td>
+                  <td colSpan="6" className="text-center py-10 text-text-muted">{t('materi.loadingData')}</td>
                 </tr>
               ) : materials.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="text-center py-10 text-text-muted">Belum ada materi. Silakan upload materi baru.</td>
+                  <td colSpan="6" className="text-center py-10 text-text-muted">{t('materi.emptyState')}</td>
                 </tr>
               ) : filteredMaterials.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="text-center py-10 text-text-muted">Tidak ada materi pada mata kuliah ini.</td>
+                  <td colSpan="6" className="text-center py-10 text-text-muted">{t('materi.noMaterialsForSubject')}</td>
                 </tr>
               ) : (
                 filteredMaterials.map((m, idx) => (
@@ -235,7 +237,7 @@ export default function MateriPage() {
                         checked={selectedDocs.includes(`mat_${m.id}`)}
                         onChange={() => m.status === 'Ready' && toggleSelection(m.id)}
                         disabled={m.status !== 'Ready'}
-                        title={m.status !== 'Ready' ? `Materi belum siap digunakan (${m.status})` : 'Aktifkan sebagai sumber RAG untuk Chat AI'}
+                        title={m.status !== 'Ready' ? t('materi.notReady', { status: m.status }) : t('materi.enableAsRagSource')}
                         className="h-4 w-4 rounded appearance-none cursor-pointer
                           bg-slate-800 border-2 border-slate-500
                           checked:bg-primary checked:border-primary
@@ -273,13 +275,13 @@ export default function MateriPage() {
                               />
                             </div>
                             <div className="flex items-center gap-1">
-                              <div className="text-[10px] text-text-muted leading-tight truncate max-w-[150px]" title={m.stage || 'Menunggu diproses...'}>
-                                {m.status === 'Pending' ? 'Menunggu antrian...' : (m.stage || 'Memproses...')}
+                              <div className="text-[10px] text-text-muted leading-tight truncate max-w-[150px]" title={m.stage || t('materi.waitingForProcess')}>
+                                {m.status === 'Pending' ? t('materi.waitingInQueue') : (m.stage || t('materi.processing'))}
                               </div>
                               <button
-                                onClick={() => { if (confirm('Batalkan pemrosesan materi ini?')) cancelMaterialMutation.mutate(m.id); }}
+                                onClick={() => { if (confirm(t('materi.confirmCancelProcessing'))) cancelMaterialMutation.mutate(m.id); }}
                                 className="p-0.5 rounded text-text-muted hover:text-danger hover:bg-danger/10 transition-colors shrink-0"
-                                title="Batalkan"
+                                title={t('materi.cancelProcessing')}
                               >
                                 <X size={11} />
                               </button>
@@ -306,7 +308,7 @@ export default function MateriPage() {
                         <button
                           onClick={() => handleAudio(m.id)}
                           className="p-1.5 rounded-lg text-text-secondary hover:text-accent-teal hover:bg-accent-teal/10 transition-colors"
-                          title="Buat / Mainkan Audio Podcast"
+                          title={t('materi.audioPodcastTitle')}
                         >
                           <Headphones size={16} />
                         </button>
@@ -314,7 +316,7 @@ export default function MateriPage() {
                         <button
                           onClick={() => handleDelete(m.id)}
                           className="p-1.5 rounded-lg text-text-secondary hover:text-danger hover:bg-danger/10 transition-colors"
-                          title="Hapus Materi"
+                          title={t('materi.deleteMateriTitle')}
                         >
                           <Trash2 size={16} />
                         </button>
@@ -357,6 +359,7 @@ export default function MateriPage() {
 }
 
 function UploadModal({ onClose, subjects, onSuccess }) {
+  const { t } = useTranslation();
   const [file, setFile] = useState(null);
   const [subjectId, setSubjectId] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -365,7 +368,7 @@ function UploadModal({ onClose, subjects, onSuccess }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!file || !subjectId) return setError('Pilih file dan mata kuliah terlebih dahulu.');
+    if (!file || !subjectId) return setError(t('materi.uploadSelectFileSubject'));
     setError('');
     setIsSubmitting(true);
     const formData = new FormData();
@@ -375,11 +378,11 @@ function UploadModal({ onClose, subjects, onSuccess }) {
       const res = await fetch('/api/materials', { method: 'POST', body: formData });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.message || data.detail || 'Gagal mengunggah materi.');
+        throw new Error(data.message || data.detail || t('materi.uploadFailed'));
       }
       onSuccess();
     } catch (err) {
-      setError(err.message && err.message.length < 200 ? err.message : 'Gagal mengunggah materi. Coba lagi.');
+      setError(err.message && err.message.length < 200 ? err.message : t('materi.uploadFailedRetry'));
       setIsSubmitting(false);
     }
   };
@@ -393,7 +396,7 @@ function UploadModal({ onClose, subjects, onSuccess }) {
         className="w-full max-w-md card-base shadow-2xl"
       >
         <div className="flex items-center justify-between p-4 border-b border-border">
-          <h3 className="font-semibold text-text">Upload Materi Baru</h3>
+          <h3 className="font-semibold text-text">{t('materi.uploadModalTitle')}</h3>
           <button onClick={onClose} className="text-text-muted hover:text-text"><X size={18} /></button>
         </div>
         <form onSubmit={handleSubmit} className="p-4 space-y-4">
@@ -403,30 +406,30 @@ function UploadModal({ onClose, subjects, onSuccess }) {
             </div>
           )}
           <div>
-            <label className="block text-xs font-medium text-text-secondary mb-1">Mata Kuliah</label>
+            <label className="block text-xs font-medium text-text-secondary mb-1">{t('materi.subjectLabel')}</label>
             <select
               required
               value={subjectId}
               onChange={(e) => setSubjectId(e.target.value)}
               className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary transition-colors"
             >
-              <option value="">-- Pilih Mata Kuliah --</option>
+              <option value="">{t('materi.selectSubject')}</option>
               {subjects.map(s => (
                 <option key={s.id} value={s.id}>{s.name}</option>
               ))}
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-text-secondary mb-1">Pilih File (PDF/DOCX/TXT/MD/PPTX/XLSX)</label>
+            <label className="block text-xs font-medium text-text-secondary mb-1">{t('materi.uploadSelectFileLabel')}</label>
             <div 
               className="border-2 border-dashed border-border hover:border-primary/50 transition-colors rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer text-center"
               onClick={() => fileInputRef.current?.click()}
             >
               <Upload size={24} className="text-primary mb-2" />
               <p className="text-sm text-text font-medium">
-                {file ? file.name : 'Klik atau seret file ke sini'}
+                {file ? file.name : t('materi.uploadDropzone')}
               </p>
-              <p className="text-xs text-text-muted mt-1">Maks. 50MB</p>
+              <p className="text-xs text-text-muted mt-1">{t('materi.uploadMaxSize')}</p>
               <input
                 type="file"
                 ref={fileInputRef}
@@ -438,9 +441,9 @@ function UploadModal({ onClose, subjects, onSuccess }) {
             </div>
           </div>
           <div className="flex justify-end gap-2 pt-2">
-            <button type="button" onClick={onClose} className="btn-ghost">Batal</button>
+            <button type="button" onClick={onClose} className="btn-ghost">{t('common.cancel')}</button>
             <button type="submit" disabled={isSubmitting || !file} className="btn-primary">
-              {isSubmitting ? 'Mengunggah...' : 'Upload & Proses'}
+              {isSubmitting ? t('materi.uploading') : t('materi.uploadAndProcess')}
             </button>
           </div>
         </form>
@@ -450,6 +453,7 @@ function UploadModal({ onClose, subjects, onSuccess }) {
 }
 
 function YoutubeModal({ onClose, subjects, onSuccess }) {
+  const { t } = useTranslation();
   const [url, setUrl] = useState('');
   const [subjectId, setSubjectId] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -457,7 +461,7 @@ function YoutubeModal({ onClose, subjects, onSuccess }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!url || !subjectId) return setError('Masukkan URL dan pilih mata kuliah');
+    if (!url || !subjectId) return setError(t('materi.youtubeEnterUrlSubject'));
     setError('');
     setIsSubmitting(true);
     try {
@@ -481,7 +485,7 @@ function YoutubeModal({ onClose, subjects, onSuccess }) {
         <div className="flex items-center justify-between p-4 border-b border-border">
           <div className="flex items-center gap-2">
             <Video size={20} className="text-red-500" />
-            <h3 className="font-semibold text-text">Import YouTube Video</h3>
+            <h3 className="font-semibold text-text">{t('materi.youtubeModalTitle')}</h3>
           </div>
           <button onClick={onClose} className="text-text-muted hover:text-text"><X size={18} /></button>
         </div>
@@ -492,14 +496,14 @@ function YoutubeModal({ onClose, subjects, onSuccess }) {
             </div>
           )}
           <div>
-            <label className="block text-xs font-medium text-text-secondary mb-1">Mata Kuliah</label>
+            <label className="block text-xs font-medium text-text-secondary mb-1">{t('materi.subjectLabel')}</label>
             <select
               required
               value={subjectId}
               onChange={(e) => setSubjectId(e.target.value)}
               className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm text-text focus:outline-none focus:border-red-500/50 transition-colors"
             >
-              <option value="">-- Pilih Mata Kuliah --</option>
+              <option value="">{t('materi.selectSubject')}</option>
               {subjects.map(s => (
                 <option key={s.id} value={s.id}>{s.name}</option>
               ))}
@@ -515,15 +519,15 @@ function YoutubeModal({ onClose, subjects, onSuccess }) {
               className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm text-text focus:outline-none focus:border-red-500/50 transition-colors"
             />
             <p className="text-[10px] text-text-muted mt-1">
-              Subtitle/CC otomatis digunakan jika tersedia. Jika tidak ada, Whisper AI akan mentranskripsikan audio.
+              {t('materi.youtubeSubtitleInfo')}
               <br />
-              Video sering diblokir YouTube? Simpan file <code className="text-primary">cookies.txt</code> (dari ekstensi browser "Get cookies.txt") di folder <code className="text-primary">storage/</code> untuk menembus blokir.
+              {t('materi.youtubeSubtitleHelp')}
             </p>
           </div>
           <div className="flex justify-end gap-2 pt-2">
-            <button type="button" onClick={onClose} className="btn-ghost">Batal</button>
+            <button type="button" onClick={onClose} className="btn-ghost">{t('common.cancel')}</button>
             <button type="submit" disabled={isSubmitting || !url} className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl text-sm font-medium transition-all">
-              {isSubmitting ? 'Memproses...' : 'Import Transkrip'}
+              {isSubmitting ? t('materi.youtubeProcessing') : t('materi.importTranscript')}
             </button>
           </div>
         </form>

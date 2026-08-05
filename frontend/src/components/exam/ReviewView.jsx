@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BookOpen, CheckCircle, XCircle, ChevronDown, Loader2, Lightbulb, FileText } from 'lucide-react';
 import { examAPI } from '@/services/api';
@@ -7,6 +8,7 @@ import MathMarkdown from '@/components/MathMarkdown';
 import { SectionHeader } from './shared';
 
 export default function ReviewView({ sessionData, evalData }) {
+  const { t } = useTranslation();
   const [expandedIdx, setExpandedIdx] = useState(null);
   // Map of question index → {loading, text, error}
   const [explanations, setExplanations] = useState({});
@@ -27,7 +29,7 @@ export default function ReviewView({ sessionData, evalData }) {
         correct_answer: q.answer || '',
         topic:         q.topic  || '',
       });
-      const text = r.data?.explanation || 'Penjelasan tidak tersedia.';
+      const text = r.data?.explanation || t('exam.review.explanationUnavailable');
       setExplanations(prev => ({ ...prev, [i]: { loading: false, text, error: '' } }));
     } catch {
       setExplanations(prev => ({

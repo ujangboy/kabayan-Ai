@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 
 function formatTime(seconds) {
   const m = Math.floor(seconds / 60);
@@ -7,6 +8,7 @@ function formatTime(seconds) {
 }
 
 export default function QuizTimer({ totalSeconds, onTimeUp, isActive = true }) {
+  const { t } = useTranslation();
   const [remaining, setRemaining] = useState(totalSeconds);
   const onTimeUpRef = useRef(onTimeUp);
   onTimeUpRef.current = onTimeUp;
@@ -36,7 +38,7 @@ export default function QuizTimer({ totalSeconds, onTimeUp, isActive = true }) {
             ? 'bg-warning/15 text-warning border-warning/30'
             : 'bg-card text-text-secondary border-border'
       }`}
-      title="Sisa waktu pengerjaan quiz"
+      title={t('quizTimer.remainingTime')}
     >
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="10" />

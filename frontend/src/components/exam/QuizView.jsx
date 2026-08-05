@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Clock, Play, Pause, ChevronLeft, ChevronRight, Loader2, Check } from 'lucide-react';
 import { examAPI } from '@/services/api';
 import { cn } from '@/utils';
@@ -6,6 +7,7 @@ import MathMarkdown from '@/components/MathMarkdown';
 import { Chip } from './shared';
 
 export default function QuizView({ sessionData, onDone }) {
+  const { t } = useTranslation();
   const questions = sessionData?.questions || [];
   const totalQ    = questions.length;
   const duration  = sessionData?.duration_minutes;
@@ -45,7 +47,7 @@ export default function QuizView({ sessionData, onDone }) {
 
       onDone(evalResult, answers);
     } catch (e) {
-      setError(e.response?.data?.detail || e.message || 'Gagal submit.');
+      setError(e.response?.data?.detail || e.message || t('exam.quiz.submitFailed'));
       setIsSubmitting(false);
     }
   };
@@ -62,8 +64,8 @@ export default function QuizView({ sessionData, onDone }) {
       <div className="card-base p-4 flex items-center gap-4">
         <div className="flex-1">
           <div className="flex items-center justify-between mb-1">
-            <span className="text-xs text-text-muted">Soal {idx+1} / {totalQ}</span>
-            <span className="text-xs text-text-muted">{answered} dijawab</span>
+            <span className="text-xs text-text-muted">{t('exam.quiz.questionCounter', { current: idx+1, total: totalQ })}</span>
+            <span className="text-xs text-text-muted">{t('exam.quiz.answeredCount', { count: answered })}</span>
           </div>
           <div className="h-2 bg-border rounded-full overflow-hidden">
             <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${progress}%` }} />
@@ -87,9 +89,9 @@ export default function QuizView({ sessionData, onDone }) {
       {paused && (
         <div className="card-base p-16 text-center">
           <Pause size={48} className="mx-auto mb-4 text-text-muted opacity-40" />
-          <h3 className="text-lg font-semibold text-text mb-2">Ujian Dijeda</h3>
+          <h3 className="text-lg font-semibold text-text mb-2">{t('exam.quiz.pausedTitle')}</h3>
           <button onClick={() => setPaused(false)} className="btn-primary mt-4">
-            <Play size={14} /> Lanjutkan
+            <Play size={14} /> {t('exam.quiz.resume')}
           </button>
         </div>
       )}
@@ -136,7 +138,7 @@ export default function QuizView({ sessionData, onDone }) {
               rows={5}
               value={userAnswer}
               onChange={e => selectAnswer(e.target.value)}
-              placeholder={`Tulis jawaban ${q.type === 'calculation' ? 'perhitungan' : q.type === 'essay' ? 'esai' : 'kamu'} di sini...`}
+              placeholder={t('exam.quiz.answerPlaceholder', { type: q.type === 'calculation' ? 'perhitungan' : q.type === 'essay' ? 'esai' : 'kamu' })}
               className="w-full px-4 py-3 bg-background border border-border rounded-xl text-sm text-text focus:outline-none focus:border-primary resize-none"
             />
           )}
@@ -150,7 +152,7 @@ export default function QuizView({ sessionData, onDone }) {
         <div className="flex items-center justify-between">
           <button onClick={() => setIdx(p => Math.max(0, p-1))} disabled={idx === 0}
             className="btn-ghost text-sm border border-border disabled:opacity-30">
-            <ChevronLeft size={14} /> Sebelumnya
+            <ChevronLeft size={14} /> {t('exam.quiz.previous')}
           </button>
 
           <div className="flex gap-1">
@@ -167,11 +169,11 @@ export default function QuizView({ sessionData, onDone }) {
 
           {idx < totalQ - 1 ? (
             <button onClick={() => setIdx(p => p+1)} className="btn-primary text-sm">
-              Berikutnya <ChevronRight size={14} />
+              {t('exam.quiz.next')} <ChevronRight size={14} />
             </button>
           ) : (
             <button onClick={handleSubmit} disabled={isSubmitting} className="btn-primary text-sm">
-              {isSubmitting ? <><Loader2 size={13} className="animate-spin" /> Mengevaluasi...</> : <><Check size={13} /> Submit</>}
+              {isSubmitting ? <><Loader2 size={13} className="animate-spin" /> {t('exam.quiz.evaluating')}</> : <><Check size={13} /> {t('exam.quiz.submit')}</>}
             </button>
           )}
         </div>
