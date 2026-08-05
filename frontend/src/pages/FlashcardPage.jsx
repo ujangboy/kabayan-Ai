@@ -100,7 +100,7 @@ export default function FlashcardPage() {
           <div className="flex items-center gap-3 flex-wrap">
             {(() => {
               const totalDue = groups.reduce((sum, g) =>
-                sum + g.cards.filter(c => c.next_review && !c.mastered && new Date(c.next_review) <= new Date()).length, 0
+                sum + g.cards.filter(c => !c.mastered && (c.times_seen === 0 || (c.next_review && new Date(c.next_review) <= new Date()))).length, 0
               );
               return (
                 <button
@@ -205,7 +205,7 @@ function BatchFlashcardCard({ group, onStart, onReview, onDeleteAll }) {
   // ─── Statistik SRS dari data kartu ───
   const masteredCount = cards.filter(c => c.mastered).length;
   const newCount = cards.filter(c => !c.times_seen).length;
-  const dueCount = cards.filter(c => c.next_review && !c.mastered && new Date(c.next_review) <= new Date()).length;
+  const dueCount = cards.filter(c => !c.mastered && (c.times_seen === 0 || (c.next_review && new Date(c.next_review) <= new Date()))).length;
 
   return (
     <motion.div

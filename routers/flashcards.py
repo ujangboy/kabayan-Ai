@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, Form, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from typing import List, Optional
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError, OperationalError
 from database import get_db
@@ -81,11 +82,17 @@ async def review_flashcard(req: ReviewRequest, db: Session = Depends(get_db)):
 
 @router.get("/api/flashcards/review/due")
 async def get_due_flashcards(subject_id: int = Query(None), db: Session = Depends(get_db), limit: int = Query(50, ge=1, le=200)):
-    """Kartu yang sudah waktunya di-review (next_review <= sekarang)."""
+    """Kartu yang siap direview: kartu baru (belum pernah direview) + kartu yang sudah jatuh tempo."""
     import datetime
     from models import Flashcard
+    now = datetime.datetime.utcnow()
     query = db.query(Flashcard).filter(
-        Flashcard.next_review <= datetime.datetime.utcnow()
+        Flashcard.mastered == 0,
+        or_(
+            Flashcard.times_seen == 0,          # kartu baru: belum pernah direview
+            Flashcard.next_review.is_(None),    # belum pernah dijadwalkan (manual/legacy)
+            Flashcard.next_review <= now,       # sudah waktunya review
+        )
     )
     if subject_id:
         query = query.filter(Flashcard.subject_id == subject_id)
