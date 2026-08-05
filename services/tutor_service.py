@@ -76,13 +76,13 @@ class TutorService:
                 yield chunk
         elif tier == "MEDIUM":
             async for chunk in self._handle_ai(
-                message, history, mata_kuliah, student_level, capability="chat",
+                db, message, history, mata_kuliah, student_level, capability="chat",
                 profile=profile,
             ):
                 yield chunk
         else:  # COMPLEX
             async for chunk in self._handle_ai(
-                message, history, mata_kuliah, student_level, capability="reasoning",
+                db, message, history, mata_kuliah, student_level, capability="reasoning",
                 profile=profile,
             ):
                 yield chunk
@@ -103,7 +103,7 @@ class TutorService:
         if faq is None:
             logger.debug("No FAQ match for '%s', escalating to MEDIUM.", message[:60])
             async for chunk in self._handle_ai(
-                message, [], mata_kuliah, student_level, capability="chat",
+                db, message, [], mata_kuliah, student_level, capability="chat",
                 profile=profile,
             ):
                 yield chunk
@@ -122,6 +122,7 @@ class TutorService:
 
     async def _handle_ai(
         self,
+        db: Session,
         message: str,
         history: list[dict],
         mata_kuliah: Optional[str],
