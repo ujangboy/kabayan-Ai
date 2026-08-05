@@ -194,10 +194,10 @@ function OverviewTab({ data }) {
              <p className="text-xs font-semibold text-success mb-2 flex items-center gap-1">
                <TrendingUp size={11} /> {t('exam.detail.strongTopics')}
              </p>
-            {(data.strong_topics || []).slice(0,5).map((t,i) => (
+            {(data.strong_topics || []).slice(0,5).map((topic,i) => (
               <div key={i} className="flex items-center justify-between py-1 border-b border-success/10 last:border-0">
-                <span className="text-xs text-text">{typeof t === 'string' ? t : t.topic || ''}</span>
-                {t.mastery && <Chip label={t.mastery} size="xs" color="success" />}
+                <span className="text-xs text-text">{typeof topic === 'string' ? topic : topic.topic || ''}</span>
+                {topic.mastery && <Chip label={topic.mastery} size="xs" color="success" />}
               </div>
             ))}
           </div>
@@ -207,11 +207,11 @@ function OverviewTab({ data }) {
              <p className="text-xs font-semibold text-danger mb-2 flex items-center gap-1">
                <AlertTriangle size={11} /> {t('exam.detail.weakTopics')}
              </p>
-            {(data.weak_topics || []).slice(0,5).map((t,i) => (
+            {(data.weak_topics || []).slice(0,5).map((topic,i) => (
               <div key={i} className="flex items-center justify-between py-1 border-b border-danger/10 last:border-0">
-                <span className="text-xs text-text">{typeof t === 'string' ? t : t.topic || ''}</span>
-                {t.priority && <Chip label={t.priority} size="xs"
-                  color={t.priority==='Tinggi'?'danger':t.priority==='Menengah'?'warning':'teal'} />}
+                <span className="text-xs text-text">{typeof topic === 'string' ? topic : topic.topic || ''}</span>
+                {topic.priority && <Chip label={topic.priority} size="xs"
+                  color={topic.priority==='Tinggi'?'danger':topic.priority==='Menengah'?'warning':'teal'} />}
               </div>
             ))}
           </div>

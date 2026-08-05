@@ -99,18 +99,18 @@ export default function DashboardView({ subjectId, subjects, analysis, onAnalysi
       <div className="card-base p-5">
         <SectionHeader icon={Target} title={t('exam.dashboard.topicPriority')} subtitle={t('exam.dashboard.topicPrioritySubtitle')} />
         <div className="space-y-3">
-          {topic_priority.slice(0, 8).map((t, i) => (
+          {topic_priority.slice(0, 8).map((tp, i) => (
             <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-background hover:bg-card/60 transition-colors">
               <span className="text-xs font-bold text-text-muted w-5 mt-0.5">{i+1}</span>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-semibold text-sm text-text">{t.topic}</span>
-                  <StarRating stars={t.stars} />
+                  <span className="font-semibold text-sm text-text">{tp.topic}</span>
+                  <StarRating stars={tp.stars} />
                 </div>
-                <p className="text-xs text-text-muted mt-0.5">{t.reason}</p>
-                {t.subtopics?.length > 0 && (
+                <p className="text-xs text-text-muted mt-0.5">{tp.reason}</p>
+                {tp.subtopics?.length > 0 && (
                   <div className="flex gap-1 flex-wrap mt-1.5">
-                    {t.subtopics.map((st, j) => <Chip key={j} label={st} color="blue" size="xs" />)}
+                    {tp.subtopics.map((st, j) => <Chip key={j} label={st} color="blue" size="xs" />)}
                   </div>
                 )}
               </div>

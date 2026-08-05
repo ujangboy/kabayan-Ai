@@ -118,10 +118,10 @@ export default function ResultView({ evalData, onReview, onFinish, sessionId, on
               <TrendingUp size={12} /> {t('exam.result.strongTopics')}
             </p>
             <div className="space-y-2">
-              {strong_topics.map((t, i) => (
+              {strong_topics.map((topic, i) => (
                 <div key={i} className="flex items-center justify-between">
-                  <span className="text-sm text-text">{t.topic}</span>
-                  <Chip label={t.mastery} size="xs" color="success" />
+                  <span className="text-sm text-text">{topic.topic}</span>
+                  <Chip label={topic.mastery} size="xs" color="success" />
                 </div>
               ))}
             </div>
@@ -133,14 +133,14 @@ export default function ResultView({ evalData, onReview, onFinish, sessionId, on
               <AlertTriangle size={12} /> {t('exam.result.weakTopics')}
             </p>
             <div className="space-y-2">
-              {weak_topics.map((t, i) => (
+              {weak_topics.map((topic, i) => (
                 <div key={i} className="space-y-0.5">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-text">{t.topic}</span>
-                    <Chip label={t('exam.result.priorityLabel', { priority: t.priority })} size="xs"
-                      color={t.priority === 'Tinggi' ? 'danger' : t.priority === 'Menengah' ? 'warning' : 'teal'} />
+                    <span className="text-sm text-text">{topic.topic}</span>
+                    <Chip label={t('exam.result.priorityLabel', { priority: topic.priority })} size="xs"
+                      color={topic.priority === 'Tinggi' ? 'danger' : topic.priority === 'Menengah' ? 'warning' : 'teal'} />
                   </div>
-                  {t.issue && <p className="text-xs text-text-muted pl-1">{t.issue}</p>}
+                  {topic.issue && <p className="text-xs text-text-muted pl-1">{topic.issue}</p>}
                 </div>
               ))}
             </div>

@@ -58,6 +58,7 @@ function SubjectPicker({ subjects, onSelectSubject, onStartConfig, t }) {
             onSelectSubject={onSelectSubject}
             onStartConfig={onStartConfig}
             onDelete={handleDelete}
+            t={t}
           />
         ))}
       </div>
@@ -264,11 +265,11 @@ export default function HistoryView({ subjectId, subjects, onSelectSubject, onSt
           )}
         </div>
         <div className="flex flex-wrap gap-2">
-          {['all','uts','uas','quiz','latihan_harian','custom'].map(t => (
-            <button key={t} onClick={() => setTypeFilter(t)}
+          {['all','uts','uas','quiz','latihan_harian','custom'].map(type => (
+            <button key={type} onClick={() => setTypeFilter(type)}
               className={cn('px-3 py-1 rounded-lg text-xs font-medium border transition-all',
-                typeFilter === t ? 'bg-primary text-white border-primary' : 'bg-card text-text border-border hover:border-primary/40')}>
-               {t === 'all' ? t('exam.history.all') : t.toUpperCase().replace('_',' ')}
+                typeFilter === type ? 'bg-primary text-white border-primary' : 'bg-card text-text border-border hover:border-primary/40')}>
+               {type === 'all' ? t('exam.history.all') : type.toUpperCase().replace('_',' ')}
             </button>
           ))}
           <div className="w-px bg-border mx-1" />
@@ -411,8 +412,8 @@ function HistoryCard({ session: s, onDetail, onDelete, t }) {
 
       {(s.weak_topics || []).slice(0, 2).length > 0 && (
         <div className="flex gap-1 flex-wrap mb-3">
-          {(s.weak_topics || []).slice(0, 2).map((t, i) => (
-            <Chip key={i} label={typeof t === 'string' ? t : t.topic || ''} size="xs" color="danger" />
+          {(s.weak_topics || []).slice(0, 2).map((topic, i) => (
+            <Chip key={i} label={typeof topic === 'string' ? topic : topic.topic || ''} size="xs" color="danger" />
           ))}
         </div>
       )}
