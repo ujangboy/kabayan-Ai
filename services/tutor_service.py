@@ -23,7 +23,8 @@ from services.ai_service import ai_service, _normalize_math, _trim_history, _wra
 from services.tutor_classifier import classify, TierType
 from services.faq_service import faq_service
 from services.tutor_profile_service import get_or_create_profile
-from prompts.tutor import build_tutor_prompt, TUTOR_FAQ_WRAPPER_PROMPT
+from services.cache_service import cache_service
+from prompts.tutor import build_tutor_prompt
 
 logger = logging.getLogger(__name__)
 
@@ -95,13 +96,10 @@ class TutorService:
         mata_kuliah: Optional[str],
         student_level: str,
     ) -> AsyncIterator[str]:
-        """Look up FAQ and wrap answer with a natural tone via short AI call."""
-        import asyncio
-
+        """Look up FAQ and return the answer directly (0 token)."""
         faq = faq_service.find_best_match(db, message, mata_kuliah=mata_kuliah)
 
         if faq is None:
-            # Fallback: escalate to MEDIUM if no FAQ found
             logger.debug("No FAQ match for '%s', escalating to MEDIUM.", message[:60])
             async for chunk in self._handle_ai(
                 message, [], mata_kuliah, student_level, capability="chat"
@@ -110,31 +108,13 @@ class TutorService:
             return
 
         # Record usage (fire-and-forget, non-blocking)
+        import asyncio
         asyncio.create_task(
             asyncio.to_thread(faq_service.record_usage, db, faq.id)
         )
 
-        # Wrap FAQ answer with natural tone using a short AI call (streamed)
-        prompt = TUTOR_FAQ_WRAPPER_PROMPT
-        try:
-            llm = ai_service._get_llm("chat")
-            sys_content = prompt.format(
-                mata_kuliah=mata_kuliah or faq.mata_kuliah or "umum",
-                question=message,
-                faq_answer=faq.answer,
-                student_level=student_level,
-            )
-            messages = [SystemMessage(content=sys_content)]
-            full = ""
-            async for chunk in llm.astream(messages):
-                if chunk.content:
-                    full += chunk.content
-                    yield chunk.content
-            return
-        except Exception as exc:
-            logger.warning("FAQ wrapper AI failed, falling back to raw answer: %s", exc)
-            # Graceful fallback: return raw FAQ answer directly
-            yield faq.answer
+        # Return raw FAQ answer directly — 0 token cost
+        yield faq.answer
 
     # ── MEDIUM / COMPLEX: full AI response ────────────────────────────────────
 
@@ -150,7 +130,7 @@ class TutorService:
         """Stream an AI tutor response using the Socratic prompt."""
         import time
 
-        trimmed_history = _trim_history(history)
+        trimmed_history = _trim_history(history, max_turns=6)
         hist_str = "\n".join(
             f"{m['role']}: {m['content']}" for m in trimmed_history
         )
@@ -175,6 +155,14 @@ class TutorService:
         messages.append(HumanMessage(content=wrapped_input))
 
         llm = ai_service._get_llm(capability)
+
+        # Cache lookup — keyed by message + capability + level + subject
+        cache_key = f"{message}:{capability}:{student_level}:{mata_kuliah or 'umum'}"
+        cached = cache_service.get_cache(db, cache_key, "", "")
+        if cached:
+            yield cached
+            return
+
         full_response = ""
         last_yield = time.time()
 
@@ -199,6 +187,12 @@ class TutorService:
 
         # Normalize math delimiters on complete response (same as ai_service)
         _normalize_math(full_response)
+
+        # Cache the response for future identical queries
+        try:
+            cache_service.set_cache(db, cache_key, "", "", full_response)
+        except Exception:
+            pass  # cache failure is non-critical
 
     # ── Classification only (for /api/tutor/classify endpoint) ───────────────
 

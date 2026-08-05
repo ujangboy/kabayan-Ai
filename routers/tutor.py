@@ -277,3 +277,20 @@ async def get_tutor_profile(db: Session = Depends(get_db)):
         })
     except Exception as exc:
         raise AppError(str(exc), status_code=500)
+
+
+@router.get("/api/tutor/stats")
+async def get_tutor_stats(db: Session = Depends(get_db)):
+    """Token usage & session statistics for the tutor."""
+    try:
+        profile = get_or_create_profile(db)
+        return JSONResponse({
+            "total_sessions": profile.total_sessions,
+            "total_messages": profile.total_messages,
+            "total_tokens": profile.total_tokens,
+            "helpful_count": profile.helpful_count,
+            "not_helpful_count": profile.not_helpful_count,
+            "helpful_rate": profile.helpful_rate,
+        })
+    except Exception as exc:
+        raise AppError(str(exc), status_code=500)
