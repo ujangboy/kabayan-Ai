@@ -14,6 +14,7 @@ import datetime
 from sqlalchemy.orm import Session
 from models import TrashItem, Material
 from services.cache_service import cache_service
+from services.rag_service import rag_service
 
 logger = logging.getLogger(__name__)
 
@@ -241,6 +242,10 @@ def delete_item_permanent(db: Session, item_id: int) -> bool:
     it = db.query(TrashItem).filter(TrashItem.id == item_id).first()
     if not it:
         return False
+    if it.material_id:
+        # Row milik materi: delegasikan ke penghapusan menyeluruh materi
+        # (file + audio + record + RAG) agar tak meninggalkan materi sampah nyangkut.
+        return delete_material_permanent(db, it.material_id)
     if it.trash_path:
         try:
             os.remove(it.trash_path)
@@ -270,7 +275,12 @@ def restore_item(db: Session, item_id: int) -> bool:
 
 
 def empty_trash(db: Session) -> int:
-    """Kosongkan sampah permanen: hapus semua file trunk + row TrashItem (materi tetap Trashed)."""
+    """Kosongkan sampah permanen.
+
+    Semua file trunk + row TrashItem dihapus. Record materi yang ditandai
+    Trashed ikut dihapus permanen (file + audio + record + RAG chunks) supaya
+    tidak tersisa materi zombie tanpa TrashItem yang tak bisa di-restore.
+    """
     _register_orphan_files(db)
     items = db.query(TrashItem).all()
     count = 0
@@ -282,7 +292,19 @@ def empty_trash(db: Session) -> int:
                 pass
         db.delete(it)
         count += 1
+
+    from models import AudioGeneration
+    trashed = db.query(Material).filter(Material.status == "Trashed").all()
+    for mat in trashed:
+        rag_service.delete_document_chunks(f"mat_{mat.id}")
+        db.query(AudioGeneration).filter(AudioGeneration.material_id == mat.id).delete(synchronize_session=False)
+        db.delete(mat)
+        count += 1
+
     db.commit()
+    if trashed and rag_service._should_rebuild():
+        import threading
+        threading.Thread(target=rag_service.rebuild_index, daemon=True).start()
     cache_service.invalidate_all(db)
     return count
 

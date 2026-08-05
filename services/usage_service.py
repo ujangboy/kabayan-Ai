@@ -12,6 +12,7 @@ import logging
 
 from sqlalchemy.orm import Session
 
+import models
 from repositories.settings_repository import setting_repository
 
 logger = logging.getLogger(__name__)
@@ -68,7 +69,6 @@ def record_usage(db: Session, feature: str, response_text: str | None = None) ->
 
 def get_usage(db: Session) -> dict:
     """Kumpulan pemakaian per fitur + total, untuk ditampilkan di UI."""
-    import models
     settings = db.query(models.Setting).filter(models.Setting.key.like("usage.%")).all()
 
     features: dict[str, dict] = {}

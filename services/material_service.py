@@ -39,15 +39,6 @@ class MaterialService:
         from services.storage_cleanup_service import trash_file
         trash_file(filepath)
 
-    def _delete_audio_files(self, db: Session, material_id: int):
-        # C1: hapus SEMUA file audio fisik milik materi (bisa lebih dari satu generasi)
-        from models import AudioGeneration
-        rows = db.query(AudioGeneration).filter(AudioGeneration.material_id == material_id).all()
-        for row in rows:
-            if row.filepath:
-                full_path = os.path.join(config.BASE_DIR, row.filepath.lstrip("/"))
-                self._remove_file(full_path)
-
     def process_material_async(self, filepath: str, doc_id: str, material_id: int = None):
         db = SessionLocal()
         try:

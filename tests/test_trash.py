@@ -101,18 +101,24 @@ def test_delete_material_permanent_removes_record_and_file(db_session, make_subj
 
 def test_empty_trash_removes_all_files(db_session, make_subject, make_material):
     subject = make_subject()
+    ids = []
     for i in range(2):
         fp = os.path.join(config.UPLOADS_DIR, f"f{i}.pdf")
         with open(fp, "wb") as f:
             f.write(b"%PDF")
         mat = make_material(subject.id, status="Ready", filepath=fp)
         material_service.delete(db_session, mat.id)
+        ids.append(mat.id)
     assert len(_trash_contents()) == 2
 
     count = empty_trash(db_session)
 
     assert count >= 2
     assert _trash_contents() == []
+    # Kosongkan sampah juga menghapus record materi Trashed (anti-zombie):
+    # tak tersisa materi status Trashed tanpa TrashItem yang tak bisa di-restore.
+    assert db_session.query(TrashItem).count() == 0
+    assert db_session.query(Material).filter(Material.id.in_(ids)).count() == 0
 
 
 def test_trash_api_flow(client, db_session, make_subject, make_material):

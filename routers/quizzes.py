@@ -26,7 +26,7 @@ async def get_quizzes_json(db: Session = Depends(get_db), skip: int = Query(0, g
                     all_mat_ids.add(int(mid.strip()))
     mat_name_map = {}
     if all_mat_ids:
-        mats = db.query(Material).filter(Material.id.in_(all_mat_ids)).all()
+        mats = db.query(Material).filter(Material.id.in_(all_mat_ids), Material.status != "Trashed").all()
         mat_name_map = {m.id: m.filename or f"Materi #{m.id}" for m in mats}
 
     results = []

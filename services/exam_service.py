@@ -984,7 +984,7 @@ class ExamService:
                 except Exception:
                     pass
             if all_mat_ids:
-                mats = db.query(Material).filter(Material.id.in_(all_mat_ids)).all()
+                mats = db.query(Material).filter(Material.id.in_(all_mat_ids), Material.status != "Trashed").all()
                 mat_name_map = {m.id: m.filename or f"Materi #{m.id}" for m in mats}
                 for bp_id, ids in bp_mat_ids.items():
                     blueprint_material_map[bp_id] = [mat_name_map[i] for i in ids if i in mat_name_map]
@@ -1093,7 +1093,7 @@ class ExamService:
                     mat_ids = [int(x.strip()) for x in str(raw_mat_ids).split(",") if x.strip().isdigit()]
                     if mat_ids:
                         from models import Material
-                        mats = db.query(Material).filter(Material.id.in_(mat_ids)).all()
+                        mats = db.query(Material).filter(Material.id.in_(mat_ids), Material.status != "Trashed").all()
                         material_names = [m.filename or f"Materi #{m.id}" for m in mats]
                 except Exception:
                     pass
