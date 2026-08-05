@@ -133,3 +133,25 @@ def test_trash_api_flow(client, db_session, make_subject, make_material):
     r2 = client.post(f"/api/trash/materials/{mat.id}/restore")
     assert r2.status_code == 200
     assert os.path.exists(fp)
+
+
+def test_orphan_files_registered_without_metadata(db_session):
+    """File trash lama (tanpa TrashItem) otomatis tampil sebagai orphan."""
+    from services.trash_service import list_trash, empty_trash
+    # Simulasikan file yang masuk trash sebelum fitur (trash_file tanpa metadata)
+    name1 = "lama_ab12cd34.pdf"
+    name2 = "tanpauuid.docx"
+    with open(os.path.join(config.TRASH_DIR, name1), "wb") as f:
+        f.write(b"%PDF-lama")
+    with open(os.path.join(config.TRASH_DIR, name2), "wb") as f:
+        f.write(b"PK-docx")
+
+    items = list_trash(db_session)
+
+    names = {i["original_filename"] for i in items}
+    assert "lama.pdf" in names          # suffix uuid dihapus
+    assert "tanpauuid.docx" in names    # tanpa uuid tetap apa adanya
+    assert all(i["source_type"] == "orphan" for i in items if i["material_id"] is None)
+    # Bisa dikosongkan
+    assert empty_trash(db_session) >= 2
+    assert os.listdir(config.TRASH_DIR) == []

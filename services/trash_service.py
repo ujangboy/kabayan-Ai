@@ -95,8 +95,57 @@ def trash_material(db: Session, material_id: int) -> bool:
     return True
 
 
+def _recover_original_name(trash_name: str) -> str:
+    """Best-effort pulihkan nama asli file trash ber-suffix uuid (stem_8hex.ext)."""
+    import re
+    stem, ext = os.path.splitext(trash_name)
+    m = re.match(r"^(.*)_[0-9a-f]{8}$", stem)
+    if m:
+        return m.group(1) + ext
+    return trash_name
+
+
+def _register_orphan_files(db: Session) -> None:
+    """Daftarkan file di TRASH_DIR yang belum punya TrashItem sebagai orphan.
+
+    File yang masuk trash sebelum fitur sampah (dipindah oleh trash_file lama
+    tanpa metadata) tetap tampil & bisa dihapus permanen / dikosongkan.
+    """
+    import config
+    known = {os.path.basename(it.trash_path) for it in db.query(TrashItem).all() if it.trash_path}
+    if not os.path.isdir(config.TRASH_DIR):
+        return
+    changed = False
+    for name in os.listdir(config.TRASH_DIR):
+        full = os.path.join(config.TRASH_DIR, name)
+        if not os.path.isfile(full) or name in known:
+            continue
+        original = _recover_original_name(name)
+        original_path = os.path.join(config.UPLOADS_DIR, original)
+        size = 0
+        try:
+            size = os.path.getsize(full)
+        except OSError:
+            pass
+        db.add(TrashItem(
+            material_id=None,
+            source_type="orphan",
+            original_path=original_path,
+            trash_path=full,
+            original_filename=original,
+            original_status=None,
+            size_bytes=size,
+            trashed_at=datetime.datetime.utcnow(),
+        ))
+        known.add(name)
+        changed = True
+    if changed:
+        db.commit()
+
+
 def list_trash(db: Session) -> list[dict]:
     """Daftar item sampah dengan info ringkas untuk UI."""
+    _register_orphan_files(db)
     items = db.query(TrashItem).order_by(TrashItem.trashed_at.desc()).all()
     result = []
     for it in items:
@@ -222,6 +271,7 @@ def restore_item(db: Session, item_id: int) -> bool:
 
 def empty_trash(db: Session) -> int:
     """Kosongkan sampah permanen: hapus semua file trunk + row TrashItem (materi tetap Trashed)."""
+    _register_orphan_files(db)
     items = db.query(TrashItem).all()
     count = 0
     for it in items:
@@ -239,4 +289,5 @@ def empty_trash(db: Session) -> int:
 
 def get_trash_count(db: Session) -> int:
     """Jumlah item sampah (untuk overview)."""
+    _register_orphan_files(db)
     return db.query(TrashItem).count()
