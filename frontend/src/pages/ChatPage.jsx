@@ -1,11 +1,11 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, X, BookOpen, Trash2, Bot, User, Copy, Check, Pin, Edit3 } from 'lucide-react';
+import { Send, X, BookOpen, Trash2, Bot, User, Copy, Check, Pin, Edit3, GraduationCap } from 'lucide-react';
 import MathMarkdown from '@/components/MathMarkdown';
 import { useChatStore } from '@/store';
 import { cn, formatDateTime } from '@/utils';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { notesAPI } from '@/services/api';
+import { notesAPI, subjectAPI, tutorAPI } from '@/services/api';
 import { usePendingOperation } from '@/hooks/usePendingOperation';
 
 const QUICK_PROMPTS = [
@@ -111,6 +111,12 @@ export default function ChatPage() {
   const [editingTitle, setEditingTitle] = useState('');
   const [noteToast, setNoteToast] = useState(null);
   const [isNoteSaving, setIsNoteSaving] = useState(false);
+  // Tutor Mode state
+  const [tutorMode, setTutorMode] = useState(false);
+  const [tutorSubject, setTutorSubject] = useState('');
+  const [tutorLevel, setTutorLevel] = useState('intermediate');
+  const [tutorBadge, setTutorBadge] = useState(null); // SIMPLE | MEDIUM | COMPLEX
+  const [subjects, setSubjects] = useState([]);
   // Mutex ref — mencegah double-call karena React state update async
   const isNoteSavingRef = useRef(false);
   // Mutex ref untuk isLoading — mencegah 2 stream chat paralel (double-click cepat)
@@ -144,6 +150,13 @@ export default function ChatPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chat?.messages, isLoading]);
 
+  // Load subjects for Tutor Mode subject selector
+  useEffect(() => {
+    subjectAPI.getAll()
+      .then(res => setSubjects(res.data?.subjects || []))
+      .catch(() => setSubjects([]));
+  }, []);
+
   const sendMessage = useCallback(async (text) => {
     if (!text?.trim() || isLoadingRef.current) return;
     isLoadingRef.current = true;
@@ -153,22 +166,35 @@ export default function ChatPage() {
     if (textareaRef.current) textareaRef.current.style.height = 'auto';
     setIsLoading(true);
     setShowQuickPrompts(false);
+    setTutorBadge(null);
 
     // Add empty assistant message
     addMessage(chatId, { role: 'assistant', content: '' });
 
-     try {
-       chatOp.start();
-       const res = await fetch('/api/chat', {
+    try {
+      chatOp.start();
+
+      const endpoint = tutorMode ? '/api/tutor/chat' : '/api/chat';
+      const body = tutorMode
+        ? {
+            message: text,
+            history: chat?.messages?.slice(0, -1)?.map(m => ({ role: m.role, content: m.content })) || [],
+            session_id: String(currentChatId || ''),
+            mata_kuliah: tutorSubject || undefined,
+            student_level: tutorLevel,
+          }
+        : {
+            message: text,
+            history: chat?.messages?.slice(0, -1)?.map(m => ({ role: m.role, content: m.content })) || [],
+            documents: selectedDocs,
+            web_search: false,
+            session_id: String(currentChatId || ''),
+          };
+
+      const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: text,
-          history: chat?.messages?.slice(0, -1)?.map(m => ({ role: m.role, content: m.content })) || [],
-          documents: selectedDocs,
-          web_search: false,
-          session_id: String(currentChatId || ''),
-        }),
+        body: JSON.stringify(body),
       });
 
       if (!res.ok) { throw new Error('Server error'); }
@@ -176,51 +202,50 @@ export default function ChatPage() {
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let full = '';
+      let headerStripped = !tutorMode; // normal mode has no TYPE header to strip
+
       while (true) {
         const { value, done } = await reader.read();
         if (done) break;
-        full += decoder.decode(value, { stream: true });
+        const chunk = decoder.decode(value, { stream: true });
+
+        // Strip the TYPE:XXX metadata header from tutor responses (null byte delimited)
+        if (!headerStripped) {
+          const combined = full + chunk;
+          const NULL = '\u0000';
+          if (combined.startsWith(NULL + 'TYPE:')) {
+            const endIdx = combined.indexOf(NULL, 1);
+            if (endIdx !== -1) {
+              const tierType = combined.slice(6, endIdx); // 6 = len('\u0000TYPE:')
+              setTutorBadge(tierType);
+              const stripped = combined.slice(endIdx + 1);
+              full = stripped;
+              headerStripped = true;
+              updateLastMessage(chatId, full);
+              continue;
+            }
+          }
+          // Header may arrive split across chunks — buffer until found
+          full += chunk;
+          // If we have > 20 chars and still no header, assume no header (fallback)
+          if (full.length > 20) {
+            headerStripped = true;
+            updateLastMessage(chatId, full);
+          }
+          continue;
+        }
+
+        full += chunk;
         updateLastMessage(chatId, full);
       }
-    } catch (err) {
-      updateLastMessage(chatId, '⚠️ Terjadi kesalahan. Coba lagi.');
-     } finally {
-       isLoadingRef.current = false;
-       setIsLoading(false);
-       chatOp.finish();
-     }
-   }, [currentChatId, selectedDocs, chat, addMessage, updateLastMessage, chatOp]);
-
-  // Direct-to-Notebook: simpan input ke catatan TANPA memanggil Groq AI
-  const saveAsNote = useCallback(async () => {
-    if (isNoteSavingRef.current) return;
-    const text = input.trim();
-    if (!text) return;
-    const title = text.slice(0, 30);
-    isNoteSavingRef.current = true;
-    setIsNoteSaving(true);
-    try {
-      const res = await fetch('/api/notebook/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, content: text }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setInput('');
-        if (textareaRef.current) textareaRef.current.style.height = 'auto';
-        setNoteToast({ type: 'success', msg: data.message || 'Catatan disimpan!' });
-      } else {
-        setNoteToast({ type: 'error', msg: data.message || 'Gagal menyimpan.' });
-      }
     } catch {
-      setNoteToast({ type: 'error', msg: 'Koneksi ke server gagal.' });
+      updateLastMessage(chatId, '⚠️ Terjadi kesalahan. Coba lagi.');
     } finally {
-      isNoteSavingRef.current = false;
-      setIsNoteSaving(false);
-      setTimeout(() => setNoteToast(null), 3000);
+      isLoadingRef.current = false;
+      setIsLoading(false);
+      chatOp.finish();
     }
-  }, [input]);
+  }, [currentChatId, selectedDocs, chat, addMessage, updateLastMessage, chatOp, tutorMode, tutorSubject, tutorLevel]);
 
   // Simpan respons AI terakhir ke Notebook — auto-detect mata kuliah + auto-judul
   const generateAndSaveNote = useCallback(async () => {
@@ -446,11 +471,71 @@ export default function ChatPage() {
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
           <div className="flex items-center gap-2">
-            <Bot size={18} className="text-primary" />
-            <span className="font-semibold text-text text-sm">{chat?.title || 'Chat AI'}</span>
+            <Bot size={18} className={cn('transition-colors', tutorMode ? 'text-amber-400' : 'text-primary')} />
+            <span className="font-semibold text-text text-sm">{chat?.title || (tutorMode ? 'Tutor AI' : 'Chat AI')}</span>
+            {/* Tutor badge: show SIMPLE / MEDIUM / COMPLEX tier of last response */}
+            {tutorMode && tutorBadge && (
+              <span className={cn(
+                'px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide',
+                tutorBadge === 'SIMPLE'  && 'bg-green-500/15 text-green-400',
+                tutorBadge === 'MEDIUM'  && 'bg-blue-500/15 text-blue-400',
+                tutorBadge === 'COMPLEX' && 'bg-purple-500/15 text-purple-400',
+              )}>
+                {tutorBadge}
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-2">
-            {selectedDocs.length > 0 && (
+            {/* Tutor Mode controls — visible when tutorMode is on */}
+            {tutorMode && (
+              <div className="flex items-center gap-1.5">
+                {/* Subject selector */}
+                <select
+                  value={tutorSubject}
+                  onChange={e => setTutorSubject(e.target.value)}
+                  className="text-[11px] bg-card border border-border rounded-lg px-2 py-1 text-text-secondary outline-none cursor-pointer hover:border-amber-400/40 transition-colors"
+                  title="Pilih mata pelajaran"
+                >
+                  <option value="">Semua mapel</option>
+                  {subjects.map(s => (
+                    <option key={s.id} value={s.name}>{s.name}</option>
+                  ))}
+                  {/* Static fallback jika belum ada subjects */}
+                  {subjects.length === 0 && ['Matematika','Fisika','Biologi','Kimia','B. Indonesia','B. Inggris'].map(n => (
+                    <option key={n} value={n}>{n}</option>
+                  ))}
+                </select>
+                {/* Level selector */}
+                <select
+                  value={tutorLevel}
+                  onChange={e => setTutorLevel(e.target.value)}
+                  className="text-[11px] bg-card border border-border rounded-lg px-2 py-1 text-text-secondary outline-none cursor-pointer hover:border-amber-400/40 transition-colors"
+                  title="Level siswa"
+                >
+                  <option value="beginner">Pemula</option>
+                  <option value="intermediate">Menengah</option>
+                  <option value="advanced">Mahir</option>
+                </select>
+              </div>
+            )}
+
+            {/* Tutor Mode toggle */}
+            <button
+              onClick={() => { setTutorMode(v => !v); setTutorBadge(null); }}
+              title={tutorMode ? 'Kembali ke Chat Biasa' : 'Aktifkan Tutor Mode'}
+              className={cn(
+                'flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-medium border transition-all',
+                tutorMode
+                  ? 'bg-amber-500/15 border-amber-500/40 text-amber-400 hover:bg-amber-500/25'
+                  : 'bg-card border-border text-text-muted hover:text-text hover:border-border'
+              )}
+            >
+              <GraduationCap size={13} />
+              {tutorMode ? 'Tutor ON' : 'Tutor'}
+            </button>
+
+            {/* Selected docs indicator (normal mode only) */}
+            {!tutorMode && selectedDocs.length > 0 && (
               <div className="flex items-center gap-2">
                 <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[11px] font-medium">
                   <BookOpen size={10} /> {selectedDocs.length} materi aktif
@@ -475,10 +560,18 @@ export default function ChatPage() {
                 <Bot size={32} className="text-primary" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-text mb-1">Halo! Saya Kabayan AI 👋</h2>
-                <p className="text-text-secondary text-sm">Tanyakan apa saja, atau pilih materi untuk diskusi berbasis dokumen.</p>
+                <h2 className="text-xl font-bold text-text mb-1">
+                  {tutorMode ? '📚 Tutor Mode Aktif!' : 'Halo! Saya Kabayan AI 👋'}
+                </h2>
+                <p className="text-text-secondary text-sm">
+                  {tutorMode
+                    ? `Tanyakan konsep, minta penjelasan langkah-langkah, atau minta saya membuktikan sesuatu.${tutorSubject ? ` Fokus: ${tutorSubject}.` : ''}`
+                    : 'Tanyakan apa saja, atau pilih materi untuk diskusi berbasis dokumen.'}
+                </p>
               </div>
-              <p className="text-xs text-text-muted">Klik ⚡ di bawah untuk quick prompts</p>
+              <p className="text-xs text-text-muted">
+                {tutorMode ? 'Ketik "reveal" untuk minta jawaban penuh' : 'Klik ⚡ di bawah untuk quick prompts'}
+              </p>
             </motion.div>
           ) : (
             <>
@@ -556,7 +649,9 @@ export default function ChatPage() {
               value={input}
               onChange={(e) => { setInput(e.target.value); autoResize(e); }}
               onKeyDown={handleKeyDown}
-              placeholder="Tanyakan apa saja… (Enter kirim, Shift+Enter baris baru)"
+              placeholder={tutorMode
+                ? `Tanya ke Tutor AI${tutorSubject ? ` tentang ${tutorSubject}` : ''}… (Enter kirim)`
+                : 'Tanyakan apa saja… (Enter kirim, Shift+Enter baris baru)'}
               className="w-full bg-transparent text-text text-sm placeholder:text-text-muted px-4 pt-3 pb-1 outline-none resize-none min-h-[40px] max-h-[140px] leading-relaxed"
               rows={1}
               disabled={isLoading}
@@ -589,7 +684,9 @@ export default function ChatPage() {
             </div>
           </div>
           <p className="text-center text-[10px] text-text-muted mt-2">
-            Kabayan AI dapat membuat kesalahan. Periksa informasi penting.
+            {tutorMode
+              ? 'Tutor Mode aktif — respons menggunakan metode Socratic. Ketik "reveal" untuk jawaban penuh.'
+              : 'Kabayan AI dapat membuat kesalahan. Periksa informasi penting.'}
           </p>
         </div>
       </div>

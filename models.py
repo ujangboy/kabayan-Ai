@@ -142,6 +142,9 @@ class Message(Base):
     role = Column(String) # user or assistant
     content = Column(Text)
     timestamp = Column(DateTime, default=datetime.datetime.utcnow)
+    # Tutor mode metadata (nullable — normal chat rows stay untouched)
+    type = Column(String, nullable=True)              # simple / medium / complex
+    tokens_used = Column(Integer, nullable=True)      # estimated tokens consumed
 
     chat = relationship("Chat", back_populates="messages")
 
@@ -357,6 +360,46 @@ class PracticeResult(Base):
 
     plan_item = relationship("StudyPlanItem", back_populates="practice_results")
     session   = relationship("ExamSession")
+
+
+# ─── Question Bank Model ─────────────────────────────────────────────────────
+
+# ─── AI Tutor Models ─────────────────────────────────────────────────────────
+
+class TutorFAQ(Base):
+    """
+    Pre-built FAQ entries for the Smart Classifier SIMPLE route.
+    Answered from database with 0 token cost.
+    """
+    __tablename__ = "tutor_faq"
+    id = Column(Integer, primary_key=True, index=True)
+    mata_kuliah = Column(String, index=True)          # e.g. "Matematika"
+    topic = Column(String, index=True)                # e.g. "Limit"
+    keywords_json = Column(Text)                      # JSON list of keywords
+    question = Column(Text)
+    answer = Column(Text)
+    difficulty = Column(String, default="sedang")     # mudah / sedang / sulit
+    usage_count = Column(Integer, default=0)
+    effectiveness = Column(Integer, default=80)       # 0-100
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_by = Column(String, nullable=True)
+    last_updated = Column(DateTime, nullable=True)
+
+
+class TutorTemplate(Base):
+    """
+    Formula / procedure / example templates for structured responses.
+    Used to enrich SIMPLE route answers without AI calls.
+    """
+    __tablename__ = "tutor_templates"
+    id = Column(Integer, primary_key=True, index=True)
+    mata_kuliah = Column(String, index=True)
+    type = Column(String, default="formula")          # formula / procedure / example
+    title = Column(String)
+    content = Column(Text)                            # content with {{variable}} placeholders
+    variables_json = Column(Text, nullable=True)      # JSON: [{name, description, type}]
+    usage_count = Column(Integer, default=0)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
 
 # ─── Question Bank Model ─────────────────────────────────────────────────────

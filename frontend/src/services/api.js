@@ -168,4 +168,15 @@ export const sessionsAPI = {
   delete: (sessionId) => api.delete(`/exam/sessions/${sessionId}`),
 };
 
+// --- TUTOR ---
+export const tutorAPI = {
+  // classify a message (observability / debug)
+  classify: (message, history = []) =>
+    api.post('/tutor/classify', { message, history }),
+
+  // list FAQ entries (debug/admin)
+  listFAQ: (mata_kuliah = null, limit = 50) =>
+    api.get('/tutor/faq', { params: { ...(mata_kuliah ? { mata_kuliah } : {}), limit } }),
+};
+
 export default api;
