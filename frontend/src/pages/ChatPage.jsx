@@ -1,12 +1,12 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, X, BookOpen, Trash2, Bot, User, Copy, Check, Pin, Edit3, GraduationCap, ThumbsUp, ThumbsDown, Hand, Lightbulb, Target, FileText, Clipboard } from 'lucide-react';
+import { Send, X, BookOpen, Trash2, Bot, User, Copy, Check, Pin, Edit3, GraduationCap, ThumbsUp, ThumbsDown, Hand, Lightbulb, Target, FileText, Clipboard, Square } from 'lucide-react';
 import MathMarkdown from '@/components/MathMarkdown';
 import { useChatStore } from '@/store';
 import { cn, formatDateTime } from '@/utils';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { notesAPI, subjectAPI, tutorAPI } from '@/services/api';
-import { streamChat } from '@/services/tutorStream';
+import { streamChat, abortActiveStream } from '@/services/tutorStream';
 import { usePendingOperation } from '@/hooks/usePendingOperation';
 
 const QUICK_PROMPTS = [
@@ -323,14 +323,17 @@ export default function ChatPage() {
           }
         }
       }
-      setStreaming(false, null);
     } catch (err) {
       if (err?.name !== 'AbortError') {
         updateLastMessage(chatId, '⚠ Terjadi kesalahan. Coba lagi.');
-        setStreaming(false, null);
       }
     } finally {
-      streamingChatIdRef.current = null;
+      // Reset streaming hanya jika stream yang selesai ini masih stream aktif.
+      // Saat pindah sesi, ref sudah milik chat baru — jangan clobber stream-nya.
+      if (streamingChatIdRef.current === chatId) {
+        streamingChatIdRef.current = null;
+        setStreaming(false, null);
+      }
       chatOp.finish();
     }
   }, [currentChatId, selectedDocs, chat, addMessage, updateLastMessage, patchLastMessage, chatOp, tutorMode, tutorSubject, tutorLevel, setStreaming, setTutorBadge]);
@@ -772,16 +775,19 @@ export default function ChatPage() {
                 </button>
               </div>
               <button
-                onClick={() => sendMessage(input)}
-                disabled={!input.trim() || isCurrentChatStreaming}
+                onClick={() => isCurrentChatStreaming ? abortActiveStream() : sendMessage(input)}
+                disabled={!isCurrentChatStreaming && !input.trim()}
                 className={cn(
                   'w-8 h-8 rounded-xl flex items-center justify-center transition-all',
-                  input.trim() && !isCurrentChatStreaming
-                    ? 'bg-primary text-white hover:bg-primary-hover active:scale-95'
-                    : 'bg-card text-text-muted cursor-not-allowed'
+                  isCurrentChatStreaming
+                    ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20 active:scale-95'
+                    : input.trim()
+                      ? 'bg-primary text-white hover:bg-primary-hover active:scale-95'
+                      : 'bg-card text-text-muted cursor-not-allowed'
                 )}
+                title={isCurrentChatStreaming ? 'Hentikan AI' : 'Kirim'}
               >
-                <Send size={14} />
+                {isCurrentChatStreaming ? <Square size={12} fill="currentColor" /> : <Send size={14} />}
               </button>
             </div>
           </div>
