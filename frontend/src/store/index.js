@@ -3,19 +3,16 @@ import { persist } from 'zustand/middleware';
 
 export const useChatStore = create(
   persist(
-    (set, get) => ({
+(set, get) => ({
       chats: [],
       currentChatId: null,
       selectedDocs: [],
       isStreaming: false,
       streamingChatId: null,
-      tutorMode: false,
       tutorBadge: null,
-      tutorSubject: '',
-      tutorLevel: 'intermediate',
 
       createChat: () => {
-        const chat = { id: Date.now(), title: 'Chat Baru', messages: [], pinned: false, createdAt: new Date().toISOString() };
+        const chat = { id: Date.now(), title: 'Chat Baru', messages: [], pinned: false, createdAt: new Date().toISOString(), tutorEnabled: false, tutorSubject: '', tutorLevel: 'intermediate' };
         set((s) => ({ chats: [chat, ...s.chats], currentChatId: chat.id }));
         return chat.id;
       },
@@ -93,10 +90,16 @@ export const useChatStore = create(
         streamingChatId: isStreaming ? chatId : null,
       }),
 
-      setTutorMode: (tutorMode) => set({ tutorMode }),
       setTutorBadge: (tutorBadge) => set({ tutorBadge }),
-      setTutorSubject: (tutorSubject) => set({ tutorSubject }),
-      setTutorLevel: (tutorLevel) => set({ tutorLevel }),
+
+      // Konfigurasi tutor disimpan PER-CHAT agar hanya aktif di sesi terpilih
+      setChatTutor: (chatId, patch) => set((s) => ({
+        chats: s.chats.map((c) =>
+          c.id === chatId
+            ? { ...c, tutorEnabled: patch.tutorEnabled ?? c.tutorEnabled, tutorSubject: patch.tutorSubject ?? c.tutorSubject ?? '', tutorLevel: patch.tutorLevel ?? c.tutorLevel ?? 'intermediate' }
+            : c
+        ),
+      })),
     }),
     {
       name: 'kabayan-chat-store',

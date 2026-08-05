@@ -175,19 +175,19 @@ function TypingIndicator() {
 export default function ChatPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { chats, currentChatId, setCurrentChat, createChat, deleteChat, deleteAllChats, togglePinChat, renameChat, addMessage, updateLastMessage, patchLastMessage, setMessageFeedback, getCurrentChat, selectedDocs, clearSelectedDocs, isStreaming, streamingChatId, tutorMode, tutorBadge, tutorSubject, tutorLevel, setStreaming, setTutorMode, setTutorBadge, setTutorSubject, setTutorLevel } = useChatStore();
+  const { chats, currentChatId, setCurrentChat, createChat, deleteChat, deleteAllChats, togglePinChat, renameChat, addMessage, updateLastMessage, patchLastMessage, setMessageFeedback, getCurrentChat, selectedDocs, clearSelectedDocs, isStreaming, streamingChatId, tutorBadge, setStreaming, setTutorBadge, setChatTutor } = useChatStore();
   const [input, setInput] = useState('');
   const [showQuickPrompts, setShowQuickPrompts] = useState(false);
   const [editingChatId, setEditingChatId] = useState(null);
   const [editingTitle, setEditingTitle] = useState('');
   const [noteToast, setNoteToast] = useState(null);
   const [isNoteSaving, setIsNoteSaving] = useState(false);
-  // Tutor Mode state (persisted di store agar bertahan saat pindah menu)
+  // Tutor Mode state (persisted per-chat di store agar bertahan saat pindah menu)
   const [subjects, setSubjects] = useState([]);
   // Mutex ref — mencegah double-call karena React state update async
   const isNoteSavingRef = useRef(false);
-  // Mutex ref untuk isLoading — mencegah 2 stream chat paralel (double-click cepat)
-  const isLoadingRef = useRef(false);
+  // Pelacak chat yang sedang streaming — kunci kirim hanya untuk chat tersebu(h)
+  const streamingChatIdRef = useRef(null);
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
 
@@ -206,6 +206,11 @@ export default function ChatPage() {
   }, []);
 
   const chat = getCurrentChat();
+  // Konfigurasi tutor diambil dari chat aktif (per-chat), default OFF untuk chat baru/legacy
+  const tutorMode = !!chat?.tutorEnabled;
+  const tutorSubject = chat?.tutorSubject || '';
+  const tutorLevel = chat?.tutorLevel || 'intermediate';
+  const isCurrentChatStreaming = isStreaming && streamingChatId === currentChatId;
   const sortedChats = [...chats].sort((a, b) => {
     const aPinned = !!a.pinned;
     const bPinned = !!b.pinned;
@@ -225,9 +230,11 @@ export default function ChatPage() {
   }, []);
 
   const sendMessage = useCallback(async (text) => {
-    if (!text?.trim() || isLoadingRef.current) return;
-    isLoadingRef.current = true;
+    if (!text?.trim()) return;
     const chatId = currentChatId;
+    // Kunci kirim hanya untuk chat yang sedang streaming — sesi lain tetap bisa kirim
+    if (streamingChatIdRef.current === chatId) return;
+    streamingChatIdRef.current = chatId;
     addMessage(chatId, { role: 'user', content: text });
     setInput('');
     if (textareaRef.current) textareaRef.current.style.height = 'auto';
@@ -323,7 +330,7 @@ export default function ChatPage() {
         setStreaming(false, null);
       }
     } finally {
-      isLoadingRef.current = false;
+      streamingChatIdRef.current = null;
       chatOp.finish();
     }
   }, [currentChatId, selectedDocs, chat, addMessage, updateLastMessage, patchLastMessage, chatOp, tutorMode, tutorSubject, tutorLevel, setStreaming, setTutorBadge]);
@@ -585,7 +592,7 @@ export default function ChatPage() {
                 {/* Subject selector */}
                 <select
                   value={tutorSubject}
-                  onChange={e => setTutorSubject(e.target.value)}
+                  onChange={e => setChatTutor(currentChatId, { tutorSubject: e.target.value })}
                   className="text-[11px] bg-card border border-border rounded-lg px-2 py-1 text-text-secondary outline-none cursor-pointer hover:border-amber-400/40 transition-colors"
                   title="Pilih mata pelajaran"
                 >
@@ -601,7 +608,7 @@ export default function ChatPage() {
                 {/* Level selector */}
                 <select
                   value={tutorLevel}
-                  onChange={e => setTutorLevel(e.target.value)}
+                  onChange={e => setChatTutor(currentChatId, { tutorLevel: e.target.value })}
                   className="text-[11px] bg-card border border-border rounded-lg px-2 py-1 text-text-secondary outline-none cursor-pointer hover:border-amber-400/40 transition-colors"
                   title="Level siswa"
                 >
@@ -614,7 +621,7 @@ export default function ChatPage() {
 
             {/* Tutor Mode toggle */}
             <button
-              onClick={() => { setTutorMode(!tutorMode); setTutorBadge(null); }}
+              onClick={() => { setChatTutor(currentChatId, { tutorEnabled: !tutorMode }); setTutorBadge(null); }}
               title={tutorMode ? 'Kembali ke Chat Biasa' : 'Aktifkan Tutor Mode'}
               className={cn(
                 'flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-medium border transition-all',
@@ -766,10 +773,10 @@ export default function ChatPage() {
               </div>
               <button
                 onClick={() => sendMessage(input)}
-                disabled={!input.trim() || isStreaming}
+                disabled={!input.trim() || isCurrentChatStreaming}
                 className={cn(
                   'w-8 h-8 rounded-xl flex items-center justify-center transition-all',
-                  input.trim() && !isStreaming
+                  input.trim() && !isCurrentChatStreaming
                     ? 'bg-primary text-white hover:bg-primary-hover active:scale-95'
                     : 'bg-card text-text-muted cursor-not-allowed'
                 )}
