@@ -806,7 +806,28 @@
     "fcSocratic": "Diskusi Socratic",
     "minutesShort": "mnt",
     "empty": "Can acan kagiatan anu disarankeun ayeuna.",
-    "bestHour": "Wanci pangalusna: {{hour}}.00 WIB"
+    "bestHour": "Wanci pangalusna: {{hour}}.00 WIB",
+    "doneCount": "{{done}}/{{total}} réngsé",
+    "markDone": "Tandaan réngsé"
+  },
+  "studyProgress": {
+    "title": "Konsisténsi Diajar",
+    "subtitle": "Streak harian jeung tren ngawasaan materi kana wanci.",
+    "empty": "Can aya kagiatan — mimitian diajar pikeun ngawangun streak!",
+    "streakCurrent": "Streak ayeuna",
+    "streakLongest": "Rékor pangpanjangna",
+    "activeDays": "Poé aktif",
+    "windowTitle": "Kagiatan 14 poé panungtung",
+    "windowHint": "Poé ieu aya di belah katuhu",
+    "trendTitle": "Tren ngawasaan",
+    "trendUp": "Ningkat",
+    "trendDown": "Turun",
+    "trendStable": "Stabil",
+    "trendNeedData": "Butuh sahenteuna 2 sési latihan pikeun ningali tren.",
+    "sessions": "sési",
+    "lastSession": "Sési panungtung: {{avg}}%",
+    "trendTooltip": "Sési {{session}}: {{avg}}% ({{topics}} topik)",
+    "lastActive": "Panungtung aktip: {{date}}"
   },
   "focusMode": {
     "title": "Mode Pokus",

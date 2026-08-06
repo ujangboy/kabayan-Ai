@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -11,6 +11,7 @@ import {
 import { subjectAPI, examAPI, studyAPI } from '@/services/api';
 import { useFocusStore } from '@/store';
 import { formatDate, fileIcon } from '@/utils';
+import ProgressCard from '@/components/ProgressCard';
 
 const TOPIC_STATUS_META = (t) => ({
   dikuasai:      { label: t('subjectDashboard.topicMastered'),     cls: 'badge-success' },
@@ -387,6 +388,28 @@ function DailyPlanCard({ subjectId }) {
     enabled: !!subjectId,
   });
 
+  const doneKey = (item) => {
+    const date = new Date().toISOString().slice(0, 10);
+    return `kabayan-plan-done:${subjectId}:${date}:${item.type}:${item.topic || ''}`;
+  };
+  const getDone = () => {
+    const map = {};
+    (plan?.items || []).forEach((item) => { map[doneKey(item)] = localStorage.getItem(doneKey(item)) === '1'; });
+    return map;
+  };
+  const [doneMap, setDoneMap] = useState(getDone);
+  useEffect(() => { setDoneMap(getDone()); }, [subjectId, freeMinutes, plan]);
+
+  const toggleDone = (item) => {
+    const key = doneKey(item);
+    const next = !doneMap[key];
+    if (next) localStorage.setItem(key, '1');
+    else localStorage.removeItem(key);
+    setDoneMap((p) => ({ ...p, [key]: next }));
+  };
+
+  const items = plan?.items || [];
+  const doneCount = items.filter((item) => doneMap[doneKey(item)]).length;
   const meta = PLAN_ITEM_META(t);
 
   const startFocus = (item, m) => {
@@ -428,26 +451,50 @@ function DailyPlanCard({ subjectId }) {
         <div className="space-y-2">
           {[1, 2, 3].map(i => <div key={i} className="h-10 bg-border rounded animate-pulse" />)}
         </div>
-      ) : plan?.items?.length === 0 ? (
+      ) : items.length === 0 ? (
         <p className="text-xs text-text-muted text-center py-4 border border-dashed border-border rounded-xl">
           {plan.empty_reason || t('studyPlan.empty')}
         </p>
       ) : (
         <div className="space-y-2">
-          {plan.items.map((item, i) => {
+          {doneCount > 0 && (
+            <div className="flex items-center gap-2">
+              <div className="h-1.5 flex-1 bg-background rounded-full overflow-hidden border border-border/50">
+                <div className="h-full rounded-full bg-success transition-all duration-300" style={{ width: `${(doneCount / items.length) * 100}%` }} />
+              </div>
+              <span className="text-[10px] text-text-muted shrink-0">
+                {t('studyPlan.doneCount', { done: doneCount, total: items.length })}
+              </span>
+            </div>
+          )}
+          {items.map((item, i) => {
             const m = meta[item.type] || meta.micro_quiz;
             const Icon = m.icon;
+            const isDone = !!doneMap[doneKey(item)];
             return (
-              <div key={i} className="flex items-stretch gap-2">
+              <div key={i} className={`flex items-stretch gap-2 ${isDone ? 'opacity-60' : ''}`}>
+                <button
+                  onClick={() => toggleDone(item)}
+                  title={t('studyPlan.markDone')}
+                  className={`w-8 shrink-0 flex items-center justify-center rounded-xl border transition-colors cursor-pointer ${
+                    isDone
+                      ? 'border-success/40 bg-success/10 text-success'
+                      : 'border-border text-text-muted hover:text-success hover:border-success/40'
+                  }`}
+                >
+                  <CheckCircle2 size={14} />
+                </button>
                 <button
                   onClick={() => navigate(m.to)}
-                  className="flex-1 min-w-0 flex items-center gap-3 p-2.5 rounded-xl border border-border hover:border-primary/30 transition-colors cursor-pointer text-left"
+                  className={`flex-1 min-w-0 flex items-center gap-3 p-2.5 rounded-xl border hover:border-primary/30 transition-colors cursor-pointer text-left ${
+                    isDone ? 'border-success/20 bg-success/5' : 'border-border'
+                  }`}
                 >
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${m.cls}`}>
                     <Icon size={14} />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs font-semibold text-text truncate">
+                    <p className={`text-xs font-semibold text-text truncate ${isDone ? 'line-through' : ''}`}>
                       {m.label}{item.topic ? ` · ${item.topic}` : ''}
                     </p>
                     <p className="text-[10px] text-text-muted mt-0.5 line-clamp-2">{item.reason}</p>
@@ -866,6 +913,13 @@ export default function SubjectDashboardPage() {
     staleTime: 60_000,
   });
 
+  const { data: studyProgress } = useQuery({
+    queryKey: ['study-progress', subjectId],
+    queryFn: () => studyAPI.progress(subjectId),
+    enabled: !!subjectId,
+    staleTime: 60_000,
+  });
+
   const deleteMutation = useMutation({
     mutationFn: () => subjectAPI.delete(subjectId),
     onSuccess: () => {
@@ -1056,6 +1110,9 @@ export default function SubjectDashboardPage() {
 
             {/* Adaptive learning profile */}
             <LearningProfileCard profile={learningProfile} />
+
+            {/* Konsistensi & tren mastery (PRD US5.1) */}
+            <ProgressCard progress={studyProgress} />
 
             {/* Diagnostik belajar (PRD US4.2) */}
             <DiagnosticCard diagnostic={diagnostic} />

@@ -203,6 +203,9 @@ export const studyAPI = {
   // diagnostik belajar: kesiapan + resep perbaikan (PRD US4.2)
   diagnostic: (subjectId = null) =>
     api.get('/study/diagnostic', { params: subjectId ? { subject_id: subjectId } : {} }).then(r => r.data),
+  // progres belajar: streak konsistensi + tren mastery (PRD US5.1)
+  progress: (subjectId = null) =>
+    api.get('/study/progress', { params: subjectId ? { subject_id: subjectId } : {} }).then(r => r.data),
 };
 
 // --- TUTOR ---

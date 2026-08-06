@@ -108,6 +108,20 @@ async def study_knowledge_graph(subject_id: Optional[int] = Query(None), db: Ses
     return JSONResponse(build_knowledge_graph(db, subject_id))
 
 
+@router.get("/api/study/progress")
+async def study_progress(subject_id: Optional[int] = Query(None), db: Session = Depends(get_db)):
+    """Progres belajar (PRD US5.1): streak konsistensi + tren mastery."""
+    from engines.progress import get_progress
+
+    if subject_id is not None:
+        from models import Subject
+
+        subject = db.query(Subject).filter(Subject.id == subject_id).first()
+        if not subject:
+            return JSONResponse(status_code=404, content={"detail": "Mata kuliah tidak ditemukan."})
+    return JSONResponse(get_progress(db, subject_id))
+
+
 @router.get("/api/study/diagnostic")
 async def study_diagnostic(subject_id: Optional[int] = Query(None), db: Session = Depends(get_db)):
     """Diagnostic (PRD US4.2): readiness, topik lemah/kuat, resep perbaikan, risiko."""

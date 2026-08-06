@@ -813,7 +813,28 @@
     "fcSocratic": "Diskusi Socratic",
     "minutesShort": "mnt",
     "empty": "Belum ada aktivitas yang direkomendasikan hari ini.",
-    "bestHour": "Waktu slot terbaik: {{hour}}.00 WIB"
+    "bestHour": "Waktu slot terbaik: {{hour}}.00 WIB",
+    "doneCount": "{{done}}/{{total}} selesai",
+    "markDone": "Tandai selesai"
+  },
+  "studyProgress": {
+    "title": "Konsistensi Belajar",
+    "subtitle": "Streak harian dan tren penguasaan materi dari waktu ke waktu.",
+    "empty": "Belum ada aktivitas — mulai belajar untuk membangun streak!",
+    "streakCurrent": "Streak saat ini",
+    "streakLongest": "Rekor terlama",
+    "activeDays": "Hari aktif",
+    "windowTitle": "Aktivitas 14 hari terakhir",
+    "windowHint": "Hari ini paling kanan",
+    "trendTitle": "Tren penguasaan",
+    "trendUp": "Meningkat",
+    "trendDown": "Menurun",
+    "trendStable": "Stabil",
+    "trendNeedData": "Butuh minimal 2 sesi latihan untuk melihat tren.",
+    "sessions": "sesi",
+    "lastSession": "Sesi terakhir: {{avg}}%",
+    "trendTooltip": "Sesi {{session}}: {{avg}}% ({{topics}} topik)",
+    "lastActive": "Terakhir aktif: {{date}}"
   },
   "focusMode": {
     "title": "Mode Fokus",

@@ -813,7 +813,28 @@
     "fcSocratic": "Socratic Discussion",
     "minutesShort": "min",
     "empty": "No recommended activity for today yet.",
-    "bestHour": "Your best study slot: {{hour}}.00 WIB"
+    "bestHour": "Your best study slot: {{hour}}.00 WIB",
+    "doneCount": "{{done}}/{{total}} done",
+    "markDone": "Mark as done"
+  },
+  "studyProgress": {
+    "title": "Study Consistency",
+    "subtitle": "Daily streak and mastery trend over time.",
+    "empty": "No activity yet — start studying to build a streak!",
+    "streakCurrent": "Current streak",
+    "streakLongest": "Longest streak",
+    "activeDays": "Active days",
+    "windowTitle": "Activity: last 14 days",
+    "windowHint": "Today is on the right",
+    "trendTitle": "Mastery trend",
+    "trendUp": "Improving",
+    "trendDown": "Declining",
+    "trendStable": "Stable",
+    "trendNeedData": "Need at least 2 practice sessions to show a trend.",
+    "sessions": "sessions",
+    "lastSession": "Last session: {{avg}}%",
+    "trendTooltip": "Session {{session}}: {{avg}}% ({{topics}} topics)",
+    "lastActive": "Last active: {{date}}"
   },
   "focusMode": {
     "title": "Focus Mode",
