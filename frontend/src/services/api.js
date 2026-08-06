@@ -170,6 +170,17 @@ export const sessionsAPI = {
   delete: (sessionId) => api.delete(`/exam/sessions/${sessionId}`),
 };
 
+// --- STUDY (Modality Router) ---
+export const studyAPI = {
+  // rekomendasi modalitas belajar; tier optional (null → semua tier + primary)
+  route: (subjectId, tier = null, topic = null) =>
+    api.post('/study/route', {
+      subject_id: subjectId,
+      ...(tier ? { tier } : {}),
+      ...(topic ? { topic } : {}),
+    }).then(r => r.data),
+};
+
 // --- TUTOR ---
 export const tutorAPI = {
   // classify a message (observability / debug)

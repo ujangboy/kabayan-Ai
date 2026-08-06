@@ -764,5 +764,17 @@
       "version": "Vérsi",
       "description": "Rohang diajar pinter dumasar AI: materi, chat, flashcard, kuis, sareng simulasi ujian."
     }
+  },
+  "studyRoute": {
+    "title": "Rekomendasi Diajar",
+    "subtitle": "Modalitas latihan luyu jeung tingkat kompleksitas materi (PRD US3.2).",
+    "flashcard": "Flashcard",
+    "microQuiz": "Micro-Quiz",
+    "socratic": "Tutor Socratic",
+    "tierSimple": "SIMPLE",
+    "tierMedium": "MEDIUM",
+    "tierComplex": "COMPLEX",
+    "recommended": "DIPUNYARANGKÉ",
+    "primaryNote": "Mimitian tina {label}: {n} kartu sadia, {q} kuis."
   }
 }

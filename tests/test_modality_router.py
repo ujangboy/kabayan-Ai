@@ -155,3 +155,26 @@ class TestStudyRouteEndpoint:
         subject = make_subject()
         response = _call(StudyRouteRequest(subject_id=subject.id, tier="JUMBO"), db_session)
         assert response.status_code == 422
+
+    def test_all_tiers_mode(self, db_session, make_subject):
+        subject = make_subject()
+        _add_flashcards(db_session, subject.id)
+        _add_quiz(db_session, subject.id)
+        response = _call(StudyRouteRequest(subject_id=subject.id), db_session)
+        assert response.status_code == 200
+        import json
+        body = json.loads(response.body.decode("utf-8"))
+        assert body["mode"] == "all"
+        assert len(body["recommendations"]) == 3
+        mods = [r["modality"] for r in body["recommendations"]]
+        assert mods == ["flashcard", "micro_quiz", "socratic"]
+        # primary = flashcard (prioritas resource nyata)
+        assert body["primary"]["modality"] == "flashcard"
+
+    def test_all_tiers_mode_primary_fallback(self, db_session, make_subject):
+        subject = make_subject()
+        # Tanpa resource sama sekali → semua tier jatuh ke socratic
+        response = _call(StudyRouteRequest(subject_id=subject.id), db_session)
+        import json
+        body = json.loads(response.body.decode("utf-8"))
+        assert body["primary"]["modality"] == "socratic"

@@ -771,5 +771,17 @@
       "version": "Version",
       "description": "An AI-powered study space: materials, chat, flashcards, quiz, and exam simulator."
     }
+  },
+  "studyRoute": {
+    "title": "Study Recommendation",
+    "subtitle": "Practice modality based on content complexity (PRD US3.2).",
+    "flashcard": "Flashcard",
+    "microQuiz": "Micro-Quiz",
+    "socratic": "Socratic Tutor",
+    "tierSimple": "SIMPLE",
+    "tierMedium": "MEDIUM",
+    "tierComplex": "COMPLEX",
+    "recommended": "RECOMMENDED",
+    "primaryNote": "Start with {label}: {n} cards available, {q} quizzes."
   }
 }

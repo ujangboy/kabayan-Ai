@@ -771,5 +771,17 @@
       "version": "Versi",
       "description": "Ruang belajar cerdas berbasis AI: materi, chat, flashcard, quiz, dan simulasi ujian."
     }
+  },
+  "studyRoute": {
+    "title": "Rekomendasi Belajar",
+    "subtitle": "Modalitas latihan sesuai kompleksitas materi (PRD US3.2).",
+    "flashcard": "Flashcard",
+    "microQuiz": "Micro-Quiz",
+    "socratic": "Tutor Socratic",
+    "tierSimple": "SIMPLE",
+    "tierMedium": "MEDIUM",
+    "tierComplex": "COMPLEX",
+    "recommended": "DIREKOMENDASIKAN",
+    "primaryNote": "Mulai dari {label}: {n} kartu tersedia, {q} kuis."
   }
 }

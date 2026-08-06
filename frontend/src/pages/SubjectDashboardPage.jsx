@@ -7,7 +7,7 @@ import {
   ArrowLeft, Book, FileText, CreditCard, HelpCircle, Pencil, Trash2, X,
   TrendingUp, Trophy, Target, CalendarCheck, Clock, BookOpen, Zap, Brain, Sparkles
 } from 'lucide-react';
-import { subjectAPI, examAPI } from '@/services/api';
+import { subjectAPI, examAPI, studyAPI } from '@/services/api';
 import { formatDate, fileIcon } from '@/utils';
 
 const TOPIC_STATUS_META = (t) => ({
@@ -289,6 +289,66 @@ const ACTIVITY_META = (t) => ({
   materi:    { icon: FileText,   label: t('subjectDashboard.activityMaterial'),  cls: 'bg-accent-blue/10 text-accent-blue' },
 });
 
+const STUDY_MODALITY_META = (t) => ({
+  flashcard: { icon: CreditCard, label: t('studyRoute.flashcard'),  to: '/flashcard', cls: 'bg-accent-purple/10 text-accent-purple' },
+  micro_quiz: { icon: HelpCircle, label: t('studyRoute.microQuiz'), to: '/quiz',      cls: 'bg-accent-teal/10 text-accent-teal' },
+  socratic:  { icon: Brain,      label: t('studyRoute.socratic'),   to: '/chat',      cls: 'bg-primary/10 text-primary' },
+});
+
+function StudyRecommendationCard({ route }) {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  if (!route?.recommendations) return null;
+
+  const meta = STUDY_MODALITY_META(t);
+  const primaryModality = route.primary?.modality;
+  const primary = route.recommendations.find(r => r.modality === primaryModality);
+  const tierLabel = (tier) => t(`studyRoute.tier${tier.charAt(0) + tier.slice(1).toLowerCase()}`);
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="card-base p-6">
+      <div className="flex items-center gap-2 mb-4">
+        <Zap size={16} className="text-warning" />
+        <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('studyRoute.title')}</h2>
+      </div>
+      <p className="text-xs text-text-muted mb-3">{t('studyRoute.subtitle')}</p>
+      <div className="space-y-2">
+        {route.recommendations.map((rec) => {
+          const m = meta[rec.modality];
+          const Icon = m.icon;
+          const isPrimary = rec.modality === primaryModality;
+          return (
+            <button
+              key={rec.tier}
+              onClick={() => navigate(m.to)}
+              className={`w-full flex items-center gap-3 p-2.5 rounded-xl border transition-colors cursor-pointer text-left ${
+                isPrimary ? 'border-primary/40 bg-primary/5' : 'border-border hover:border-primary/30'
+              }`}
+            >
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${m.cls}`}>
+                <Icon size={14} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-semibold text-text">{m.label}</span>
+                  <span className="badge badge-warning text-[9px]">{tierLabel(rec.tier)}</span>
+                  {isPrimary && <span className="badge badge-success text-[9px]">{t('studyRoute.recommended')}</span>}
+                </div>
+                <p className="text-[10px] text-text-muted mt-0.5 line-clamp-2">{rec.reason}</p>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+      {primary && (
+        <p className="text-[10px] text-text-muted mt-3 bg-background border border-border/50 rounded-lg p-2">
+          {t('studyRoute.primaryNote', { label: primary.modality_label, n: primary.resources.flashcards_total ?? 0, q: primary.resources.quizzes_total ?? 0 })}
+        </p>
+      )}
+    </motion.div>
+  );
+}
+
 export default function SubjectDashboardPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -307,6 +367,13 @@ export default function SubjectDashboardPage() {
     queryKey: ['learning-profile', subjectId],
     queryFn: () => examAPI.getLearningProfile(subjectId),
     enabled: !!subjectId,
+  });
+
+  const { data: studyRoute } = useQuery({
+    queryKey: ['study-route', subjectId],
+    queryFn: () => studyAPI.route(subjectId),
+    enabled: !!subjectId,
+    staleTime: 60_000,
   });
 
   const deleteMutation = useMutation({
@@ -512,6 +579,9 @@ export default function SubjectDashboardPage() {
 
           {/* ─── Sidebar (1/3) ─── */}
           <div className="space-y-6">
+            {/* Rekomendasi modalitas belajar (PRD US3.2) */}
+            <StudyRecommendationCard route={studyRoute} />
+
             {/* Active study plan */}
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="card-base p-6">
               <div className="flex items-center gap-2 mb-4">
