@@ -29,7 +29,6 @@ async def chat_endpoint(request: ChatRequest, db: Session = Depends(get_db)):
     from fastapi.responses import StreamingResponse
     try:
         from services.ai_service import ai_service
-        from services.rag_service import rag_service
 
         # ── Save or create chat session ─────────────────────────────
         chat_id = None
@@ -45,10 +44,11 @@ async def chat_endpoint(request: ChatRequest, db: Session = Depends(get_db)):
         context = ""
         rag_sources = []
         if request.documents:
-            result = await asyncio.to_thread(rag_service.search, request.message, request.documents, 5)
-            if result.get("text"):
-                context = "--- DOKUMEN REFERENSI LOKAL ---\n" + result["text"] + "\n\n"
-                rag_sources = result.get("sources", [])
+            from agents.retrieval_agent import retrieval_agent
+            retrieval = await asyncio.to_thread(retrieval_agent.run, request.message, request.documents)
+            if retrieval.context:
+                context = "--- DOKUMEN REFERENSI LOKAL ---\n" + retrieval.context + "\n\n"
+                rag_sources = retrieval.sources
 
             if not context:
                 from repositories.material_repository import material_repository

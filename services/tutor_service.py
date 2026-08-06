@@ -25,6 +25,7 @@ from services.faq_service import faq_service
 from services.tutor_profile_service import get_or_create_profile
 from services.cache_service import cache_service
 from services.rag_context_service import rag_context_service
+from agents.retrieval_agent import retrieval_agent
 from prompts.tutor import build_tutor_prompt
 
 logger = logging.getLogger(__name__)
@@ -73,6 +74,31 @@ def _find_subject_learning_profile(db: Session, mata_kuliah: Optional[str]) -> O
     except Exception as exc:
         logger.warning("Lookup LearningProfile per matkul gagal: %s", exc)
         return None
+
+
+def _collect_doc_ids(db: Session, mata_kuliah: Optional[str], rag_docs: Optional[list[str]]) -> list[str]:
+    """Kumpulkan doc_id materi aktif (Ready) dari mata kuliah + rag_docs manual."""
+    doc_ids: list[str] = []
+    try:
+        from sqlalchemy import func
+        from models import Subject
+
+        if mata_kuliah and str(mata_kuliah).strip():
+            name = str(mata_kuliah).strip()
+            subject = db.query(Subject).filter(func.lower(Subject.name) == name.lower()).first()
+            if subject and hasattr(subject, 'materials'):
+                doc_ids.extend(
+                    f"mat_{m.id}" for m in subject.materials
+                    if getattr(m, 'status', None) == "Ready"
+                )
+    except Exception as exc:
+        logger.debug("collect doc_ids matkul gagal: %s", exc)
+
+    if rag_docs:
+        for d in rag_docs:
+            if str(d).startswith("mat_") and d not in doc_ids:
+                doc_ids.append(d)
+    return doc_ids
 
 
 def _gather_tutor_context(db: Session, mata_kuliah: Optional[str], query: str, max_words: int = 800, rag_docs: list[str] = None) -> str:
@@ -366,6 +392,9 @@ class TutorService:
 
         subject_profile = _find_subject_learning_profile(db, mata_kuliah)
         material_context = _gather_tutor_context(db, mata_kuliah, message, max_words=800, rag_docs=rag_docs)
+        retrieval = retrieval_agent.run(message, _collect_doc_ids(db, mata_kuliah, rag_docs))
+        if retrieval.context:
+            material_context = retrieval.context
         exam_context = _gather_exam_context(db, exam_session_id)
         prompt_template = build_tutor_prompt(
             student_level, profile=profile, subject_profile=subject_profile,
@@ -382,6 +411,19 @@ class TutorService:
             history="",
             input=wrapped_input,
         )
+
+        # CRAG: retrieval tidak cukup → instruksi jujur + ajukan klarifikasi
+        # (PRD US2.1: jangan memaksakan jawaban / menghalusinasi)
+        if retrieval.needs_clarification and retrieval.status != "no_docs":
+            sys_content += (
+                "\n\nCATATAN RETRIEVAL (PENTING): Pencarian di materi kuliah user "
+                "tidak menemukan informasi yang cukup untuk menjawab pertanyaan ini. "
+                "JANGAN menebak atau mengarang jawaban dari materi yang tidak ada. "
+                "Sampaikan bahwa informasi ini tidak ditemukan di materi yang "
+                "diunggah, lalu bantu dengan pengetahuan umum yang relevan ATAU "
+                "ajukan pertanyaan klarifikasi agar user bisa memperjelas atau "
+                "mengunggah materi yang tepat."
+            )
 
         messages = [SystemMessage(content=sys_content)]
         # Add history as proper message objects (last 10 turns)
@@ -402,7 +444,7 @@ class TutorService:
         ).hexdigest()[:8]
         material_fp = hashlib.md5(material_context.encode()).hexdigest()[:8] if material_context else "none"
         exam_fp = hashlib.md5(exam_context.encode()).hexdigest()[:8] if exam_context else "none"
-        cache_key = f"{message}:{capability}:{student_level}:{mata_kuliah or 'umum'}:{profile_fp}:{material_fp}:{exam_fp}"
+        cache_key = f"{message}:{capability}:{student_level}:{mata_kuliah or 'umum'}:{profile_fp}:{material_fp}:{exam_fp}:{retrieval.status}"
         cached = cache_service.get_cache(db, cache_key, "", "")
         if cached:
             yield _normalize_math(cached)
