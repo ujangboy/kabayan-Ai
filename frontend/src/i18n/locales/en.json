@@ -799,5 +799,15 @@
     "fatigueInsufficient": "Not enough data",
     "bestTime": "Best time",
     "noData": "No data yet"
+  },
+  "studyPlan": {
+    "title": "Today's Plan",
+    "subtitle": "Auto-schedule from FSRS, exam mastery, and your free time.",
+    "fcFlashcard": "Flashcard",
+    "fcQuiz": "Micro-Quiz",
+    "fcSocratic": "Socratic Discussion",
+    "minutesShort": "min",
+    "empty": "No recommended activity for today yet.",
+    "bestHour": "Your best study slot: {{hour}}.00 WIB"
   }
 }

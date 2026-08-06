@@ -792,5 +792,15 @@
     "fatigueInsufficient": "Can cukup data",
     "bestTime": "Wanci pangalusna",
     "noData": "Can aya data"
+  },
+  "studyPlan": {
+    "title": "Rencana Ayeuna",
+    "subtitle": "Jadwal otomatis tina FSRS, mastery ujian, jeung wanci luang.",
+    "fcFlashcard": "Flashcard",
+    "fcQuiz": "Micro-Quiz",
+    "fcSocratic": "Diskusi Socratic",
+    "minutesShort": "mnt",
+    "empty": "Can acan kagiatan anu disarankeun ayeuna.",
+    "bestHour": "Wanci pangalusna: {{hour}}.00 WIB"
   }
 }

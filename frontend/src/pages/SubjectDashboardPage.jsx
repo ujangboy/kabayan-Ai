@@ -367,6 +367,96 @@ function LearningMetricsCard({ metrics }) {
   );
 }
 
+const PLAN_ITEM_META = (t) => ({
+  flashcard: { icon: CreditCard, label: t('studyPlan.fcFlashcard'),  cls: 'bg-accent-purple/10 text-accent-purple', to: '/flashcard' },
+  micro_quiz: { icon: HelpCircle, label: t('studyPlan.fcQuiz'),       cls: 'bg-accent-teal/10 text-accent-teal',      to: '/quiz' },
+  socratic:  { icon: Brain,      label: t('studyPlan.fcSocratic'),   cls: 'bg-primary/10 text-primary',              to: '/chat' },
+});
+
+function DailyPlanCard({ subjectId }) {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const [freeMinutes, setFreeMinutes] = useState(60);
+
+  const { data: plan, isLoading } = useQuery({
+    queryKey: ['daily-plan', subjectId, freeMinutes],
+    queryFn: () => studyAPI.dailyPlan(subjectId, freeMinutes),
+    enabled: !!subjectId,
+  });
+
+  const meta = PLAN_ITEM_META(t);
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="card-base p-6">
+      <div className="flex items-center gap-2 mb-1">
+        <CalendarCheck size={16} className="text-accent-blue" />
+        <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('studyPlan.title')}</h2>
+      </div>
+      <p className="text-xs text-text-muted mb-3">{t('studyPlan.subtitle')}</p>
+
+      {/* Free time selector */}
+      <div className="flex items-center gap-2 mb-4">
+        {[15, 30, 60, 90].map((m) => (
+          <button
+            key={m}
+            onClick={() => setFreeMinutes(m)}
+            className={`text-[10px] px-2.5 py-1 rounded-lg border transition-colors ${
+              freeMinutes === m
+                ? 'border-primary/50 bg-primary/10 text-primary font-semibold'
+                : 'border-border text-text-secondary hover:border-primary/30'
+            }`}
+          >
+            {m} {t('studyPlan.minutesShort')}
+          </button>
+        ))}
+      </div>
+
+      {isLoading ? (
+        <div className="space-y-2">
+          {[1, 2, 3].map(i => <div key={i} className="h-10 bg-border rounded animate-pulse" />)}
+        </div>
+      ) : plan?.items?.length === 0 ? (
+        <p className="text-xs text-text-muted text-center py-4 border border-dashed border-border rounded-xl">
+          {plan.empty_reason || t('studyPlan.empty')}
+        </p>
+      ) : (
+        <div className="space-y-2">
+          {plan.items.map((item, i) => {
+            const m = meta[item.type] || meta.micro_quiz;
+            const Icon = m.icon;
+            return (
+              <button
+                key={i}
+                onClick={() => navigate(m.to)}
+                className="w-full flex items-center gap-3 p-2.5 rounded-xl border border-border hover:border-primary/30 transition-colors cursor-pointer text-left"
+              >
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${m.cls}`}>
+                  <Icon size={14} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-semibold text-text truncate">
+                    {m.label}{item.topic ? ` · ${item.topic}` : ''}
+                  </p>
+                  <p className="text-[10px] text-text-muted mt-0.5 line-clamp-2">{item.reason}</p>
+                </div>
+                <span className="text-[10px] text-text-muted shrink-0">
+                  {item.duration_minutes} {t('studyPlan.minutesShort')}
+                </span>
+              </button>
+            );
+          })}
+          {plan.best_hour != null && (
+            <p className="text-[10px] text-text-muted pt-1">
+              <Clock size={10} className="inline mr-1" />
+              {t('studyPlan.bestHour', { hour: String(plan.best_hour).padStart(2, '0') })}
+            </p>
+          )}
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
 function StudyRecommendationCard({ route }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -658,6 +748,9 @@ export default function SubjectDashboardPage() {
 
           {/* ─── Sidebar (1/3) ─── */}
           <div className="space-y-6">
+            {/* Rencana belajar hari ini — FSRS due + mastery + waktu luang (PRD US4.3) */}
+            <DailyPlanCard subjectId={subjectId} />
+
             {/* Rekomendasi modalitas belajar (PRD US3.2) */}
             <StudyRecommendationCard route={studyRoute} />
 

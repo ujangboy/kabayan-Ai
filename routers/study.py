@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 from database import get_db
 from engines.modality_router import route as modality_route, VALID_TIERS
 from engines.learning_metrics import get_learning_metrics
+from engines.daily_planner import generate_daily_plan
 
 router = APIRouter()
 
@@ -75,3 +76,19 @@ async def study_metrics(subject_id: Optional[int] = Query(None), db: Session = D
         if not subject:
             return JSONResponse(status_code=404, content={"detail": "Mata kuliah tidak ditemukan."})
     return JSONResponse(get_learning_metrics(db, subject_id))
+
+
+@router.get("/api/study/daily-plan")
+async def study_daily_plan(
+    subject_id: Optional[int] = Query(None),
+    free_minutes: int = Query(60, ge=5, le=480),
+    db: Session = Depends(get_db),
+):
+    """Rencana belajar hari ini (PRD US4.3): FSRS due + mastery rendah + waktu luang."""
+    if subject_id is not None:
+        from models import Subject
+
+        subject = db.query(Subject).filter(Subject.id == subject_id).first()
+        if not subject:
+            return JSONResponse(status_code=404, content={"detail": "Mata kuliah tidak ditemukan."})
+    return JSONResponse(generate_daily_plan(db, free_minutes=free_minutes, subject_id=subject_id))

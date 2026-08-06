@@ -182,6 +182,14 @@ export const studyAPI = {
   // metrik belajar: speed, fatigue, waktu optimal, overview FSRS
   metrics: (subjectId = null) =>
     api.get('/study/metrics', { params: subjectId ? { subject_id: subjectId } : {} }).then(r => r.data),
+  // rencana belajar hari ini (FSRS due + mastery rendah + waktu luang)
+  dailyPlan: (subjectId = null, freeMinutes = 60) =>
+    api.get('/study/daily-plan', {
+      params: {
+        ...(subjectId ? { subject_id: subjectId } : {}),
+        free_minutes: freeMinutes,
+      },
+    }).then(r => r.data),
 };
 
 // --- TUTOR ---

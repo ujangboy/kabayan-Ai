@@ -799,5 +799,15 @@
     "fatigueInsufficient": "Belum cukup data",
     "bestTime": "Waktu terbaik",
     "noData": "Belum ada data"
+  },
+  "studyPlan": {
+    "title": "Rencana Hari Ini",
+    "subtitle": "Jadwal otomatis dari FSRS, mastery ujian, dan waktu luang Anda.",
+    "fcFlashcard": "Flashcard",
+    "fcQuiz": "Micro-Quiz",
+    "fcSocratic": "Diskusi Socratic",
+    "minutesShort": "mnt",
+    "empty": "Belum ada aktivitas yang direkomendasikan hari ini.",
+    "bestHour": "Waktu slot terbaik: {{hour}}.00 WIB"
   }
 }
