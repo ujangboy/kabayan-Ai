@@ -295,6 +295,78 @@ const STUDY_MODALITY_META = (t) => ({
   socratic:  { icon: Brain,      label: t('studyRoute.socratic'),   to: '/chat',      cls: 'bg-primary/10 text-primary' },
 });
 
+const FATIGUE_META = (t) => ({
+  berat:   { cls: 'badge-danger',  label: t('studyMetrics.fatigueHeavy') },
+  sedang:  { cls: 'badge-warning', label: t('studyMetrics.fatigueMedium') },
+  ringan:  { cls: 'badge-warning', label: t('studyMetrics.fatigueLight') },
+  normal:  { cls: 'badge-success', label: t('studyMetrics.fatigueNormal') },
+  tidak_cukup_data: { cls: 'badge', label: t('studyMetrics.fatigueInsufficient') },
+});
+
+function LearningMetricsCard({ metrics }) {
+  const { t } = useTranslation();
+  if (!metrics) return null;
+  const speed = metrics.speed || {};
+  const fatigue = metrics.fatigue || {};
+  const opt = metrics.optimal_time || {};
+  const fsrs = metrics.fsrs_overview || {};
+
+  const fatigueMeta = FATIGUE_META(t)[fatigue.level] || FATIGUE_META(t).tidak_cukup_data;
+  const dueText = fsrs.due_cards != null ? fsrs.due_cards : '—';
+  const newText = fsrs.new_cards != null ? fsrs.new_cards : '—';
+  const retention = fsrs.retention_pct != null ? `${fsrs.retention_pct}%` : '—';
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="card-base p-6">
+      <div className="flex items-center gap-2 mb-4">
+        <Brain size={16} className="text-accent-teal" />
+        <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('studyMetrics.title')}</h2>
+      </div>
+
+      {/* FSRS overview */}
+      <div className="grid grid-cols-3 gap-2 mb-4">
+        <div className="bg-background border border-border rounded-xl p-2.5 text-center">
+          <p className="text-lg font-bold text-text">{dueText}</p>
+          <p className="text-[10px] text-text-secondary mt-0.5">{t('studyMetrics.fsrsDue')}</p>
+        </div>
+        <div className="bg-background border border-border rounded-xl p-2.5 text-center">
+          <p className="text-lg font-bold text-text">{newText}</p>
+          <p className="text-[10px] text-text-secondary mt-0.5">{t('studyMetrics.fsrsNew')}</p>
+        </div>
+        <div className="bg-background border border-border rounded-xl p-2.5 text-center">
+          <p className="text-lg font-bold text-text">{retention}</p>
+          <p className="text-[10px] text-text-secondary mt-0.5">{t('studyMetrics.fsrsRetention')}</p>
+        </div>
+      </div>
+
+      <div className="space-y-2.5 text-xs">
+        <div className="flex items-center justify-between">
+          <span className="text-text-secondary">{t('studyMetrics.speed')}</span>
+          <span className="font-semibold text-text">
+            {speed.items_per_minute != null ? `${speed.items_per_minute} ${t('studyMetrics.speedUnit')}` : t('studyMetrics.noData')}
+          </span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-text-secondary">{t('studyMetrics.fatigue')}</span>
+          <span className={`badge text-[10px] ${fatigueMeta.cls}`}>{fatigueMeta.label}</span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-text-secondary">{t('studyMetrics.bestTime')}</span>
+          <span className="font-semibold text-text">
+            {opt.best_hour != null
+              ? `${String(opt.best_hour).padStart(2, '0')}.00 WIB`
+              : t('studyMetrics.noData')}
+          </span>
+        </div>
+      </div>
+
+      <p className="text-[10px] text-text-muted mt-3 leading-relaxed bg-background border border-border/50 rounded-lg p-2">
+        {speed.reading_speed_note}
+      </p>
+    </motion.div>
+  );
+}
+
 function StudyRecommendationCard({ route }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -372,6 +444,13 @@ export default function SubjectDashboardPage() {
   const { data: studyRoute } = useQuery({
     queryKey: ['study-route', subjectId],
     queryFn: () => studyAPI.route(subjectId),
+    enabled: !!subjectId,
+    staleTime: 60_000,
+  });
+
+  const { data: studyMetrics } = useQuery({
+    queryKey: ['study-metrics', subjectId],
+    queryFn: () => studyAPI.metrics(subjectId),
     enabled: !!subjectId,
     staleTime: 60_000,
   });
@@ -581,6 +660,9 @@ export default function SubjectDashboardPage() {
           <div className="space-y-6">
             {/* Rekomendasi modalitas belajar (PRD US3.2) */}
             <StudyRecommendationCard route={studyRoute} />
+
+            {/* Metrik belajar: speed, kelelahan, waktu optimal, FSRS (PRD US3.3) */}
+            <LearningMetricsCard metrics={studyMetrics} />
 
             {/* Active study plan */}
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="card-base p-6">

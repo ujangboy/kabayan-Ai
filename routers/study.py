@@ -7,13 +7,14 @@ POST /api/study/route
     - Jika `tier` null → kembalikan `recommendations` untuk semua tier +
       `primary` (modalitas terbaik yang resource-nya tersedia).
 """
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from typing import Optional
 from sqlalchemy.orm import Session
 from database import get_db
 from engines.modality_router import route as modality_route, VALID_TIERS
+from engines.learning_metrics import get_learning_metrics
 
 router = APIRouter()
 
@@ -62,3 +63,15 @@ async def study_route(req: StudyRouteRequest, db: Session = Depends(get_db)):
         })
     except ValueError as e:
         return JSONResponse(status_code=422, content={"detail": str(e)})
+
+
+@router.get("/api/study/metrics")
+async def study_metrics(subject_id: Optional[int] = Query(None), db: Session = Depends(get_db)):
+    """Metrik belajar (PRD US3.3): speed, fatigue, waktu optimal, overview FSRS."""
+    if subject_id is not None:
+        from models import Subject
+
+        subject = db.query(Subject).filter(Subject.id == subject_id).first()
+        if not subject:
+            return JSONResponse(status_code=404, content={"detail": "Mata kuliah tidak ditemukan."})
+    return JSONResponse(get_learning_metrics(db, subject_id))

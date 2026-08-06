@@ -783,5 +783,21 @@
     "tierComplex": "COMPLEX",
     "recommended": "DIREKOMENDASIKAN",
     "primaryNote": "Mulai dari {label}: {n} kartu tersedia, {q} kuis."
+  },
+  "studyMetrics": {
+    "title": "Metrik Belajar",
+    "fsrsDue": "Kartu due",
+    "fsrsNew": "Kartu baru",
+    "fsrsRetention": "Retensi",
+    "speed": "Kecepatan",
+    "speedUnit": "item/menit",
+    "fatigue": "Kelelahan",
+    "fatigueHeavy": "Berat",
+    "fatigueMedium": "Sedang",
+    "fatigueLight": "Ringan",
+    "fatigueNormal": "Normal",
+    "fatigueInsufficient": "Belum cukup data",
+    "bestTime": "Waktu terbaik",
+    "noData": "Belum ada data"
   }
 }

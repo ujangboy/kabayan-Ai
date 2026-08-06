@@ -783,5 +783,21 @@
     "tierComplex": "COMPLEX",
     "recommended": "RECOMMENDED",
     "primaryNote": "Start with {label}: {n} cards available, {q} quizzes."
+  },
+  "studyMetrics": {
+    "title": "Learning Metrics",
+    "fsrsDue": "Due cards",
+    "fsrsNew": "New cards",
+    "fsrsRetention": "Retention",
+    "speed": "Speed",
+    "speedUnit": "items/min",
+    "fatigue": "Fatigue",
+    "fatigueHeavy": "Heavy",
+    "fatigueMedium": "Moderate",
+    "fatigueLight": "Light",
+    "fatigueNormal": "Normal",
+    "fatigueInsufficient": "Not enough data",
+    "bestTime": "Best time",
+    "noData": "No data yet"
   }
 }

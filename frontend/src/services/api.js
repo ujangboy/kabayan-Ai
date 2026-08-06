@@ -179,6 +179,9 @@ export const studyAPI = {
       ...(tier ? { tier } : {}),
       ...(topic ? { topic } : {}),
     }).then(r => r.data),
+  // metrik belajar: speed, fatigue, waktu optimal, overview FSRS
+  metrics: (subjectId = null) =>
+    api.get('/study/metrics', { params: subjectId ? { subject_id: subjectId } : {} }).then(r => r.data),
 };
 
 // --- TUTOR ---

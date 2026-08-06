@@ -776,5 +776,21 @@
     "tierComplex": "COMPLEX",
     "recommended": "DIPUNYARANGKÉ",
     "primaryNote": "Mimitian tina {label}: {n} kartu sadia, {q} kuis."
+  },
+  "studyMetrics": {
+    "title": "Métrik Diajar",
+    "fsrsDue": "Kartu jatuh tempo",
+    "fsrsNew": "Kartu anyar",
+    "fsrsRetention": "Réténsi",
+    "speed": "Kagancangan",
+    "speedUnit": "item/menit",
+    "fatigue": "Kacapéan",
+    "fatigueHeavy": "Beurat",
+    "fatigueMedium": "Sedeng",
+    "fatigueLight": "Enténg",
+    "fatigueNormal": "Normal",
+    "fatigueInsufficient": "Can cukup data",
+    "bestTime": "Wanci pangalusna",
+    "noData": "Can aya data"
   }
 }
