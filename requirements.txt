@@ -16,6 +16,7 @@ python-multipart
 numpy
 python-pptx
 yt-dlp
+fsrs
 
 # Dev
 pytest

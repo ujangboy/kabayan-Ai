@@ -89,6 +89,8 @@ class Flashcard(Base):
     times_correct = Column(Integer, default=0)     # berapa kali dinilai benar/ingat
     last_reviewed = Column(DateTime, nullable=True)
     mastered = Column(Integer, default=0)          # 1 = sudah dikuasai (interval >= 21 hari)
+    # ─── FSRS state (Fase 3: FSRS) — JSON serialisasi Card fsrs (v6.3) ───
+    fsrs_state = Column(Text, nullable=True)       # {"stability","difficulty","due","state",...}
 
     subject = relationship("Subject", back_populates="flashcards")
     reviews = relationship("FlashcardReview", back_populates="flashcard", cascade="all, delete-orphan")
