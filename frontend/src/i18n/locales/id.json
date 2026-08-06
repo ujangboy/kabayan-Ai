@@ -809,5 +809,12 @@
     "minutesShort": "mnt",
     "empty": "Belum ada aktivitas yang direkomendasikan hari ini.",
     "bestHour": "Waktu slot terbaik: {{hour}}.00 WIB"
+  },
+  "focusMode": {
+    "title": "Mode Fokus",
+    "start": "Belajar dalam mode fokus",
+    "exit": "Keluar",
+    "exitHint": "Gerakkan mouse atau tekan Esc untuk keluar",
+    "activity": "Aktivitas saat ini"
   }
 }

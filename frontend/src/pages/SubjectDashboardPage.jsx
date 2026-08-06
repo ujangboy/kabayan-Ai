@@ -5,9 +5,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, Book, FileText, CreditCard, HelpCircle, Pencil, Trash2, X,
-  TrendingUp, Trophy, Target, CalendarCheck, Clock, BookOpen, Zap, Brain, Sparkles
+  TrendingUp, Trophy, Target, CalendarCheck, Clock, BookOpen, Zap, Brain, Sparkles, Focus
 } from 'lucide-react';
 import { subjectAPI, examAPI, studyAPI } from '@/services/api';
+import { useFocusStore } from '@/store';
 import { formatDate, fileIcon } from '@/utils';
 
 const TOPIC_STATUS_META = (t) => ({
@@ -376,6 +377,7 @@ const PLAN_ITEM_META = (t) => ({
 function DailyPlanCard({ subjectId }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const enterFocus = useFocusStore((s) => s.enterFocus);
   const [freeMinutes, setFreeMinutes] = useState(60);
 
   const { data: plan, isLoading } = useQuery({
@@ -385,6 +387,16 @@ function DailyPlanCard({ subjectId }) {
   });
 
   const meta = PLAN_ITEM_META(t);
+
+  const startFocus = (item, m) => {
+    enterFocus({
+      type: item.type,
+      to: m.to,
+      label: item.topic ? `${m.label} · ${item.topic}` : (item.subject_name || m.label),
+      subjectId,
+    });
+    navigate(m.to);
+  };
 
   return (
     <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="card-base p-6">
@@ -425,24 +437,32 @@ function DailyPlanCard({ subjectId }) {
             const m = meta[item.type] || meta.micro_quiz;
             const Icon = m.icon;
             return (
-              <button
-                key={i}
-                onClick={() => navigate(m.to)}
-                className="w-full flex items-center gap-3 p-2.5 rounded-xl border border-border hover:border-primary/30 transition-colors cursor-pointer text-left"
-              >
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${m.cls}`}>
-                  <Icon size={14} />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs font-semibold text-text truncate">
-                    {m.label}{item.topic ? ` · ${item.topic}` : ''}
-                  </p>
-                  <p className="text-[10px] text-text-muted mt-0.5 line-clamp-2">{item.reason}</p>
-                </div>
-                <span className="text-[10px] text-text-muted shrink-0">
-                  {item.duration_minutes} {t('studyPlan.minutesShort')}
-                </span>
-              </button>
+              <div key={i} className="flex items-stretch gap-2">
+                <button
+                  onClick={() => navigate(m.to)}
+                  className="flex-1 min-w-0 flex items-center gap-3 p-2.5 rounded-xl border border-border hover:border-primary/30 transition-colors cursor-pointer text-left"
+                >
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${m.cls}`}>
+                    <Icon size={14} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-semibold text-text truncate">
+                      {m.label}{item.topic ? ` · ${item.topic}` : ''}
+                    </p>
+                    <p className="text-[10px] text-text-muted mt-0.5 line-clamp-2">{item.reason}</p>
+                  </div>
+                  <span className="text-[10px] text-text-muted shrink-0">
+                    {item.duration_minutes} {t('studyPlan.minutesShort')}
+                  </span>
+                </button>
+                <button
+                  onClick={() => startFocus(item, m)}
+                  title={t('focusMode.start')}
+                  className="w-10 shrink-0 flex items-center justify-center rounded-xl border border-border text-text-muted hover:text-primary hover:border-primary/40 transition-colors cursor-pointer"
+                >
+                  <Focus size={14} />
+                </button>
+              </div>
             );
           })}
           {plan.best_hour != null && (
@@ -457,15 +477,21 @@ function DailyPlanCard({ subjectId }) {
   );
 }
 
-function StudyRecommendationCard({ route }) {
+function StudyRecommendationCard({ route, subjectId }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const enterFocus = useFocusStore((s) => s.enterFocus);
   if (!route?.recommendations) return null;
 
   const meta = STUDY_MODALITY_META(t);
   const primaryModality = route.primary?.modality;
   const primary = route.recommendations.find(r => r.modality === primaryModality);
   const tierLabel = (tier) => t(`studyRoute.tier${tier.charAt(0) + tier.slice(1).toLowerCase()}`);
+
+  const startFocus = (rec, m) => {
+    enterFocus({ type: rec.modality, to: m.to, label: m.label, subjectId });
+    navigate(m.to);
+  };
 
   return (
     <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="card-base p-6">
@@ -480,25 +506,33 @@ function StudyRecommendationCard({ route }) {
           const Icon = m.icon;
           const isPrimary = rec.modality === primaryModality;
           return (
-            <button
-              key={rec.tier}
-              onClick={() => navigate(m.to)}
-              className={`w-full flex items-center gap-3 p-2.5 rounded-xl border transition-colors cursor-pointer text-left ${
-                isPrimary ? 'border-primary/40 bg-primary/5' : 'border-border hover:border-primary/30'
-              }`}
-            >
-              <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${m.cls}`}>
-                <Icon size={14} />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold text-text">{m.label}</span>
-                  <span className="badge badge-warning text-[9px]">{tierLabel(rec.tier)}</span>
-                  {isPrimary && <span className="badge badge-success text-[9px]">{t('studyRoute.recommended')}</span>}
+            <div key={rec.tier} className="flex items-stretch gap-2">
+              <button
+                onClick={() => navigate(m.to)}
+                className={`flex-1 min-w-0 flex items-center gap-3 p-2.5 rounded-xl border transition-colors cursor-pointer text-left ${
+                  isPrimary ? 'border-primary/40 bg-primary/5' : 'border-border hover:border-primary/30'
+                }`}
+              >
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${m.cls}`}>
+                  <Icon size={14} />
                 </div>
-                <p className="text-[10px] text-text-muted mt-0.5 line-clamp-2">{rec.reason}</p>
-              </div>
-            </button>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold text-text">{m.label}</span>
+                    <span className="badge badge-warning text-[9px]">{tierLabel(rec.tier)}</span>
+                    {isPrimary && <span className="badge badge-success text-[9px]">{t('studyRoute.recommended')}</span>}
+                  </div>
+                  <p className="text-[10px] text-text-muted mt-0.5 line-clamp-2">{rec.reason}</p>
+                </div>
+              </button>
+              <button
+                onClick={() => startFocus(rec, m)}
+                title={t('focusMode.start')}
+                className="w-10 shrink-0 flex items-center justify-center rounded-xl border border-border text-text-muted hover:text-primary hover:border-primary/40 transition-colors cursor-pointer"
+              >
+                <Focus size={14} />
+              </button>
+            </div>
           );
         })}
       </div>
@@ -752,7 +786,7 @@ export default function SubjectDashboardPage() {
             <DailyPlanCard subjectId={subjectId} />
 
             {/* Rekomendasi modalitas belajar (PRD US3.2) */}
-            <StudyRecommendationCard route={studyRoute} />
+            <StudyRecommendationCard route={studyRoute} subjectId={subjectId} />
 
             {/* Metrik belajar: speed, kelelahan, waktu optimal, FSRS (PRD US3.3) */}
             <LearningMetricsCard metrics={studyMetrics} />

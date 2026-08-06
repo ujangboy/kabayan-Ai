@@ -809,5 +809,12 @@
     "minutesShort": "min",
     "empty": "No recommended activity for today yet.",
     "bestHour": "Your best study slot: {{hour}}.00 WIB"
+  },
+  "focusMode": {
+    "title": "Focus Mode",
+    "start": "Study in focus mode",
+    "exit": "Exit",
+    "exitHint": "Move your mouse or press Esc to exit",
+    "activity": "Current activity"
   }
 }

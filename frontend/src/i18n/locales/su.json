@@ -802,5 +802,12 @@
     "minutesShort": "mnt",
     "empty": "Can acan kagiatan anu disarankeun ayeuna.",
     "bestHour": "Wanci pangalusna: {{hour}}.00 WIB"
+  },
+  "focusMode": {
+    "title": "Mode Pokus",
+    "start": "Diajar dina mode pokus",
+    "exit": "Kaluar",
+    "exitHint": "Gerakkeun beurit atawa pencét Esc pikeun kaluar",
+    "activity": "Kagiatan ayeuna"
   }
 }

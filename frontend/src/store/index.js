@@ -133,6 +133,8 @@ export const useUiStore = create(
   )
 );
 
+export { useFocusStore } from './focusStore';
+
 export const useAppStore = create((set) => ({
   sidebarOpen: true,
   searchOpen: false,

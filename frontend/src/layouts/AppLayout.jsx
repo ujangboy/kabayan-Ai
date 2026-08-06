@@ -1,9 +1,10 @@
 import { useEffect } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import CommandSearch from '@/components/search/CommandSearch';
 import BackgroundProcessSync from '@/components/BackgroundProcessSync';
-import { useAppStore } from '@/store';
+import FocusModeView from '@/components/FocusModeView';
+import { useAppStore, useFocusStore } from '@/store';
 import { useTranslation } from 'react-i18next';
 import { profileAPI } from '@/services/api';
 import { setAppLanguage, STORAGE_KEY } from '@/i18n';
@@ -45,6 +46,11 @@ function PendingBanner({ t }) {
 export default function AppLayout() {
   const { searchOpen } = useAppStore();
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const isFocusMode = useFocusStore((s) => s.isFocusMode);
+  const focusActivity = useFocusStore((s) => s.focusActivity);
+  const exitFocus = useFocusStore((s) => s.exitFocus);
 
   // Sinkronkan bahasa dari backend saat aplikasi pertama dibuka.
   // localStorage adalah sumber instant untuk i18n; backend adalah sumber persisten.
@@ -61,6 +67,27 @@ export default function AppLayout() {
       .catch(() => { /* abaikan — default 'id' */ });
     return () => { cancelled = true; };
   }, []);
+
+  // Keluar otomatis dari mode fokus jika pengguna pindah halaman (mis. tombol back).
+  useEffect(() => {
+    if (isFocusMode && focusActivity && location.pathname !== focusActivity.to) {
+      exitFocus();
+    }
+  }, [isFocusMode, focusActivity, location.pathname, exitFocus]);
+
+  if (isFocusMode) {
+    return (
+      <FocusModeView
+        activity={focusActivity}
+        onExit={() => {
+          exitFocus();
+          navigate(focusActivity?.subjectId ? `/subjects/${focusActivity.subjectId}` : '/dashboard');
+        }}
+      >
+        <Outlet />
+      </FocusModeView>
+    );
+  }
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
