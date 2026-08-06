@@ -750,7 +750,17 @@
       "trashEmptied": "Sampah dikosongkan",
       "trashError": "Aksi sampah gagal",
       "trashDeleteConfirm": "Hapus permanen '{name}'? Tindakan ini tidak bisa dibatalkan.",
-      "trashEmptyConfirm": "Kosongkan sampah permanen? Semua file di sampah akan dihapus."
+      "trashEmptyConfirm": "Kosongkan sampah permanen? Semua file di sampah akan dihapus.",
+      "backupTitle": "Backup & Ekspor",
+      "backupDesc": "Simpan seluruh data lokal ke satu arsip ZIP portabel.",
+      "backupCreate": "Buat Backup & Unduh",
+      "backupCreating": "Membuat backup...",
+      "backupCreated": "Backup berhasil dibuat",
+      "backupNote": "Berisi database (materi, kartu, ujian, profil) + file materi asli + hasil audio. Indeks vektor dibuat ulang otomatis dari materi saat dipakai — tidak perlu di-backup.",
+      "backupRecent": "Backup terbaru",
+      "backupEmpty": "Belum ada backup.",
+      "backupDownload": "Unduh backup",
+      "backupError": "Gagal membuat backup"
     },
     "aiLimit": {
       "title": "Pemakaian AI",

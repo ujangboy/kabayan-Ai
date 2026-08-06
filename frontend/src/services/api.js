@@ -255,6 +255,10 @@ export const dataAPI = {
   overview: () => api.get('/data/overview'),
   // pemakaian Groq API per fitur + total (limit AI)
   usage: () => api.get('/usage'),
+  // backup/export ZIP
+  createBackup: () => api.post('/backup/create').then((r) => r.data),
+  listBackups: () => api.get('/backup/list').then((r) => r.data),
+  downloadBackup: (filename) => api.get('/backup/download', { params: { filename }, responseType: 'blob' }),
 };
 
 // --- SAMPAH (Pengaturan > Data, recycle bin) ---

@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import {
   BookOpen, FileText, MessageSquare, BookMarked, CreditCard,
   HelpCircle, Brain, LayoutTemplate, Database as DatabaseIcon, HardDrive,
-  Trash2, Loader2, RotateCcw, Trash as TrashIcon, XCircle,
+  Trash2, Loader2, RotateCcw, Trash as TrashIcon, XCircle, Download, Archive,
 } from 'lucide-react';
 import { dataAPI, materiAPI, trashAPI } from '@/services/api';
 import { useToast } from '@/components/Toast';
@@ -107,6 +107,43 @@ export default function DataTab() {
   const handleEmptyTrash = () => {
     if (window.confirm(t('settings.data.trashEmptyConfirm'))) {
       emptyTrashMutation.mutate();
+    }
+  };
+
+  const { data: backups } = useQuery({
+    queryKey: ['backups'],
+    queryFn: () => dataAPI.listBackups(),
+  });
+
+  const backupMutation = useMutation({
+    mutationFn: () => dataAPI.createBackup(),
+    onSuccess: async (info) => {
+      queryClient.invalidateQueries(['backups']);
+      toast.success(t('settings.data.backupCreated'));
+      const res = await dataAPI.downloadBackup(info.filename);
+      const url = URL.createObjectURL(res.data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = info.filename;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+    },
+    onError: () => toast.error(t('settings.data.backupError')),
+  });
+
+  const handleBackup = () => backupMutation.mutate();
+
+  const handleDownloadBackup = async (name) => {
+    try {
+      const res = await dataAPI.downloadBackup(name);
+      const url = URL.createObjectURL(res.data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = name;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+    } catch {
+      toast.error(t('settings.data.backupError'));
     }
   };
 
@@ -235,6 +272,59 @@ export default function DataTab() {
             </table>
           </div>
         )}
+      </div>
+
+      {/* Backup / Export */}
+      <div className="card-base p-5">
+        <h3 className="text-sm font-semibold text-text mb-1 flex items-center gap-2">
+          <Archive size={15} className="text-primary" />
+          {t('settings.data.backupTitle')}
+        </h3>
+        <p className="text-xs text-text-muted mb-4">{t('settings.data.backupDesc')}</p>
+
+        <button
+          onClick={handleBackup}
+          disabled={backupMutation.isPending}
+          className="btn-primary px-4 py-2 rounded-xl text-sm flex items-center gap-2"
+        >
+          {backupMutation.isPending ? (
+            <Loader2 size={15} className="animate-spin" />
+          ) : (
+            <Download size={15} />
+          )}
+          {backupMutation.isPending ? t('settings.data.backupCreating') : t('settings.data.backupCreate')}
+        </button>
+
+        <p className="text-[10px] text-text-muted mt-2 leading-relaxed">{t('settings.data.backupNote')}</p>
+
+        <div className="mt-4">
+          <p className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider mb-2">
+            {t('settings.data.backupRecent')}
+          </p>
+          {(!backups?.backups || backups.backups.length === 0) ? (
+            <p className="text-xs text-text-muted">{t('settings.data.backupEmpty')}</p>
+          ) : (
+            <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+              {backups.backups.map((b) => (
+                <div key={b.filename} className="flex items-center justify-between gap-2 bg-background border border-border/60 rounded-lg px-3 py-2">
+                  <div className="min-w-0">
+                    <p className="text-xs text-text truncate" title={b.filename}>{b.filename}</p>
+                    <p className="text-[10px] text-text-muted">
+                      {b.created_at} · {formatBytes(b.size)}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => handleDownloadBackup(b.filename)}
+                    title={t('settings.data.backupDownload')}
+                    className="p-1.5 rounded-lg text-text-muted hover:text-primary hover:bg-primary/10 transition-colors shrink-0"
+                  >
+                    <Download size={13} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Trash (Sampah) */}

@@ -750,7 +750,17 @@
       "trashEmptied": "Trash emptied",
       "trashError": "Trash action failed",
       "trashDeleteConfirm": "Permanently delete '{name}'? This action cannot be undone.",
-      "trashEmptyConfirm": "Empty trash permanently? All files in the trash will be deleted."
+      "trashEmptyConfirm": "Empty trash permanently? All files in the trash will be deleted.",
+      "backupTitle": "Backup & Export",
+      "backupDesc": "Save all local data into one portable ZIP archive.",
+      "backupCreate": "Create Backup & Download",
+      "backupCreating": "Creating backup...",
+      "backupCreated": "Backup created successfully",
+      "backupNote": "Includes the database (materials, cards, exams, profile) + original material files + audio output. The vector index is rebuilt automatically from materials when used — no need to back it up.",
+      "backupRecent": "Recent backups",
+      "backupEmpty": "No backups yet.",
+      "backupDownload": "Download backup",
+      "backupError": "Failed to create backup"
     },
     "aiLimit": {
       "title": "AI Usage",

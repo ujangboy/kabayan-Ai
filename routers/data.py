@@ -2,17 +2,19 @@
 
 Menghimpun jumlah item per kategori + penggunaan penyimpanan. Frontend lalu
 memuat detail per kategori via endpoint khusus masing-masing (materials, chats,
-flashcards, quizzes, notes, exam sessions).
+flashcards, quizzes, notes, exam sessions). Menyediakan juga backup/export ZIP.
 """
-from fastapi import APIRouter, Depends
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, Depends, Query
+from fastapi.responses import JSONResponse, FileResponse
 from sqlalchemy.orm import Session
 
 from database import get_db
 import models
+import os
 from services.storage_cleanup_service import get_storage_usage
 from services.usage_service import get_usage
 from services.trash_service import get_trash_count
+from services.backup_service import create_backup, list_backups, backup_path_for
 from exceptions import AppError
 
 router = APIRouter()
@@ -66,3 +68,40 @@ async def data_overview(db: Session = Depends(get_db)):
         raise
     except Exception as exc:
         raise AppError(str(exc), status_code=500)
+
+
+# ─── Backup / Export ─────────────────────────────────────────────────────────
+
+@router.post("/api/backup/create")
+async def create_backup_now():
+    """Buat arsip backup ZIP (DB snapshot + uploads + audio) di storage/backups."""
+    try:
+        return JSONResponse(create_backup())
+    except AppError:
+        raise
+    except Exception as exc:
+        raise AppError(str(exc), status_code=500)
+
+
+@router.get("/api/backup/list")
+async def list_backup_archives():
+    """Daftar arsip backup yang tersedia (terbaru dulu)."""
+    try:
+        return JSONResponse({"backups": list_backups()})
+    except AppError:
+        raise
+    except Exception as exc:
+        raise AppError(str(exc), status_code=500)
+
+
+@router.get("/api/backup/download")
+async def download_backup_archive(filename: str = Query(...)):
+    """Unduh arsip backup; nama file disanitasi (tolak path traversal)."""
+    path = backup_path_for(filename)
+    if not path:
+        return JSONResponse(status_code=404, content={"detail": "Backup tidak ditemukan."})
+    return FileResponse(
+        path,
+        media_type="application/zip",
+        filename=os.path.basename(path),
+    )

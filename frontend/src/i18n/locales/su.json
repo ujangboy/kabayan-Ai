@@ -743,7 +743,17 @@
       "trashEmptied": "Sampah dikosongkeun",
       "trashError": "Aksi sampah gagal",
       "trashDeleteConfirm": "Hapus permanén '{name}'? Aksi ieu teu tiasa dibatalkeun.",
-      "trashEmptyConfirm": "Kosongkeun sampah permanén? Sadaya file di sampah bakal dihapus."
+      "trashEmptyConfirm": "Kosongkeun sampah permanén? Sadaya file di sampah bakal dihapus.",
+      "backupTitle": "Backup & Ékspor",
+      "backupDesc": "Simpen sadaya data lokal kana hiji arsip ZIP portabel.",
+      "backupCreate": "Jieun Backup & Unduh",
+      "backupCreating": "Ngadamel backup...",
+      "backupCreated": "Backup hasil",
+      "backupNote": "Eusina database (materi, kartu, ujian, profil) + file materi asli + audio. Indéks véktor didamel ulang otomatis tina materi nalika dianggo — teu perlu dibackup.",
+      "backupRecent": "Backup panganyarna",
+      "backupEmpty": "Can aya backup.",
+      "backupDownload": "Unduh backup",
+      "backupError": "Gagal ngadamel backup"
     },
     "aiLimit": {
       "title": "Pamakéan AI",
