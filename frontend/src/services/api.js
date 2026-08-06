@@ -149,6 +149,7 @@ export const examAPI = {
   retry: (blueprintId, weakTopics = []) =>
     api.post(`/exam/retry/${blueprintId}`, { weak_topics: weakTopics }, { timeout: 30000 }),
   getExplanation: (payload) => api.post('/exam/explain', payload, { timeout: 60000 }),
+  getLearningProfile: (subjectId) => api.get(`/exam/learning-profile/${subjectId}`).then(r => r.data),
 };
 
 // --- UNIFIED SESSIONS ---

@@ -77,12 +77,16 @@ Hasilkan JSON valid (tanpa teks tambahan) dengan struktur berikut:
   ]
 }}
 
-Pastikan total weight_percent = 100 dan total question_count = {total_questions}."""
+Pastikan total weight_percent = 100 dan total question_count = {total_questions}.
+
+Instruksi Adaptif (bisa kosong):
+{adaptive_instructions}"""
 
 BLUEPRINT_PROMPT = PromptTemplate(
     input_variables=[
         "subject_name", "exam_type", "total_questions", "difficulty",
-        "bloom_level", "question_type", "focus_material", "topic_priority_json"
+        "bloom_level", "question_type", "focus_material", "topic_priority_json",
+        "adaptive_instructions"
     ],
     template=BLUEPRINT_PROMPT_TEMPLATE
 )
@@ -117,6 +121,9 @@ Aturan format matematika:
 - Rumus blok: $$...$$ pada baris tersendiri
 - JANGAN gunakan unicode matematika (×, ², √, ∑, ∫). Gunakan LaTeX.
 
+Instruksi Adaptif (bisa kosong — hanya penyesuaian distribusi bobot/kesulitan topik, jangan ubah jumlah soal):
+{adaptive_instructions}
+
 Hasilkan JSON valid (tanpa teks tambahan) dengan struktur:
 {{
   "questions": [
@@ -145,7 +152,7 @@ Catatan:
 QUESTION_GEN_PROMPT = PromptTemplate(
     input_variables=[
         "context", "topic", "question_count", "question_types",
-        "bloom_level", "difficulty", "key_concepts"
+        "bloom_level", "difficulty", "key_concepts", "adaptive_instructions"
     ],
     template=QUESTION_GEN_PROMPT_TEMPLATE
 )

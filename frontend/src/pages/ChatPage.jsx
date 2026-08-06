@@ -198,6 +198,80 @@ export default function ChatPage() {
   // Handle URL params
   useEffect(() => {
     const id = searchParams.get('id');
+    const tutorParam = searchParams.get('tutor');
+    const subjectParam = searchParams.get('subject');
+    const topicParam = searchParams.get('topic');
+    const examParam = searchParams.get('exam');
+
+    if (tutorParam === '1') {
+      const newId = createChat();
+      navigate(`/chat?id=${newId}`, { replace: true });
+      setTimeout(() => {
+        setChatTutor(newId, {
+          tutorEnabled: true,
+          tutorSubject: subjectParam || '',
+          examSessionId: examParam ? Number(examParam) : null,
+        });
+        const subjectText = subjectParam ? ` dalam mata kuliah ${subjectParam}` : '';
+        const msg = examParam
+          ? `Aku baru selesai ujian${subjectText}. Tolong bantu aku memahami kesalahan-kesalahanku, jelaskan topik lemahku dengan detail seperti dosen, dan beri tips agar nilai meningkat.`
+          : topicParam
+            ? `Jelaskan topik "${topicParam}"${subjectText} seperti dosen menjelaskan di kelas. Berikan penjelasan konsep, contoh, dan pemahaman mendalam.`
+            : `Mulai diskusi tentang ${subjectParam || 'mata kuliah ini'}.`;
+        addMessage(newId, { role: 'user', content: msg });
+        addMessage(newId, { role: 'assistant', content: '' });
+        setStreaming(true, newId);
+        navigate('/chat?id=' + newId, { replace: true });
+
+        (async () => {
+          try {
+            const { streamChat } = await import('@/services/tutorStream');
+            let full = '';
+            let headerStripped = false;
+            const body = {
+              message: msg,
+              history: [],
+              session_id: String(newId),
+              mata_kuliah: subjectParam || undefined,
+              student_level: 'intermediate',
+              rag_docs: [],
+            };
+            if (examParam) body.exam_session_id = Number(examParam);
+            await streamChat({
+              chatId: newId,
+              endpoint: '/api/tutor/chat',
+              body,
+              onChunk: (chunk) => {
+                if (!headerStripped) {
+                  const combined = full + chunk;
+                  const NULL = '\u0000';
+                  if (combined.startsWith(NULL + 'TYPE:')) {
+                    const endIdx = combined.indexOf(NULL, 1);
+                    if (endIdx !== -1) {
+                      full = combined.slice(endIdx + 1);
+                      headerStripped = true;
+                      updateLastMessage(newId, full);
+                      return;
+                    }
+                  }
+                  full += chunk;
+                  if (full.length > 20) { headerStripped = true; updateLastMessage(newId, full); }
+                  return;
+                }
+                full += chunk;
+                updateLastMessage(newId, full);
+              },
+            });
+          } catch {
+            updateLastMessage(newId, '⚠️ Gagal memuat respons tutor.');
+          } finally {
+            setStreaming(false, newId);
+          }
+        })();
+      }, 100);
+      return;
+    }
+
     if (id) {
       setCurrentChat(Number(id));
     } else if (!currentChatId || !chats.find(c => c.id === currentChatId)) {
@@ -256,6 +330,8 @@ export default function ChatPage() {
             session_id: String(currentChatId || ''),
             mata_kuliah: tutorSubject || undefined,
             student_level: tutorLevel,
+            exam_session_id: chat?.examSessionId || undefined,
+            rag_docs: selectedDocs,
           }
         : {
             message: text,
@@ -586,8 +662,17 @@ export default function ChatPage() {
           </div>
           <div className="flex items-center gap-2">
             {/* Tutor Mode controls — visible when tutorMode is on */}
-            {tutorMode && (
+            {tutorMode && (() => {
+              const activeSubject = tutorSubject ? subjects.find(s => s.name === tutorSubject) : null;
+              const tutorActiveDocsCount = activeSubject?.materials?.filter(m => m.status === 'Ready').length || 0;
+              return (
               <div className="flex items-center gap-1.5">
+                {/* RAG Indicator for Tutor Mode */}
+                {tutorActiveDocsCount > 0 && (
+                  <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-[10px] font-medium mr-1" title="AI akan membaca materi ini untuk menjawab">
+                    <BookOpen size={10} /> {tutorActiveDocsCount} Materi Aktif
+                  </span>
+                )}
                 {/* Subject selector */}
                 <select
                   value={tutorSubject}
@@ -616,7 +701,8 @@ export default function ChatPage() {
                   <option value="advanced">{t('chat.levelAdvanced')}</option>
                 </select>
               </div>
-            )}
+              );
+            })()}
 
             {/* Tutor Mode toggle */}
             <button
@@ -633,8 +719,8 @@ export default function ChatPage() {
               {tutorMode ? 'Tutor ON' : 'Tutor'}
             </button>
 
-            {/* Selected docs indicator (normal mode only) */}
-            {!tutorMode && selectedDocs.length > 0 && (
+            {/* Selected docs indicator (manual selection) */}
+            {selectedDocs.length > 0 && (
               <div className="flex items-center gap-2">
                 <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[11px] font-medium">
                   <BookOpen size={10} /> {t('chat.documentsActive', { count: selectedDocs.length })}

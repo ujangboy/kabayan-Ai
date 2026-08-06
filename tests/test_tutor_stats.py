@@ -11,12 +11,21 @@ import asyncio
 
 
 class TestStatsEndpoint:
-    def test_stats_returns_json(self, db_session):
-        get_or_create_profile(db_session)
+    def _make_client(self, db_session):
         from fastapi.testclient import TestClient
+        from database import get_db
         from main import app
 
+        def _override():
+            yield db_session
+
+        app.dependency_overrides[get_db] = _override
         client = TestClient(app)
+        return client
+
+    def test_stats_returns_json(self, db_session):
+        get_or_create_profile(db_session)
+        client = self._make_client(db_session)
         response = client.get("/api/tutor/stats")
         assert response.status_code == 200
         data = response.json()
@@ -28,10 +37,9 @@ class TestStatsEndpoint:
         assert "helpful_rate" in data
 
     def test_stats_defaults_zero(self, db_session):
-        from fastapi.testclient import TestClient
-        from main import app
-
-        client = TestClient(app)
+        from services.tutor_profile_service import get_or_create_profile as _goc
+        _goc(db_session)  # pastikan profil ada tapi belum ada pesan
+        client = self._make_client(db_session)
         response = client.get("/api/tutor/stats")
         assert response.status_code == 200
         data = response.json()

@@ -53,6 +53,8 @@ class TutorChatRequest(BaseModel):
     session_id: Optional[str] = None
     mata_kuliah: Optional[str] = None
     student_level: str = Field(default="intermediate")  # beginner / intermediate / advanced
+    exam_session_id: Optional[int] = None  # link ke sesi ujian untuk konteks adaptif
+    rag_docs: List[str] = Field(default_factory=list)
 
 
 class TutorClassifyRequest(BaseModel):
@@ -118,6 +120,8 @@ async def tutor_chat(request: TutorChatRequest, db: Session = Depends(get_db)):
                     history=hist_dicts,
                     mata_kuliah=request.mata_kuliah,
                     student_level=request.student_level,
+                    exam_session_id=request.exam_session_id,
+                    rag_docs=request.rag_docs,
                 ):
                     # First chunk contains TYPE metadata header "\x00TYPE:XXX\x00".
                     # Marker diteruskan ke klien (frontend yang melepas & menampilkan

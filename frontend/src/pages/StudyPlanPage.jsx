@@ -4,7 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft, Check, Loader2, Clock, Play, Brain, Trophy,
-  CheckCircle, XCircle, Award, Target, ClipboardCheck
+  CheckCircle, XCircle, Award, Target, ClipboardCheck, MessageSquare
 } from 'lucide-react';
 import { sessionsAPI } from '@/services/api';
 import MathMarkdown from '@/components/MathMarkdown';
@@ -224,6 +224,17 @@ export default function StudyPlanPage() {
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-accent-purple/40 text-accent-purple text-[11px] font-semibold hover:bg-accent-purple/10 transition-colors"
                         >
                           <Brain size={11} /> Review Flashcard
+                        </button>
+                      )}
+                      {subjectId && !item.completed && (
+                        <button
+                          onClick={() => {
+                            const subjectName = data?.subject_name || '';
+                            navigate(`/chat?tutor=1&subject=${encodeURIComponent(subjectName)}&topic=${encodeURIComponent(item.topic)}`);
+                          }}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-accent-blue/40 text-accent-blue text-[11px] font-semibold hover:bg-accent-blue/10 transition-colors"
+                        >
+                          <MessageSquare size={11} /> Tanya Tutor
                         </button>
                       )}
                     </div>

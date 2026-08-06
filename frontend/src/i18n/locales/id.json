@@ -7,7 +7,14 @@
   },
   "appLayout": {
     "opFallback": "Memproses...",
-    "opRunningMultiple": "{{count}} proses berjalan"
+    "opRunningMultiple": "{{count}} proses berjalan",
+    "opChat": "AI sedang merespons...",
+    "opNotebook": "AI sedang menulis catatan...",
+    "opAudio": "Membuat audio podcast...",
+    "opProcess": "Memproses materi...",
+    "opYoutube": "Mengunduh transkrip YouTube...",
+    "opQuiz": "Membuat soal quiz...",
+    "opFlashcard": "Membuat flashcard..."
   },
   "audioStatus": {
     "processing": "Membuat audio...",
@@ -355,9 +362,10 @@
     "reviewDaily": "Review Harian (SRS)",
     "srsInfo": "Pilih seberapa baik kamu mengingat jawaban.",
     "srsInfo2": "Kartu yang sulit akan muncul lebih sering.",
-    "noCardsTitle": "Tidak Ada Kartu yang Perlu Direview",
-    "noCardsMessage": "Semua kartu sudah dijadwalkan untuk nanti. Kembali lagi besok!",
+    "noCardsTitle": "Belum Ada Kartu untuk Direview",
+    "noCardsMessage": "Belum ada flashcard untuk mata kuliah ini. Flashcard otomatis dibuat dari soal ujian yang salah — atau buat sekarang dari materi upload.",
     "backToFlashcard": "Kembali ke Flashcard",
+    "generateNow": "Buat Flashcard dari Materi",
     "reviewComplete": "Review Selesai!",
     "cardsReviewed": "{{count}} kartu direview",
     "rememberedOf": "{{remembered}} dari {{total}} kartu diingat",
@@ -408,6 +416,8 @@
   "exam": {
     "title": "Ujian Simulasi",
     "subtitle": "Analisis kelemahan dan simulasikan ujian nyata dari materimu.",
+    "adaptiveBadge": "Adaptif",
+    "adaptiveBadgeHint": "Soal ujian disesuaikan dengan profil belajar jangka panjangmu (topik lemah & kuat).",
     "selectSubjectPlaceholder": "-- Pilih Mata Kuliah --",
     "createSimulation": "Buat Simulasi",
     "confirmExit": "Keluar dari ujian? Progres akan hilang.",
@@ -524,6 +534,7 @@
       "weakTopics": "Topik Lemah",
       "priorityLabel": "Prioritas: {{priority}}",
       "reviewAnswers": "Review Jawaban",
+      "askTutor": "Tanya Tutor",
       "savePlan": "Simpan Rencana Belajar",
       "saving": "Menyimpan...",
       "saved": "Tersimpan!",
@@ -639,7 +650,21 @@
     "recentActivityTitle": "Aktivitas Terbaru",
     "recentActivityEmpty": "Belum ada aktivitas tercatat.",
     "materialsTitle": "Materi ({{count}})",
-    "materialsEmpty": "Belum ada materi untuk mata kuliah ini."
+    "materialsEmpty": "Belum ada materi untuk mata kuliah ini.",
+    "learningTitle": "Profil Belajar Adaptif",
+    "learningSubtitle": "Sistem menyesuaikan soal ujian dengan kekuatan & kelemahanmu",
+    "learningEmpty": "Belum ada data evaluasi. Selesaikan minimal 2 sesi ujian agar profil belajar terbentuk.",
+    "learningLevel": "Estimasi Level",
+    "learningLevelHint": "Akurasi gabungan seluruh topik",
+    "learningSessions": "Sesi Ujian",
+    "learningQuestions": "Soal Dijawab",
+    "learningWeakTitle": "Topik Lemah",
+    "learningStrongTitle": "Topik Dikuasai",
+    "learningWeakEmpty": "Belum ada topik lemah yang teridentifikasi.",
+    "learningStrongEmpty": "Belum ada topik yang dikuasai.",
+    "learningMastery": "Penguasaan per Topik",
+    "learningThreshold": "Butuh minimal {{n}} sesi per topik untuk diklasifikasikan",
+    "learningAdaptiveNote": "Soal ujian berikutnya otomatis disesuaikan: bobot lebih pada topik lemah & kesulitan naik pada topik yang dikuasai."
   },
   "settings": {
     "title": "Pengaturan",

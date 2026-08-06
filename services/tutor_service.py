@@ -24,6 +24,7 @@ from services.tutor_classifier import classify, TierType
 from services.faq_service import faq_service
 from services.tutor_profile_service import get_or_create_profile
 from services.cache_service import cache_service
+from services.rag_context_service import rag_context_service
 from prompts.tutor import build_tutor_prompt
 
 logger = logging.getLogger(__name__)
@@ -39,6 +40,176 @@ TIER_CAPABILITY: dict[TierType, str] = {
 }
 
 
+def _find_subject_learning_profile(db: Session, mata_kuliah: Optional[str]) -> Optional[dict]:
+    """
+    Ambil topik lemah/kuat dari LearningProfile mata kuliah yang sedang dibahas.
+
+    Matching nama mata kuliah (case-insensitive). Kembalikan None jika belum
+    ada data ujian → tutor jatuh ke profil global (perilaku lama).
+    """
+    if not mata_kuliah or not str(mata_kuliah).strip():
+        return None
+    try:
+        import json
+        from sqlalchemy import func
+        from models import Subject, LearningProfile
+
+        name = str(mata_kuliah).strip()
+        subject = db.query(Subject).filter(func.lower(Subject.name) == name.lower()).first()
+        if not subject:
+            return None
+        lp = db.query(LearningProfile).filter_by(user_key="local", subject_id=subject.id).first()
+        if not lp or not lp.total_sessions:
+            return None
+        weak = json.loads(lp.weak_topics or "[]")
+        strong = json.loads(lp.strong_topics or "[]")
+        if not isinstance(weak, list):
+            weak = []
+        if not isinstance(strong, list):
+            strong = []
+        if not weak and not strong:
+            return None
+        return {"subject": subject.name, "weak": weak, "strong": strong}
+    except Exception as exc:
+        logger.warning("Lookup LearningProfile per matkul gagal: %s", exc)
+        return None
+
+
+def _gather_tutor_context(db: Session, mata_kuliah: Optional[str], query: str, max_words: int = 800, rag_docs: list[str] = None) -> str:
+    """
+    Ambil potongan materi upload dari mata kuliah yang sedang dibahas dan/atau rag_docs manual.
+    """
+    try:
+        from sqlalchemy import func
+        from models import Subject
+
+        ready_materials = []
+        if mata_kuliah and str(mata_kuliah).strip():
+            name = str(mata_kuliah).strip()
+            subject = db.query(Subject).filter(func.lower(Subject.name) == name.lower()).first()
+            if subject and hasattr(subject, 'materials'):
+                ready_materials.extend([m for m in subject.materials if getattr(m, 'status', None) == "Ready"])
+        
+        # Tambahkan secara manual jika rag_docs disertakan
+        if rag_docs:
+            from models import Material
+            # extract IDs: "mat_1" -> 1
+            mat_ids = []
+            for doc in rag_docs:
+                if doc.startswith("mat_"):
+                    try: mat_ids.append(int(doc.split("_")[1]))
+                    except: pass
+            if mat_ids:
+                manual_mats = db.query(Material).filter(Material.id.in_(mat_ids), Material.status == "Ready").all()
+                for m in manual_mats:
+                    if m not in ready_materials:
+                        ready_materials.append(m)
+
+        if not ready_materials:
+            return ""
+
+        context = rag_context_service.gather_context(ready_materials, max_words=max_words, query=query)
+
+        # Fallback: jika dynamic search tidak cukup, ambil semua chunk
+        if not context or len(context.split()) < 100:
+            all_chunks = rag_context_service._gather_chunks(
+                [f"mat_{m.id}" for m in ready_materials], max_words
+            )
+            if all_chunks and len(all_chunks.split()) > len((context or "").split()):
+                context = all_chunks
+
+        return context if context else ""
+    except Exception as exc:
+        logger.debug("Tutor RAG context gather gagal: %s", exc)
+        return ""
+
+
+def _gather_exam_context(db: Session, exam_session_id: Optional[int]) -> str:
+    """Bangun ringkasan hasil ujian untuk konteks tutor.
+
+    Data diambil dari ExamSession (skor, topik lemah/kuat, evaluasi) + soal
+    yang salah dari ExamReview. Dipakai agar tutor bisa menjawab pertanyaan
+    seputar hasil ujian dengan konteks spesifik, bukan jawaban umum.
+    """
+    if not exam_session_id:
+        return ""
+    try:
+        import json
+        from models import ExamSession, ExamAttempt, ExamReview
+
+        session = db.query(ExamSession).filter(ExamSession.id == exam_session_id).first()
+        if not session or not session.submitted_at:
+            return ""
+
+        subject_name = session.subject_name or "Mata Kuliah"
+        lines = [
+            f"Mata kuliah: {subject_name}",
+            f"Skor: {session.score or 0}/100",
+            f"Benar: {session.total_correct or 0} · Salah: {session.total_wrong or 0}",
+            f"Tipe: {session.exam_type or 'Simulasi'} · Soal: {session.total_questions or 0}",
+        ]
+
+        weak = []
+        strong = []
+        try:
+            weak = json.loads(session.weak_topics_json or "[]")
+            strong = json.loads(session.strong_topics_json or "[]")
+        except Exception:
+            pass
+        if weak:
+            try:
+                topics = [t.get("topic", "") for t in weak if isinstance(t, dict) and t.get("topic")]
+                if topics:
+                    lines.append("Topik lemah: " + ", ".join(topics[:5]))
+            except Exception:
+                pass
+        if strong:
+            try:
+                topics = [t.get("topic", "") for t in strong if isinstance(t, dict) and t.get("topic")]
+                if topics:
+                    lines.append("Topik kuat: " + ", ".join(topics[:5]))
+            except Exception:
+                pass
+
+        # Ambil beberapa soal yang salah untuk dijadikan poin diskusi
+        attempt = (
+            db.query(ExamAttempt)
+            .filter(ExamAttempt.session_id == exam_session_id)
+            .order_by(ExamAttempt.attempt_number.desc())
+            .first()
+        )
+        wrong_questions = []
+        if attempt:
+            wrong_reviews = (
+                db.query(ExamReview)
+                .filter(ExamReview.attempt_id == attempt.id, ExamReview.is_correct == 0)
+                .order_by(ExamReview.id)
+                .limit(5)
+                .all()
+            )
+            for rv in wrong_reviews:
+                snippet = (rv.question_text or "")[:120]
+                topic = rv.topic or ""
+                wrong_questions.append(f"- [Salah] {snippet}" + (f" (topik: {topic})" if topic else ""))
+        if wrong_questions:
+            lines.append("Soal yang dijawab salah:")
+            lines.extend(wrong_questions)
+
+        eval_feedback = ""
+        try:
+            eval_data = json.loads(session.evaluation_json or "{}")
+            eval_feedback = (eval_data.get("overall_feedback") or eval_data.get("feedback") or "").strip()
+        except Exception:
+            pass
+        if eval_feedback:
+            lines.append(f"Umpan balik: {eval_feedback[:500]}")
+
+        return "\n".join(lines)
+    except Exception as exc:
+        logger.debug("Exam context gather gagal: %s", exc)
+        return ""
+
+
 class TutorService:
 
     # ── Public streaming entry point ─────────────────────────────────────────
@@ -50,6 +221,8 @@ class TutorService:
         history: list[dict],
         mata_kuliah: Optional[str] = None,
         student_level: str = "intermediate",
+        exam_session_id: Optional[int] = None,
+        rag_docs: Optional[list[str]] = None,
     ) -> AsyncIterator[str]:
         """
         Main streaming coroutine for tutor chat.
@@ -60,9 +233,13 @@ class TutorService:
               "\x00TYPE:<type>\x00"   (e.g. "\x00TYPE:SIMPLE\x00")
             All subsequent chunks are regular response text.
         """
-        # 1. Classify
-        classification = classify(message, history)
-        tier: TierType = classification["type"]
+        # 1. Classify (bypass FAQ if it's a quick prompt to prevent repetitive templates)
+        tier: TierType = "MEDIUM"
+        if "ringkas" in message.lower() or "jelaskan" in message.lower() or "analogi" in message.lower():
+            tier = "MEDIUM"
+        else:
+            classification = classify(message, history)
+            tier = classification["type"]
 
         # Yield type header as the very first chunk so the router can read it
         yield f"\x00TYPE:{tier}\x00"
@@ -70,20 +247,23 @@ class TutorService:
         # Load adaptive profile
         profile = get_or_create_profile(db)
 
-        # 2. Route
+        # 2. Route — history diteruskan ke semua rute (termasuk SIMPLE→MEDIUM escalation)
         if tier == "SIMPLE":
-            async for chunk in self._handle_simple(db, message, mata_kuliah, student_level, profile=profile):
+            async for chunk in self._handle_simple(
+                db, message, history, mata_kuliah, student_level, profile=profile,
+                exam_session_id=exam_session_id, rag_docs=rag_docs,
+            ):
                 yield chunk
         elif tier == "MEDIUM":
             async for chunk in self._handle_ai(
                 db, message, history, mata_kuliah, student_level, capability="chat",
-                profile=profile,
+                profile=profile, exam_session_id=exam_session_id, rag_docs=rag_docs,
             ):
                 yield chunk
         else:  # COMPLEX
             async for chunk in self._handle_ai(
                 db, message, history, mata_kuliah, student_level, capability="reasoning",
-                profile=profile,
+                profile=profile, exam_session_id=exam_session_id, rag_docs=rag_docs,
             ):
                 yield chunk
 
@@ -93,18 +273,21 @@ class TutorService:
         self,
         db: Session,
         message: str,
+        history: list[dict],
         mata_kuliah: Optional[str],
         student_level: str,
         profile=None,
+        exam_session_id: Optional[int] = None,
+        rag_docs: Optional[list[str]] = None,
     ) -> AsyncIterator[str]:
-        """Look up FAQ and return the answer directly (0 token)."""
+        """Look up FAQ. If material context available, wrap with AI to merge."""
         faq = faq_service.find_best_match(db, message, mata_kuliah=mata_kuliah)
 
         if faq is None:
             logger.debug("No FAQ match for '%s', escalating to MEDIUM.", message[:60])
             async for chunk in self._handle_ai(
-                db, message, [], mata_kuliah, student_level, capability="chat",
-                profile=profile,
+                db, message, history, mata_kuliah, student_level, capability="chat",
+                profile=profile, exam_session_id=exam_session_id, rag_docs=rag_docs,
             ):
                 yield chunk
             return
@@ -115,8 +298,52 @@ class TutorService:
             asyncio.to_thread(faq_service.record_usage, db, faq.id)
         )
 
-        # Return raw FAQ answer directly — 0 token cost
-        yield faq.answer
+        # Gather material context — jika ada, bungkus FAQ dengan konteks materi
+        material_context = _gather_tutor_context(db, mata_kuliah, message, max_words=500, rag_docs=rag_docs)
+        if not material_context:
+            # Tidak ada materi upload → return FAQ langsung (0 token)
+            yield faq.answer
+            return
+
+        # Ada material context → wrap FAQ + material via AI (1 permintaan ringan)
+        from prompts.tutor import TUTOR_FAQ_WRAPPER_PROMPT
+        wrapper = TUTOR_FAQ_WRAPPER_PROMPT.partial(material_context=(
+            "KONTEKS MATERI KULIAH:\n<materi_kuliah>\n"
+            f"{material_context}\n"
+            "</materi_kuliah>\n"
+            "Jika ada informasi di materi yang melengkapi jawaban, gunakan."
+        ))
+        wrapped = wrapper.format(
+            mata_kuliah=mata_kuliah or "Umum",
+            question=message,
+            faq_answer=faq.answer,
+            student_level=student_level,
+        )
+
+        llm = ai_service._get_llm("chat", max_tokens=500)
+        messages = [SystemMessage(content=wrapped)]
+
+        full_response = ""
+        try:
+            async for chunk in llm.astream(messages):
+                if chunk.content:
+                    full_response += chunk.content
+                    yield chunk.content
+        except Exception:
+            # Fallback: return raw FAQ if AI wrapper fails
+            yield faq.answer
+            return
+
+        _normalize_math(full_response)
+
+        # Cache result
+        import hashlib
+        material_fp = hashlib.md5(material_context.encode()).hexdigest()[:8]
+        cache_key = f"faq:{faq.id}:{student_level}:{material_fp}"
+        try:
+            cache_service.set_cache(db, cache_key, "", "", full_response)
+        except Exception:
+            pass
 
     # ── MEDIUM / COMPLEX: full AI response ────────────────────────────────────
 
@@ -129,13 +356,21 @@ class TutorService:
         student_level: str,
         capability: str,
         profile=None,
+        exam_session_id: Optional[int] = None,
+        rag_docs: Optional[list[str]] = None,
     ) -> AsyncIterator[str]:
         """Stream an AI tutor response using the Socratic prompt."""
         import time
 
         trimmed_history = _trim_history(history, max_turns=6)
 
-        prompt_template = build_tutor_prompt(student_level, profile=profile)
+        subject_profile = _find_subject_learning_profile(db, mata_kuliah)
+        material_context = _gather_tutor_context(db, mata_kuliah, message, max_words=800, rag_docs=rag_docs)
+        exam_context = _gather_exam_context(db, exam_session_id)
+        prompt_template = build_tutor_prompt(
+            student_level, profile=profile, subject_profile=subject_profile,
+            material_context=material_context, exam_context=exam_context,
+        )
         wrapped_input = _wrap_data("pesan_siswa", message)
 
         # History dimasukkan sebagai objek pesan (Human/AI) di bawah — JANGAN
@@ -159,8 +394,15 @@ class TutorService:
 
         llm = ai_service._get_llm(capability, max_tokens=2000)
 
-        # Cache lookup — keyed by message + capability + level + subject
-        cache_key = f"{message}:{capability}:{student_level}:{mata_kuliah or 'umum'}"
+        # Cache lookup — keyed by message + capability + level + subject + profil + material
+        # (material_fp agar cache lama tanpa material context tidak dipakai)
+        import hashlib
+        profile_fp = hashlib.md5(
+            f"{subject_profile}:{getattr(profile, 'weak_topics', '')}:{getattr(profile, 'strong_topics', '')}".encode()
+        ).hexdigest()[:8]
+        material_fp = hashlib.md5(material_context.encode()).hexdigest()[:8] if material_context else "none"
+        exam_fp = hashlib.md5(exam_context.encode()).hexdigest()[:8] if exam_context else "none"
+        cache_key = f"{message}:{capability}:{student_level}:{mata_kuliah or 'umum'}:{profile_fp}:{material_fp}:{exam_fp}"
         cached = cache_service.get_cache(db, cache_key, "", "")
         if cached:
             yield _normalize_math(cached)

@@ -1,15 +1,17 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import {
   Trophy, CheckCircle, Check, Loader2, Calendar, BookOpen,
-  AlertTriangle, TrendingUp, Save,
+  AlertTriangle, TrendingUp, Save, MessageSquare,
 } from 'lucide-react';
 import { examAPI, sessionsAPI } from '@/services/api';
 import { cn } from '@/utils';
 import { Chip } from './shared';
 
-export default function ResultView({ evalData, onReview, onFinish, sessionId, onOpenPlanTab }) {
+export default function ResultView({ evalData, onReview, onFinish, sessionId, onOpenPlanTab, subjectName = '' }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [loadingRec, setLoadingRec]     = useState(false);
   const [saving, setSaving]             = useState(false);
   const [saved, setSaved]               = useState(false);
@@ -134,13 +136,26 @@ export default function ResultView({ evalData, onReview, onFinish, sessionId, on
             </p>
             <div className="space-y-2">
               {weak_topics.map((topic, i) => (
-                <div key={i} className="space-y-0.5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-text">{topic.topic}</span>
+                <div key={i} className="flex items-start justify-between gap-2 p-2 rounded-lg bg-background/50 border border-border/50">
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-sm text-text font-medium">{topic.topic}</span>
+                    {topic.issue && <p className="text-xs text-text-muted mt-0.5">{topic.issue}</p>}
+                    
+                    {/* Contextual Ask Tutor for weak topic */}
+                    {sessionId && (
+                      <button
+                        onClick={() => navigate(`/chat?tutor=1&exam=${sessionId}&subject=${encodeURIComponent(subjectName)}&topic=${encodeURIComponent(topic.topic)}`)}
+                        className="text-[11px] flex items-center gap-1.5 text-primary hover:text-primary-focus transition-colors mt-2"
+                      >
+                        <MessageSquare size={11} /> {t('exam.result.askTutor')}
+                      </button>
+                    )}
+                  </div>
+                  
+                  <div className="shrink-0 mt-0.5">
                     <Chip label={t('exam.result.priorityLabel', { priority: topic.priority })} size="xs"
                       color={topic.priority === 'Tinggi' ? 'danger' : topic.priority === 'Menengah' ? 'warning' : 'teal'} />
                   </div>
-                  {topic.issue && <p className="text-xs text-text-muted pl-1">{topic.issue}</p>}
                 </div>
               ))}
             </div>

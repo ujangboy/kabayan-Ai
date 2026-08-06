@@ -32,6 +32,10 @@ FORMAT RESPONS (pendek & padat, hindari basa-basi)
 
 {level_instruction}
 
+{exam_context}
+
+{material_context}
+
 Riwayat chat sebelumnya:
 {history}
 
@@ -65,6 +69,7 @@ LEVEL_INSTRUCTIONS = {
 
 # ─── SIMPLE FAQ response wrapper ─────────────────────────────────────────────
 # Dipakai untuk membungkus jawaban FAQ dari database agar terasa natural
+# {material_context} di-inject via .partial() saat ada materi upload
 
 TUTOR_FAQ_WRAPPER_PROMPT = PromptTemplate(
     input_variables=["mata_kuliah", "question", "faq_answer", "student_level"],
@@ -77,8 +82,11 @@ Berikut jawaban dari database FAQ kami:
 {faq_answer}
 ---
 
+{material_context}
+
 Tugas kamu: Sampaikan ulang jawaban ini dengan gaya yang natural, ramah, dan sesuai level siswa ({student_level}).
-- Jangan ubah isi/fakta dari jawaban
+- Jika ada konteks materi kuliah, gunakan untuk melengkapi atau memperjelas jawaban
+- Jangan ubah isi/fakta dari jawaban FAQ
 - Tambahkan sapaan singkat di awal
 - Tambahkan ajakan tanya lagi di akhir
 - Gunakan format matematika $$ untuk rumus jika ada
@@ -90,15 +98,51 @@ Respon kamu:""",
 # ─── Template prompt ─────────────────────────────────────────────────────────
 # Build the main tutor prompt template dynamically based on level
 
-def build_tutor_prompt(student_level: str = "intermediate", profile=None) -> PromptTemplate:
-    """Build a PromptTemplate with the correct level instruction embedded."""
+def build_tutor_prompt(
+    student_level: str = "intermediate",
+    profile=None,
+    subject_profile: dict | None = None,
+    material_context: str = "",
+    exam_context: str = "",
+) -> PromptTemplate:
+    """Build a PromptTemplate with the correct level instruction embedded.
+
+    subject_profile: optional dict {"subject", "weak", "strong"} dari
+    LearningProfile mata kuliah yang sedang dibahas → instruksi adaptif
+    hanya menyebut topik mata kuliah itu (bukan daftar campuran global).
+    material_context: excerpt of uploaded material for current subject.
+    exam_context: ringkasan hasil ujian terakhir (skor, soal salah, evaluasi).
+    """
     level_instruction = LEVEL_INSTRUCTIONS.get(student_level, LEVEL_INSTRUCTIONS["intermediate"])
     adaptive = ""
     if profile is not None:
         from services.tutor_profile_service import build_adaptive_prompt_section
-        adaptive = build_adaptive_prompt_section(profile)
+        adaptive = build_adaptive_prompt_section(profile, subject_profile=subject_profile)
+
+    material_block = ""
+    if material_context.strip():
+        material_block = (
+            "KONTEKS MATERI KULIAH (gunakan sebagai referensi utama saat menjawab):\n"
+            "<materi_kuliah>\n"
+            f"{material_context}\n"
+            "</materi_kuliah>\n"
+            "Aturan materi: jawab BERDASARKAN materi di atas. Jika pertanyaan tidak tercakup "
+            "di materi, sampaikan dengan jujur lalu bantu dengan pengetahuan umum yang relevan."
+        )
+
+    exam_block = ""
+    if exam_context.strip():
+        exam_block = (
+            "KONTEKS HASIL UJIAN SISWA (gunakan untuk menjawab seputar nilai/soal ujian):\n"
+            "<hasil_ujian>\n"
+            f"{exam_context}\n"
+            "</hasil_ujian>\n"
+            "Jika siswa bertanya tentang ujiannya, acu data ini — bukan asumsi. "
+            "Berikan saran perbaikan yang spesifik pada topik yang masih lemah."
+        )
+
     filled = TUTOR_SYSTEM_PROMPT.replace("{level_instruction}", level_instruction + adaptive)
     return PromptTemplate(
         input_variables=["mata_kuliah", "student_level", "history", "input"],
         template=filled,
-    )
+    ).partial(material_context=material_block, exam_context=exam_block)

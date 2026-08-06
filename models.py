@@ -506,3 +506,32 @@ class QuestionBank(Base):
 
     subject   = relationship("Subject")
     blueprint = relationship("ExamBlueprint")
+
+
+class LearningProfile(Base):
+    """
+    Profil belajar jangka panjang per mata kuliah (adaptive learning).
+
+    Single-user lokal → user_key default "local", satu baris per subject_id.
+    Di-update otomatis setelah submit ujian (ingest_session), lalu diinjeksi
+    sebagai {adaptive_instructions} ke prompt blueprint & soal.
+    """
+    __tablename__ = "learning_profiles"
+    __table_args__ = (
+        UniqueConstraint("user_key", "subject_id", name="uq_learning_profile_user_subject"),
+    )
+    id = Column(Integer, primary_key=True, index=True)
+    user_key = Column(String, default="local", index=True)
+    subject_id = Column(Integer, ForeignKey("subjects.id", ondelete="CASCADE"), index=True)
+    topics_mastery = Column(Text, nullable=True)   # JSON {topic: {"accuracy": int, "attempts": int, "sessions": int}}
+    weak_topics = Column(Text, nullable=True)      # JSON [topic, ...] — hanya jika data cukup (confidence threshold)
+    strong_topics = Column(Text, nullable=True)    # JSON [topic, ...] — hanya jika data cukup (confidence threshold)
+    topic_trend_json = Column(Text, nullable=True) # JSON {topic: [acc_sesi1, acc_sesi2, ...]} — trend per sesi
+    estimated_level = Column(Integer, default=0)   # 0-100; 0 = belum ada data evaluasi (cold start)
+    total_sessions = Column(Integer, default=0)
+    total_questions = Column(Integer, default=0)
+    total_correct = Column(Integer, default=0)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+
+    subject = relationship("Subject")

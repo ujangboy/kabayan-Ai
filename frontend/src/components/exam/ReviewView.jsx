@@ -1,14 +1,16 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BookOpen, CheckCircle, XCircle, ChevronDown, Loader2, Lightbulb, FileText } from 'lucide-react';
+import { BookOpen, CheckCircle, XCircle, ChevronDown, Loader2, Lightbulb, FileText, MessageSquare } from 'lucide-react';
 import { examAPI } from '@/services/api';
 import { cn } from '@/utils';
 import MathMarkdown from '@/components/MathMarkdown';
+import { useNavigate } from 'react-router-dom';
 import { SectionHeader } from './shared';
 
 export default function ReviewView({ sessionData, evalData }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [expandedIdx, setExpandedIdx] = useState(null);
   // Map of question index → {loading, text, error}
   const [explanations, setExplanations] = useState({});
@@ -149,6 +151,25 @@ export default function ReviewView({ sessionData, evalData }) {
                               {expl?.loading
                                 ? <><Loader2 size={11} className="animate-spin" /> Memuat...</>
                                 : <><Lightbulb size={11} /> Jelaskan</>}
+                            </button>
+                          )}
+                          
+                          {/* Contextual Ask Tutor for wrong question */}
+                          {(!q.is_correct || expl?.text || q.explanation) && (
+                            <button
+                              onClick={() => {
+                                const topic = q.topic || 'Review Soal';
+                                const sessionId = sessionData?.id;
+                                const subjectName = sessionData?.subject_name || '';
+                                navigate(`/chat?tutor=1&exam=${sessionId}&subject=${encodeURIComponent(subjectName)}&topic=${encodeURIComponent(topic)}`);
+                              }}
+                              className={cn(
+                                "flex items-center gap-1 px-2.5 py-1 rounded-lg transition-colors border",
+                                (!q.explanation && !expl?.text) ? "ml-2" : "ml-auto",
+                                "bg-primary/10 text-primary border-primary/20 hover:bg-primary/20"
+                              )}
+                            >
+                              <MessageSquare size={11} /> Tanya Tutor
                             </button>
                           )}
                         </div>

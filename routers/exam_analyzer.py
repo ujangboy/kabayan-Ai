@@ -106,6 +106,37 @@ async def submit_exam(
         session = exam_session_repository.get(db, session_id)
         if session and session.subject_id:
             subject_service.recalculate_subject_stats(db, session.subject_id)
+        # Adaptive learning: agregasi hasil ujian ke profil jangka panjang.
+        # Dipanggil dari router (bukan exam_service) agar logika protected tidak berubah.
+        try:
+            from services.learning_profile_service import ingest_session
+            ingest_session(db, session_id)
+        except Exception as exc:
+            logger.warning("Learning profile ingest gagal: %s", exc)
+
+        # Auto-generate flashcard dari soal yang salah (loop adaptif ujian→flashcard).
+        # Fire-and-forget di thread terpisah dengan session sendiri agar tidak
+        # memblokir respons submit dan tidak bergantung pada session request.
+        try:
+            import asyncio
+
+            def _gen_flashcards():
+                from database import SessionLocal
+                from services.flashcard_service import flashcard_service
+                session_db = SessionLocal()
+                try:
+                    flashcard_service.generate_from_exam_review(session_db, session_id, max_cards=8)
+                    session_db.commit()
+                except Exception as exc:
+                    session_db.rollback()
+                    logger.warning("Auto flashcard dari ujian gagal: %s", exc)
+                finally:
+                    session_db.close()
+
+            asyncio.create_task(asyncio.to_thread(_gen_flashcards))
+        except Exception as exc:
+            logger.warning("Menjadwalkan auto flashcard gagal: %s", exc)
+
         return JSONResponse(data)
     except ValueError as e:
         raise AppError(str(e), status_code=400)
@@ -169,6 +200,67 @@ async def bank_stats(subject_id: int, db: Session = Depends(get_db)):
         return JSONResponse({"stats": data})
     except Exception as e:
         logger.error(f"bank_stats error: {e}", exc_info=True)
+        raise AppError(str(e), status_code=500)
+
+
+@router.get("/learning-profile/{subject_id}")
+async def get_learning_profile(subject_id: int, db: Session = Depends(get_db)):
+    """Profil belajar jangka panjang (adaptive) untuk satu mata kuliah.
+
+    Cold start → default aman (estimated_level 0, topics_mastery {}), bukan error.
+    Mengembalikan topic_trend — history akurasi per topik per sesi.
+    """
+    try:
+        from services.subject_service import subject_service
+        if not subject_service.get_by_id(db, subject_id):
+            raise AppError("Mata kuliah tidak ditemukan.", status_code=404)
+        from services.learning_profile_service import get_profile_payload
+        return JSONResponse(get_profile_payload(db, subject_id))
+    except AppError:
+        raise
+    except Exception as e:
+        logger.error(f"learning_profile error: {e}", exc_info=True)
+        raise AppError(str(e), status_code=500)
+
+
+@router.post("/learning-profile/{subject_id}/reset")
+async def reset_learning_profile(subject_id: int, db: Session = Depends(get_db)):
+    """Reset profil adaptif per mata kuliah ke kondisi kosong (cold start).
+
+    ExamReview & ExamSession TIDAK dihapus — hanya statistik profil yang direset.
+    Gunakan /recalculate setelah reset untuk menghitung ulang dari data yang ada.
+    """
+    try:
+        from services.subject_service import subject_service
+        if not subject_service.get_by_id(db, subject_id):
+            raise AppError("Mata kuliah tidak ditemukan.", status_code=404)
+        from services.learning_profile_service import reset_profile
+        reset_profile(db, subject_id)
+        return JSONResponse({"status": "reset", "subject_id": subject_id})
+    except AppError:
+        raise
+    except Exception as e:
+        logger.error(f"reset_learning_profile error: {e}", exc_info=True)
+        raise AppError(str(e), status_code=500)
+
+
+@router.post("/learning-profile/{subject_id}/recalculate")
+async def recalculate_learning_profile(subject_id: int, db: Session = Depends(get_db)):
+    """Hitung ulang profil adaptif dari seluruh ExamReview yang ada.
+
+    Berguna setelah reset atau jika profil tidak sinkron dengan histori ujian.
+    """
+    try:
+        from services.subject_service import subject_service
+        if not subject_service.get_by_id(db, subject_id):
+            raise AppError("Mata kuliah tidak ditemukan.", status_code=404)
+        from services.learning_profile_service import recalculate_profile, get_profile_payload
+        recalculate_profile(db, subject_id)
+        return JSONResponse(get_profile_payload(db, subject_id))
+    except AppError:
+        raise
+    except Exception as e:
+        logger.error(f"recalculate_learning_profile error: {e}", exc_info=True)
         raise AppError(str(e), status_code=500)
 
 

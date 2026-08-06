@@ -117,6 +117,16 @@ def _bank_row_to_question(row, global_id: int) -> dict:
 
 class ExamService:
 
+    # ── Adaptive learning injection ─────────────────────────────────────────
+    def _adaptive_section(self, db: Session, subject_id: int) -> str:
+        """Ambil instruksi adaptif dari profil belajar jangka panjang ("" jika belum ada data)."""
+        try:
+            from services.learning_profile_service import build_profile_section
+            return build_profile_section(db, subject_id)
+        except Exception as exc:
+            logger.warning("build_profile_section gagal, lanjut tanpa adaptif: %s", exc)
+            return ""
+
     # ── 1. Analyze ────────────────────────────────────────────────────────────
     def analyze(self, db: Session, subject_id: int) -> dict:
         from services.material_service import material_service
@@ -230,6 +240,7 @@ class ExamService:
                 "question_type":      question_type,
                 "focus_material":     focus_material,
                 "topic_priority_json": topic_priority_str,
+                "adaptive_instructions": self._adaptive_section(db, subject_id),
             },
             use_cache=False,
             temperature=0.5,
@@ -337,6 +348,7 @@ class ExamService:
                         "bloom_level":    bloom,
                         "difficulty":     diff,
                         "key_concepts":   concepts,
+                        "adaptive_instructions": self._adaptive_section(db, blueprint.subject_id),
                     },
                     use_cache=False,
                     temperature=0.7,
@@ -459,7 +471,25 @@ class ExamService:
             selected = all_rows[:total_needed]
             random.shuffle(selected)
         else:
-            # General retry: pull all, partition by weak/other
+            # General retry: pull all, partition by weak/other.
+            # Jika weak_topics tidak dikirim dari frontend (kosong), auto-load
+            # dari LearningProfile jangka panjang agar retry selalu relevan.
+            if not weak_topics:
+                try:
+                    from services.learning_profile_service import get_or_create as _lp_get
+                    import json as _json
+                    lp = _lp_get(db, blueprint.subject_id)
+                    if lp and lp.weak_topics:
+                        _loaded = _json.loads(lp.weak_topics)
+                        if isinstance(_loaded, list) and _loaded:
+                            weak_topics = _loaded
+                            logger.info(
+                                "retry_from_bank: auto-loaded %d weak topics dari LearningProfile subject %d",
+                                len(weak_topics), blueprint.subject_id,
+                            )
+                except Exception as _exc:
+                    logger.warning("retry_from_bank: gagal load LearningProfile weak_topics: %s", _exc)
+
             weak_set = set(
                 w.get("topic", w) if isinstance(w, dict) else w
                 for w in (weak_topics or [])
@@ -737,7 +767,8 @@ class ExamService:
                 review_rows.append({
                     "attempt_id": attempt.id,
                     "question_number": q.get("id", 0),
-                    "topic": q.get("topic", ""),
+                    # Normalize empty topic → "Umum" agar profil adaptif tidak salah bucket
+                    "topic": (q.get("topic") or "").strip() or "Umum",
                     "question_text": q.get("question", ""),
                     "question_type": q.get("type", ""),
                     "bloom_level": q.get("bloom_level", ""),
@@ -752,6 +783,11 @@ class ExamService:
                 })
             for row in review_rows:
                 db.add(ExamReview(**row))
+
+            # Commit semua data (session, attempt, reviews) ke DB sekarang juga.
+            # PENTING: commit ini harus selesai SEBELUM ingest_session() di router
+            # dipanggil, agar ExamReview sudah tersimpan saat profil adaptif dihitung.
+            db.commit()
 
         except HTTPException:
             raise

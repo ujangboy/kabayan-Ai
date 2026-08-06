@@ -105,6 +105,13 @@ export default function ExamAnalyzerPage() {
               <h1 className="text-2xl font-bold text-text flex items-center gap-2">
                 <Brain size={22} className="text-primary" />
                 {t('exam.title')}
+                <span
+                  className="badge badge-success text-[10px]"
+                  title={t('exam.adaptiveBadgeHint')}
+                >
+                  <Zap size={9} className="inline mr-0.5" />
+                  {t('exam.adaptiveBadge')}
+                </span>
               </h1>
               <p className="text-text-secondary text-sm mt-0.5">
                 {t('exam.subtitle')}
@@ -141,7 +148,7 @@ export default function ExamAnalyzerPage() {
             {view === VIEW.CONFIG     && <ConfigView subjectId={subjectId} analysis={analysis} onDone={handleBlueprintDone} />}
             {view === VIEW.BLUEPRINT  && <BlueprintView blueprint={blueprint} onGenerate={handleSessionReady} onBack={() => go(VIEW.CONFIG)} />}
             {view === VIEW.QUIZ       && <QuizView sessionData={sessionData} onDone={handleEvalDone} />}
-            {view === VIEW.RESULT     && <ResultView evalData={evalData} onReview={() => go(VIEW.REVIEW)} onFinish={() => go(VIEW.HISTORY)} sessionId={sessionData?.session_id} onOpenPlanTab={() => { setPendingPlanTab(true); setDetailId(sessionData?.session_id); }} />}
+            {view === VIEW.RESULT     && <ResultView evalData={evalData} onReview={() => go(VIEW.REVIEW)} onFinish={() => go(VIEW.HISTORY)} sessionId={sessionData?.session_id} onOpenPlanTab={() => { setPendingPlanTab(true); setDetailId(sessionData?.session_id); }} subjectName={sessionData?.subject_name || ''} />}
             {view === VIEW.REVIEW     && <ReviewView sessionData={sessionData} evalData={evalData} />}
             {view === VIEW.HISTORY    && <HistoryView subjectId={subjectId} subjects={subjects} onSelectSubject={(id) => { setSubjectId(id); go(VIEW.HISTORY); }} onStartConfig={startConfigFor} onResume={(sd) => { setSessionData(sd); go(VIEW.QUIZ); }} detailId={detailId} setDetailId={setDetailId} pendingPlanTab={pendingPlanTab} setPendingPlanTab={setPendingPlanTab} />}
           </motion.div>

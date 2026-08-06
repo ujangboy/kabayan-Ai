@@ -7,7 +7,14 @@
   },
   "appLayout": {
     "opFallback": "Processing...",
-    "opRunningMultiple": "{{count}} processes running"
+    "opRunningMultiple": "{{count}} processes running",
+    "opChat": "AI is responding...",
+    "opNotebook": "AI is writing note...",
+    "opAudio": "Generating audio podcast...",
+    "opProcess": "Processing material...",
+    "opYoutube": "Downloading YouTube transcript...",
+    "opQuiz": "Generating quiz...",
+    "opFlashcard": "Generating flashcards..."
   },
   "audioStatus": {
     "processing": "Generating audio...",
@@ -355,9 +362,10 @@
     "reviewDaily": "Daily Review (SRS)",
     "srsInfo": "Rate how well you remembered the answer.",
     "srsInfo2": "Harder cards will appear more frequently.",
-    "noCardsTitle": "No Cards Due for Review",
-    "noCardsMessage": "All cards are scheduled for later. Come back tomorrow!",
+    "noCardsTitle": "No Cards to Review",
+    "noCardsMessage": "No flashcards exist for this subject yet. Flashcards are auto-generated from wrong exam answers — or create them now from your materials.",
     "backToFlashcard": "Back to Flashcards",
+    "generateNow": "Create Flashcards from Materials",
     "reviewComplete": "Review Complete!",
     "cardsReviewed": "{{count}} cards reviewed",
     "rememberedOf": "{{remembered}} of {{total}} cards remembered",
@@ -408,6 +416,8 @@
   "exam": {
     "title": "Exam Simulator",
     "subtitle": "Analyze weaknesses and simulate real exams from your materials.",
+    "adaptiveBadge": "Adaptive",
+    "adaptiveBadgeHint": "Exam questions adapt to your long-term learning profile (weak & strong topics).",
     "selectSubjectPlaceholder": "-- Select Subject --",
     "createSimulation": "Create Simulation",
     "confirmExit": "Exit the exam? Progress will be lost.",
@@ -524,6 +534,7 @@
       "weakTopics": "Weak Topics",
       "priorityLabel": "Priority: {{priority}}",
       "reviewAnswers": "Review Answers",
+      "askTutor": "Ask Tutor",
       "savePlan": "Save Study Plan",
       "saving": "Saving...",
       "saved": "Saved!",
@@ -639,7 +650,21 @@
     "recentActivityTitle": "Recent Activity",
     "recentActivityEmpty": "No activity recorded yet.",
     "materialsTitle": "Materials ({{count}})",
-    "materialsEmpty": "No materials for this subject yet."
+    "materialsEmpty": "No materials for this subject yet.",
+    "learningTitle": "Adaptive Learning Profile",
+    "learningSubtitle": "Exam questions adapt to your strengths & weaknesses",
+    "learningEmpty": "No evaluation data yet. Complete at least 2 exam sessions to build your learning profile.",
+    "learningLevel": "Estimated Level",
+    "learningLevelHint": "Overall accuracy across topics",
+    "learningSessions": "Exam Sessions",
+    "learningQuestions": "Answered Questions",
+    "learningWeakTitle": "Weak Topics",
+    "learningStrongTitle": "Mastered Topics",
+    "learningWeakEmpty": "No weak topics identified yet.",
+    "learningStrongEmpty": "No mastered topics yet.",
+    "learningMastery": "Mastery per Topic",
+    "learningThreshold": "Requires at least {{n}} sessions per topic to classify",
+    "learningAdaptiveNote": "Next exam questions adjust automatically: more weight on weak topics & higher difficulty on mastered ones."
   },
   "settings": {
     "title": "Settings",

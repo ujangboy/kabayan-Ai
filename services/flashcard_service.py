@@ -140,4 +140,72 @@ class FlashcardService:
             snippet = str(result)[:300] if result else ""
             raise ValueError(f"AI gagal: {e}\nResponse: {snippet}")
 
+    def generate_from_exam_review(self, db: Session, session_id: int, max_cards: int = 8) -> dict | None:
+        """
+        Generate flashcard dari soal ujian yang dijawab salah (ExamReview is_correct=0).
+
+        Menjadi bagian dari loop adaptif: ujian → soal salah → flashcard → review.
+        Dipanggil fire-and-forget dari router setelah submit — kegagalan tidak
+        boleh memengaruhi alur submit ujian.
+        """
+        import models
+        from sqlalchemy import func
+
+        if max_cards <= 0:
+            return None
+
+        attempt = (
+            db.query(models.ExamAttempt)
+            .filter(models.ExamAttempt.session_id == session_id)
+            .order_by(models.ExamAttempt.attempt_number.desc())
+            .first()
+        )
+        if not attempt:
+            return None
+
+        wrong_reviews = (
+            db.query(models.ExamReview)
+            .filter(
+                models.ExamReview.attempt_id == attempt.id,
+                models.ExamReview.is_correct == 0,
+            )
+            .limit(max_cards)
+            .all()
+        )
+        if not wrong_reviews:
+            return None
+
+        session = db.query(models.ExamSession).filter(models.ExamSession.id == session_id).first()
+        subject_id = session.subject_id if session else None
+        subject_name = (session.subject_name if session else None) or "Mata Kuliah"
+        if not subject_id:
+            return None
+
+        # Bangun konteks dari soal yang salah: pertanyaan + jawaban benar + penjelasan AI
+        parts = []
+        for i, rv in enumerate(wrong_reviews, 1):
+            q = (rv.question_text or "").strip()
+            a = (rv.correct_answer or "").strip()
+            e = (rv.ai_explanation or "").strip()
+            if not q or not a:
+                continue
+            parts.append(f"{i}. Pertanyaan: {q}\n   Jawaban benar: {a}" + (f"\n   Penjelasan: {e}" if e else ""))
+        if not parts:
+            return None
+
+        context = (
+            f"Berikut {len(parts)} soal dari ujian simulasi '{subject_name}' yang dijawab salah "
+            "oleh mahasiswa. Buat flashcard tanya-jawab untuk membantu memahami konsepnya:\n\n"
+            + "\n\n".join(parts)
+        )
+
+        return self.generate_flashcards(
+            db,
+            subject_id=subject_id,
+            context=context,
+            count=min(max_cards, len(parts)),
+            title=f"Ujian {subject_name} — Soal Salah",
+        )
+
+
 flashcard_service = FlashcardService()

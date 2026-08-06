@@ -74,6 +74,9 @@ def update_topics(db: Session, topics: list[str], strength: str) -> TutorUserPro
     Merge a topic into weak_topics or strong_topics JSON list.
 
     strength: "weak" or "strong"
+
+    Catatan: Fungsi ini menyimpan topik tanpa tag subject (legacy).
+    Gunakan update_topics_for_subject() untuk sinkronisasi yang lebih akurat.
     """
     profile = get_or_create_profile(db)
     key = "weak_topics" if strength == "weak" else "strong_topics"
@@ -90,8 +93,81 @@ def update_topics(db: Session, topics: list[str], strength: str) -> TutorUserPro
     return profile
 
 
-def get_adaptive_instructions(profile: TutorUserProfile) -> str:
-    """Return additional prompt instructions based on profile settings."""
+def update_topics_for_subject(
+    db: Session,
+    subject_id: int,
+    weak: list[str],
+    strong: list[str],
+) -> TutorUserProfile:
+    """
+    Sinkronisasi topik lemah/kuat dari LearningProfile (per subject) ke
+    TutorUserProfile — dengan format tagged agar tidak bercampur antar matkul.
+
+    Format yang disimpan: {"subject_id": int, "topics": [str, ...]}
+    stored as JSON list of tagged objects.
+
+    Subject lain tidak terpengaruh — hanya entry dengan subject_id ini yang di-replace.
+    """
+    profile = get_or_create_profile(db)
+
+    def _merge_tagged(
+        current_json: Optional[str], sid: int, new_topics: list[str]
+    ) -> str:
+        """Update/insert tagged entry untuk subject_id ini."""
+        try:
+            current = json.loads(current_json or "[]")
+            if not isinstance(current, list):
+                current = []
+        except (json.JSONDecodeError, TypeError):
+            current = []
+
+        # Pisahkan entry milik subject ini vs subject lain
+        other = [e for e in current if not (isinstance(e, dict) and e.get("subject_id") == sid)]
+        if new_topics:
+            other.append({"subject_id": sid, "topics": new_topics})
+        return json.dumps(other, ensure_ascii=False)
+
+    profile.weak_topics   = _merge_tagged(profile.weak_topics,   subject_id, weak)
+    profile.strong_topics = _merge_tagged(profile.strong_topics, subject_id, strong)
+    profile.updated_at    = datetime.datetime.utcnow()
+    db.commit()
+    db.refresh(profile)
+    return profile
+
+
+def _flatten_tagged_topics(topics_json: Optional[str]) -> list[str]:
+    """
+    Flatten tagged topics (list of {subject_id, topics}) OR legacy flat list.
+    Digunakan oleh get_adaptive_instructions untuk backward compatibility.
+    """
+    if not topics_json:
+        return []
+    try:
+        data = json.loads(topics_json)
+        if not isinstance(data, list):
+            return []
+        flat = []
+        for entry in data:
+            if isinstance(entry, str):
+                flat.append(entry)          # legacy format
+            elif isinstance(entry, dict):
+                flat.extend(entry.get("topics", []))  # tagged format
+        return flat
+    except (json.JSONDecodeError, TypeError):
+        return []
+
+
+def get_adaptive_instructions(
+    profile: TutorUserProfile,
+    subject_profile: Optional[dict] = None,
+) -> str:
+    """
+    Return additional prompt instructions based on profile settings.
+
+    subject_profile: optional dict {"subject": str, "weak": [..], "strong": [..]}
+    dari LearningProfile mata kuliah yang sedang dibahas. Jika ada, topik
+    lemah/kuat per materi DIPRIORITASKAN (tidak mencampur topik matkul lain).
+    """
     parts = []
     if profile.explanation_depth == "brief":
         parts.append("Berikan penjelasan singkat dan ringkas.")
@@ -107,25 +183,45 @@ def get_adaptive_instructions(profile: TutorUserProfile) -> str:
         parts.append("Jangan sertakan contoh konkret.")
     if not profile.use_step_by_step:
         parts.append("Jangan pecah penjelasan menjadi langkah-langkah bertahap.")
-    if profile.weak_topics:
-        try:
-            weak = json.loads(profile.weak_topics)
-            if weak:
-                parts.append(
-                    "Siswa sering kesulitan dengan: "
-                    + ", ".join(weak[:5])
-                    + ". Berikan perhatian ekstra pada topik ini."
-                )
-        except (json.JSONDecodeError, TypeError):
-            pass
+
+    # Topik lemah/kuat: utamakan profil per mata kuliah jika tersedia
+    if subject_profile and (subject_profile.get("weak") or subject_profile.get("strong")):
+        weak = subject_profile.get("weak", [])
+        strong = subject_profile.get("strong", [])
+        if weak:
+            parts.append(
+                "Berdasarkan hasil ujian di mata kuliah ini, siswa sering kesulitan "
+                "dengan: "
+                + ", ".join(weak[:5])
+                + ". Berikan perhatian ekstra dan contoh tambahan untuk topik ini."
+            )
+        if strong:
+            parts.append(
+                "Berdasarkan hasil ujian di mata kuliah ini, siswa sudah menguasai: "
+                + ", ".join(strong[:5])
+                + ". Jangan mengulang penjelasan dasar topik ini; bisa langsung "
+                "melaju ke tingkat lanjutan atau soal yang lebih menantang."
+            )
+    else:
+        # Fallback ke profil global, flatten dari format tagged maupun legacy
+        weak = _flatten_tagged_topics(profile.weak_topics)
+        if weak:
+            parts.append(
+                "Siswa sering kesulitan dengan: "
+                + ", ".join(weak[:5])
+                + ". Berikan perhatian ekstra pada topik ini."
+            )
     return "\n".join(parts)
 
 
-def build_adaptive_prompt_section(profile: TutorUserProfile | None) -> str:
+def build_adaptive_prompt_section(
+    profile: TutorUserProfile | None,
+    subject_profile: Optional[dict] = None,
+) -> str:
     """Build a full adaptive section to inject into the tutor system prompt."""
     if profile is None:
         return ""
-    instructions = get_adaptive_instructions(profile)
+    instructions = get_adaptive_instructions(profile, subject_profile=subject_profile)
     if not instructions:
         return ""
     return (

@@ -11,7 +11,7 @@ export const useChatStore = create(
       tutorBadge: null,
 
       createChat: () => {
-        const chat = { id: Date.now(), title: 'Chat Baru', messages: [], pinned: false, createdAt: new Date().toISOString(), tutorEnabled: false, tutorSubject: '', tutorLevel: 'intermediate' };
+        const chat = { id: Date.now(), title: 'Chat Baru', messages: [], pinned: false, createdAt: new Date().toISOString(), tutorEnabled: false, tutorSubject: '', tutorLevel: 'intermediate', examSessionId: null };
         set((s) => ({ chats: [chat, ...s.chats], currentChatId: chat.id }));
         return chat.id;
       },
@@ -102,7 +102,7 @@ export const useChatStore = create(
       setChatTutor: (chatId, patch) => set((s) => ({
         chats: s.chats.map((c) =>
           c.id === chatId
-            ? { ...c, tutorEnabled: patch.tutorEnabled ?? c.tutorEnabled, tutorSubject: patch.tutorSubject ?? c.tutorSubject ?? '', tutorLevel: patch.tutorLevel ?? c.tutorLevel ?? 'intermediate' }
+            ? { ...c, tutorEnabled: patch.tutorEnabled ?? c.tutorEnabled, tutorSubject: patch.tutorSubject ?? c.tutorSubject ?? '', tutorLevel: patch.tutorLevel ?? c.tutorLevel ?? 'intermediate', examSessionId: patch.examSessionId ?? c.examSessionId ?? null }
             : c
         ),
       })),
