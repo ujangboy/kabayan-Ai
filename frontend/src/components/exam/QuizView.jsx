@@ -23,8 +23,8 @@ export default function QuizView({ sessionData, onDone }) {
   useEffect(() => {
     if (timeLeft === null || paused) return;
     if (timeLeft <= 0) { handleSubmit(); return; }
-    const t = setTimeout(() => setTimeLeft(p => p - 1), 1000);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setTimeLeft(p => p - 1), 1000);
+    return () => clearTimeout(timer);
   }, [timeLeft, paused]);
 
   const formatTime = (s) => {

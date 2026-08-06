@@ -39,4 +39,4 @@ class ErrorBoundary extends Component {
   }
 }
 
-export default withTranslation('errorBoundary')(ErrorBoundary);
+export default withTranslation()(ErrorBoundary);

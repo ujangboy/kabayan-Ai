@@ -690,6 +690,7 @@ function FlashcardSession({ cards, subjectName, onClose }) {
 // Generate AI Modal
 // ─────────────────────────────────────────────────────────────────────────────
 function GenerateAIModal({ subjects, onClose, onSuccess }) {
+  const { t } = useTranslation();
   const [subjectId, setSubjectId] = useState('');
   const [count, setCount] = useState(10);
   const [selectedMaterialIds, setSelectedMaterialIds] = useState([]);
@@ -815,6 +816,7 @@ function GenerateAIModal({ subjects, onClose, onSuccess }) {
 // Manual Create Modal
 // ─────────────────────────────────────────────────────────────────────────────
 function CreateFlashcardModal({ subjects, onClose, onSuccess }) {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({ question: '', answer: '', subject_id: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
