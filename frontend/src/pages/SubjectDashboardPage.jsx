@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -388,17 +388,19 @@ function DailyPlanCard({ subjectId }) {
     enabled: !!subjectId,
   });
 
-  const doneKey = (item) => {
+  const doneKey = useCallback((item) => {
     const date = new Date().toISOString().slice(0, 10);
     return `kabayan-plan-done:${subjectId}:${date}:${item.type}:${item.topic || ''}`;
-  };
-  const getDone = () => {
+  }, [subjectId]);
+  const [doneMap, setDoneMap] = useState({});
+  useEffect(() => {
     const map = {};
-    (plan?.items || []).forEach((item) => { map[doneKey(item)] = localStorage.getItem(doneKey(item)) === '1'; });
-    return map;
-  };
-  const [doneMap, setDoneMap] = useState(getDone);
-  useEffect(() => { setDoneMap(getDone()); }, [subjectId, freeMinutes, plan]);
+    (plan?.items || []).forEach((item) => {
+      const key = doneKey(item);
+      map[key] = localStorage.getItem(key) === '1';
+    });
+    setDoneMap(map);
+  }, [doneKey, freeMinutes, plan]);
 
   const toggleDone = (item) => {
     const key = doneKey(item);
