@@ -22,7 +22,7 @@ from services.tutor_service import tutor_service as tutor_service_instance
 
 # ─── Fake stream: ganti achat_stream agar deterministik & tanpa AI ───────────
 
-async def _fake_stream(db, message, history, mata_kuliah=None, student_level="intermediate", exam_session_id=None):
+async def _fake_stream(db, message, history, mata_kuliah=None, student_level="intermediate", exam_session_id=None, rag_docs=None):
     yield "\x00TYPE:SIMPLE\x00"
     yield "Jawaban dari FAQ: limit adalah nilai yang didekati."
 

@@ -3,9 +3,9 @@ Learning Profile Service — adaptive learning jangka panjang.
 
 Fokus uji:
   - Cold start → payload aman (estimated_level 0, mastery {}, bukan error)
-  - Confidence threshold → topik tidak dikategorikan sebelum >= 2 sesi
+  - Partial-adaptive (v2): 1 sesi sudah mengklasifikasi weak/strong (MIN=1)
   - build_profile_section → "" saat data kurang, memuat BATASAN MUTLAK saat ada data
-  - Sync weak/strong topics ke TutorUserProfile
+  - Sync weak/strong topics ke TutorUserProfile (format tagged per subject)
 """
 import json
 import datetime
@@ -155,8 +155,8 @@ def test_get_or_create_creates_default(db_session, make_subject):
 
 # ─── Confidence threshold ────────────────────────────────────────────────────
 
-def test_ingest_below_confidence_threshold_no_classification(db_session, make_subject):
-    """1 sesi saja → weak/strong HARUS kosong (belum cukup data)."""
+def test_ingest_single_session_triggers_partial_classification(db_session, make_subject):
+    """1 sesi → weak/strong TERISI (v2 partial-adaptive, MIN_CONFIDENCE_SESSIONS=1)."""
     subject = make_subject("Matkul Satu Sesi")
     _make_completed_session(db_session, subject.id, [
         ("Looping", True), ("Looping", False), ("Percabangan", True),
@@ -166,13 +166,17 @@ def test_ingest_below_confidence_threshold_no_classification(db_session, make_su
 
     assert profile.total_sessions == 1
     assert profile.total_questions == 3
-    assert json.loads(profile.weak_topics) == []
-    assert json.loads(profile.strong_topics) == []
-    assert profile.estimated_level == 0
+    # Akurasi: Looping 50% (<70 → lemah), Percabangan 100% (≥70 → kuat)
+    weak = json.loads(profile.weak_topics)
+    strong = json.loads(profile.strong_topics)
+    assert "Looping" in weak
+    assert "Percabangan" in strong
 
     mastery = json.loads(profile.topics_mastery)
     assert mastery["Looping"]["accuracy"] == 50
     assert mastery["Looping"]["sessions"] == 1
+    # weighted = (50*2 + 100*1) / 3 = 66.67 → 67
+    assert profile.estimated_level == 67
 
 
 def test_ingest_meets_confidence_threshold_classifies(db_session, make_subject):
@@ -262,10 +266,15 @@ def test_ingest_syncs_tutor_profile(db_session, make_subject):
 
     tutor = db_session.query(TutorUserProfile).filter_by(user_key="local").first()
     assert tutor is not None
+    # Format v2: tagged per subject — {"subject_id": int, "topics": [str]}
     weak = json.loads(tutor.weak_topics)
     strong = json.loads(tutor.strong_topics)
-    assert "Looping" in weak
-    assert "Percabangan" in strong
+    weak_entry = next((e for e in weak if isinstance(e, dict) and e.get("subject_id") == subject.id), None)
+    strong_entry = next((e for e in strong if isinstance(e, dict) and e.get("subject_id") == subject.id), None)
+    assert weak_entry is not None
+    assert strong_entry is not None
+    assert "Looping" in weak_entry["topics"]
+    assert "Percabangan" in strong_entry["topics"]
 
 
 # ─── Tutor chat sadar per mata kuliah ────────────────────────────────────────
