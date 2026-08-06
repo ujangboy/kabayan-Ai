@@ -240,7 +240,12 @@
     "youtubeSubtitleInfo": "Urang ngagunakeun subtitle/transkrip resmi tina YouTube.",
     "youtubeSubtitleHelp": "Video tanpa subtitle otomatis teu tiasa diimpor.",
     "youtubeProcessing": "Keur diproses...",
-    "importTranscript": "Import Transkrip"
+    "importTranscript": "Import Transkrip",
+    "importAudio": "Import Audio",
+    "audioModalTitle": "Unggah Audio (Transkripsi)",
+    "audioSubtitle": "Rékaman kuliah atawa audio diajar — ditranskripsikeun otomatis (Whisper) tuluy dijieun materi.",
+    "audioFormats": "MP3, WAV, M4A, OGG, FLAC — maks 24MB",
+    "audioUploading": "Audio ditarima — transkripsi keur jalan di latar tukang."
   },
   "notebook": {
     "notes": "Catetan",

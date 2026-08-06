@@ -105,6 +105,38 @@ async def upload_material(
     finally:
         await file.close()
 
+@router.post("/api/materials/audio")
+async def upload_audio_material(
+    background_tasks: BackgroundTasks,
+    subject_id: int = Form(...),
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db)
+):
+    """US1.1: upload audio → transkripsi Whisper (Groq) → materi siap RAG.
+
+    Status langsung 'Processing' (bukan Pending) agar worker materi biasa tidak
+    mengambil file audio; transkripsi + indexing ditangani background task.
+    """
+    from services.transcription_service import validate_audio
+    try:
+        file_bytes = await file.read()
+        try:
+            validate_audio(file.filename, len(file_bytes))
+        except ValueError as e:
+            return JSONResponse(status_code=400, content={"status": "error", "message": str(e)})
+
+        filepath, mat_id = material_service.create_audio_material(
+            db, subject_id, file.filename or "audio", file_bytes
+        )
+        background_tasks.add_task(material_service.process_audio_material_async, mat_id)
+        return JSONResponse({
+            "status": "processing",
+            "material_id": mat_id,
+            "message": "Audio diterima — transkripsi sedang berjalan di background.",
+        })
+    finally:
+        await file.close()
+
 @router.post("/api/materials/{material_id}/delete")
 async def delete_material(material_id: int, db: Session = Depends(get_db)):
     material_service.delete(db, material_id)

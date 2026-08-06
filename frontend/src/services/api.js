@@ -44,6 +44,13 @@ export const materiAPI = {
   delete: (id) => api.post(`/materials/${id}/delete`),
   cancel: (id) => api.post(`/materials/${id}/cancel`),
   importYoutube: (data) => api.post('/materials/youtube', data),
+  // US1.1: upload audio → transkripsi Whisper (Groq) di background
+  uploadAudio: (subjectId, file) => {
+    const fd = new FormData();
+    fd.append('subject_id', String(subjectId));
+    fd.append('file', file);
+    return api.post('/materials/audio', fd);
+  },
 };
 
 // --- SUBJECT ---

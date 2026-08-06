@@ -233,7 +233,6 @@ class YoutubeSource(BaseSource):
     # ─── Jalur 3: Whisper via Groq (fallback terakhir) ──────────────────────
     def _transcribe_audio_with_groq(self) -> Tuple[list, int, str]:
         import yt_dlp
-        from groq import Groq
 
         # Gunakan temp dir agar tidak ada isu permission di working directory
         tmp_dir = tempfile.gettempdir()
@@ -276,42 +275,23 @@ class YoutubeSource(BaseSource):
             if size_mb > 24:
                 raise ValueError(f"Audio terlalu besar untuk Whisper ({size_mb:.0f}MB > 24MB). Video terlalu panjang untuk jalur fallback.")
 
-            client = Groq(api_key=config.GROQ_API_KEY)
-            with open(filename, "rb") as f:
-                transcription = client.audio.transcriptions.create(
-                    file=(os.path.basename(filename), f.read()),
-                    model="whisper-large-v3",
-                    response_format="verbose_json",
-                )
+            # Transkripsi via layanan umum (US1.1) — Groq Whisper, 0 token lokal.
+            # validate_ext=False: file unduhan bisa webm/opus (Groq menerimanya).
+            from services.transcription_service import transcribe
+
+            data = transcribe(filename, validate_ext=False)
 
             result = []
+            for seg in data["segments"]:
+                result.append({
+                    'text': seg["text"],
+                    'start': seg["start"],
+                    'duration': seg["end"] - seg["start"],
+                })
+            if not result and data["text"]:
+                result.append({'text': data["text"], 'start': 0.0, 'duration': data["duration"]})
 
-            if isinstance(transcription, dict):
-                duration = int(transcription.get('duration', 0))
-                lang = transcription.get('language', 'id')
-                segments = transcription.get('segments', [])
-                text_content = transcription.get('text', '')
-            else:
-                duration = int(getattr(transcription, 'duration', 0))
-                lang = getattr(transcription, 'language', 'id')
-                segments = getattr(transcription, 'segments', [])
-                text_content = getattr(transcription, 'text', '')
-
-            if not segments and text_content:
-                result.append({'text': text_content, 'start': 0.0, 'duration': duration})
-            else:
-                for seg in segments:
-                    if isinstance(seg, dict):
-                        start = seg.get('start', 0.0)
-                        end = seg.get('end', 0.0)
-                        text = seg.get('text', '')
-                    else:
-                        start = getattr(seg, 'start', 0.0)
-                        end = getattr(seg, 'end', 0.0)
-                        text = getattr(seg, 'text', '')
-                    result.append({'text': text, 'start': start, 'duration': end - start})
-
-            return result, duration, lang
+            return result, data["duration"], data["language"]
 
         except Exception as e:
             logger.error(f"Whisper/Groq fallback gagal untuk video {self.video_id}: {e}", exc_info=True)

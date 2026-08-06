@@ -1,14 +1,19 @@
 import os
 import shutil
 import uuid
+import logging
+from typing import Tuple
 from fastapi import UploadFile
 from sqlalchemy.orm import Session
 import config
 from database import SessionLocal
+from models import MaterialType
 from repositories.material_repository import material_repository
 from services.cache_service import cache_service
 from services.rag_service import rag_service
 from parsers.document_parser import extract_text
+
+logger = logging.getLogger(__name__)
 
 class MaterialService:
     def upload_material_sync(self, db: Session, subject_id: int, file: UploadFile) -> str:
@@ -105,6 +110,79 @@ class MaterialService:
                         db.commit()
                 except Exception:
                     pass
+        finally:
+            db.close()
+
+    def create_audio_material(self, db: Session, subject_id: int, filename: str, data: bytes) -> Tuple[str, int]:
+        """Simpan file audio upload + buat record Material (US1.1).
+
+        Status langsung 'Processing' agar worker materi tidak mengambilnya —
+        transkripsi ditangani process_audio_material_async (background task).
+        """
+        ext = os.path.splitext(filename or "audio")[1].lower()
+        safe_filename = f"{uuid.uuid4().hex}{ext}"
+        filepath = os.path.join(config.UPLOADS_DIR, safe_filename)
+        with open(filepath, "wb") as buffer:
+            buffer.write(data)
+
+        mat = material_repository.create(db, {
+            "subject_id": subject_id,
+            "filename": filename,
+            "filepath": filepath,
+            "material_type": MaterialType.TXT,
+            "status": "Processing",
+            "progress": 5,
+            "stage": "Mengunggah audio...",
+        })
+        db.commit()
+        return filepath, mat.id
+
+    def process_audio_material_async(self, material_id: int):
+        """US1.1: transkripsi audio (Groq Whisper) → simpan transkrip .txt → index RAG.
+
+        Dipanggil background task. Setelah transkripsi, memakai pipeline proses
+        materi biasa (chunking + embedding + LanceDB) lewat process_material_async.
+        """
+        db = SessionLocal()
+        try:
+            mat = material_repository.get(db, material_id)
+            if not mat or not mat.filepath:
+                return
+            audio_path = mat.filepath
+
+            from services.transcription_service import transcribe
+
+            self._set_progress(db, material_id, 40, "Mentranskripsikan audio (Whisper)...")
+            data = transcribe(audio_path)
+
+            transcript_path = os.path.join(config.UPLOADS_DIR, f"audio_{material_id}.txt")
+            with open(transcript_path, "w", encoding="utf-8") as f:
+                f.write(data["text"])
+
+            mat = material_repository.get(db, material_id)
+            if mat:
+                mat.filepath = transcript_path
+                mat.language = data.get("language")
+                db.commit()
+
+            # Audio asli dipindah ke trash (safety-net, bukan hapus permanen) — D2
+            from services.storage_cleanup_service import trash_file
+            if audio_path and os.path.exists(audio_path) and audio_path != transcript_path:
+                trash_file(audio_path)
+
+            # Chunking + embedding + indexing (menandai Ready bila sukses)
+            self.process_material_async(transcript_path, f"mat_{material_id}", material_id)
+        except Exception as e:
+            logger.error(f"Transkripsi audio materi {material_id} gagal: {e}", exc_info=True)
+            mat = material_repository.get(db, material_id)
+            if mat:
+                self._remove_file(mat.filepath)
+                material_repository.update(db, mat, {
+                    "status": "Failed",
+                    "failure_reason": str(e)[:300],
+                    "filepath": None,
+                })
+                db.commit()
         finally:
             db.close()
 

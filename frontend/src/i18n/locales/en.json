@@ -247,7 +247,12 @@
     "youtubeSubtitleInfo": "We use official subtitles/transcripts from YouTube.",
     "youtubeSubtitleHelp": "Videos without auto-subtitles cannot be imported.",
     "youtubeProcessing": "Processing...",
-    "importTranscript": "Import Transcript"
+    "importTranscript": "Import Transcript",
+    "importAudio": "Import Audio",
+    "audioModalTitle": "Upload Audio (Transcription)",
+    "audioSubtitle": "Lecture recordings or study audio — auto-transcribed (Whisper) then turned into a material.",
+    "audioFormats": "MP3, WAV, M4A, OGG, FLAC — max 24MB",
+    "audioUploading": "Audio accepted — transcription is running in the background."
   },
   "notebook": {
     "notes": "Notes",
