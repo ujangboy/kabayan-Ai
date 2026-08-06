@@ -814,5 +814,37 @@
     "exit": "Kaluar",
     "exitHint": "Gerakkeun beurit atawa pencét Esc pikeun kaluar",
     "activity": "Kagiatan ayeuna"
+  },
+  "studyGraph": {
+    "title": "Peta Konsép",
+    "subtitle": "Topik & patalina konsép tina bank soal, blueprint, jeung profil diajar.",
+    "empty": "Can aya topik dipetakeun — jieun blueprint atawa latihan heula.",
+    "babs": "Bab",
+    "topics": "topik",
+    "mastery": "Mastery",
+    "dependencies": "Patalina antar topik",
+    "weak": "Lemah",
+    "strong": "Kuat",
+    "noData": "Tanpa data",
+    "concepts": "Konsép konci",
+    "meta": "{{topics}} topik · {{babs}} bab · {{deps}} patalina",
+    "ungrouped": "Topik séjén"
+  },
+  "studyDiagnostic": {
+    "title": "Diagnostik Diajar",
+    "subtitle": "Kasiapan ujian, topik lemah, jeung resep perbaikan otomatis.",
+    "readiness": "Kasiapan ujian",
+    "levelReady": "Siap ujian",
+    "levelPrepare": "Perlu persiapan",
+    "levelPractice": "Perlu loba latihan",
+    "levelNoData": "Can aya data",
+    "coverage": "Cakupan topik: {{covered}}/{{total}} ({{pct}}%)",
+    "weakTitle": "Topik lemah",
+    "noWeak": "Taya topik lemah — hébat!",
+    "strongTitle": "Topik kuat",
+    "noDataTopics": "Can diuji: {{topics}}",
+    "actionsTitle": "Resep ayeuna",
+    "risksTitle": "Tanda résiko",
+    "start": "Mimitian"
   }
 }

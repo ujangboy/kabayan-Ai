@@ -197,6 +197,12 @@ export const studyAPI = {
         free_minutes: freeMinutes,
       },
     }).then(r => r.data),
+  // peta konsep: topik/bab + keterkaitan (PRD US4.1)
+  knowledgeGraph: (subjectId = null) =>
+    api.get('/study/knowledge-graph', { params: subjectId ? { subject_id: subjectId } : {} }).then(r => r.data),
+  // diagnostik belajar: kesiapan + resep perbaikan (PRD US4.2)
+  diagnostic: (subjectId = null) =>
+    api.get('/study/diagnostic', { params: subjectId ? { subject_id: subjectId } : {} }).then(r => r.data),
 };
 
 // --- TUTOR ---

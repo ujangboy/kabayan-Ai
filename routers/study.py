@@ -92,3 +92,31 @@ async def study_daily_plan(
         if not subject:
             return JSONResponse(status_code=404, content={"detail": "Mata kuliah tidak ditemukan."})
     return JSONResponse(generate_daily_plan(db, free_minutes=free_minutes, subject_id=subject_id))
+
+
+@router.get("/api/study/knowledge-graph")
+async def study_knowledge_graph(subject_id: Optional[int] = Query(None), db: Session = Depends(get_db)):
+    """Knowledge graph (PRD US4.1): peta topik/bab + keterkaitan konsep per mata kuliah."""
+    from engines.knowledge_graph import build_knowledge_graph
+
+    if subject_id is not None:
+        from models import Subject
+
+        subject = db.query(Subject).filter(Subject.id == subject_id).first()
+        if not subject:
+            return JSONResponse(status_code=404, content={"detail": "Mata kuliah tidak ditemukan."})
+    return JSONResponse(build_knowledge_graph(db, subject_id))
+
+
+@router.get("/api/study/diagnostic")
+async def study_diagnostic(subject_id: Optional[int] = Query(None), db: Session = Depends(get_db)):
+    """Diagnostic (PRD US4.2): readiness, topik lemah/kuat, resep perbaikan, risiko."""
+    from engines.diagnostic import run_diagnostic
+
+    if subject_id is not None:
+        from models import Subject
+
+        subject = db.query(Subject).filter(Subject.id == subject_id).first()
+        if not subject:
+            return JSONResponse(status_code=404, content={"detail": "Mata kuliah tidak ditemukan."})
+    return JSONResponse(run_diagnostic(db, subject_id))

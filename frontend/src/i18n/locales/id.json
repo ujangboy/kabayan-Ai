@@ -821,5 +821,37 @@
     "exit": "Keluar",
     "exitHint": "Gerakkan mouse atau tekan Esc untuk keluar",
     "activity": "Aktivitas saat ini"
+  },
+  "studyGraph": {
+    "title": "Peta Konsep",
+    "subtitle": "Topik & keterkaitan konsep dari bank soal, blueprint, dan profil belajarmu.",
+    "empty": "Belum ada topik terpetakan — buat blueprint atau latihan dulu.",
+    "babs": "Bab",
+    "topics": "topik",
+    "mastery": "Mastery",
+    "dependencies": "Keterkaitan antar topik",
+    "weak": "Lemah",
+    "strong": "Kuat",
+    "noData": "Tanpa data",
+    "concepts": "Konsep kunci",
+    "meta": "{{topics}} topik · {{babs}} bab · {{deps}} keterkaitan",
+    "ungrouped": "Topik lain"
+  },
+  "studyDiagnostic": {
+    "title": "Diagnostik Belajar",
+    "subtitle": "Kesiapan ujian, topik lemah, dan resep perbaikan otomatis.",
+    "readiness": "Kesiapan ujian",
+    "levelReady": "Siap ujian",
+    "levelPrepare": "Perlu persiapan",
+    "levelPractice": "Perlu banyak latihan",
+    "levelNoData": "Belum ada data",
+    "coverage": "Cakupan topik: {{covered}}/{{total}} ({{pct}}%)",
+    "weakTitle": "Topik lemah",
+    "noWeak": "Tidak ada topik lemah — hebat!",
+    "strongTitle": "Topik kuat",
+    "noDataTopics": "Belum diuji: {{topics}}",
+    "actionsTitle": "Resep hari ini",
+    "risksTitle": "Tanda risiko",
+    "start": "Mulai"
   }
 }

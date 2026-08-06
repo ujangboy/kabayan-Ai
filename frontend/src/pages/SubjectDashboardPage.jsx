@@ -4,8 +4,9 @@ import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ArrowLeft, Book, FileText, CreditCard, HelpCircle, Pencil, Trash2, X,
-  TrendingUp, Trophy, Target, CalendarCheck, Clock, BookOpen, Zap, Brain, Sparkles, Focus
+  ArrowLeft, ArrowRight, Book, FileText, CreditCard, HelpCircle, Pencil, Trash2, X,
+  TrendingUp, TrendingDown, Trophy, Target, CalendarCheck, Clock, BookOpen, Zap, Brain, Sparkles, Focus,
+  Network, Stethoscope, AlertTriangle, CheckCircle2
 } from 'lucide-react';
 import { subjectAPI, examAPI, studyAPI } from '@/services/api';
 import { useFocusStore } from '@/store';
@@ -545,6 +546,278 @@ function StudyRecommendationCard({ route, subjectId }) {
   );
 }
 
+function KnowledgeGraphCard({ graph }) {
+  const { t } = useTranslation();
+  if (!graph) return null;
+  const nodes = graph.nodes || [];
+  const edges = graph.edges || [];
+  if (nodes.length === 0) {
+    return (
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="card-base p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Network size={16} className="text-accent-blue" />
+          <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('studyGraph.title')}</h2>
+        </div>
+        <p className="text-xs text-text-muted">{t('studyGraph.empty')}</p>
+      </motion.div>
+    );
+  }
+
+  const babs = nodes.filter(n => n.type === 'bab');
+  const ungrouped = nodes.filter(n => n.type === 'topik' && !edges.some(e => e.type === 'contains' && e.source === n.id));
+  const dependencies = edges.filter(e => e.type === 'depends_on').sort((a, b) => (b.weight || 0) - (a.weight || 0)).slice(0, 6);
+  const statusBadge = (n) => {
+    if (n.status === 'lemah') return { cls: 'badge-danger', label: t('studyGraph.weak') };
+    if (n.status === 'kuat') return { cls: 'badge-success', label: t('studyGraph.strong') };
+    if (n.status === 'tanpa_data') return { cls: 'badge', label: t('studyGraph.noData') };
+    return null;
+  };
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="card-base p-6">
+      <div className="flex items-center gap-2 mb-1">
+        <Network size={16} className="text-accent-blue" />
+        <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('studyGraph.title')}</h2>
+      </div>
+      <p className="text-xs text-text-muted mb-3">{t('studyGraph.subtitle')}</p>
+
+      <div className="space-y-3">
+        {babs.map(bab => (
+          <div key={bab.id} className="bg-background border border-border/60 rounded-xl p-3">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-semibold text-text">{bab.label}</span>
+              <div className="flex items-center gap-2">
+                {bab.mastery != null && (
+                  <span className="text-[10px] text-text-secondary">
+                    {t('studyGraph.mastery')}: {bab.mastery}%
+                  </span>
+                )}
+                <span className="text-[10px] text-text-muted">{bab.topics_count} {t('studyGraph.topics')}</span>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {nodes.filter(n => n.type === 'topik' && edges.some(e => e.type === 'contains' && e.source === n.id && e.target === bab.id))
+                .map(n => {
+                  const sb = statusBadge(n);
+                  return (
+                    <span key={n.id} className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg border border-border bg-card text-[10px]">
+                      <span className="font-medium text-text">{n.label}</span>
+                      {n.mastery != null && <span className="text-text-muted">{n.mastery}%</span>}
+                      {n.in_latest_blueprint && <Sparkles size={10} className="text-warning" />}
+                      {sb && <span className={`badge text-[9px] ${sb.cls}`}>{sb.label}</span>}
+                    </span>
+                  );
+                })}
+            </div>
+            {nodes.filter(n => n.type === 'topik' && edges.some(e => e.type === 'contains' && e.source === n.id && e.target === bab.id))
+              .some(n => (n.concepts || []).length > 0) && (
+              <div className="mt-2">
+                {nodes.filter(n => n.type === 'topik' && (n.concepts || []).length > 0)
+                  .slice(0, 3)
+                  .map(n => (
+                    <p key={n.id} className="text-[10px] text-text-muted leading-relaxed">
+                      <span className="font-semibold text-text-secondary">{n.label}:</span> {n.concepts.join(' · ')}
+                    </p>
+                  ))}
+              </div>
+            )}
+          </div>
+        ))}
+
+        {ungrouped.length > 0 && (
+          <div className="bg-background border border-border/60 rounded-xl p-3">
+            <p className="text-xs font-semibold text-text mb-2">{t('studyGraph.ungrouped')}</p>
+            <div className="flex flex-wrap gap-1.5">
+              {ungrouped.map(n => {
+                const sb = statusBadge(n);
+                return (
+                  <span key={n.id} className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg border border-border bg-card text-[10px]">
+                    <span className="font-medium text-text">{n.label}</span>
+                    {n.mastery != null && <span className="text-text-muted">{n.mastery}%</span>}
+                    {sb && <span className={`badge text-[9px] ${sb.cls}`}>{sb.label}</span>}
+                  </span>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {dependencies.length > 0 && (
+          <div className="bg-background border border-border/60 rounded-xl p-3">
+            <p className="text-xs font-semibold text-text mb-2">{t('studyGraph.dependencies')}</p>
+            <div className="flex flex-wrap gap-1.5">
+              {dependencies.map((e, i) => (
+                <span key={i} className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-card border border-border text-[10px] text-text-secondary">
+                  {e.source} <ArrowRight size={10} className="text-text-muted" /> {e.target}
+                  <span className="text-text-muted">×{e.weight}</span>
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <p className="text-[10px] text-text-muted mt-3">
+        {t('studyGraph.meta', {
+          topics: graph.meta?.topics_count ?? 0,
+          babs: graph.meta?.babs_count ?? 0,
+          deps: graph.meta?.dependencies_count ?? 0,
+        })}
+      </p>
+    </motion.div>
+  );
+}
+
+const READINESS_META = {
+  siap_ujian: { cls: 'badge-success', icon: CheckCircle2 },
+  perlu_persiapan: { cls: 'badge-warning', icon: AlertTriangle },
+  perlu_banyak_latihan: { cls: 'badge-danger', icon: AlertTriangle },
+  belum_ada_data: { cls: 'badge', icon: Clock },
+};
+
+function DiagnosticCard({ diagnostic }) {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  if (!diagnostic) return null;
+
+  const readiness = diagnostic.readiness || {};
+  const overview = diagnostic.overview || {};
+  const weakTopics = diagnostic.weak_topics || [];
+  const strongTopics = diagnostic.strong_topics || [];
+  const riskFlags = diagnostic.risk_flags || [];
+  const actionItems = diagnostic.action_items || [];
+  const noDataTopics = diagnostic.no_data_topics || [];
+  const rdMeta = READINESS_META[readiness.level] || READINESS_META.belum_ada_data;
+  const RdIcon = rdMeta.icon;
+  const modalityMeta = STUDY_MODALITY_META(t);
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="card-base p-6">
+      <div className="flex items-center gap-2 mb-1">
+        <Stethoscope size={16} className="text-accent-teal" />
+        <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('studyDiagnostic.title')}</h2>
+      </div>
+      <p className="text-xs text-text-muted mb-3">{t('studyDiagnostic.subtitle')}</p>
+
+      {/* Readiness */}
+      <div className="flex items-center justify-between bg-background border border-border rounded-xl p-3 mb-3">
+        <span className="text-xs text-text-secondary">{t('studyDiagnostic.readiness')}</span>
+        <div className="flex items-center gap-2">
+          {readiness.avg_mastery != null && (
+            <span className="text-sm font-bold text-text">{readiness.avg_mastery}%</span>
+          )}
+          <span className={`badge text-[10px] ${rdMeta.cls}`}>
+            <RdIcon size={10} className="inline mr-1" />
+            {readiness.label || t('studyDiagnostic.levelNoData')}
+          </span>
+        </div>
+      </div>
+
+      {/* Coverage */}
+      <div className="mb-4">
+        <div className="flex items-center justify-between text-[10px] text-text-muted mb-1">
+          <span>{t('studyDiagnostic.coverage', {
+            covered: overview.topics_covered ?? 0,
+            total: overview.topics_in_bank ?? 0,
+            pct: overview.coverage_pct ?? 0,
+          })}</span>
+        </div>
+        <div className="h-1.5 bg-background rounded-full overflow-hidden border border-border/50">
+          <div className="h-full rounded-full bg-primary transition-all duration-500" style={{ width: `${overview.coverage_pct ?? 0}%` }} />
+        </div>
+      </div>
+
+      {/* Action items */}
+      {actionItems.length > 0 && (
+        <div className="mb-4">
+          <p className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider mb-2">{t('studyDiagnostic.actionsTitle')}</p>
+          <div className="space-y-2">
+            {actionItems.map((item, i) => {
+              const m = modalityMeta[item.modality] || STUDY_MODALITY_META(t).flashcard;
+              const Icon = m.icon;
+              return (
+                <button
+                  key={i}
+                  onClick={() => navigate(item.to)}
+                  className="w-full flex items-center gap-2.5 p-2.5 rounded-xl border border-border hover:border-primary/40 transition-colors cursor-pointer text-left"
+                >
+                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${m.cls}`}>
+                    <Icon size={13} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-semibold text-text truncate">
+                      {item.topic ? `${item.topic} · ${m.label}` : m.label}
+                    </p>
+                    <p className="text-[10px] text-text-muted line-clamp-2">{item.reason}</p>
+                  </div>
+                  <span className="text-[10px] text-primary shrink-0">{t('studyDiagnostic.start')}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Weak topics */}
+      <div className="mb-4">
+        <p className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider mb-2">{t('studyDiagnostic.weakTitle')}</p>
+        {weakTopics.length === 0 ? (
+          <p className="text-xs text-text-muted">{t('studyDiagnostic.noWeak')}</p>
+        ) : (
+          <div className="space-y-1.5">
+            {weakTopics.map(d => (
+              <div key={d.topic} className="flex items-center justify-between gap-2 bg-background border border-border/60 rounded-lg px-2.5 py-1.5">
+                <span className="text-xs text-text truncate">{d.topic}</span>
+                <div className="flex items-center gap-2 shrink-0">
+                  {d.trend_direction === 'turun' && <TrendingDown size={12} className="text-danger" />}
+                  {d.trend_direction === 'naik' && <TrendingUp size={12} className="text-success" />}
+                  <span className="text-xs font-semibold text-danger">{d.accuracy}%</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Strong topics */}
+      {strongTopics.length > 0 && (
+        <div className="mb-4">
+          <p className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider mb-2">{t('studyDiagnostic.strongTitle')}</p>
+          <div className="flex flex-wrap gap-1.5">
+            {strongTopics.map(d => (
+              <span key={d.topic} className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-success/10 border border-success/20 text-[10px] text-success">
+                <CheckCircle2 size={10} />
+                {d.topic} · {d.accuracy}%
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Risk flags */}
+      {riskFlags.length > 0 && (
+        <div className="mb-2">
+          <p className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider mb-2">{t('studyDiagnostic.risksTitle')}</p>
+          <div className="space-y-1.5">
+            {riskFlags.map((f, i) => (
+              <div key={i} className={`flex items-start gap-2 rounded-lg px-2.5 py-2 text-[10px] ${f.severity === 'tinggi' ? 'bg-danger/10 border border-danger/20 text-danger' : 'bg-warning/10 border border-warning/20 text-warning'}`}>
+                <AlertTriangle size={11} className="shrink-0 mt-0.5" />
+                <span>{f.message}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {noDataTopics.length > 0 && (
+        <p className="text-[10px] text-text-muted">
+          {t('studyDiagnostic.noDataTopics', { topics: noDataTopics.join(', ') })}
+        </p>
+      )}
+    </motion.div>
+  );
+}
+
 export default function SubjectDashboardPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -575,6 +848,20 @@ export default function SubjectDashboardPage() {
   const { data: studyMetrics } = useQuery({
     queryKey: ['study-metrics', subjectId],
     queryFn: () => studyAPI.metrics(subjectId),
+    enabled: !!subjectId,
+    staleTime: 60_000,
+  });
+
+  const { data: knowledgeGraph } = useQuery({
+    queryKey: ['study-graph', subjectId],
+    queryFn: () => studyAPI.knowledgeGraph(subjectId),
+    enabled: !!subjectId,
+    staleTime: 60_000,
+  });
+
+  const { data: diagnostic } = useQuery({
+    queryKey: ['study-diagnostic', subjectId],
+    queryFn: () => studyAPI.diagnostic(subjectId),
     enabled: !!subjectId,
     staleTime: 60_000,
   });
@@ -769,6 +1056,12 @@ export default function SubjectDashboardPage() {
 
             {/* Adaptive learning profile */}
             <LearningProfileCard profile={learningProfile} />
+
+            {/* Diagnostik belajar (PRD US4.2) */}
+            <DiagnosticCard diagnostic={diagnostic} />
+
+            {/* Peta konsep (PRD US4.1) */}
+            <KnowledgeGraphCard graph={knowledgeGraph} />
 
             {/* Score history chart */}
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="card-base p-6">

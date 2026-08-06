@@ -821,5 +821,37 @@
     "exit": "Exit",
     "exitHint": "Move your mouse or press Esc to exit",
     "activity": "Current activity"
+  },
+  "studyGraph": {
+    "title": "Concept Map",
+    "subtitle": "Topics & concept links from question bank, blueprint, and your learning profile.",
+    "empty": "No topics mapped yet — create a blueprint or practice first.",
+    "babs": "Chapters",
+    "topics": "topics",
+    "mastery": "Mastery",
+    "dependencies": "Topic links",
+    "weak": "Weak",
+    "strong": "Strong",
+    "noData": "No data",
+    "concepts": "Key concepts",
+    "meta": "{{topics}} topics · {{babs}} chapters · {{deps}} links",
+    "ungrouped": "Other topics"
+  },
+  "studyDiagnostic": {
+    "title": "Learning Diagnostic",
+    "subtitle": "Exam readiness, weak topics, and automatic corrective prescriptions.",
+    "readiness": "Exam readiness",
+    "levelReady": "Ready for exam",
+    "levelPrepare": "Needs preparation",
+    "levelPractice": "Needs more practice",
+    "levelNoData": "No data yet",
+    "coverage": "Topic coverage: {{covered}}/{{total}} ({{pct}}%)",
+    "weakTitle": "Weak topics",
+    "noWeak": "No weak topics — great job!",
+    "strongTitle": "Strong topics",
+    "noDataTopics": "Untested: {{topics}}",
+    "actionsTitle": "Today's prescription",
+    "risksTitle": "Risk flags",
+    "start": "Start"
   }
 }
