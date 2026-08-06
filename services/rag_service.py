@@ -15,6 +15,16 @@ from database import SessionLocal
 
 TABLE_NAME = "chunks"
 
+# Bobot hybrid scoring (0 token LLM — murni kalkulasi lokal):
+#   vector   : kesamaan semantik embedding (jarak L2 → skor 0..1)
+#   keyword  : overlap token kata kunci query vs chunk (BM25-lite)
+#   position : kedudukan kandidat dalam hasil vector search (tie-break ringan)
+VECTOR_WEIGHT = 0.6
+KEYWORD_WEIGHT = 0.3
+POSITION_WEIGHT = 0.1
+
+_TOKEN_RE = re.compile(r"[^\w\s]", re.UNICODE)
+
 # ── B1: doc_id sanitization ────────────────────────────────────────────────
 # doc_id dipakai dalam filter WHERE LanceDB (doc_id IN (...)) dan metadata tabel.
 # Batasi ke karakter aman agar tidak bisa menyisipkan injeksi/path traversal.
@@ -26,6 +36,59 @@ def _sanitize_doc_id(doc_id) -> str:
     if not s:
         return ""
     return _DOC_ID_ALLOWED_RE.sub('_', s)
+
+
+# ── Hybrid scoring (0 token LLM) ─────────────────────────────────────────────
+
+def _tokenize(text: str) -> list:
+    """Tokenisasi ringan: lowercase, buang tanda baca, token >= 2 karakter."""
+    if not text:
+        return []
+    return [tok for tok in _TOKEN_RE.sub(" ", text.lower()).split() if len(tok) >= 2]
+
+
+def _keyword_overlap(query_tokens: list, content_tokens: list) -> float:
+    """Proporsi token query unik yang muncul di chunk (BM25-lite, 0..1)."""
+    if not query_tokens or not content_tokens:
+        return 0.0
+    qset = set(query_tokens)
+    cset = set(content_tokens)
+    return len(qset & cset) / len(qset)
+
+
+def _normalize_vec(distance) -> float:
+    """Jarak L2 LanceDB → skor kemiripan 0..1 (distance 0 → 1.0)."""
+    if distance is None:
+        return 0.0
+    try:
+        d = float(distance)
+    except (TypeError, ValueError):
+        return 0.0
+    if d < 0:
+        return 1.0
+    return 1.0 / (1.0 + d)
+
+
+def _score_candidates(rows: list, query_tokens: list) -> list:
+    """Ranking ulang kandidat: hybrid = 0.6*vector + 0.3*keyword + 0.1*posisi.
+
+    rows: daftar dict hasil vector search ({content, _distance, ...}).
+    Mengembalikan list (hybrid_score, vec_score, row) terurut menurun
+    (tie-break skor vector).
+    """
+    scored = []
+    n = len(rows)
+    for i, r in enumerate(rows):
+        content = r.get("content", "")
+        if not content:
+            continue
+        vec = _normalize_vec(r.get("_distance"))
+        kw = _keyword_overlap(query_tokens, _tokenize(content)) if query_tokens else 0.0
+        pos = 1.0 - (i / max(1, n))
+        hybrid = VECTOR_WEIGHT * vec + KEYWORD_WEIGHT * kw + POSITION_WEIGHT * pos
+        scored.append((hybrid, vec, r))
+    scored.sort(key=lambda t: (-t[0], -t[1]))
+    return scored
 
 
 def _table_schema(dim: int) -> pa.Schema:
@@ -346,7 +409,7 @@ class RAGService:
                     filters.append(f"doc_id IN ({ids_str})")
             where_clause = " AND ".join(filters)
 
-            fetch_k = max(1, top_k * 3)
+            fetch_k = max(1, top_k * 6)
 
             try:
                 results = self._table.search(query_vec).where(where_clause).limit(fetch_k).to_list()
@@ -355,7 +418,7 @@ class RAGService:
 
             out = []
             sources = []
-            for r in results:
+            for _, _, r in _score_candidates(results, _tokenize(query)):
                 ts_start = _nan_to_none(r.get("timestamp_start"))
                 content = r.get("content", "")
                 doc_id = str(r.get("doc_id", ""))
