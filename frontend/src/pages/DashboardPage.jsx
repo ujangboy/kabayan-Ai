@@ -20,16 +20,27 @@ const formatBytes = (bytes) => {
 };
 
 const QUICK_ACTIONS = (t) => [
-  { icon: MessageSquare, label: t('dashboard.quickChat'),       desc: t('dashboard.quickChatDesc'),     to: '/chat',      color: 'bg-primary/10 text-primary' },
-  { icon: FileText,      label: t('dashboard.quickUpload'),     desc: t('dashboard.quickUploadDesc'),    to: '/materi',    color: 'bg-accent-blue/10 text-accent-blue' },
-  { icon: CreditCard,    label: t('dashboard.quickFlashcard'),  desc: t('dashboard.quickFlashcardDesc'),  to: '/flashcard', color: 'bg-accent-purple/10 text-accent-purple' },
-  { icon: HelpCircle,    label: t('dashboard.quickQuiz'),       desc: t('dashboard.quickQuizDesc'),        to: '/quiz',      color: 'bg-accent-teal/10 text-accent-teal' },
+  { icon: MessageSquare, label: t('dashboard.quickChat'),       desc: t('dashboard.quickChatDesc'),     to: '/chat',      color: 'bg-gradient-primary text-white',       shadow: 'shadow-btn-primary' },
+  { icon: FileText,      label: t('dashboard.quickUpload'),     desc: t('dashboard.quickUploadDesc'),    to: '/materi',    color: 'bg-accent-blue/15 text-accent-blue',   shadow: '' },
+  { icon: CreditCard,    label: t('dashboard.quickFlashcard'),  desc: t('dashboard.quickFlashcardDesc'),  to: '/flashcard', color: 'bg-accent-purple/15 text-accent-purple', shadow: '' },
+  { icon: HelpCircle,    label: t('dashboard.quickQuiz'),       desc: t('dashboard.quickQuizDesc'),        to: '/quiz',      color: 'bg-accent-teal/15 text-accent-teal',   shadow: '' },
 ];
 
+const container = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { staggerChildren: 0.08 } },
+};
+
+const item = {
+  hidden: { opacity: 0, y: 16 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.32, 0.72, 0, 1] } },
+};
+
 function StatCard({ icon: Icon, label, value, color, loading }) {
+  const bgClass = color.replace('text-', 'bg-');
   return (
-    <motion.div whileHover={{ scale: 1.02 }} className="card-base flex items-center gap-4 p-4">
-      <div className={`w-10 h-10 rounded-xl bg-card flex items-center justify-center shrink-0 border border-border ${color}`}>
+    <motion.div whileHover={{ scale: 1.02, y: -2 }} className="card-base card-hoverable flex items-center gap-4 p-4">
+      <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${bgClass}/15 ${color} ${bgClass}/10`}>
         <Icon size={18} />
       </div>
       <div>
@@ -83,33 +94,48 @@ export default function DashboardPage() {
       <div className="max-w-5xl mx-auto px-6 py-10 space-y-10">
 
         {/* Greeting */}
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-          <div className="flex items-center gap-2 mb-1">
-            <WavingHand size={26} className="text-primary" />
-            <h1 className="text-3xl font-bold text-text">{greeting}!</h1>
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: [0.32, 0.72, 0, 1] }}
+        >
+          <div className="flex items-center gap-3 mb-1.5">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-primary flex items-center justify-center shadow-btn-primary">
+              <WavingHand size={24} className="text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-text bg-gradient-to-r from-violet-400 to-indigo-300 bg-clip-text text-transparent">
+                {greeting}!
+              </h1>
+              <p className="text-text-secondary text-sm">
+                {t('dashboard.tagline')}
+                {stats.subjects > 0 && ` ${t('dashboard.activeSubjects', { count: stats.subjects })}`}
+              </p>
+            </div>
           </div>
-          <p className="text-text-secondary">
-            {t('dashboard.tagline')}
-            {stats.subjects > 0 && ` ${t('dashboard.activeSubjects', { count: stats.subjects })}`}
-          </p>
         </motion.div>
 
         {/* Quick Actions */}
-        <motion.section initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-          <div className="flex items-center gap-2 mb-4">
+        <motion.section
+          variants={container}
+          initial="hidden"
+          animate="show"
+        >
+          <motion.div variants={item} className="flex items-center gap-2 mb-4">
             <Zap size={16} className="text-warning" />
             <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('dashboard.sectionQuickActions')}</h2>
-          </div>
+          </motion.div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {QUICK_ACTIONS(t).map(({ icon: Icon, label, desc, to, color }) => (
+            {QUICK_ACTIONS(t).map(({ icon: Icon, label, desc, to, color, shadow }) => (
               <motion.button
                 key={to}
-                whileHover={{ scale: 1.03 }}
+                variants={item}
+                whileHover={{ scale: 1.03, y: -3 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={() => handleQuickAction(to)}
-                className="card-base flex flex-col items-start gap-3 p-4 text-left hover:border-primary/30 transition-colors cursor-pointer"
+                className="card-base card-hoverable flex flex-col items-start gap-3 p-4 text-left hover:border-primary/30 transition-colors cursor-pointer"
               >
-                <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${color}`}>
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${color} ${shadow}`}>
                   <Icon size={17} />
                 </div>
                 <div>
@@ -122,11 +148,15 @@ export default function DashboardPage() {
         </motion.section>
 
         {/* Stats */}
-        <motion.section initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-          <div className="flex items-center gap-2 mb-4">
+        <motion.section
+          variants={container}
+          initial="hidden"
+          animate="show"
+        >
+          <motion.div variants={item} className="flex items-center gap-2 mb-4">
             <TrendingUp size={16} className="text-success" />
             <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('dashboard.sectionStats')}</h2>
-          </div>
+          </motion.div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <StatCard icon={FileText}   label={t('dashboard.statMaterials')}    value={stats.materials}  color="text-accent-blue"   loading={isLoading} />
             <StatCard icon={BookMarked} label={t('dashboard.statNotes')}       value={stats.notes}      color="text-success"       loading={isLoading} />
@@ -135,7 +165,7 @@ export default function DashboardPage() {
           </div>
           {/* D6: badge observability storage */}
           {data?.storage && (
-            <div className="mt-3 flex items-center gap-2 text-xs text-text-secondary">
+            <div className="mt-4 flex items-center gap-2 text-xs text-text-secondary px-1">
               <Database size={14} className="text-accent-blue" />
               <span>{t('dashboard.storageLabel')}: <span className="text-text font-medium">{formatBytes(data.storage.total)}</span></span>
               <span className="opacity-50">·</span>
@@ -148,19 +178,19 @@ export default function DashboardPage() {
 
         {/* Recent Materials + Recent Quizzes side by side */}
         <motion.section
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
+          variants={container}
+          initial="hidden"
+          animate="show"
           className="grid grid-cols-1 md:grid-cols-2 gap-6"
         >
           {/* Materi Terbaru */}
-          <div>
+          <motion.div variants={item}>
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <Clock size={14} className="text-text-secondary" />
                 <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('dashboard.sectionRecentMaterials')}</h2>
               </div>
-              <button onClick={() => navigate('/materi')} className="text-xs text-primary hover:text-primary/80 transition-colors">
+              <button onClick={() => navigate('/materi')} className="text-xs text-primary-light hover:text-primary transition-colors">
                 {t('dashboard.viewAll')}
               </button>
             </div>
@@ -177,7 +207,7 @@ export default function DashboardPage() {
                 <table className="w-full text-sm">
                   <tbody>
                     {recentMaterials.map((m) => (
-                      <tr key={m.id} className="border-b border-border/50 last:border-0 hover:bg-background/50 transition-colors">
+                      <tr key={m.id} className="border-b border-border/50 last:border-0 hover:bg-card-hover/50 transition-colors">
                         <td className="px-4 py-2.5">
                           <div className="flex items-center gap-2">
                             <FileTypeIcon type={(m.filename || '').split('.').pop()?.toUpperCase() || m.material_type} className="text-base text-text-muted" />
@@ -196,16 +226,16 @@ export default function DashboardPage() {
                 </table>
               )}
             </div>
-          </div>
+          </motion.div>
 
           {/* Quiz Terbaru */}
-          <div>
+          <motion.div variants={item}>
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <Trophy size={14} className="text-text-secondary" />
                 <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('dashboard.sectionRecentQuizzes')}</h2>
               </div>
-              <button onClick={() => navigate('/quiz')} className="text-xs text-primary hover:text-primary/80 transition-colors">
+              <button onClick={() => navigate('/quiz')} className="text-xs text-primary-light hover:text-primary transition-colors">
                 {t('dashboard.viewAll')}
               </button>
             </div>
@@ -222,7 +252,7 @@ export default function DashboardPage() {
                 <table className="w-full text-sm">
                   <tbody>
                     {recentQuizzes.map((q) => (
-                      <tr key={q.id} className="border-b border-border/50 last:border-0 hover:bg-background/50 transition-colors">
+                      <tr key={q.id} className="border-b border-border/50 last:border-0 hover:bg-card-hover/50 transition-colors">
                         <td className="px-4 py-2.5">
                           <span className="text-text font-medium text-xs truncate max-w-[150px] block">{q.title}</span>
                           <span className="text-text-muted text-[10px]">{q.subject?.name || '—'}</span>
@@ -243,7 +273,7 @@ export default function DashboardPage() {
                 </table>
               )}
             </div>
-          </div>
+          </motion.div>
         </motion.section>
 
         {/* Empty state */}
@@ -251,10 +281,12 @@ export default function DashboardPage() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.3 }}
+            transition={{ delay: 0.3, duration: 0.4, ease: [0.32, 0.72, 0, 1] }}
             className="card-base text-center py-16"
           >
-            <School size={48} className="mx-auto mb-4 text-text-muted" />
+            <div className="w-20 h-20 rounded-3xl bg-gradient-primary/10 flex items-center justify-center mx-auto mb-4">
+              <School size={48} className="text-primary-light" />
+            </div>
             <h3 className="text-xl font-bold text-text mb-2">{t('dashboard.welcomeTitle')}</h3>
             <p className="text-text-secondary mb-6 max-w-sm mx-auto">
               {t('dashboard.welcomeText')}
