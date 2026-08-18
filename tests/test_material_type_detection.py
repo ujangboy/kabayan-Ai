@@ -46,3 +46,15 @@ def test_upload_unknown_extension_falls_back_to_pdf(db_session, make_subject):
     from repositories.material_repository import material_repository
     mat = material_repository.get(db_session, mat_id)
     assert mat.material_type.value == "PDF"
+
+
+def test_material_without_type_is_none_not_pdf(db_session, make_subject):
+    """Regresi: default kolom tidak boleh diam-diam melabeli PDF (masker bug tipe salah)."""
+    from models import Material
+    subject = make_subject()
+
+    mat = Material(subject_id=subject.id, filename="tanpa_tipe.bin", status="Pending")
+    db_session.add(mat)
+    db_session.commit()
+
+    assert mat.material_type is None

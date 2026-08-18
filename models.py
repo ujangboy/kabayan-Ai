@@ -48,7 +48,7 @@ class Material(Base):
     subject_id = Column(Integer, ForeignKey("subjects.id", ondelete="CASCADE"), index=True)
     filename = Column(String)
     filepath = Column(String)
-    material_type = Column(Enum(MaterialType), default=MaterialType.PDF)
+    material_type = Column(Enum(MaterialType))
     source_url = Column(String, nullable=True)
     external_id = Column(String, nullable=True)
     thumbnail = Column(String, nullable=True)
