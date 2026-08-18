@@ -37,13 +37,13 @@ export default function Sidebar() {
     <motion.aside
       initial={false}
       animate={{ width: sidebarOpen ? 240 : 64 }}
-      transition={{ duration: 0.25, ease: 'easeInOut' }}
-      className="relative flex flex-col h-screen bg-sidebar border-r border-border shrink-0 overflow-hidden z-20"
+      transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
+      className="relative flex flex-col h-screen bg-gradient-to-b from-sidebar to-background border-r border-border shrink-0 overflow-hidden z-20"
     >
       {/* Logo — selalu tampil; saat collapsed hanya icon Bot */}
-      <div className="relative flex flex-col items-center pt-4 pb-2 shrink-0 gap-1">
+      <div className="relative flex flex-col items-center pt-4 pb-2 shrink-0 gap-1.5">
         <div className={cn(
-          "rounded-xl bg-primary flex items-center justify-center shrink-0 shadow-glow transition-all duration-200",
+          "rounded-xl bg-gradient-primary flex items-center justify-center shrink-0 shadow-btn-primary transition-all duration-300",
           sidebarOpen ? "w-9 h-9" : "w-10 h-10"
         )}>
           <Bot size={sidebarOpen ? 18 : 20} className="text-white" />
@@ -54,10 +54,10 @@ export default function Sidebar() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.15 }}
+              transition={{ duration: 0.2 }}
               className="overflow-hidden flex items-center gap-1.5 whitespace-nowrap"
             >
-              <span className="text-xs font-bold text-text">Kabayan AI</span>
+              <span className="text-xs font-bold text-text tracking-wide">Kabayan AI</span>
               <span className="badge badge-primary text-[10px]">v2</span>
             </motion.div>
           )}
@@ -73,7 +73,7 @@ export default function Sidebar() {
         >
           <button
             onClick={toggleSidebar}
-            className="p-1.5 rounded-lg text-text-secondary hover:text-text hover:bg-card transition-all duration-150 shrink-0"
+            className="p-1.5 rounded-lg text-text-secondary hover:text-text hover:bg-card hover:shadow-glow-sm transition-all duration-200 shrink-0"
             aria-label={sidebarOpen ? "Tutup sidebar" : "Buka sidebar"}
           >
             {sidebarOpen
@@ -136,7 +136,7 @@ export default function Sidebar() {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto">
+      <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto overflow-x-hidden">
         {NAV.map(({ to, icon: Icon, label }) => {
           const isExam = to === '/exam-analyzer';
           return (
@@ -147,21 +147,37 @@ export default function Sidebar() {
                   const active = isExam
                     ? isActive || location.pathname === '/study-plan'
                     : isActive;
-                  return cn('sidebar-item', active && 'active', !sidebarOpen && 'justify-center px-0');
+                  return cn('sidebar-item relative', active && 'active', !sidebarOpen && 'justify-center px-0');
                 }}
                 title={!sidebarOpen ? label : undefined}
               >
-                <Icon size={sidebarOpen ? 16 : 20} className="shrink-0" />
-                <AnimatePresence>
-                  {sidebarOpen && (
-                    <motion.span
-                      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                      className="whitespace-nowrap text-sm"
-                    >
-                      {label}
-                    </motion.span>
-                  )}
-                </AnimatePresence>
+                {({ isActive }) => {
+                  const active = isExam
+                    ? isActive || location.pathname === '/study-plan'
+                    : isActive;
+                  return (
+                    <>
+                      <Icon size={sidebarOpen ? 16 : 20} className="shrink-0" />
+                      <AnimatePresence>
+                        {sidebarOpen && (
+                          <motion.span
+                            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                            className="whitespace-nowrap text-sm"
+                          >
+                            {label}
+                          </motion.span>
+                        )}
+                      </AnimatePresence>
+                      {/* Active indicator bar */}
+                      {active && (
+                        <motion.span
+                          layoutId="sidebar-active-indicator"
+                          className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-6 rounded-full bg-gradient-primary"
+                        />
+                      )}
+                    </>
+                  );
+                }}
               </NavLink>
             </Tooltip>
           );
@@ -174,18 +190,28 @@ export default function Sidebar() {
           <NavLink
             to="/settings"
             className={({ isActive }) =>
-              cn('sidebar-item', isActive && 'active', !sidebarOpen && 'justify-center px-0')
+              cn('sidebar-item relative', isActive && 'active', !sidebarOpen && 'justify-center px-0')
             }
             title={!sidebarOpen ? 'Pengaturan' : undefined}
           >
-            <Settings size={sidebarOpen ? 16 : 20} className="shrink-0" />
-            <AnimatePresence>
-              {sidebarOpen && (
-                <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-sm">
-                  Pengaturan
-                </motion.span>
-              )}
-            </AnimatePresence>
+            {({ isActive }) => (
+              <>
+                <Settings size={sidebarOpen ? 16 : 20} className="shrink-0" />
+                <AnimatePresence>
+                  {sidebarOpen && (
+                    <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-sm">
+                      Pengaturan
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+                {isActive && (
+                  <motion.span
+                    layoutId="sidebar-active-indicator"
+                    className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-6 rounded-full bg-gradient-primary"
+                  />
+                )}
+              </>
+            )}
           </NavLink>
         </Tooltip>
       </div>

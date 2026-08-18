@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import Sidebar from './Sidebar';
 import CommandSearch from '@/components/search/CommandSearch';
 import BackgroundProcessSync from '@/components/BackgroundProcessSync';
@@ -34,12 +35,18 @@ function PendingBanner({ t }) {
   const ops = [...pendingOperations];
 
   return (
-    <div className="flex items-center gap-2 px-4 py-2 bg-amber-500/10 border-b border-amber-500/30 text-amber-400 text-xs">
+    <motion.div
+      initial={{ opacity: 0, y: -12 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -12 }}
+      transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
+      className="flex items-center gap-2 px-4 py-2 bg-warning/10 border-b border-warning/25 text-warning text-xs"
+    >
       <RefreshCw size={12} className="animate-spin" />
       <span>
         {ops.length === 1 ? getOpLabel(ops[0], t) : t('appLayout.opRunningMultiple', { count: ops.length })}
       </span>
-    </div>
+    </motion.div>
   );
 }
 
@@ -95,7 +102,18 @@ export default function AppLayout() {
       <Sidebar />
       <main className="flex-1 overflow-hidden flex flex-col min-w-0">
         <PendingBanner t={t} />
-        <Outlet />
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={location.pathname}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.22, ease: [0.32, 0.72, 0, 1] }}
+            className="flex-1 flex flex-col min-w-0 overflow-hidden"
+          >
+            <Outlet />
+          </motion.div>
+        </AnimatePresence>
       </main>
       {searchOpen && <CommandSearch />}
     </div>
