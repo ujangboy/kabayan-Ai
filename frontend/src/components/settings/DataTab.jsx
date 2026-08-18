@@ -53,9 +53,13 @@ export default function DataTab() {
   });
 
   const handleDelete = (m) => {
-    if (window.confirm(t('settings.data.deleteConfirm').replace('{name}', m.filename || `#${m.id}`))) {
-      deleteMutation.mutate(m.id);
-    }
+    toast.confirm({
+      title: t('settings.data.deleteConfirm').replace('{name}', m.filename || `#${m.id}`),
+      message: t('settings.data.deleteConfirm').replace('{name}', m.filename || `#${m.id}`),
+      danger: true,
+      confirmLabel: t('common.delete'),
+      onConfirm: () => deleteMutation.mutate(m.id),
+    });
   };
 
   const { data: trashData } = useQuery({
@@ -100,15 +104,23 @@ export default function DataTab() {
 
   const handleDeleteTrash = (item) => {
     const name = item.original_filename || `#${item.id}`;
-    if (window.confirm(t('settings.data.trashDeleteConfirm').replace('{name}', name))) {
-      deleteTrashMutation.mutate(item);
-    }
+    toast.confirm({
+      title: t('settings.data.trashDeleteConfirm').replace('{name}', name),
+      message: t('settings.data.trashDeleteConfirm').replace('{name}', name),
+      danger: true,
+      confirmLabel: t('common.delete'),
+      onConfirm: () => deleteTrashMutation.mutate(item),
+    });
   };
 
   const handleEmptyTrash = () => {
-    if (window.confirm(t('settings.data.trashEmptyConfirm'))) {
-      emptyTrashMutation.mutate();
-    }
+    toast.confirm({
+      title: t('settings.data.trashEmptyConfirm'),
+      message: t('settings.data.trashEmptyConfirm'),
+      danger: true,
+      confirmLabel: t('common.delete'),
+      onConfirm: () => emptyTrashMutation.mutate(),
+    });
   };
 
   const { data: backups } = useQuery({
