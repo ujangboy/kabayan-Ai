@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import {
   MessageSquare, FileText, CreditCard, HelpCircle,
-  BookMarked, Zap, TrendingUp, Clock, BookOpen, Trophy, Database,
+  BookMarked, Zap, TrendingUp, Clock, Trophy, Database,
   WavingHand, School,
 } from '@/icons';
 import { useNavigate } from 'react-router-dom';
@@ -26,6 +26,13 @@ const QUICK_ACTIONS = (t) => [
   { icon: HelpCircle,    label: t('dashboard.quickQuiz'),       desc: t('dashboard.quickQuizDesc'),        to: '/quiz',      color: 'bg-accent-teal/15 text-accent-teal',   shadow: '' },
 ];
 
+const STAT_TONES = {
+  blue:   'bg-accent-blue/10 text-accent-blue border-accent-blue/20',
+  green:  'bg-success/10 text-success border-success/20',
+  purple: 'bg-accent-purple/10 text-accent-purple border-accent-purple/20',
+  teal:   'bg-accent-teal/10 text-accent-teal border-accent-teal/20',
+};
+
 const container = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { staggerChildren: 0.08 } },
@@ -36,15 +43,15 @@ const item = {
   show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.32, 0.72, 0, 1] } },
 };
 
-function StatCard({ icon: Icon, label, value, color, loading }) {
-  const bgClass = color.replace('text-', 'bg-');
+function StatCard({ icon: Icon, label, value, tone, loading }) {
   return (
-    <motion.div whileHover={{ scale: 1.02, y: -2 }} className="card-base card-hoverable flex items-center gap-4 p-4">
-      <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${bgClass}/15 ${color} ${bgClass}/10`}>
+    <motion.div whileHover={{ scale: 1.02, y: -2 }} className="card-base card-hoverable relative overflow-hidden flex items-center gap-4 p-4">
+      <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-primary opacity-70" />
+      <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${STAT_TONES[tone]}`}>
         <Icon size={18} />
       </div>
       <div>
-        <p className="text-2xl font-bold text-text">
+        <p className="text-2xl font-bold bg-gradient-to-r from-text to-text-secondary bg-clip-text text-transparent">
           {loading ? <span className="inline-block w-8 h-6 bg-border animate-pulse rounded" /> : (value ?? 0)}
         </p>
         <p className="text-xs text-text-secondary">{label}</p>
@@ -104,7 +111,7 @@ export default function DashboardPage() {
               <WavingHand size={24} className="text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-text bg-gradient-to-r from-violet-400 to-indigo-300 bg-clip-text text-transparent">
+              <h1 className="text-3xl font-bold text-text bg-gradient-to-r from-primary-light to-accent-blue bg-clip-text text-transparent">
                 {greeting}!
               </h1>
               <p className="text-text-secondary text-sm">
@@ -158,10 +165,10 @@ export default function DashboardPage() {
             <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('dashboard.sectionStats')}</h2>
           </motion.div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <StatCard icon={FileText}   label={t('dashboard.statMaterials')}    value={stats.materials}  color="text-accent-blue"   loading={isLoading} />
-            <StatCard icon={BookMarked} label={t('dashboard.statNotes')}       value={stats.notes}      color="text-success"       loading={isLoading} />
-            <StatCard icon={CreditCard} label={t('dashboard.statFlashcards')}  value={stats.flashcards} color="text-accent-purple" loading={isLoading} />
-            <StatCard icon={HelpCircle} label={t('dashboard.statQuizzes')}     value={stats.quizzes}    color="text-accent-teal"   loading={isLoading} />
+            <StatCard icon={FileText}   label={t('dashboard.statMaterials')}    value={stats.materials}  tone="blue"   loading={isLoading} />
+            <StatCard icon={BookMarked} label={t('dashboard.statNotes')}       value={stats.notes}      tone="green"  loading={isLoading} />
+            <StatCard icon={CreditCard} label={t('dashboard.statFlashcards')}  value={stats.flashcards} tone="purple" loading={isLoading} />
+            <StatCard icon={HelpCircle} label={t('dashboard.statQuizzes')}     value={stats.quizzes}    tone="teal"   loading={isLoading} />
           </div>
           {/* D6: badge observability storage */}
           {data?.storage && (
@@ -210,7 +217,7 @@ export default function DashboardPage() {
                       <tr key={m.id} className="border-b border-border/50 last:border-0 hover:bg-card-hover/50 transition-colors">
                         <td className="px-4 py-2.5">
                           <div className="flex items-center gap-2">
-                            <FileTypeIcon type={(m.filename || '').split('.').pop()?.toUpperCase() || m.material_type} className="text-base text-text-muted" />
+                             <FileTypeIcon type={m.material_type} className="text-base text-text-muted" />
                             <span className="text-text font-medium truncate max-w-[130px] text-xs">{m.filename}</span>
                           </div>
                         </td>
