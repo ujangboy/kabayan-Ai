@@ -95,6 +95,7 @@
   "common": {
     "save": "Save",
     "cancel": "Cancel",
+    "confirm": "Confirm",
     "loading": "Loading...",
     "delete": "Delete",
     "close": "Close",
@@ -884,5 +885,8 @@
     "actionsTitle": "Today's prescription",
     "risksTitle": "Risk flags",
     "start": "Start"
+  },
+  "toast": {
+    "confirmTitle": "Confirm"
   }
 }

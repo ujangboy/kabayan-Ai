@@ -88,6 +88,7 @@
   "common": {
     "save": "Simpen",
     "cancel": "Bolay",
+    "confirm": "Konfirmasi",
     "loading": "Ngamuat...",
     "delete": "Hapus",
     "close": "Tutup",
@@ -877,5 +878,8 @@
     "actionsTitle": "Resep ayeuna",
     "risksTitle": "Tanda résiko",
     "start": "Mimitian"
+  },
+  "toast": {
+    "confirmTitle": "Konfirmasi"
   }
 }
