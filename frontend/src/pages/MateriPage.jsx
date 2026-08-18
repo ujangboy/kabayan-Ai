@@ -15,10 +15,10 @@ import { usePendingOperation } from '@/hooks/usePendingOperation';
 
 export default function MateriPage() {
   const { t } = useTranslation();
+  const { toast } = useToast();
   const queryClient = useQueryClient();
   const location = useLocation();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const processOp = usePendingOperation('process');
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isYoutubeModalOpen, setIsYoutubeModalOpen] = useState(false);
@@ -86,9 +86,23 @@ export default function MateriPage() {
   });
 
   const handleDelete = (id) => {
-    if (confirm(t('materi.confirmDelete'))) {
-      deleteMutation.mutate(id);
-    }
+    toast.confirm({
+      title: t('materi.deleteTitle', 'Hapus Materi'),
+      message: t('materi.confirmDelete'),
+      danger: true,
+      confirmLabel: t('common.delete'),
+      onConfirm: () => deleteMutation.mutate(id),
+    });
+  };
+
+  const handleCancelProcessing = (id) => {
+    toast.confirm({
+      title: t('materi.cancelTitle', 'Batalkan Proses'),
+      message: t('materi.confirmCancelProcessing'),
+      danger: true,
+      confirmLabel: t('common.cancel'),
+      onConfirm: () => cancelMaterialMutation.mutate(id),
+    });
   };
 
   return (
@@ -136,7 +150,7 @@ export default function MateriPage() {
             <select
               value={subjectFilter}
               onChange={(e) => setSubjectFilter('materi', e.target.value)}
-              className="px-3 py-2 bg-card border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary transition-colors"
+              className="px-3 py-2 bg-card border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/30 transition-all"
             >
               <option value="">{t('materi.filterAllSubjects')}</option>
               {sortedSubjects.map(s => (
@@ -183,7 +197,7 @@ export default function MateriPage() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.05 }}
-                    className="border-b border-border/50 hover:bg-background/50 transition-colors"
+                    className="border-b border-border/50 hover:bg-card-hover/50 transition-colors"
                   >
                     <td className="px-4 py-4">
                       <Tooltip label={m.status !== 'Ready' ? t('materi.notReady', { status: m.status }) : t('materi.enableAsRagSource')}>
@@ -242,7 +256,7 @@ export default function MateriPage() {
                           <div className="space-y-1">
                             <div className="w-full h-1 bg-border rounded-full overflow-hidden">
                               <div
-                                className={`h-full transition-all duration-700 ${m.status === 'Pending' ? 'bg-text-muted' : 'bg-primary'}`}
+                                className={`h-full transition-all duration-700 ${m.status === 'Pending' ? 'bg-text-muted' : 'bg-gradient-primary'}`}
                                 style={{ width: `${Math.max(m.progress || 0, 4)}%` }}
                               />
                             </div>
@@ -252,7 +266,7 @@ export default function MateriPage() {
                               </div>
                               <Tooltip label={t('materi.cancelProcessing')}>
                               <button
-                                onClick={() => { if (confirm(t('materi.confirmCancelProcessing'))) cancelMaterialMutation.mutate(m.id); }}
+                                onClick={() => handleCancelProcessing(m.id)}
                                 className="p-0.5 rounded text-text-muted hover:text-danger hover:bg-danger/10 transition-colors shrink-0"
                                 aria-label={t('materi.cancelProcessing')}
                               >
@@ -345,12 +359,13 @@ function UploadModal({ onClose, subjects, onSuccess }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        className="w-full max-w-md card-base shadow-2xl"
+        initial={{ opacity: 0, scale: 0.92, y: 12 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 8 }}
+        transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
+        className="w-full max-w-md glass rounded-dialog shadow-modal"
       >
         <div className="flex items-center justify-between p-4 border-b border-border">
           <h3 className="font-semibold text-text">{t('materi.uploadModalTitle')}</h3>
@@ -370,7 +385,7 @@ function UploadModal({ onClose, subjects, onSuccess }) {
               required
               value={subjectId}
               onChange={(e) => setSubjectId(e.target.value)}
-              className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary transition-colors"
+              className="input-base"
             >
               <option value="">{t('materi.selectSubject')}</option>
               {subjects.map(s => (
@@ -384,7 +399,9 @@ function UploadModal({ onClose, subjects, onSuccess }) {
               className="border-2 border-dashed border-border hover:border-primary/50 transition-colors rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer text-center"
               onClick={() => fileInputRef.current?.click()}
             >
-              <Upload size={24} className="text-primary mb-2" />
+              <div className="w-12 h-12 rounded-2xl bg-gradient-primary/15 flex items-center justify-center mb-2">
+                <Upload size={24} className="text-primary-light" />
+              </div>
               <p className="text-sm text-text font-medium">
                 {file ? file.name : t('materi.uploadDropzone')}
               </p>
@@ -434,16 +451,19 @@ function YoutubeModal({ onClose, subjects, onSuccess }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        className="w-full max-w-md card-base shadow-2xl border-red-500/20"
+        initial={{ opacity: 0, scale: 0.92, y: 12 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 8 }}
+        transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
+        className="w-full max-w-md glass rounded-dialog shadow-modal border-red-500/20"
       >
         <div className="flex items-center justify-between p-4 border-b border-border">
           <div className="flex items-center gap-2">
-            <Video size={20} className="text-red-500" />
+            <div className="w-8 h-8 rounded-lg bg-red-500/15 flex items-center justify-center">
+              <Video size={18} className="text-red-500" />
+            </div>
             <h3 className="font-semibold text-text">{t('materi.youtubeModalTitle')}</h3>
           </div>
           <Tooltip label={t('common.close')}>
@@ -462,7 +482,7 @@ function YoutubeModal({ onClose, subjects, onSuccess }) {
               required
               value={subjectId}
               onChange={(e) => setSubjectId(e.target.value)}
-              className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm text-text focus:outline-none focus:border-red-500/50 transition-colors"
+              className="input-base focus:border-red-500/60 focus:ring-red-500/30"
             >
               <option value="">{t('materi.selectSubject')}</option>
               {subjects.map(s => (
@@ -477,7 +497,7 @@ function YoutubeModal({ onClose, subjects, onSuccess }) {
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               placeholder="https://www.youtube.com/watch?v=... atau https://youtu.be/..."
-              className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm text-text focus:outline-none focus:border-red-500/50 transition-colors"
+              className="input-base"
             />
             <p className="text-[10px] text-text-muted mt-1">
               {t('materi.youtubeSubtitleInfo')}
@@ -487,7 +507,7 @@ function YoutubeModal({ onClose, subjects, onSuccess }) {
           </div>
           <div className="flex justify-end gap-2 pt-2">
             <button type="button" onClick={onClose} className="btn-ghost">{t('common.cancel')}</button>
-            <button type="submit" disabled={isSubmitting || !url} className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl text-sm font-medium transition-all">
+            <button type="submit" disabled={isSubmitting || !url} className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl text-sm font-medium transition-all active:scale-95">
               {isSubmitting ? t('materi.youtubeProcessing') : t('materi.importTranscript')}
             </button>
           </div>
