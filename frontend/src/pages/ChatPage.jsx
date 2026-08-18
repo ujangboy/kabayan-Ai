@@ -10,6 +10,7 @@ import { notesAPI, subjectAPI, tutorAPI } from '@/services/api';
 import { streamChat, abortActiveStream, isChatStreaming } from '@/services/tutorStream';
 import { usePendingOperation } from '@/hooks/usePendingOperation';
 import { Tooltip } from '@/components/ui/Tooltip';
+import { useToast } from '@/components/Toast';
 
 function CopyButton({ text }) {
   const [copied, setCopied] = useState(false);
@@ -93,20 +94,22 @@ function MessageBubble({ message, tutorMode, onFeedback }) {
       {/* Avatar */}
       <div className={cn(
         'w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-1',
-        isUser ? 'bg-primary/20' : 'bg-card border border-border'
+        isUser
+          ? 'bg-gradient-primary text-white shadow-btn-primary'
+          : 'bg-card border border-border'
       )}>
-        {isUser ? <User size={14} className="text-primary" /> : <Bot size={14} className="text-text-secondary" />}
+        {isUser ? <User size={14} /> : <Bot size={14} className="text-text-secondary" />}
       </div>
 
       {/* Bubble */}
       <div className={cn(
-        'max-w-[75%] rounded-2xl px-4 py-3 relative group',
+        'max-w-[75%] rounded-2xl px-4 py-3 relative group shadow-card',
         isUser
-          ? 'bg-primary/15 border border-primary/20 rounded-tr-sm'
+          ? 'bg-gradient-primary/90 text-white rounded-tr-sm border border-primary/40'
           : 'bg-card border border-border rounded-tl-sm'
       )}>
         {isUser ? (
-          <p className="text-sm text-text whitespace-pre-wrap">{message.content}</p>
+          <p className="text-sm text-white whitespace-pre-wrap">{message.content}</p>
         ) : (
           <div className="prose-dark text-sm">
             <MathMarkdown>{message.content}</MathMarkdown>
@@ -138,7 +141,7 @@ function MessageBubble({ message, tutorMode, onFeedback }) {
         {message.timestamp && (
           <p className={cn(
             'text-[10px] mt-1.5 select-none',
-            isUser ? 'text-primary/50 text-right' : 'text-text-muted'
+            isUser ? 'text-white/50 text-right' : 'text-text-muted'
           )}>
             {formatDateTime(message.timestamp)}
           </p>
@@ -176,6 +179,7 @@ function TypingIndicator() {
 
 export default function ChatPage() {
   const { t } = useTranslation();
+  const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { chats, currentChatId, setCurrentChat, createChat, deleteChat, deleteAllChats, togglePinChat, renameChat, addMessage, updateLastMessage, patchLastMessage, setMessageFeedback, getCurrentChat, selectedDocs, clearSelectedDocs, streamingChatIds, tutorBadge, setStreaming, setTutorBadge, setChatTutor } = useChatStore();
@@ -490,7 +494,7 @@ export default function ChatPage() {
   return (
     <div className="flex h-full">
       {/* Chat history sidebar */}
-      <div className="w-56 border-r border-border flex flex-col bg-sidebar shrink-0 hidden md:flex">
+      <div className="w-56 border-r border-border flex flex-col bg-gradient-to-b from-sidebar to-background shrink-0 hidden md:flex">
         {/* New chat button */}
         <div className="p-3 border-b border-border">
           <button
@@ -581,7 +585,7 @@ export default function ChatPage() {
                     key={c.id}
                     className={cn(
                       'group relative flex items-center rounded-lg transition-colors',
-                      c.id === currentChatId ? 'bg-primary/10' : 'hover:bg-card'
+                      c.id === currentChatId ? 'bg-gradient-primary-soft' : 'hover:bg-card'
                     )}
                   >
                     {/* Rename inline */}
@@ -612,7 +616,7 @@ export default function ChatPage() {
                         {/* Title */}
                         <span className="flex items-center gap-1 min-w-0 flex-1">
                           {c.pinned && <Pin size={8} className="text-primary shrink-0" />}
-                          <span className={cn('truncate', c.id === currentChatId ? 'text-primary font-medium' : 'text-text-secondary')}>
+                          <span className={cn('truncate', c.id === currentChatId ? 'text-primary-light font-medium' : 'text-text-secondary')}>
                             {c.title || t('chat.newChat')}
                           </span>
                         </span>
@@ -672,11 +676,17 @@ export default function ChatPage() {
           <div className="p-2 border-t border-border">
             <button
               onClick={() => {
-                if (confirm(t('chat.confirmDeleteAllChats'))) {
-                  deleteAllChats();
-                  const newId = createChat();
-                  navigate(`/chat?id=${newId}`);
-                }
+                toast.confirm({
+                  title: t('chat.confirmDeleteAllChats'),
+                  message: t('chat.deleteAllChatsDesc') || t('chat.confirmDeleteAllChats'),
+                  danger: true,
+                  confirmLabel: t('common.delete'),
+                  onConfirm: () => {
+                    deleteAllChats();
+                    const newId = createChat();
+                    navigate(`/chat?id=${newId}`);
+                  },
+                });
               }}
               className="w-full text-[11px] text-text-muted hover:text-danger transition-colors py-1.5 flex items-center justify-center gap-1"
             >
@@ -689,9 +699,9 @@ export default function ChatPage() {
       {/* Main chat area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0 bg-background/50 backdrop-blur-sm">
           <div className="flex items-center gap-2">
-            <Bot size={18} className={cn('transition-colors', tutorMode ? 'text-amber-400' : 'text-primary')} />
+            <Bot size={18} className={cn('transition-colors', tutorMode ? 'text-amber-400' : 'text-primary-light')} />
             <span className="font-semibold text-text text-sm">{chat?.title || (tutorMode ? 'Tutor AI' : 'Chat AI')}</span>
             {/* Tutor badge: show SIMPLE / MEDIUM / COMPLEX tier of last response */}
             {tutorMode && tutorBadge && (
@@ -788,14 +798,14 @@ export default function ChatPage() {
               animate={{ opacity: 1, scale: 1 }}
               className="flex flex-col items-center justify-center h-full text-center gap-4 pb-20"
             >
-              <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center">
-                <Bot size={32} className="text-primary" />
+              <div className="w-20 h-20 rounded-3xl bg-gradient-primary shadow-btn-primary flex items-center justify-center">
+                <Bot size={36} className="text-white" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-text mb-1">
+                <h2 className="text-2xl font-bold text-text mb-1">
                   {tutorMode
-                    ? <><BookOpen size={18} className="inline mr-1 align-middle" />{t('chat.tutorModeActive')}</>
-                    : <><GraduationCap size={18} className="inline mr-1 align-middle" />{t('chat.greetingKabayan')}</>
+                    ? <><BookOpen size={18} className="inline mr-1 align-middle text-amber-400" />{t('chat.tutorModeActive')}</>
+                    : <><GraduationCap size={18} className="inline mr-1 align-middle text-primary-light" />{t('chat.greetingKabayan')}</>
                   }
                 </h2>
                 <p className="text-text-secondary text-sm">
@@ -847,7 +857,8 @@ export default function ChatPage() {
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 6 }}
-                className="mb-2 p-2 bg-card border border-border rounded-2xl flex flex-wrap gap-2 shadow-lg"
+                transition={{ duration: 0.2, ease: [0.32, 0.72, 0, 1] }}
+                className="mb-2 p-2 glass rounded-2xl flex flex-wrap gap-2 shadow-modal"
               >
                 {QUICK_PROMPTS.map((q) => (
                   <button
@@ -862,7 +873,7 @@ export default function ChatPage() {
                       }
                     }}
                     className={cn(
-                      'px-3 py-1.5 bg-background border rounded-full text-xs font-medium transition-all',
+                      'px-3 py-1.5 bg-background border rounded-full text-xs font-medium transition-all hover:-translate-y-0.5',
                       q.toNotebook
                         ? isNoteSaving
                           ? 'border-amber-500/30 text-amber-400 opacity-60 cursor-wait'
@@ -878,7 +889,7 @@ export default function ChatPage() {
             )}
           </AnimatePresence>
 
-          <div className="glass rounded-2xl border border-border focus-within:border-primary/40 transition-colors">
+          <div className="glass rounded-2xl border border-border focus-within:border-primary/50 focus-within:shadow-glow-sm transition-all duration-300">
             <textarea
               ref={textareaRef}
               value={input}
@@ -899,7 +910,7 @@ export default function ChatPage() {
                     onClick={() => setShowQuickPrompts(!showQuickPrompts)}
                     className={cn(
                       'p-1.5 rounded-lg transition-colors text-xs',
-                      showQuickPrompts ? 'text-primary bg-primary/10' : 'text-text-muted hover:text-text hover:bg-card'
+                      showQuickPrompts ? 'text-primary-light bg-primary/15' : 'text-text-muted hover:text-text hover:bg-card'
                     )}
                     aria-label="Quick prompts"
                   >
@@ -912,11 +923,11 @@ export default function ChatPage() {
                   onClick={() => isCurrentChatStreaming ? abortActiveStream(currentChatId) : sendMessage(input)}
                   disabled={!isCurrentChatStreaming && !input.trim()}
                   className={cn(
-                    'w-8 h-8 rounded-xl flex items-center justify-center transition-all',
+                    'w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-200',
                     isCurrentChatStreaming
                       ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20 active:scale-95'
                       : input.trim()
-                        ? 'bg-primary text-white hover:bg-primary-hover active:scale-95'
+                        ? 'bg-gradient-primary text-white shadow-btn-primary hover:brightness-110 active:scale-95'
                         : 'bg-card text-text-muted cursor-not-allowed'
                   )}
                   aria-label={isCurrentChatStreaming ? t('chat.stopAI') : t('chat.send')}
