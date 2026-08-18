@@ -9,6 +9,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { notesAPI, subjectAPI, tutorAPI } from '@/services/api';
 import { streamChat, abortActiveStream, isChatStreaming } from '@/services/tutorStream';
 import { usePendingOperation } from '@/hooks/usePendingOperation';
+import { Tooltip } from '@/components/ui/Tooltip';
 
 function CopyButton({ text }) {
   const [copied, setCopied] = useState(false);
@@ -18,9 +19,11 @@ function CopyButton({ text }) {
     setTimeout(() => setCopied(false), 2000);
   };
   return (
-    <button onClick={copy} className="p-1 rounded text-text-muted hover:text-text transition-colors">
-      {copied ? <Check size={13} className="text-success" /> : <Copy size={13} />}
-    </button>
+    <Tooltip label={copied ? 'Tersalin' : 'Salin'}>
+      <button onClick={copy} className="p-1 rounded text-text-muted hover:text-text transition-colors">
+        {copied ? <Check size={13} className="text-success" /> : <Copy size={13} />}
+      </button>
+    </Tooltip>
   );
 }
 
@@ -45,36 +48,41 @@ function FeedbackButtons({ onFeedback }) {
   return (
     <div className="mt-2 flex items-center gap-1.5">
       <span className="text-[10px] text-text-muted select-none">Feedback:</span>
-      <button
-        onClick={() => submit('helpful')}
-        disabled={status === 'sending'}
-        title={t('chat.feedbackHelpful')}
-        className="p-1 rounded-md bg-background border border-border text-text-muted hover:text-success hover:border-success/50 transition-colors"
-      >
-        <ThumbsUp size={12} />
-      </button>
-      <button
-        onClick={() => submit('somewhat')}
-        disabled={status === 'sending'}
-        title={t('chat.feedbackSomewhat')}
-        className="p-1 rounded-md bg-background border border-border text-text-muted hover:text-amber-400 hover:border-amber-400/50 transition-colors"
-      >
-        <Hand size={12} />
-      </button>
-      <button
-        onClick={() => submit('not_helpful')}
-        disabled={status === 'sending'}
-        title={t('chat.feedbackNotHelpful')}
-        className="p-1 rounded-md bg-background border border-border text-text-muted hover:text-danger hover:border-danger/50 transition-colors"
-      >
-        <ThumbsDown size={12} />
-      </button>
+      <Tooltip label={t('chat.feedbackHelpful')}>
+        <button
+          onClick={() => submit('helpful')}
+          disabled={status === 'sending'}
+          className="p-1 rounded-md bg-background border border-border text-text-muted hover:text-success hover:border-success/50 transition-colors"
+        >
+          <ThumbsUp size={12} />
+        </button>
+      </Tooltip>
+      <Tooltip label={t('chat.feedbackSomewhat')}>
+        <button
+          onClick={() => submit('somewhat')}
+          disabled={status === 'sending'}
+          className="p-1 rounded-md bg-background border border-border text-text-muted hover:text-amber-400 hover:border-amber-400/50 transition-colors"
+        >
+          <Hand size={12} />
+        </button>
+      </Tooltip>
+      <Tooltip label={t('chat.feedbackNotHelpful')}>
+        <button
+          onClick={() => submit('not_helpful')}
+          disabled={status === 'sending'}
+          className="p-1 rounded-md bg-background border border-border text-text-muted hover:text-danger hover:border-danger/50 transition-colors"
+        >
+          <ThumbsDown size={12} />
+        </button>
+      </Tooltip>
     </div>
   );
 }
 
 function MessageBubble({ message, tutorMode, onFeedback }) {
   const isUser = message.role === 'user';
+  // Skip render pesan assistant yang masih kosong (streaming belum mulai)
+  if (!isUser && !message.content) return null;
   const showFeedback = !isUser && tutorMode && message.msgId && !message.feedback;
   return (
     <motion.div
@@ -505,12 +513,15 @@ export default function ChatPage() {
               className="w-full pl-7 pr-6 py-1.5 bg-background border border-border rounded-lg text-xs text-text placeholder-text-muted focus:outline-none focus:border-primary transition-colors"
             />
             {chatSearch && (
-              <button
-                onClick={() => setChatSearch('')}
-                className="absolute right-1.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-text transition-colors"
-              >
-                <X size={10} />
-              </button>
+              <Tooltip label="Hapus pencarian">
+                <button
+                  onClick={() => setChatSearch('')}
+                  className="absolute right-1.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-text transition-colors"
+                  aria-label="Hapus pencarian"
+                >
+                  <X size={10} />
+                </button>
+              </Tooltip>
             )}
           </div>
         </div>
@@ -615,35 +626,38 @@ export default function ChatPage() {
                     {/* Action buttons — muncul saat hover, menggantikan waktu */}
                     {editingChatId !== c.id && (
                       <div className="absolute right-1 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center gap-0.5 bg-card border border-border rounded-md px-0.5 py-0.5 shadow-sm">
-                        <button
-                          onClick={(e) => { e.stopPropagation(); togglePinChat(c.id); }}
-                          title={c.pinned ? 'Unpin' : 'Pin'}
-                          className={cn('p-1 rounded transition-colors', c.pinned ? 'text-primary' : 'text-text-muted hover:text-primary')}
-                        >
-                          <Pin size={11} />
-                        </button>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); setEditingChatId(c.id); setEditingTitle(c.title || ''); }}
-                          title={t('chat.renameChat')}
-                          className="p-1 rounded text-text-muted hover:text-text transition-colors"
-                        >
-                          <Edit3 size={11} />
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            deleteChat(c.id);
-                            if (c.id === currentChatId) {
-                              const remaining = chats.filter(x => x.id !== c.id);
-                              if (remaining.length > 0) navigate(`/chat?id=${remaining[0].id}`);
-                              else { const newId = createChat(); navigate(`/chat?id=${newId}`); }
-                            }
-                          }}
-                          title={t('common.delete')}
-                          className="p-1 rounded text-text-muted hover:text-danger transition-colors"
-                        >
-                          <X size={11} />
-                        </button>
+                        <Tooltip label={c.pinned ? 'Unpin' : 'Pin'}>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); togglePinChat(c.id); }}
+                            className={cn('p-1 rounded transition-colors', c.pinned ? 'text-primary' : 'text-text-muted hover:text-primary')}
+                          >
+                            <Pin size={11} />
+                          </button>
+                        </Tooltip>
+                        <Tooltip label={t('chat.renameChat')}>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setEditingChatId(c.id); setEditingTitle(c.title || ''); }}
+                            className="p-1 rounded text-text-muted hover:text-text transition-colors"
+                          >
+                            <Edit3 size={11} />
+                          </button>
+                        </Tooltip>
+                        <Tooltip label={t('common.delete')}>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteChat(c.id);
+                              if (c.id === currentChatId) {
+                                const remaining = chats.filter(x => x.id !== c.id);
+                                if (remaining.length > 0) navigate(`/chat?id=${remaining[0].id}`);
+                                else { const newId = createChat(); navigate(`/chat?id=${newId}`); }
+                              }
+                            }}
+                            className="p-1 rounded text-text-muted hover:text-danger transition-colors"
+                          >
+                            <X size={11} />
+                          </button>
+                        </Tooltip>
                       </div>
                     )}
                   </div>
@@ -756,9 +770,11 @@ export default function ChatPage() {
                 <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[11px] font-medium">
                   <BookOpen size={10} /> {t('chat.documentsActive', { count: selectedDocs.length })}
                 </span>
-                <button onClick={clearSelectedDocs} className="text-text-muted hover:text-text transition-colors" title={t('chat.clearDocumentSelection')}>
-                  <X size={14} />
-                </button>
+                <Tooltip label={t('chat.clearDocumentSelection')}>
+                  <button onClick={clearSelectedDocs} className="text-text-muted hover:text-text transition-colors" aria-label={t('chat.clearDocumentSelection')}>
+                    <X size={14} />
+                  </button>
+                </Tooltip>
               </div>
             )}
           </div>
@@ -878,32 +894,36 @@ export default function ChatPage() {
             />
             <div className="flex items-center justify-between px-3 pb-2">
               <div className="flex items-center gap-1">
-                <button
-                  onClick={() => setShowQuickPrompts(!showQuickPrompts)}
-                  className={cn(
-                    'p-1.5 rounded-lg transition-colors text-xs',
-                    showQuickPrompts ? 'text-primary bg-primary/10' : 'text-text-muted hover:text-text hover:bg-card'
-                  )}
-                  title="Quick prompts"
-                >
-                  <Zap size={14} />
-                </button>
+                <Tooltip label="Quick prompts">
+                  <button
+                    onClick={() => setShowQuickPrompts(!showQuickPrompts)}
+                    className={cn(
+                      'p-1.5 rounded-lg transition-colors text-xs',
+                      showQuickPrompts ? 'text-primary bg-primary/10' : 'text-text-muted hover:text-text hover:bg-card'
+                    )}
+                    aria-label="Quick prompts"
+                  >
+                    <Zap size={14} />
+                  </button>
+                </Tooltip>
               </div>
-              <button
-                onClick={() => isCurrentChatStreaming ? abortActiveStream(currentChatId) : sendMessage(input)}
-                disabled={!isCurrentChatStreaming && !input.trim()}
-                className={cn(
-                  'w-8 h-8 rounded-xl flex items-center justify-center transition-all',
-                  isCurrentChatStreaming
-                    ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20 active:scale-95'
-                    : input.trim()
-                      ? 'bg-primary text-white hover:bg-primary-hover active:scale-95'
-                      : 'bg-card text-text-muted cursor-not-allowed'
-                )}
-                title={isCurrentChatStreaming ? t('chat.stopAI') : t('chat.send')}
-              >
-                {isCurrentChatStreaming ? <Square size={12} fill="currentColor" /> : <Send size={14} />}
-              </button>
+              <Tooltip label={isCurrentChatStreaming ? t('chat.stopAI') : t('chat.send')}>
+                <button
+                  onClick={() => isCurrentChatStreaming ? abortActiveStream(currentChatId) : sendMessage(input)}
+                  disabled={!isCurrentChatStreaming && !input.trim()}
+                  className={cn(
+                    'w-8 h-8 rounded-xl flex items-center justify-center transition-all',
+                    isCurrentChatStreaming
+                      ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20 active:scale-95'
+                      : input.trim()
+                        ? 'bg-primary text-white hover:bg-primary-hover active:scale-95'
+                        : 'bg-card text-text-muted cursor-not-allowed'
+                  )}
+                  aria-label={isCurrentChatStreaming ? t('chat.stopAI') : t('chat.send')}
+                >
+                  {isCurrentChatStreaming ? <Square size={12} fill="currentColor" /> : <Send size={14} />}
+                </button>
+              </Tooltip>
             </div>
           </div>
           <p className="text-center text-[10px] text-text-muted mt-2">

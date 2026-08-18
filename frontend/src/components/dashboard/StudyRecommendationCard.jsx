@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Zap, CreditCard, HelpCircle, Brain, Focus } from '@/icons';
+import { Tooltip } from '@/components/ui/Tooltip';
 import { useTranslation } from 'react-i18next';
 import { useFocusStore } from '@/store';
 
@@ -59,13 +60,15 @@ export default function StudyRecommendationCard({ route, subjectId }) {
                   <p className="text-[10px] text-text-muted mt-0.5 line-clamp-2">{rec.reason}</p>
                 </div>
               </button>
-              <button
-                onClick={() => startFocus(rec, m)}
-                title={t('focusMode.start')}
-                className="w-10 shrink-0 flex items-center justify-center rounded-xl border border-border text-text-muted hover:text-primary hover:border-primary/40 transition-colors cursor-pointer"
-              >
-                <Focus size={14} />
-              </button>
+              <Tooltip label={t('focusMode.start')}>
+                <button
+                  onClick={() => startFocus(rec, m)}
+                  className="w-10 shrink-0 flex items-center justify-center rounded-xl border border-border text-text-muted hover:text-primary hover:border-primary/40 transition-colors cursor-pointer"
+                  aria-label={t('focusMode.start')}
+                >
+                  <Focus size={14} />
+                </button>
+              </Tooltip>
             </div>
           );
         })}

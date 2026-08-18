@@ -8,6 +8,7 @@ import { formatDate, formatDateTime } from '@/utils';
 import { cn } from '@/utils';
 import NoteEditor from '@/components/NoteEditor';
 import MaterialPicker from '@/components/MaterialPicker';
+import { Tooltip } from '@/components/ui/Tooltip';
 
 // ─── Auto-title: extract title from content (zero AI) ─────────────────────
 function extractTitle(content) {
@@ -234,23 +235,27 @@ export default function NotebookPage() {
 
         {/* Hover actions */}
         <div className="absolute right-1.5 top-2 hidden group-hover:flex items-center gap-0.5">
-          <button
-            onClick={(e) => { e.stopPropagation(); pinMutation.mutate(n.id); }}
-            title={n.is_pinned ? t('notebook.unpin') : t('notebook.pin')}
-            className={cn(
-              'p-1 rounded-md transition-colors',
-              n.is_pinned ? 'text-primary' : 'text-text-muted hover:text-primary'
-            )}
-          >
-            <Pin size={11} />
-          </button>
-          <button
-            onClick={(e) => handleDelete(n.id, e)}
-            title={t('common.delete')}
-            className="p-1 rounded-md text-text-muted hover:text-danger transition-colors"
-          >
-            <Trash2 size={11} />
-          </button>
+          <Tooltip label={n.is_pinned ? t('notebook.unpin') : t('notebook.pin')}>
+            <button
+              onClick={(e) => { e.stopPropagation(); pinMutation.mutate(n.id); }}
+              aria-label={n.is_pinned ? t('notebook.unpin') : t('notebook.pin')}
+              className={cn(
+                'p-1 rounded-md transition-colors',
+                n.is_pinned ? 'text-primary' : 'text-text-muted hover:text-primary'
+              )}
+            >
+              <Pin size={11} />
+            </button>
+          </Tooltip>
+          <Tooltip label={t('common.delete')}>
+            <button
+              onClick={(e) => handleDelete(n.id, e)}
+              aria-label={t('common.delete')}
+              className="p-1 rounded-md text-text-muted hover:text-danger transition-colors"
+            >
+              <Trash2 size={11} />
+            </button>
+          </Tooltip>
         </div>
       </div>
     );
@@ -265,25 +270,29 @@ export default function NotebookPage() {
         <div className="px-4 pt-4 pb-3 flex items-center justify-between">
           <h2 className="text-sm font-semibold text-text">{t('notebook.notes')}</h2>
           <div className="flex items-center gap-1">
-            <button
-              onClick={() => setShowGeneratePanel(true)}
-              className="p-1.5 rounded-lg transition-all duration-150 text-primary hover:bg-primary/10"
-              title={t('notebook.generateWithAi')}
-            >
-              <Sparkles size={15} />
-            </button>
-            <button
-              onClick={handleCreateNote}
-              disabled={isCreating}
-              className={cn(
-                'p-1.5 rounded-lg transition-all duration-150',
-                'text-primary hover:bg-primary/10',
-                isCreating && 'opacity-50 pointer-events-none'
-              )}
-              title={t('notebook.newNoteTitle')}
-            >
-              <Plus size={16} />
-            </button>
+            <Tooltip label={t('notebook.generateWithAi')}>
+              <button
+                onClick={() => setShowGeneratePanel(true)}
+                className="p-1.5 rounded-lg transition-all duration-150 text-primary hover:bg-primary/10"
+                aria-label={t('notebook.generateWithAi')}
+              >
+                <Sparkles size={15} />
+              </button>
+            </Tooltip>
+            <Tooltip label={t('notebook.newNoteTitle')}>
+              <button
+                onClick={handleCreateNote}
+                disabled={isCreating}
+                className={cn(
+                  'p-1.5 rounded-lg transition-all duration-150',
+                  'text-primary hover:bg-primary/10',
+                  isCreating && 'opacity-50 pointer-events-none'
+                )}
+                aria-label={t('notebook.newNoteTitle')}
+              >
+                <Plus size={16} />
+              </button>
+            </Tooltip>
           </div>
         </div>
 
@@ -299,12 +308,15 @@ export default function NotebookPage() {
               className="w-full pl-7 pr-7 py-1.5 bg-background border border-border rounded-lg text-xs text-text placeholder-text-muted focus:outline-none focus:border-primary transition-colors"
             />
             {noteSearch && (
-              <button
-                onClick={() => setNoteSearch('')}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted hover:text-text transition-colors"
-              >
-                <X size={11} />
-              </button>
+              <Tooltip label="Bersihkan pencarian">
+                <button
+                  onClick={() => setNoteSearch('')}
+                  aria-label="Bersihkan pencarian"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted hover:text-text transition-colors"
+                >
+                  <X size={11} />
+                </button>
+              </Tooltip>
             )}
           </div>
         </div>
@@ -477,24 +489,29 @@ function NoteView({ note, onBack, onSave, onPin, onDelete }) {
             {saveStatus === 'saved' && <><Save size={10} /> {t('notebook.saved')}</>}
           </span>
 
-          <button
-            onClick={onPin}
-            className={cn(
-              'p-1.5 rounded-lg transition-colors',
-              note.is_pinned ? 'text-primary' : 'text-text-muted hover:text-primary'
-            )}
-            title={note.is_pinned ? t('notebook.unpin') : t('notebook.pin')}
-          >
-            <Pin size={15} />
-          </button>
+          <Tooltip label={note.is_pinned ? t('notebook.unpin') : t('notebook.pin')}>
+            <button
+              onClick={onPin}
+              aria-label={note.is_pinned ? t('notebook.unpin') : t('notebook.pin')}
+              className={cn(
+                'p-1.5 rounded-lg transition-colors',
+                note.is_pinned ? 'text-primary' : 'text-text-muted hover:text-primary'
+              )}
+            >
+              <Pin size={15} />
+            </button>
+          </Tooltip>
 
           <div className="relative">
-            <button
-              onClick={() => setShowMenu(v => !v)}
-              className="p-1.5 rounded-lg text-text-muted hover:text-text hover:bg-card transition-colors"
-            >
-              <MoreHorizontal size={15} />
-            </button>
+            <Tooltip label="Opsi lainnya">
+              <button
+                onClick={() => setShowMenu(v => !v)}
+                aria-label="Opsi lainnya"
+                className="p-1.5 rounded-lg text-text-muted hover:text-text hover:bg-card transition-colors"
+              >
+                <MoreHorizontal size={15} />
+              </button>
+            </Tooltip>
             {showMenu && (
               <>
                 <div className="fixed inset-0 z-30" onClick={() => setShowMenu(false)} />

@@ -9,6 +9,7 @@ import { materiAPI, subjectAPI } from '@/services/api';
 import { formatDate } from '@/utils';
 import FileTypeIcon from '@/components/FileTypeIcon';
 import { useToast } from '@/components/Toast';
+import { Tooltip } from '@/components/ui/Tooltip';
 import { extractErrorMessage } from '@/utils/errors';
 import { usePendingOperation } from '@/hooks/usePendingOperation';
 
@@ -185,19 +186,37 @@ export default function MateriPage() {
                     className="border-b border-border/50 hover:bg-background/50 transition-colors"
                   >
                     <td className="px-4 py-4">
-                      <input
-                        type="checkbox"
-                        checked={selectedDocs.includes(`mat_${m.id}`)}
-                        onChange={() => m.status === 'Ready' && toggleSelection(m.id)}
-                        disabled={m.status !== 'Ready'}
-                        title={m.status !== 'Ready' ? t('materi.notReady', { status: m.status }) : t('materi.enableAsRagSource')}
-                        className="h-4 w-4 rounded appearance-none cursor-pointer
-                          bg-slate-800 border-2 border-slate-500
-                          checked:bg-primary checked:border-primary
-                          focus:outline-none focus:ring-2 focus:ring-primary/50
-                          disabled:opacity-30 disabled:cursor-not-allowed
-                          transition-colors"
-                      />
+                      <Tooltip label={m.status !== 'Ready' ? t('materi.notReady', { status: m.status }) : t('materi.enableAsRagSource')}>
+                        <span className="inline-flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={selectedDocs.includes(`mat_${m.id}`)}
+                            onChange={() => m.status === 'Ready' && toggleSelection(m.id)}
+                            disabled={m.status !== 'Ready'}
+                            className="peer sr-only"
+                          />
+                          <span
+                            aria-hidden="true"
+                            className="h-4 w-4 rounded border-2 border-slate-500 bg-slate-800 flex items-center justify-center
+                              peer-checked:bg-primary peer-checked:border-primary
+                              peer-focus-visible:ring-2 peer-focus-visible:ring-primary/50
+                              peer-disabled:opacity-30 peer-disabled:cursor-not-allowed
+                              cursor-pointer transition-colors"
+                          >
+                            <svg
+                              viewBox="0 0 24 24"
+                              className="w-3 h-3 text-white opacity-0 peer-checked:opacity-100 transition-opacity"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="3"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M5 13l4 4L19 7" />
+                            </svg>
+                          </span>
+                        </span>
+                      </Tooltip>
                     </td>
                     <td className="px-4 py-4 text-text-muted">{idx + 1}</td>
                     <td className="px-4 py-4">
@@ -231,13 +250,15 @@ export default function MateriPage() {
                               <div className="text-[10px] text-text-muted leading-tight truncate max-w-[150px]" title={m.stage || t('materi.waitingForProcess')}>
                                 {m.status === 'Pending' ? t('materi.waitingInQueue') : (m.stage || t('materi.processing'))}
                               </div>
+                              <Tooltip label={t('materi.cancelProcessing')}>
                               <button
                                 onClick={() => { if (confirm(t('materi.confirmCancelProcessing'))) cancelMaterialMutation.mutate(m.id); }}
                                 className="p-0.5 rounded text-text-muted hover:text-danger hover:bg-danger/10 transition-colors shrink-0"
-                                title={t('materi.cancelProcessing')}
+                                aria-label={t('materi.cancelProcessing')}
                               >
                                 <X size={11} />
                               </button>
+                            </Tooltip>
                             </div>
                           </div>
                         )}
@@ -250,13 +271,15 @@ export default function MateriPage() {
                     </td>
                     <td className="px-4 py-4">
                       <div className="flex items-center justify-end gap-2">
+                        <Tooltip label={t('materi.deleteMateriTitle')}>
                         <button
                           onClick={() => handleDelete(m.id)}
                           className="p-1.5 rounded-lg text-text-secondary hover:text-danger hover:bg-danger/10 transition-colors"
-                          title={t('materi.deleteMateriTitle')}
+                          aria-label={t('materi.deleteMateriTitle')}
                         >
                           <Trash2 size={16} />
                         </button>
+                      </Tooltip>
                       </div>
                     </td>
                   </motion.tr>
@@ -331,7 +354,9 @@ function UploadModal({ onClose, subjects, onSuccess }) {
       >
         <div className="flex items-center justify-between p-4 border-b border-border">
           <h3 className="font-semibold text-text">{t('materi.uploadModalTitle')}</h3>
-          <button onClick={onClose} className="text-text-muted hover:text-text"><X size={18} /></button>
+          <Tooltip label={t('common.close')}>
+            <button onClick={onClose} className="text-text-muted hover:text-text" aria-label={t('common.close')}><X size={18} /></button>
+          </Tooltip>
         </div>
         <form onSubmit={handleSubmit} className="p-4 space-y-4">
           {error && (
@@ -421,7 +446,9 @@ function YoutubeModal({ onClose, subjects, onSuccess }) {
             <Video size={20} className="text-red-500" />
             <h3 className="font-semibold text-text">{t('materi.youtubeModalTitle')}</h3>
           </div>
-          <button onClick={onClose} className="text-text-muted hover:text-text"><X size={18} /></button>
+          <Tooltip label={t('common.close')}>
+            <button onClick={onClose} className="text-text-muted hover:text-text" aria-label={t('common.close')}><X size={18} /></button>
+          </Tooltip>
         </div>
         <form onSubmit={handleSubmit} className="p-4 space-y-4">
           {error && (

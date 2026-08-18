@@ -10,6 +10,7 @@ import { formatDate } from '@/utils';
 import FileTypeIcon from '@/components/FileTypeIcon';
 import DeleteConfirmModal from './DeleteConfirmModal';
 import { useToast } from '@/components/Toast';
+import { Tooltip } from '@/components/ui/Tooltip';
 
 export default function MaterialsTable({ materials, subjectId }) {
   const { t } = useTranslation();
@@ -78,20 +79,24 @@ export default function MaterialsTable({ materials, subjectId }) {
                   <td className="px-4 py-3 text-text-secondary text-xs whitespace-nowrap">{formatDate(m.upload_date)}</td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-1">
-                      <button
-                        onClick={() => navigate('/materi')}
-                        title={t('subjectDashboard.viewMaterial', 'Lihat')}
-                        className="p-1.5 rounded-lg text-text-muted hover:text-accent-blue hover:bg-accent-blue/10 transition-colors"
-                      >
-                        <Eye size={13} />
-                      </button>
-                      <button
-                        onClick={() => setDeleteTarget(m)}
-                        title={t('subjectDashboard.deleteMaterial', 'Hapus')}
-                        className="p-1.5 rounded-lg text-text-muted hover:text-danger hover:bg-danger/10 transition-colors"
-                      >
-                        <Trash2 size={13} />
-                      </button>
+                      <Tooltip label={t('subjectDashboard.viewMaterial', 'Lihat')}>
+                        <button
+                          onClick={() => navigate('/materi')}
+                          aria-label={t('subjectDashboard.viewMaterial', 'Lihat')}
+                          className="p-1.5 rounded-lg text-text-muted hover:text-accent-blue hover:bg-accent-blue/10 transition-colors"
+                        >
+                          <Eye size={13} />
+                        </button>
+                      </Tooltip>
+                      <Tooltip label={t('subjectDashboard.deleteMaterial', 'Hapus')}>
+                        <button
+                          onClick={() => setDeleteTarget(m)}
+                          aria-label={t('subjectDashboard.deleteMaterial', 'Hapus')}
+                          className="p-1.5 rounded-lg text-text-muted hover:text-danger hover:bg-danger/10 transition-colors"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </Tooltip>
                     </div>
                   </td>
                 </tr>

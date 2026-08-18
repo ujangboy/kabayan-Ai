@@ -4,6 +4,7 @@ import { X } from '@/icons';
 import { useTranslation } from 'react-i18next';
 import { subjectAPI } from '@/services/api';
 import { extractErrorMessage } from '@/utils/errors';
+import { Tooltip } from '@/components/ui/Tooltip';
 
 export default function EditSubjectModal({ subject, onClose, onSuccess }) {
   const { t } = useTranslation();
@@ -41,9 +42,11 @@ export default function EditSubjectModal({ subject, onClose, onSuccess }) {
       >
         <div className="p-4 border-b border-border flex items-center justify-between bg-background/50">
           <h3 className="font-bold text-text">{t('subjectDashboard.editTitle')}</h3>
-          <button onClick={onClose} className="text-text-muted hover:text-text transition-colors">
-            <X size={18} />
-          </button>
+          <Tooltip label={t('common.close')}>
+            <button onClick={onClose} aria-label={t('common.close')} className="text-text-muted hover:text-text transition-colors">
+              <X size={18} />
+            </button>
+          </Tooltip>
         </div>
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
           {error && (

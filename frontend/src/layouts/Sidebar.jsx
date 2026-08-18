@@ -5,8 +5,9 @@ import { useAppStore, useChatStore, useUiStore } from '@/store';
 import {
   LayoutDashboard, MessageSquare, BookOpen, FileText,
   BookMarked, CreditCard, HelpCircle,
-  Settings, ChevronLeft, ChevronRight, Plus, Search, Bot, Brain
+  Settings, PanelOpen, PanelClose, Plus, Search, Bot, Brain
 } from '@/icons';
+import { Tooltip } from '@/components/ui/Tooltip';
 import { cn } from '@/utils';
 
 export default function Sidebar() {
@@ -39,79 +40,99 @@ export default function Sidebar() {
       transition={{ duration: 0.25, ease: 'easeInOut' }}
       className="relative flex flex-col h-screen bg-sidebar border-r border-border shrink-0 overflow-hidden z-20"
     >
-      {/* Logo */}
-      <div className="relative flex items-center gap-3 px-4 py-5 shrink-0">
-        <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center shrink-0 shadow-glow">
-          <Bot size={16} className="text-white" />
+      {/* Logo — selalu tampil; saat collapsed hanya icon Bot */}
+      <div className="relative flex flex-col items-center pt-4 pb-2 shrink-0 gap-1">
+        <div className={cn(
+          "rounded-xl bg-primary flex items-center justify-center shrink-0 shadow-glow transition-all duration-200",
+          sidebarOpen ? "w-9 h-9" : "w-10 h-10"
+        )}>
+          <Bot size={sidebarOpen ? 18 : 20} className="text-white" />
         </div>
-        <AnimatePresence>
+        <AnimatePresence initial={false}>
           {sidebarOpen && (
             <motion.div
-              initial={{ opacity: 0, x: -8 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -8 }}
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.15 }}
-              className="overflow-hidden whitespace-nowrap"
+              className="overflow-hidden flex items-center gap-1.5 whitespace-nowrap"
             >
-              <span className="text-sm font-bold text-text">Kabayan AI</span>
-              <span className="ml-1.5 badge badge-primary text-[10px]">v2</span>
+              <span className="text-xs font-bold text-text">Kabayan AI</span>
+              <span className="badge badge-primary text-[10px]">v2</span>
             </motion.div>
           )}
         </AnimatePresence>
-
-        {/* Collapse toggle */}
-        <button
-          onClick={toggleSidebar}
-          className={cn(
-            "absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-lg text-text-secondary hover:text-text hover:bg-card transition-all duration-150 shrink-0"
-          )}
-          title={sidebarOpen ? "Tutup sidebar" : "Buka sidebar"}
-        >
-          {sidebarOpen ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
-        </button>
       </div>
+
+      {/* Collapse toggle — selalu tampil, dipisah dari logo */}
+      <div className="flex justify-center pb-2 shrink-0">
+        <Tooltip
+          label={sidebarOpen ? "Tutup sidebar" : "Buka sidebar"}
+          side="right"
+          align="center"
+        >
+          <button
+            onClick={toggleSidebar}
+            className="p-1.5 rounded-lg text-text-secondary hover:text-text hover:bg-card transition-all duration-150 shrink-0"
+            aria-label={sidebarOpen ? "Tutup sidebar" : "Buka sidebar"}
+          >
+            {sidebarOpen
+              ? <PanelOpen size={20} />
+              : <PanelClose size={20} />}
+          </button>
+        </Tooltip>
+      </div>
+
+      {/* Divider */}
+      <div className="mx-3 mb-2 border-t border-border shrink-0" />
 
       {/* Search */}
       <div className="px-3 mb-2 shrink-0">
-        <button
-          onClick={() => setSearchOpen(true)}
-          className={cn(
-            "sidebar-item w-full",
-            !sidebarOpen && "justify-center px-2"
-          )}
-        >
-          <Search size={16} className="shrink-0" />
-          <AnimatePresence>
-            {sidebarOpen && (
-              <motion.span
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                className="flex-1 text-left text-xs text-text-muted"
-              >
-                Cari... <kbd className="ml-1 text-[10px] bg-card border border-border px-1 rounded">⌘K</kbd>
-              </motion.span>
+        <Tooltip label="Cari" side="right" align="center">
+          <button
+            onClick={() => setSearchOpen(true)}
+            className={cn(
+              "sidebar-item w-full",
+              !sidebarOpen && "justify-center px-0"
             )}
-          </AnimatePresence>
-        </button>
+            aria-label="Cari"
+          >
+            <Search size={sidebarOpen ? 16 : 20} className="shrink-0" />
+            <AnimatePresence>
+              {sidebarOpen && (
+                <motion.span
+                  initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                  className="flex-1 text-left text-xs text-text-muted"
+                >
+                  Cari... <kbd className="ml-1 text-[10px] bg-card border border-border px-1 rounded">⌘K</kbd>
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </button>
+        </Tooltip>
       </div>
 
       {/* New Chat Button */}
       <div className="px-3 mb-3 shrink-0">
-        <button
-          onClick={handleNewChat}
-          className={cn(
-            "btn-primary w-full justify-center text-xs",
-            !sidebarOpen && "px-2"
-          )}
-        >
-          <Plus size={14} />
-          <AnimatePresence>
-            {sidebarOpen && (
-              <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                Chat Baru
-              </motion.span>
+        <Tooltip label="Chat Baru" side="right" align="center">
+          <button
+            onClick={handleNewChat}
+            className={cn(
+              "btn-primary w-full justify-center text-xs",
+              !sidebarOpen && "px-0 py-2"
             )}
-          </AnimatePresence>
-        </button>
+            aria-label="Chat Baru"
+          >
+            <Plus size={sidebarOpen ? 14 : 18} />
+            <AnimatePresence>
+              {sidebarOpen && (
+                <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                  Chat Baru
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </button>
+        </Tooltip>
       </div>
 
       {/* Nav */}
@@ -119,51 +140,54 @@ export default function Sidebar() {
         {NAV.map(({ to, icon: Icon, label }) => {
           const isExam = to === '/exam-analyzer';
           return (
-            <NavLink
-              key={to}
-              to={to}
-              className={({ isActive }) => {
-                const active = isExam
-                  ? isActive || location.pathname === '/study-plan'
-                  : isActive;
-                return cn('sidebar-item', active && 'active', !sidebarOpen && 'justify-center px-2');
-              }}
-              title={!sidebarOpen ? label : undefined}
-            >
-              <Icon size={16} className="shrink-0" />
-              <AnimatePresence>
-                {sidebarOpen && (
-                  <motion.span
-                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                    className="whitespace-nowrap text-sm"
-                  >
-                    {label}
-                  </motion.span>
-                )}
-              </AnimatePresence>
-            </NavLink>
+            <Tooltip key={to} label={!sidebarOpen ? label : undefined} side="right" align="center">
+              <NavLink
+                to={to}
+                className={({ isActive }) => {
+                  const active = isExam
+                    ? isActive || location.pathname === '/study-plan'
+                    : isActive;
+                  return cn('sidebar-item', active && 'active', !sidebarOpen && 'justify-center px-0');
+                }}
+                title={!sidebarOpen ? label : undefined}
+              >
+                <Icon size={sidebarOpen ? 16 : 20} className="shrink-0" />
+                <AnimatePresence>
+                  {sidebarOpen && (
+                    <motion.span
+                      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                      className="whitespace-nowrap text-sm"
+                    >
+                      {label}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </NavLink>
+            </Tooltip>
           );
         })}
       </nav>
 
       {/* Bottom: Settings */}
       <div className="px-3 py-4 border-t border-border shrink-0">
-        <NavLink
-          to="/settings"
-          className={({ isActive }) =>
-            cn('sidebar-item', isActive && 'active', !sidebarOpen && 'justify-center px-2')
-          }
-          title={!sidebarOpen ? 'Pengaturan' : undefined}
-        >
-          <Settings size={16} className="shrink-0" />
-          <AnimatePresence>
-            {sidebarOpen && (
-              <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-sm">
-                Pengaturan
-              </motion.span>
-            )}
-          </AnimatePresence>
-        </NavLink>
+        <Tooltip label={!sidebarOpen ? 'Pengaturan' : undefined} side="right" align="center">
+          <NavLink
+            to="/settings"
+            className={({ isActive }) =>
+              cn('sidebar-item', isActive && 'active', !sidebarOpen && 'justify-center px-0')
+            }
+            title={!sidebarOpen ? 'Pengaturan' : undefined}
+          >
+            <Settings size={sidebarOpen ? 16 : 20} className="shrink-0" />
+            <AnimatePresence>
+              {sidebarOpen && (
+                <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-sm">
+                  Pengaturan
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </NavLink>
+        </Tooltip>
       </div>
     </motion.aside>
   );

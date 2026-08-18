@@ -12,6 +12,7 @@ import { examAPI, sessionsAPI } from '@/services/api';
 import { cn } from '@/utils';
 import MathMarkdown from '@/components/MathMarkdown';
 import { Chip, ProgressBar, STATUS_META, getBadge, getGradeColor } from './shared';
+import { Tooltip } from '@/components/ui/Tooltip';
 
 // ─── Detail Modal ─────────────────────────────────────────────────────────────
 export default function DetailModal({ historySessionId, onClose, onResume, pendingPlanTab, setPendingPlanTab }) {
@@ -729,7 +730,9 @@ function StudyPlanTab({ plan, sessionId, onToggle, onPlanSaved,
         <div className="flex items-start gap-2 p-3 rounded-xl bg-danger/5 border border-danger/20 text-xs text-danger">
           <AlertCircle size={13} className="shrink-0 mt-0.5" />
           <span className="flex-1">{practiceError}</span>
-          <button type="button" onClick={() => setPracticeError('')} className="shrink-0 text-danger/60 hover:text-danger"><X size={12} /></button>
+          <Tooltip label={t('common.close')}>
+            <button type="button" onClick={() => setPracticeError('')} aria-label={t('common.close')} className="shrink-0 text-danger/60 hover:text-danger"><X size={12} /></button>
+          </Tooltip>
         </div>
       )}
 

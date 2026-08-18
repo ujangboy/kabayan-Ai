@@ -14,6 +14,7 @@ import { extractErrorMessage } from '@/utils/errors';
 import MathMarkdown from '@/components/MathMarkdown';
 import MaterialPicker from '@/components/MaterialPicker';
 import { formatDate, formatDateTime, formatTimeOnly } from '@/utils';
+import { Tooltip } from '@/components/ui/Tooltip';
 import { usePendingOperation } from '@/hooks/usePendingOperation';
 import { usePageState } from '@/hooks/usePageState';
 
@@ -280,13 +281,15 @@ function BatchFlashcardCard({ group, onStart, onReview, onHistory, onDeleteAll }
           </div>
           <h3 className="font-semibold text-text text-sm truncate">{subject.name}</h3>
         </div>
-        <button
-          onClick={onDeleteAll}
-          className="p-1 text-text-muted hover:text-danger transition-colors shrink-0 ml-2"
-          title={t('flashcard.deleteAllCardsTitle')}
-        >
-          <Trash2 size={14} />
-        </button>
+        <Tooltip label={t('flashcard.deleteAllCardsTitle')}>
+          <button
+            onClick={onDeleteAll}
+            aria-label={t('flashcard.deleteAllCardsTitle')}
+            className="p-1 text-text-muted hover:text-danger transition-colors shrink-0 ml-2"
+          >
+            <Trash2 size={14} />
+          </button>
+        </Tooltip>
       </div>
 
       <div className="flex items-center gap-3 mb-2 text-xs text-text-secondary flex-wrap">
@@ -731,13 +734,15 @@ function FlashcardSession({ cards, subjectName, onClose }) {
         >
           <ChevronLeft size={16} /> {t('flashcard.prev')}
         </button>
-        <button
-          onClick={handleDeleteCard}
-          className="p-2 text-text-muted hover:text-danger transition-colors"
-          title={t('flashcard.deleteCardTitle')}
-        >
-          <Trash2 size={15} />
-        </button>
+        <Tooltip label={t('flashcard.deleteCardTitle')}>
+          <button
+            onClick={handleDeleteCard}
+            aria-label={t('flashcard.deleteCardTitle')}
+            className="p-2 text-text-muted hover:text-danger transition-colors"
+          >
+            <Trash2 size={15} />
+          </button>
+        </Tooltip>
         <button
           onClick={goNext}
           className="btn-ghost text-sm"
@@ -801,9 +806,11 @@ function GenerateAIModal({ subjects, onClose, onSuccess }) {
             <Zap size={18} className="text-primary" />
             <h3 className="font-semibold text-text">{t('flashcard.generateAiModalTitle')}</h3>
           </div>
-          <button onClick={onClose} disabled={isGenerating} className="text-text-muted hover:text-text disabled:opacity-40">
-            <X size={18} />
-          </button>
+          <Tooltip label={t('common.close')}>
+            <button onClick={onClose} disabled={isGenerating} aria-label={t('common.close')} className="text-text-muted hover:text-text disabled:opacity-40">
+              <X size={18} />
+            </button>
+          </Tooltip>
         </div>
         <form onSubmit={handleSubmit} className="p-4 space-y-4">
           {error && (
@@ -921,7 +928,9 @@ if (!formData.question || !formData.answer || !formData.subject_id) {
             <CreditCard size={18} className="text-primary" />
             <h3 className="font-semibold text-text">{t('flashcard.manualModalTitle')}</h3>
           </div>
-          <button onClick={onClose} className="text-text-muted hover:text-text"><X size={18} /></button>
+          <Tooltip label={t('common.close')}>
+            <button onClick={onClose} aria-label={t('common.close')} className="text-text-muted hover:text-text"><X size={18} /></button>
+          </Tooltip>
         </div>
         <form onSubmit={handleSubmit} className="p-4 space-y-4">
           {error && (
@@ -1011,7 +1020,9 @@ function ReviewHistoryModal({ group, onClose }) {
             <Brain size={18} className="text-accent-purple" />
             <h3 className="font-semibold text-text">{t('flashcard.reviewHistoryTitle', { subjectName: subject?.name || t('flashcard.defaultName') })}</h3>
           </div>
-          <button onClick={onClose} className="text-text-muted hover:text-text"><X size={18} /></button>
+          <Tooltip label={t('common.close')}>
+            <button onClick={onClose} aria-label={t('common.close')} className="text-text-muted hover:text-text"><X size={18} /></button>
+          </Tooltip>
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-3">

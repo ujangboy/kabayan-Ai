@@ -8,6 +8,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useUiStore } from '@/store';
 import { usePageState } from '@/hooks/usePageState';
 import { VIEW } from '@/components/exam/shared';
+import { Tooltip } from '@/components/ui/Tooltip';
 import DashboardView from '@/components/exam/DashboardView';
 import ConfigView from '@/components/exam/ConfigView';
 import BlueprintView from '@/components/exam/BlueprintView';
@@ -157,37 +158,39 @@ export default function ExamAnalyzerPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             {view !== VIEW.DASHBOARD && subjectId && (
-              <button onClick={() => {
-                if (view === VIEW.GENERATING) {
-                  if (!confirm(t('exam.confirmExit'))) return;
-                  clearAll(); go(VIEW.HISTORY); return;
-                }
-                if (view === VIEW.QUIZ) {
-                  if (!confirm(t('exam.confirmExit'))) return;
-                  clearAll(); go(VIEW.HISTORY); return;
-                }
-                if (view === VIEW.HISTORY) {
-                  setSubjectId('');
-                  setAnalysis(null); setBlueprint(null); setSessionData(null); setEvalData(null);
-                  setDetailId(null); setGenerating(null); setQuizClockStart(null); setRecommend(null); clear();
-                  return;
-                }
-                if (view === VIEW.RESULT) {
-                  setSubjectId('');
-                  setAnalysis(null); setBlueprint(null); setSessionData(null); setEvalData(null);
-                  setDetailId(null); setGenerating(null); setQuizClockStart(null); setRecommend(null); clear();
-                  return;
-                }
-                const back = {
-                  [VIEW.CONFIG]:     null,
-                  [VIEW.BLUEPRINT]:  VIEW.CONFIG,
-                  [VIEW.REVIEW]:     VIEW.RESULT,
-                }[view] || null;
-                if (back === null) { go(VIEW.HISTORY); return; }
-                go(back);
-              }} className="p-1.5 rounded-lg hover:bg-card text-text-secondary transition-colors">
-                <ChevronLeft size={18} />
-              </button>
+              <Tooltip label={t('common.back')}>
+                <button onClick={() => {
+                  if (view === VIEW.GENERATING) {
+                    if (!confirm(t('exam.confirmExit'))) return;
+                    clearAll(); go(VIEW.HISTORY); return;
+                  }
+                  if (view === VIEW.QUIZ) {
+                    if (!confirm(t('exam.confirmExit'))) return;
+                    clearAll(); go(VIEW.HISTORY); return;
+                  }
+                  if (view === VIEW.HISTORY) {
+                    setSubjectId('');
+                    setAnalysis(null); setBlueprint(null); setSessionData(null); setEvalData(null);
+                    setDetailId(null); setGenerating(null); setQuizClockStart(null); setRecommend(null); clear();
+                    return;
+                  }
+                  if (view === VIEW.RESULT) {
+                    setSubjectId('');
+                    setAnalysis(null); setBlueprint(null); setSessionData(null); setEvalData(null);
+                    setDetailId(null); setGenerating(null); setQuizClockStart(null); setRecommend(null); clear();
+                    return;
+                  }
+                  const back = {
+                    [VIEW.CONFIG]:     null,
+                    [VIEW.BLUEPRINT]:  VIEW.CONFIG,
+                    [VIEW.REVIEW]:     VIEW.RESULT,
+                  }[view] || null;
+                  if (back === null) { go(VIEW.HISTORY); return; }
+                  go(back);
+                }} aria-label={t('common.back')} className="p-1.5 rounded-lg hover:bg-card text-text-secondary transition-colors">
+                  <ChevronLeft size={18} />
+                </button>
+              </Tooltip>
             )}
             <div>
               <h1 className="text-2xl font-bold text-text flex items-center gap-2">

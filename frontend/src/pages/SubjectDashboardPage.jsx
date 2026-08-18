@@ -10,6 +10,7 @@ import {
 import { subjectAPI, examAPI, studyAPI } from '@/services/api';
 import { useUiStore } from '@/store';
 import { formatDate } from '@/utils';
+import { Tooltip } from '@/components/ui/Tooltip';
 import ProgressCard from '@/components/ProgressCard';
 import { useToast } from '@/components/Toast';
 import { extractErrorMessage } from '@/utils/errors';
@@ -163,9 +164,11 @@ export default function SubjectDashboardPage() {
             <button onClick={() => setIsEditOpen(true)} className="btn-ghost px-3 py-2 rounded-xl text-sm border border-border">
               <Pencil size={14} /> {t('subjectDashboard.editButton')}
             </button>
-            <button onClick={() => setIsDeleteOpen(true)} className="btn-ghost px-3 py-2 rounded-xl text-sm text-danger border border-border">
-              <Trash2 size={14} />
-            </button>
+            <Tooltip label={t('common.delete')}>
+              <button onClick={() => setIsDeleteOpen(true)} aria-label={t('common.delete')} className="btn-ghost px-3 py-2 rounded-xl text-sm text-danger border border-border">
+                <Trash2 size={14} />
+              </button>
+            </Tooltip>
           </div>
         </div>
 

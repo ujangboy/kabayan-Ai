@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Book, Plus, Trash2, X, FileText, HelpCircle, CreditCard, Trophy, Calendar, Clock } from '@/icons';
 import { subjectAPI } from '@/services/api';
 import { formatDate, formatTimeOnly } from '@/utils';
+import { Tooltip } from '@/components/ui/Tooltip';
 
 export default function SubjectsPage() {
   const { t } = useTranslation();
@@ -97,16 +98,19 @@ export default function SubjectsPage() {
                   <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
                   <div className="flex justify-between items-start mb-2 pl-2">
                     <h3 className="font-semibold text-text text-lg">{s.name}</h3>
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        handleDelete(s.id);
-                      }}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-text-muted hover:text-danger"
-                    >
-                      <Trash2 size={14} />
-                    </button>
+                    <Tooltip label={t('common.delete')}>
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleDelete(s.id);
+                        }}
+                        aria-label={t('common.delete')}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-text-muted hover:text-danger"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </Tooltip>
                   </div>
                   <div className="space-y-1 text-sm text-text-secondary pl-2 mb-3 flex-1">
                     {s.semester && <p><span className="text-text-muted text-xs">{t('subjects.semesterLabel')}:</span> {s.semester}</p>}
@@ -200,7 +204,9 @@ function CreateSubjectModal({ onClose, onSuccess }) {
             <Book size={18} className="text-primary" />
             <h3 className="font-semibold text-text">{t('subjects.addNew')}</h3>
           </div>
-          <button onClick={onClose} className="text-text-muted hover:text-text"><X size={18} /></button>
+          <Tooltip label={t('common.close')}>
+            <button onClick={onClose} aria-label={t('common.close')} className="text-text-muted hover:text-text"><X size={18} /></button>
+          </Tooltip>
         </div>
         <form onSubmit={handleSubmit} className="p-4 space-y-4">
           <div>

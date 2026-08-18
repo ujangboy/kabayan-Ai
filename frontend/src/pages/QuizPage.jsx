@@ -10,6 +10,7 @@ import MaterialPicker from '@/components/MaterialPicker';
 import QuizTimer from '@/components/quiz/QuizTimer';
 import QuizProgressBar from '@/components/quiz/QuizProgressBar';
 import { formatDate, formatTimeOnly } from '@/utils';
+import { Tooltip } from '@/components/ui/Tooltip';
 import { usePendingOperation } from '@/hooks/usePendingOperation';
 import { useUiStore } from '@/store';
 import { usePageState } from '@/hooks/usePageState';
@@ -199,13 +200,15 @@ export default function QuizPage() {
                       {quiz.title || `Quiz #${quiz.id}`}
                     </h3>
                   </div>
-                  <button
-                    onClick={() => handleDelete(quiz.id)}
-                    className="p-1 text-text-muted hover:text-danger transition-colors shrink-0 ml-2"
-                    title={t('common.delete')}
-                  >
-                    <Trash2 size={14} />
-                  </button>
+                  <Tooltip label={t('common.delete')}>
+                    <button
+                      onClick={() => handleDelete(quiz.id)}
+                      aria-label={t('common.delete')}
+                      className="p-1 text-text-muted hover:text-danger transition-colors shrink-0 ml-2"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </Tooltip>
                 </div>
 
                 <div className="flex items-center gap-3 mb-2 text-xs text-text-secondary flex-wrap">
@@ -347,9 +350,11 @@ function GenerateQuizModal({ onClose, subjects, onSuccess }) {
             <Zap size={18} className="text-primary" />
             <h3 className="font-semibold text-text">{t('quiz.modalTitle')}</h3>
           </div>
-          <button onClick={onClose} disabled={isGenerating} className="text-text-muted hover:text-text disabled:opacity-40">
-            <X size={18} />
-          </button>
+          <Tooltip label={t('common.close')}>
+            <button onClick={onClose} disabled={isGenerating} aria-label={t('common.close')} className="text-text-muted hover:text-text disabled:opacity-40">
+              <X size={18} />
+            </button>
+          </Tooltip>
         </div>
         <form onSubmit={handleSubmit} className="p-4 space-y-4">
           {error && (

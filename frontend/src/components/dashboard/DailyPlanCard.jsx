@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { CalendarCheck, Clock, CheckCircle2, Focus, CreditCard, HelpCircle, Brain } from '@/icons';
+import { Tooltip } from '@/components/ui/Tooltip';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { studyAPI } from '@/services/api';
@@ -112,17 +113,19 @@ export default function DailyPlanCard({ subjectId }) {
             const isDone = !!doneMap[doneKey(item)];
             return (
               <div key={i} className={`flex items-stretch gap-2 ${isDone ? 'opacity-60' : ''}`}>
-                <button
-                  onClick={() => toggleDone(item)}
-                  title={t('studyPlan.markDone')}
-                  className={`w-8 shrink-0 flex items-center justify-center rounded-xl border transition-colors cursor-pointer ${
-                    isDone
-                      ? 'border-success/40 bg-success/10 text-success'
-                      : 'border-border text-text-muted hover:text-success hover:border-success/40'
-                  }`}
-                >
-                  <CheckCircle2 size={14} />
-                </button>
+                <Tooltip label={t('studyPlan.markDone')}>
+                  <button
+                    onClick={() => toggleDone(item)}
+                    className={`w-8 shrink-0 flex items-center justify-center rounded-xl border transition-colors cursor-pointer ${
+                      isDone
+                        ? 'border-success/40 bg-success/10 text-success'
+                        : 'border-border text-text-muted hover:text-success hover:border-success/40'
+                    }`}
+                    aria-label={t('studyPlan.markDone')}
+                  >
+                    <CheckCircle2 size={14} />
+                  </button>
+                </Tooltip>
                 <button
                   onClick={() => navigate(m.to)}
                   className={`flex-1 min-w-0 flex items-center gap-3 p-2.5 rounded-xl border hover:border-primary/30 transition-colors cursor-pointer text-left ${
@@ -142,13 +145,15 @@ export default function DailyPlanCard({ subjectId }) {
                     {item.duration_minutes} {t('studyPlan.minutesShort')}
                   </span>
                 </button>
-                <button
-                  onClick={() => startFocus(item, m)}
-                  title={t('focusMode.start')}
-                  className="w-10 shrink-0 flex items-center justify-center rounded-xl border border-border text-text-muted hover:text-primary hover:border-primary/40 transition-colors cursor-pointer"
-                >
-                  <Focus size={14} />
-                </button>
+                <Tooltip label={t('focusMode.start')}>
+                  <button
+                    onClick={() => startFocus(item, m)}
+                    className="w-10 shrink-0 flex items-center justify-center rounded-xl border border-border text-text-muted hover:text-primary hover:border-primary/40 transition-colors cursor-pointer"
+                    aria-label={t('focusMode.start')}
+                  >
+                    <Focus size={14} />
+                  </button>
+                </Tooltip>
               </div>
             );
           })}

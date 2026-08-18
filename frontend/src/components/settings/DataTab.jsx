@@ -9,6 +9,7 @@ import { dataAPI, materiAPI, trashAPI } from '@/services/api';
 import { useToast } from '@/components/Toast';
 import { formatDate } from '@/utils';
 import { cn } from '@/utils';
+import { Tooltip } from '@/components/ui/Tooltip';
 
 function formatBytes(bytes) {
   if (bytes == null) return '—';
@@ -252,18 +253,20 @@ export default function DataTab() {
                       {m.upload_date ? formatDate(m.upload_date) : '—'}
                     </td>
                     <td className="py-2 text-right">
-                      <button
-                        onClick={() => handleDelete(m)}
-                        disabled={deleteMutation.isPending}
-                        title={t('common.delete')}
-                        className="p-1.5 rounded-lg text-text-muted hover:text-danger hover:bg-danger/10 transition-colors"
-                      >
-                        {deleteMutation.isPending && deleteMutation.variables === m.id ? (
-                          <Loader2 size={14} className="animate-spin" />
-                        ) : (
-                          <Trash2 size={14} />
-                        )}
-                      </button>
+                      <Tooltip label={t('common.delete')}>
+                        <button
+                          onClick={() => handleDelete(m)}
+                          disabled={deleteMutation.isPending}
+                          aria-label={t('common.delete')}
+                          className="p-1.5 rounded-lg text-text-muted hover:text-danger hover:bg-danger/10 transition-colors"
+                        >
+                          {deleteMutation.isPending && deleteMutation.variables === m.id ? (
+                            <Loader2 size={14} className="animate-spin" />
+                          ) : (
+                            <Trash2 size={14} />
+                          )}
+                        </button>
+                      </Tooltip>
                     </td>
                   </tr>
                 ))}
@@ -312,13 +315,15 @@ export default function DataTab() {
                       {b.created_at} · {formatBytes(b.size)}
                     </p>
                   </div>
-                  <button
-                    onClick={() => handleDownloadBackup(b.filename)}
-                    title={t('settings.data.backupDownload')}
-                    className="p-1.5 rounded-lg text-text-muted hover:text-primary hover:bg-primary/10 transition-colors shrink-0"
-                  >
-                    <Download size={13} />
-                  </button>
+                  <Tooltip label={t('settings.data.backupDownload')}>
+                    <button
+                      onClick={() => handleDownloadBackup(b.filename)}
+                      aria-label={t('settings.data.backupDownload')}
+                      className="p-1.5 rounded-lg text-text-muted hover:text-primary hover:bg-primary/10 transition-colors shrink-0"
+                    >
+                      <Download size={13} />
+                    </button>
+                  </Tooltip>
                 </div>
               ))}
             </div>
@@ -375,22 +380,26 @@ export default function DataTab() {
                       {item.trashed_at ? formatDate(item.trashed_at) : '—'}
                     </td>
                     <td className="py-2 text-right whitespace-nowrap">
-                      <button
-                        onClick={() => handleRestore(item)}
-                        disabled={restoreMutation.isPending}
-                        title={t('settings.data.trashRestore')}
-                        className="p-1.5 rounded-lg text-text-muted hover:text-success hover:bg-success/10 transition-colors mr-1"
-                      >
-                        <RotateCcw size={14} />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteTrash(item)}
-                        disabled={deleteTrashMutation.isPending}
-                        title={t('settings.data.trashDeleteForever')}
-                        className="p-1.5 rounded-lg text-text-muted hover:text-danger hover:bg-danger/10 transition-colors"
-                      >
-                        <XCircle size={14} />
-                      </button>
+                      <Tooltip label={t('settings.data.trashRestore')}>
+                        <button
+                          onClick={() => handleRestore(item)}
+                          disabled={restoreMutation.isPending}
+                          aria-label={t('settings.data.trashRestore')}
+                          className="p-1.5 rounded-lg text-text-muted hover:text-success hover:bg-success/10 transition-colors mr-1"
+                        >
+                          <RotateCcw size={14} />
+                        </button>
+                      </Tooltip>
+                      <Tooltip label={t('settings.data.trashDeleteForever')}>
+                        <button
+                          onClick={() => handleDeleteTrash(item)}
+                          disabled={deleteTrashMutation.isPending}
+                          aria-label={t('settings.data.trashDeleteForever')}
+                          className="p-1.5 rounded-lg text-text-muted hover:text-danger hover:bg-danger/10 transition-colors"
+                        >
+                          <XCircle size={14} />
+                        </button>
+                      </Tooltip>
                     </td>
                   </tr>
                 ))}

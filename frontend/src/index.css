@@ -77,6 +77,11 @@
     @apply flex items-center gap-3 px-3 py-2.5 rounded-[10px] text-sm font-medium text-text-secondary transition-all duration-200 cursor-pointer;
   }
 
+  /* Collapsed: icon saja, lebih besar dan centered */
+  .sidebar-item.justify-center {
+    @apply px-0 py-2.5 gap-0;
+  }
+
   .sidebar-item:hover {
     @apply bg-card text-text;
   }

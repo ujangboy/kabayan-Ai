@@ -31,6 +31,7 @@ import {
   Undo2, Redo2,
   Edit3, Eye, Pi, X,
 } from '@/icons';
+import { Tooltip } from '@/components/ui/Tooltip';
 import { cn } from '@/utils';
 import MathMarkdown from '@/components/MathMarkdown';
 import { MathInline, MathBlock } from '@/extensions/math';
@@ -114,23 +115,25 @@ function getDomSelectionRange(editor) {
 // ─── Shared components ────────────────────────────────────────────────────
 function ToolBtn({ onClick, active, disabled, title, children, className: cls }) {
   return (
-    <button
-      type="button"
-      onMouseDown={(e) => { e.preventDefault(); onClick(); }}
-      disabled={disabled}
-      title={title}
-      className={cn(
-        'rounded-lg transition-all select-none flex items-center justify-center shrink-0',
-        'w-7 h-7',
-        active
-          ? 'bg-primary/20 text-primary shadow-sm shadow-primary/10'
-          : 'text-text-muted hover:text-text hover:bg-white/8',
-        disabled && 'opacity-25 cursor-not-allowed pointer-events-none',
-        cls
-      )}
-    >
-      {children}
-    </button>
+    <Tooltip label={title} side="bottom">
+      <button
+        type="button"
+        onMouseDown={(e) => { e.preventDefault(); onClick(); }}
+        disabled={disabled}
+        title={title}
+        className={cn(
+          'rounded-lg transition-all select-none flex items-center justify-center shrink-0',
+          'w-7 h-7',
+          active
+            ? 'bg-primary/20 text-primary shadow-sm shadow-primary/10'
+            : 'text-text-muted hover:text-text hover:bg-white/8',
+          disabled && 'opacity-25 cursor-not-allowed pointer-events-none',
+          cls
+        )}
+      >
+        {children}
+      </button>
+    </Tooltip>
   );
 }
 

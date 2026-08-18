@@ -12,6 +12,7 @@ import { materiAPI, sessionsAPI, subjectAPI } from '@/services/api';
 import { cn, formatDate, formatTimeOnly } from '@/utils';
 import DetailModal from './DetailModal';
 import { Chip, ProgressBar, STATUS_META, getBadge, getGradeColor, Q_TYPE_LABEL } from './shared';
+import { Tooltip } from '@/components/ui/Tooltip';
 
 // ─── Subject picker (shown when no subject selected) ──────────────────────────
 function SubjectPicker({ subjects, onSelectSubject, onStartConfig, t }) {
@@ -110,15 +111,17 @@ function SubjectCard({ subject, onSelectSubject, onStartConfig, onDelete, t }) {
            <h3 className="font-semibold text-text truncate">{subject.name}</h3>
            <p className="text-xs text-text-muted">{materialCount} materi</p>
          </div>
-         {onDelete && (
-           <button
-             onClick={(e) => { e.stopPropagation(); onDelete(subject.id); }}
-             className="p-1 text-text-muted hover:text-danger transition-colors shrink-0"
-             title={t('exam.history.deleteSubject')}
-           >
-             <Trash2 size={14} />
-           </button>
-         )}
+{onDelete && (
+            <Tooltip label={t('exam.history.deleteSubject')}>
+              <button
+                onClick={(e) => { e.stopPropagation(); onDelete(subject.id); }}
+                aria-label={t('exam.history.deleteSubject')}
+                className="p-1 text-text-muted hover:text-danger transition-colors shrink-0"
+              >
+                <Trash2 size={14} />
+              </button>
+            </Tooltip>
+          )}
        </div>
 
       {/* Ringkasan stats */}
@@ -259,9 +262,11 @@ export default function HistoryView({ subjectId, subjects, onSelectSubject, onSt
             />
           </div>
           {search && (
-            <button onClick={() => setSearch('')} className="p-2 rounded-lg border border-border bg-card text-text-muted hover:text-text">
-              <X size={14} />
-            </button>
+            <Tooltip label="Hapus pencarian">
+              <button onClick={() => setSearch('')} aria-label="Hapus pencarian" className="p-2 rounded-lg border border-border bg-card text-text-muted hover:text-text">
+                <X size={14} />
+              </button>
+            </Tooltip>
           )}
         </div>
         <div className="flex flex-wrap gap-2">
@@ -452,10 +457,13 @@ function HistoryCard({ session: s, onDetail, onDelete, t }) {
           className="btn-primary text-xs flex-1 justify-center">
            <ChevronRight size={12} /> {t('exam.history.detail')}
         </button>
-        <button onClick={onDelete}
-          className="p-2 rounded-lg border border-border bg-card text-text-muted hover:text-danger hover:border-danger/30 transition-colors">
-          <Trash2 size={13} />
-        </button>
+        <Tooltip label={t('common.delete')}>
+          <button onClick={onDelete}
+            aria-label={t('common.delete')}
+            className="p-2 rounded-lg border border-border bg-card text-text-muted hover:text-danger hover:border-danger/30 transition-colors">
+            <Trash2 size={13} />
+          </button>
+        </Tooltip>
       </div>
     </motion.div>
   );
