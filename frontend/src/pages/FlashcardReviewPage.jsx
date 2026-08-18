@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  ChevronLeft, Loader2, Trophy, RotateCcw, CheckCircle2, Brain,
+  ChevronLeft, Loader2, Trophy, RotateCcw, Brain,
   SentimentDissatisfied, SentimentSatisfied, Target,
 } from '@/icons';
 import { flashcardAPI } from '@/services/api';
@@ -315,14 +315,14 @@ export default function FlashcardReviewPage() {
             transition={{ duration: 0.55, type: 'spring', stiffness: 280, damping: 22 }}
           >
             {/* Front */}
-            <div className="absolute inset-0 backface-hidden card-base flex flex-col items-center justify-center p-8 text-center border-t-4 border-t-accent-purple shadow-xl">
+            <div className="absolute inset-0 backface-hidden card-base flex flex-col items-center justify-center p-8 text-center border-t-4 border-t-accent-purple shadow-2xl shadow-primary/20">
               <span className="text-xs font-semibold text-text-secondary uppercase tracking-widest mb-4">{t('flashcard.question')}</span>
               <MathMarkdown className="text-xl font-bold text-text leading-snug text-center">{currentCard.question}</MathMarkdown>
               <p className="absolute bottom-4 text-[11px] text-text-muted">{t('flashcard.clickToSeeAnswer')}</p>
             </div>
             {/* Back */}
             <div
-              className="absolute inset-0 backface-hidden card-base flex flex-col items-center justify-center p-8 text-center border-t-4 border-t-success shadow-xl"
+              className="absolute inset-0 backface-hidden card-base flex flex-col items-center justify-center p-8 text-center border-t-4 border-t-success shadow-2xl shadow-success/20"
               style={{ transform: 'rotateY(180deg)' }}
             >
               <span className="text-xs font-semibold text-text-secondary uppercase tracking-widest mb-4">{t('flashcard.answer')}</span>
@@ -345,7 +345,7 @@ export default function FlashcardReviewPage() {
                   key={r.value}
                   onClick={() => handleRate(r.value)}
                   disabled={isSaving}
-                  className={`flex flex-col items-center gap-1.5 px-4 py-3 rounded-xl border text-sm font-semibold transition-colors disabled:opacity-50 ${r.cls}`}
+                  className={`flex flex-col items-center gap-1.5 px-4 py-3 rounded-xl border text-sm font-semibold transition-all hover:scale-[1.03] active:scale-95 disabled:opacity-50 ${r.cls}`}
                 >
                   <r.Icon size={26} className="mb-0.5" />
                   {r.label}
