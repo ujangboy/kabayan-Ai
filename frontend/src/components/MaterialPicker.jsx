@@ -97,7 +97,7 @@ export default function MaterialPicker({ subjectId, selectedMaterialIds, onSelec
                 onChange={() => isReady && toggle(m.id)}
                 disabled={!isReady}
                 className="h-4 w-4 rounded appearance-none cursor-pointer
-                  bg-slate-800 border-2 border-slate-500
+                  bg-card border-2 border-border
                   checked:bg-primary checked:border-primary
                   focus:outline-none focus:ring-2 focus:ring-primary/50
                   disabled:opacity-30 disabled:cursor-not-allowed

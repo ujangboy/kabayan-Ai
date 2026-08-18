@@ -211,7 +211,7 @@ export default function MateriPage() {
                           />
                           <span
                             aria-hidden="true"
-                            className="h-4 w-4 rounded border-2 border-slate-500 bg-slate-800 flex items-center justify-center
+                            className="h-4 w-4 rounded border-2 border-border bg-card flex items-center justify-center
                               peer-checked:bg-primary peer-checked:border-primary
                               peer-focus-visible:ring-2 peer-focus-visible:ring-primary/50
                               peer-disabled:opacity-30 peer-disabled:cursor-not-allowed

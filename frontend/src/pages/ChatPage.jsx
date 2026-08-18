@@ -120,9 +120,9 @@ function MessageBubble({ message, tutorMode, onFeedback }) {
           <div className="flex items-center gap-2 mt-1">
             <span className={cn(
               'px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide',
-              message.type === 'simple' && 'bg-green-500/15 text-green-400',
-              message.type === 'medium' && 'bg-blue-500/15 text-blue-400',
-              message.type === 'complex' && 'bg-purple-500/15 text-purple-400',
+              message.type === 'simple' && 'bg-success/15 text-success',
+              message.type === 'medium' && 'bg-accent-blue/15 text-accent-blue',
+              message.type === 'complex' && 'bg-accent-purple/15 text-accent-purple',
             )}>
               {message.type}
             </span>
@@ -707,9 +707,9 @@ export default function ChatPage() {
             {tutorMode && tutorBadge && (
               <span className={cn(
                 'px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide',
-                tutorBadge === 'SIMPLE'  && 'bg-green-500/15 text-green-400',
-                tutorBadge === 'MEDIUM'  && 'bg-blue-500/15 text-blue-400',
-                tutorBadge === 'COMPLEX' && 'bg-purple-500/15 text-purple-400',
+                tutorBadge === 'SIMPLE'  && 'bg-success/15 text-success',
+                tutorBadge === 'MEDIUM'  && 'bg-accent-blue/15 text-accent-blue',
+                tutorBadge === 'COMPLEX' && 'bg-accent-purple/15 text-accent-purple',
               )}>
                 {tutorBadge}
               </span>
@@ -840,7 +840,7 @@ export default function ChatPage() {
               exit={{ opacity: 0, y: 8 }}
               className={cn(
                 'mx-4 mb-2 px-4 py-2 rounded-xl text-xs font-medium text-center',
-                noteToast.type === 'success' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30'
+                noteToast.type === 'success' ? 'bg-success/20 text-success border border-success/30' : 'bg-danger/20 text-danger border border-danger/30'
               )}
             >
               {noteToast.type === 'success' ? <Check size={12} className="inline-block mr-1" /> : <X size={12} className="inline-block mr-1" />}{noteToast.msg}
