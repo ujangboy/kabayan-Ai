@@ -6,6 +6,7 @@ import BackgroundProcessSync from '@/components/BackgroundProcessSync';
 import FocusModeView from '@/components/FocusModeView';
 import { useAppStore, useFocusStore } from '@/store';
 import { useTranslation } from 'react-i18next';
+import { RefreshCw } from '@/icons';
 import { profileAPI } from '@/services/api';
 import { setAppLanguage, STORAGE_KEY } from '@/i18n';
 
@@ -34,7 +35,7 @@ function PendingBanner({ t }) {
 
   return (
     <div className="flex items-center gap-2 px-4 py-2 bg-amber-500/10 border-b border-amber-500/30 text-amber-400 text-xs">
-      <span className="animate-spin inline-block">⏳</span>
+      <RefreshCw size={12} className="animate-spin" />
       <span>
         {ops.length === 1 ? getOpLabel(ops[0], t) : t('appLayout.opRunningMultiple', { count: ops.length })}
       </span>
