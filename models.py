@@ -348,6 +348,7 @@ class StudyPlanItem(Base):
     time_slot      = Column(String, nullable=True)       # "Pagi (08:00–09:00)"
     resources      = Column(Text, nullable=True)
     completed      = Column(Integer, default=0)          # 0/1
+    summary        = Column(Text, nullable=True)         # rangkuman AI per topik item
 
     plan = relationship("StudyPlan", back_populates="items")
     practice_results = relationship("PracticeResult", back_populates="plan_item", cascade="all, delete-orphan", order_by="PracticeResult.created_at")
