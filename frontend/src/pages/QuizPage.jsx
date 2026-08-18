@@ -14,6 +14,7 @@ import { Tooltip } from '@/components/ui/Tooltip';
 import { usePendingOperation } from '@/hooks/usePendingOperation';
 import { useUiStore } from '@/store';
 import { usePageState } from '@/hooks/usePageState';
+import { useToast } from '@/components/Toast';
 
 const QTYPE_LABEL = { mcq: 'quiz.qtypeMcq', essay: 'quiz.qtypeEssay', mixed: 'quiz.qtypeMixed' };
 const DIFFICULTY_BADGE = {
@@ -33,6 +34,7 @@ const PAGE_KEY = 'quiz';
 
 export default function QuizPage() {
   const { t } = useTranslation();
+  const { toast } = useToast();
   const queryClient = useQueryClient();
   const location = useLocation();
   const navigate = useNavigate();
@@ -99,15 +101,23 @@ export default function QuizPage() {
   }, [activeQuizId, sessionKey]);
 
   const handleDelete = (id) => {
-    if (confirm(t('quiz.confirmDeleteSingle'))) {
-      deleteMutation.mutate(id);
-    }
+    toast.confirm({
+      title: t('quiz.confirmDeleteSingle'),
+      message: t('quiz.confirmDeleteSingle'),
+      danger: true,
+      confirmLabel: t('common.delete'),
+      onConfirm: () => deleteMutation.mutate(id),
+    });
   };
 
   const handleClearAll = () => {
-    if (confirm(t('quiz.confirmDeleteAll'))) {
-      clearMutation.mutate();
-    }
+    toast.confirm({
+      title: t('quiz.confirmDeleteAll'),
+      message: t('quiz.confirmDeleteAll'),
+      danger: true,
+      confirmLabel: t('common.delete'),
+      onConfirm: () => clearMutation.mutate(),
+    });
   };
 
   const handleStartQuiz = (quizId) => {
@@ -176,8 +186,9 @@ export default function QuizPage() {
                 key={quiz.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="card-base p-5 flex flex-col"
+                className="card-base card-hoverable p-5 flex flex-col relative overflow-hidden"
               >
+                <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-primary" />
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1 min-w-0">
                     {/* Nama materi / mata kuliah */}
@@ -263,7 +274,7 @@ export default function QuizPage() {
 
                 <button
                   onClick={() => handleStartQuiz(quiz.id)}
-                  className="bg-warning text-black font-bold w-full justify-center text-xs mt-auto px-4 py-2 rounded-lg hover:bg-warning/80 transition-colors flex items-center gap-1.5"
+                  className="bg-gradient-primary text-white font-bold w-full justify-center text-xs mt-auto px-4 py-2 rounded-lg hover:brightness-110 transition-all flex items-center gap-1.5"
                 >
                   <Play size={12} /> {quiz.score != null ? t('quiz.playAgain') : t('quiz.start')}
                 </button>
@@ -338,7 +349,7 @@ function GenerateQuizModal({ onClose, subjects, onSuccess }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
