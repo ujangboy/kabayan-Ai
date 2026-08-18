@@ -6,13 +6,13 @@ export default function StatCard({ icon: Icon, label, value, color = 'text-text'
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="card-base p-4 flex items-center gap-3"
+      className="card-base card-hoverable p-4 flex items-center gap-3"
     >
       <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${bgClass}/10`}>
         <Icon size={16} className={color} />
       </div>
       <div>
-        <p className="text-xl font-bold text-text">
+        <p className="text-xl font-bold bg-gradient-to-r from-text to-text-secondary bg-clip-text text-transparent">
           {value != null ? value : '—'}
           {suffix && <span className="text-xs text-text-muted font-normal ml-0.5">{suffix}</span>}
         </p>
