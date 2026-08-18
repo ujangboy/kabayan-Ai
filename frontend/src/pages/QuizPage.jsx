@@ -142,9 +142,14 @@ export default function QuizPage() {
         
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-text">{t('quiz.title')}</h1>
-            <p className="text-text-secondary text-sm mt-1">{t('quiz.subtitle')}</p>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center shadow-btn-primary shrink-0">
+              <HelpCircle size={20} className="text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-text">{t('quiz.title')}</h1>
+              <p className="text-text-secondary text-sm mt-1">{t('quiz.subtitle')}</p>
+            </div>
           </div>
           <div className="flex items-center gap-3">
             <select
@@ -274,7 +279,7 @@ export default function QuizPage() {
 
                 <button
                   onClick={() => handleStartQuiz(quiz.id)}
-                  className="bg-gradient-primary text-white font-bold w-full justify-center text-xs mt-auto px-4 py-2 rounded-lg hover:brightness-110 transition-all flex items-center gap-1.5"
+                  className="btn-primary w-full justify-center text-xs mt-auto"
                 >
                   <Play size={12} /> {quiz.score != null ? t('quiz.playAgain') : t('quiz.start')}
                 </button>
@@ -354,7 +359,7 @@ function GenerateQuizModal({ onClose, subjects, onSuccess }) {
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="w-full max-w-sm card-base shadow-2xl"
+        className="w-full max-w-sm glass rounded-dialog shadow-modal"
       >
         <div className="flex items-center justify-between p-4 border-b border-border">
           <div className="flex items-center gap-2">
@@ -380,7 +385,7 @@ function GenerateQuizModal({ onClose, subjects, onSuccess }) {
               value={subjectId}
               onChange={(e) => { setSubjectId(e.target.value); setSelectedMaterialIds([]); }}
               disabled={isGenerating}
-              className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary transition-colors disabled:opacity-60"
+              className="input-base disabled:opacity-60"
             >
               <option value="">{t('quiz.selectPlaceholder')}</option>
               {subjects.map(s => (
@@ -430,7 +435,7 @@ function GenerateQuizModal({ onClose, subjects, onSuccess }) {
                 value={mcqCount}
                 onChange={(e) => setMcqCount(e.target.value)}
                 disabled={isGenerating}
-                className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary transition-colors disabled:opacity-60"
+                className="input-base disabled:opacity-60"
               />
             </div>
             <div>
@@ -442,7 +447,7 @@ function GenerateQuizModal({ onClose, subjects, onSuccess }) {
                 value={essayCount}
                 onChange={(e) => setEssayCount(e.target.value)}
                 disabled={isGenerating}
-                className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary transition-colors disabled:opacity-60"
+                className="input-base disabled:opacity-60"
               />
             </div>
           </div>

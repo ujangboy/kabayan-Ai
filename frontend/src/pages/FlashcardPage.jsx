@@ -127,9 +127,14 @@ export default function FlashcardPage() {
 
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-text">{t('flashcard.pageTitle')}</h1>
-            <p className="text-text-secondary text-sm mt-1">{t('flashcard.pageSubtitle')}</p>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center shadow-btn-primary shrink-0">
+              <CreditCard size={20} className="text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-text">{t('flashcard.pageTitle')}</h1>
+              <p className="text-text-secondary text-sm mt-1">{t('flashcard.pageSubtitle')}</p>
+            </div>
           </div>
           <div className="flex items-center gap-3 flex-wrap">
             {(() => {
@@ -816,7 +821,7 @@ function GenerateAIModal({ subjects, onClose, onSuccess }) {
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="w-full max-w-sm card-base shadow-2xl"
+        className="w-full max-w-sm glass rounded-dialog shadow-modal"
       >
         <div className="flex items-center justify-between p-4 border-b border-border">
           <div className="flex items-center gap-2">
@@ -842,7 +847,7 @@ function GenerateAIModal({ subjects, onClose, onSuccess }) {
               value={subjectId}
               onChange={(e) => { setSubjectId(e.target.value); setSelectedMaterialIds([]); }}
               disabled={isGenerating}
-              className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary transition-colors disabled:opacity-60"
+              className="input-base disabled:opacity-60"
             >
               <option value="">{t('flashcard.selectSubjectPlaceholder')}</option>
               {subjects.map(s => (
@@ -938,7 +943,7 @@ if (!formData.question || !formData.answer || !formData.subject_id) {
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="w-full max-w-lg card-base shadow-2xl"
+        className="w-full max-w-lg glass rounded-dialog shadow-modal"
       >
         <div className="flex items-center justify-between p-4 border-b border-border">
           <div className="flex items-center gap-2">
@@ -959,9 +964,9 @@ if (!formData.question || !formData.answer || !formData.subject_id) {
                required
                value={formData.subject_id}
                onChange={(e) => setFormData(p => ({ ...p, subject_id: e.target.value }))}
-               className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary transition-colors"
-             >
-               <option value="">{t('flashcard.selectSubjectPlaceholder')}</option>
+                className="input-base"
+              >
+                <option value="">{t('flashcard.selectSubjectPlaceholder')}</option>
               {subjects.map(s => (
                 <option key={s.id} value={s.id}>{s.name}</option>
               ))}
@@ -974,7 +979,7 @@ if (!formData.question || !formData.answer || !formData.subject_id) {
               rows={2}
               value={formData.question}
               onChange={(e) => setFormData(p => ({ ...p, question: e.target.value }))}
-              className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary transition-colors resize-none"
+               className="input-base resize-none"
             />
           </div>
           <div>
@@ -984,7 +989,7 @@ if (!formData.question || !formData.answer || !formData.subject_id) {
               rows={3}
               value={formData.answer}
               onChange={(e) => setFormData(p => ({ ...p, answer: e.target.value }))}
-              className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary transition-colors resize-none"
+               className="input-base resize-none"
             />
           </div>
           <div className="flex justify-end gap-2 pt-2">
@@ -1030,7 +1035,7 @@ function ReviewHistoryModal({ group, onClose }) {
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="w-full max-w-2xl card-base shadow-2xl max-h-[85vh] flex flex-col"
+        className="w-full max-w-2xl glass rounded-dialog shadow-modal max-h-[85vh] flex flex-col"
       >
         <div className="flex items-center justify-between p-4 border-b border-border shrink-0">
           <div className="flex items-center gap-2">

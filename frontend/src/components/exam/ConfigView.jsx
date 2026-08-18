@@ -98,7 +98,7 @@ export default function ConfigView({ subjectId, analysis, onDone }) {
           <input type="number" min="1" max="100" value={form.custom_count}
             onChange={e => set('custom_count', e.target.value)}
             placeholder={t('exam.config.questionCountPlaceholder')}
-            className="mt-2 w-32 px-3 py-1.5 bg-background border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary" />
+            className="mt-2 w-32 input-base" />
         )}
       </div>
       <OptionGroup label={t('exam.config.difficultyLabel')} options={DIFFICULTIES} field="difficulty" />

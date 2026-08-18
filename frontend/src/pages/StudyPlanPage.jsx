@@ -353,7 +353,7 @@ export default function StudyPlanPage() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-card w-full max-w-lg rounded-2xl border border-border shadow-2xl overflow-hidden flex flex-col max-h-[85vh]"
+            className="glass rounded-dialog shadow-modal overflow-hidden flex flex-col max-h-[85vh]"
           >
             <div className="p-4 border-b border-border flex items-center justify-between bg-background/50">
               <h3 className="font-bold text-text flex items-center gap-2">

@@ -137,7 +137,7 @@ function ModalShell({ children }) {
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.97 }}
         transition={{ duration: 0.2 }}
-        className="w-full max-w-3xl max-h-[90vh] flex flex-col card-base shadow-2xl overflow-hidden"
+        className="w-full max-w-3xl max-h-[90vh] flex flex-col glass rounded-dialog shadow-modal overflow-hidden"
       >
         {children}
       </motion.div>
