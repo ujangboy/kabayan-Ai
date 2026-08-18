@@ -48,9 +48,10 @@ export default function CommandSearch() {
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.95, opacity: 0 }}
           transition={{ duration: 0.15 }}
-          className="bg-card border border-border rounded-dialog shadow-2xl w-full max-w-lg overflow-hidden"
+          className="bg-card border border-border rounded-dialog shadow-2xl w-full max-w-lg overflow-hidden relative"
           onClick={(e) => e.stopPropagation()}
         >
+          <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-primary" />
           {/* Search Input */}
           <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
             <Search size={16} className="text-text-secondary shrink-0" />
@@ -77,10 +78,10 @@ export default function CommandSearch() {
                   <button
                     key={to}
                     onClick={() => go(to)}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-background transition-colors text-left"
+                    className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-background transition-colors text-left group"
                   >
-                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                      <Icon size={15} className="text-primary" />
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 transition-colors group-hover:bg-gradient-primary">
+                      <Icon size={15} className="text-primary transition-colors group-hover:text-white" />
                     </div>
                     <div>
                       <p className="text-sm font-medium text-text">{t(`commandSearch.${labelKey}`)}</p>
