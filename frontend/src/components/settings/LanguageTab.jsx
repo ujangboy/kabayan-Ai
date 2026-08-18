@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Check, Loader2 } from 'lucide-react';
+import { Check, Loader2 } from '@/icons';
 import { profileAPI } from '@/services/api';
 import { useToast } from '@/components/Toast';
 import { setAppLanguage } from '@/i18n';

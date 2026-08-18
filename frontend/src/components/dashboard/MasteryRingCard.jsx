@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Target, CalendarCheck } from 'lucide-react';
+import { Target, CalendarCheck } from '@/icons';
 import { useTranslation } from 'react-i18next';
 import { formatDate } from '@/utils';
 

@@ -5,7 +5,7 @@ import {
   Brain, BookOpen, Target, Map, AlertTriangle, ChevronDown,
   Loader2, RefreshCw, Zap, Info, AlertCircle, Lightbulb,
   FileText, BookMarked, Clock, ArrowRight,
-} from 'lucide-react';
+} from '@/icons';
 import { examAPI } from '@/services/api';
 import { cn } from '@/utils';
 import { Chip, SectionHeader, StarRating } from './shared';

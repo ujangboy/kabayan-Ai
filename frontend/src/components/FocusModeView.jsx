@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { X } from 'lucide-react';
+import { X } from '@/icons';
 
 // Focus Mode (PRD US5.2) — overlay fullscreen yang menyembunyikan sidebar/nav.
 // Tombol keluar sengaja disembunyikan (muncul saat mouse bergerak); Esc selalu berfungsi.

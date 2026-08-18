@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { CalendarCheck, Clock, CheckCircle2, Focus, CreditCard, HelpCircle, Brain } from 'lucide-react';
+import { CalendarCheck, Clock, CheckCircle2, Focus, CreditCard, HelpCircle, Brain } from '@/icons';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { studyAPI } from '@/services/api';

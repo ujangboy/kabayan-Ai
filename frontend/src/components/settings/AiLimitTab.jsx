@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Coins, MessageSquare, Activity, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { Coins, MessageSquare, Activity, ThumbsUp, ThumbsDown } from '@/icons';
 import { dataAPI, tutorAPI } from '@/services/api';
 
 function formatNumber(n) {

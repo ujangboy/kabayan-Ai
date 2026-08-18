@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { User } from 'lucide-react';
+import { User } from '@/icons';
 import { useTranslation } from 'react-i18next';
 
 export default function MasteryProfileCard({ profile, subject }) {

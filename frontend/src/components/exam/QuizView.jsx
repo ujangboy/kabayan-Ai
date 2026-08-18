@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Clock, Play, Pause, ChevronLeft, ChevronRight, Loader2, Check } from 'lucide-react';
+import { Clock, Play, Pause, ChevronLeft, ChevronRight, Loader2, Check } from '@/icons';
 import { examAPI } from '@/services/api';
 import { cn } from '@/utils';
 import MathMarkdown from '@/components/MathMarkdown';

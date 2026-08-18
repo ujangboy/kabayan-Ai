@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Timer } from '@/icons';
 
 function formatTime(seconds) {
   const m = Math.floor(seconds / 60);
@@ -40,10 +41,7 @@ export default function QuizTimer({ totalSeconds, onTimeUp, isActive = true }) {
       }`}
       title={t('quizTimer.remainingTime')}
     >
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="10" />
-        <polyline points="12 6 12 12 16 14" />
-      </svg>
+      <Timer size={13} />
       {formatTime(Math.max(0, remaining))}
     </span>
   );

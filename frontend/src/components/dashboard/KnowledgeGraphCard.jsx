@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Network, ArrowRight, Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
+import { Network, ArrowRight, Sparkles, ChevronDown, ChevronUp } from '@/icons';
 import { useTranslation } from 'react-i18next';
 
 export default function KnowledgeGraphCard({ graph }) {

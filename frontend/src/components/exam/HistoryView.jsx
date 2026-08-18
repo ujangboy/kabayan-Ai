@@ -7,7 +7,7 @@ import {
   BookOpen, History, Zap, Search, X, ChevronRight, Trash2,
   RotateCcw, Clock, Calendar, Star, Award, BarChart2, FileText, Loader2,
   Trophy, HelpCircle, CreditCard,
-} from 'lucide-react';
+} from '@/icons';
 import { materiAPI, sessionsAPI, subjectAPI } from '@/services/api';
 import { cn, formatDate, formatTimeOnly } from '@/utils';
 import DetailModal from './DetailModal';

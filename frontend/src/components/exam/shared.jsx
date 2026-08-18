@@ -1,4 +1,4 @@
-import { Star } from 'lucide-react';
+import { Star } from '@/icons';
 import { cn } from '@/utils';
 
 // ─── View constants ─────────────────────────────────────────────────────────

@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FileText, Eye, Trash2 } from 'lucide-react';
+import { FileText, Eye, Trash2 } from '@/icons';
 import { useTranslation } from 'react-i18next';
 import { materiAPI } from '@/services/api';
 import { useQueryClient } from '@tanstack/react-query';
 import { extractErrorMessage } from '@/utils/errors';
-import { formatDate, fileIcon } from '@/utils';
+import { formatDate } from '@/utils';
+import FileTypeIcon from '@/components/FileTypeIcon';
 import DeleteConfirmModal from './DeleteConfirmModal';
 import { useToast } from '@/components/Toast';
 
@@ -64,7 +65,7 @@ export default function MaterialsTable({ materials, subjectId }) {
                   <td className="px-4 py-3 text-text-muted text-xs w-8">{idx + 1}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
-                      <span className="text-lg">{fileIcon((m.filename || '').split('.').pop()?.toUpperCase() || m.material_type)}</span>
+                      <FileTypeIcon type={(m.filename || '').split('.').pop()?.toUpperCase() || m.material_type} className="text-lg text-text-muted" />
                       <span className="text-text font-medium truncate max-w-[300px]" title={m.filename}>{m.filename}</span>
                     </div>
                   </td>

@@ -6,8 +6,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Loader2, BarChart2, BookOpen, Calendar, RotateCcw, CheckCircle, XCircle,
   ChevronDown, Lightbulb, FileText, Check, Award, Clock, TrendingUp, Target,
-  AlertTriangle, AlertCircle, RefreshCw, ArrowRight, ExternalLink,
-} from 'lucide-react';
+  AlertTriangle, AlertCircle, RefreshCw, ArrowRight, ExternalLink, PenLine,
+} from '@/icons';
 import { examAPI, sessionsAPI } from '@/services/api';
 import { cn } from '@/utils';
 import MathMarkdown from '@/components/MathMarkdown';
@@ -458,7 +458,7 @@ function InlinePractice({ questions, topic, onComplete, onClose, onRetryTopic })
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-text truncate">• "{weakTopic}" — {data.count} soal salah</p>
                     {data.tips && <p className="ml-3 text-primary/80 flex items-center gap-1"><Lightbulb size={9} /> {data.tips}</p>}
-                    {data.material && <p className="ml-3 text-text-muted flex items-center gap-1">📖 {data.material}</p>}
+                    {data.material && <p className="ml-3 text-text-muted flex items-center gap-1"><BookOpen size={10} className="shrink-0" /> {data.material}</p>}
                   </div>
                   {onRetryTopic && (
                     <button
@@ -600,7 +600,7 @@ function InlinePractice({ questions, topic, onComplete, onClose, onRetryTopic })
 
           {/* Explanation */}
           <div className="border-t border-border/50 pt-2">
-            <p className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider mb-1">📝 Penjelasan</p>
+            <p className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider mb-1 flex items-center gap-1"><PenLine size={10} /> Penjelasan</p>
             {fetchingExpl ? (
               <p className="text-text-muted flex items-center gap-1"><Loader2 size={10} className="animate-spin" /> Memuat penjelasan...</p>
             ) : explanations[String(q.id)] ? (
@@ -745,7 +745,7 @@ function StudyPlanTab({ plan, sessionId, onToggle, onPlanSaved,
         <span>Progress Rencana Belajar</span>
         <span>
           {progressValue >= 100
-            ? '🎉 Rencana Selesai!'
+            ? <span className="flex items-center gap-1"><Award size={12} className="text-success" /> Rencana Selesai!</span>
             : `${completedItems}/${totalItems} hari · ${progressValue}%`}
         </span>
       </div>

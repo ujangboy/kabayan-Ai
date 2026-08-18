@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import {
   ArrowLeft, Check, Loader2, Clock, Play, Brain, Trophy,
   CheckCircle, XCircle, Award, Target, ClipboardCheck, MessageSquare, FileText, X
-} from 'lucide-react';
+} from '@/icons';
 import { sessionsAPI, materiAPI } from '@/services/api';
 import MathMarkdown from '@/components/MathMarkdown';
 import { extractErrorMessage } from '@/utils/errors';
@@ -161,7 +161,7 @@ export default function StudyPlanPage() {
               Progress Rencana Belajar
             </span>
             <span className="font-semibold text-text-secondary">
-              {progress >= 100 ? '🎉 Rencana Selesai!' : `${completedItems}/${totalItems} hari · ${progress}%`}
+              {progress >= 100 ? <span className="flex items-center gap-1"><Award size={12} className="text-success" /> Rencana Selesai!</span> : `${completedItems}/${totalItems} hari · ${progress}%`}
             </span>
           </div>
           <div className="h-3 bg-background rounded-full overflow-hidden border border-border/50">

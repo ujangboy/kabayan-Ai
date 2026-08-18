@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Brain, ChevronLeft, Zap, Loader2 } from 'lucide-react';
+import { Brain, ChevronLeft, Zap, Loader2 } from '@/icons';
 import { subjectAPI, sessionsAPI } from '@/services/api';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useUiStore } from '@/store';

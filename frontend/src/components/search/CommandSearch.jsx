@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, FileText, MessageSquare, BookMarked, CreditCard, HelpCircle, X } from 'lucide-react';
+import { Search, FileText, MessageSquare, BookMarked, CreditCard, HelpCircle, X } from '@/icons';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAppStore } from '@/store';

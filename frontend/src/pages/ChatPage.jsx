@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, X, BookOpen, Trash2, Bot, User, Copy, Check, Pin, Edit3, GraduationCap, ThumbsUp, ThumbsDown, Hand, Lightbulb, Target, FileText, Clipboard, Square, Search } from 'lucide-react';
+import { Send, X, BookOpen, Trash2, Bot, User, Copy, Check, Pin, Edit3, GraduationCap, ThumbsUp, ThumbsDown, Hand, Lightbulb, Target, FileText, Clipboard, Square, Search, Zap } from '@/icons';
 import MathMarkdown from '@/components/MathMarkdown';
 import { useChatStore } from '@/store';
 import { cn, formatDateTime } from '@/utils';
@@ -265,7 +265,7 @@ export default function ChatPage() {
               },
             });
           } catch {
-            updateLastMessage(newId, '⚠️ Gagal memuat respons tutor.');
+            updateLastMessage(newId, 'Gagal memuat respons tutor.');
           } finally {
             setStreaming(false, newId);
           }
@@ -407,7 +407,7 @@ export default function ChatPage() {
       }
     } catch (err) {
       if (err?.name !== 'AbortError') {
-        const errorMsg = '⚠ ' + t('chat.errorRetry');
+        const errorMsg = t('chat.errorRetry');
         updateLastMessage(chatId, full ? full + '\n\n' + errorMsg : errorMsg);
       }
     } finally {
@@ -456,7 +456,7 @@ export default function ChatPage() {
       const saveRes = await notesAPI.create(title, lastAssistant.content, detectedSubjectId || undefined);
       if (saveRes.data) {
         const subjectName = mata_kuliah && mata_kuliah !== 'tidak_diketahui' ? mata_kuliah : 'Notebook';
-        setNoteToast({ type: 'success', msg: '✓ ' + t('chat.noteSavedToNotebook', { subjectName }) });
+        setNoteToast({ type: 'success', msg: t('chat.noteSavedToNotebook', { subjectName }) });
       } else {
         setNoteToast({ type: 'error', msg: t('chat.noteSaveFailed') });
       }
@@ -817,7 +817,7 @@ export default function ChatPage() {
                 noteToast.type === 'success' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30'
               )}
             >
-              {noteToast.type === 'success' ? '✓ ' : '✗ '}{noteToast.msg}
+              {noteToast.type === 'success' ? <Check size={12} className="inline-block mr-1" /> : <X size={12} className="inline-block mr-1" />}{noteToast.msg}
             </motion.div>
           )}
         </AnimatePresence>
@@ -886,7 +886,7 @@ export default function ChatPage() {
                   )}
                   title="Quick prompts"
                 >
-                  ⚡
+                  <Zap size={14} />
                 </button>
               </div>
               <button

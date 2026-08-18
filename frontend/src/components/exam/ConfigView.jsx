@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ClipboardList, Loader2, Brain } from 'lucide-react';
+import { ClipboardList, Loader2, Brain } from '@/icons';
 import { examAPI } from '@/services/api';
 import { cn } from '@/utils';
 import MaterialPicker from '@/components/MaterialPicker';

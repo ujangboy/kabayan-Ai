@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Trophy, CheckCircle, Check, Loader2, Calendar, BookOpen,
   AlertTriangle, TrendingUp, Save, MessageSquare,
-} from 'lucide-react';
+} from '@/icons';
 import { examAPI, sessionsAPI } from '@/services/api';
 import { cn } from '@/utils';
 import { Chip } from './shared';

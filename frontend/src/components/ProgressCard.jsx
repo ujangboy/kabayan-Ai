@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { Flame, TrendingUp, TrendingDown, Minus, CalendarDays, Trophy } from 'lucide-react';
+import { Flame, TrendingUp, TrendingDown, Minus, CalendarDays, Trophy } from '@/icons';
 
 const DIRECTION_META = (t) => ({
   naik:   { cls: 'badge-success', icon: TrendingUp,   label: t('studyProgress.trendUp') },

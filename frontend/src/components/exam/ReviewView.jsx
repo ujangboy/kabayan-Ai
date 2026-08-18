@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BookOpen, CheckCircle, XCircle, ChevronDown, Loader2, Lightbulb, FileText, MessageSquare } from 'lucide-react';
+import { BookOpen, CheckCircle, XCircle, ChevronDown, Loader2, Lightbulb, FileText, MessageSquare } from '@/icons';
 import { examAPI } from '@/services/api';
 import { cn } from '@/utils';
 import MathMarkdown from '@/components/MathMarkdown';

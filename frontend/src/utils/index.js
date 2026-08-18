@@ -35,14 +35,3 @@ export function formatTimeOnly(dateStr) {
   if (!dateStr) return '';
   return toLocalDate(dateStr).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
 }
-
-export function fileIcon(type) {
-  const t = (type || '').toUpperCase();
-  if (t.includes('YOUTUBE')) return '🎬';
-  if (t.includes('PDF')) return '📄';
-  if (t.includes('DOCX')) return '📝';
-  if (t.includes('PPT')) return '📊';
-  if (t.includes('XLS')) return '📗';
-  if (t.includes('TXT')) return '🗒️';
-  return '📁';
-}

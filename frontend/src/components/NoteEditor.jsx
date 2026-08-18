@@ -29,8 +29,8 @@ import {
   AlignLeft, AlignCenter, AlignRight, AlignJustify,
   List, ListOrdered, ListChecks,
   Undo2, Redo2,
-  Edit3, Eye, Pi,
-} from 'lucide-react';
+  Edit3, Eye, Pi, X,
+} from '@/icons';
 import { cn } from '@/utils';
 import MathMarkdown from '@/components/MathMarkdown';
 import { MathInline, MathBlock } from '@/extensions/math';
@@ -451,7 +451,7 @@ function FloatingToolbar({ editor, editorMode }) {
 
         {/* ── Text formatting ── */}
         <ToolBtn className="!w-6 !h-6" onClick={() => editor.chain().focus().toggleBold().run()} active={ia('bold')} title={t('noteEditor.bold')}>
-          <Bold size={12} strokeWidth={2.5} />
+          <Bold size={12} />
         </ToolBtn>
         <ToolBtn className="!w-6 !h-6" onClick={() => editor.chain().focus().toggleItalic().run()} active={ia('italic')} title={t('noteEditor.italic')}>
           <Italic size={12} />
@@ -523,7 +523,7 @@ function FloatingToolbar({ editor, editorMode }) {
                 title={t('noteEditor.clearColor')}
                 className="w-5 h-5 rounded-full border-2 border-dashed border-white/20 flex items-center justify-center text-[8px] text-white/40 hover:border-white/50 hover:text-white/70 transition-all"
               >
-                ✕
+                <X size={9} />
               </button>
             </div>
           )}

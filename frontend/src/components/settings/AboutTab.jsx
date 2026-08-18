@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Bot } from 'lucide-react';
+import { Bot } from '@/icons';
 import { infoAPI } from '@/services/api';
 
 export default function AboutTab() {

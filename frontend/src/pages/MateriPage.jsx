@@ -4,9 +4,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useChatStore, useUiStore } from '@/store';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileText, Upload, Plus, Trash2, Play, X, Video } from 'lucide-react';
+import { FileText, Upload, Plus, Trash2, Play, X, Video } from '@/icons';
 import { materiAPI, subjectAPI } from '@/services/api';
-import { formatDate, fileIcon } from '@/utils';
+import { formatDate } from '@/utils';
+import FileTypeIcon from '@/components/FileTypeIcon';
 import { useToast } from '@/components/Toast';
 import { extractErrorMessage } from '@/utils/errors';
 import { usePendingOperation } from '@/hooks/usePendingOperation';
@@ -201,7 +202,7 @@ export default function MateriPage() {
                     <td className="px-4 py-4 text-text-muted">{idx + 1}</td>
                     <td className="px-4 py-4">
                       <div className="flex items-center gap-3">
-                        <span className="text-xl">{fileIcon(m.material_type)}</span>
+                        <FileTypeIcon type={m.material_type} className="text-xl text-text-muted" />
                         <div className="flex flex-col">
                           <span className="text-text font-medium max-w-[200px] sm:max-w-xs truncate" title={m.filename}>
                             {m.filename}

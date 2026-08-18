@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { X } from 'lucide-react';
+import { X } from '@/icons';
 import { useTranslation } from 'react-i18next';
 import { subjectAPI } from '@/services/api';
 import { extractErrorMessage } from '@/utils/errors';

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, Languages, Database, Cpu, Info } from 'lucide-react';
+import { User, Languages, Database, Cpu, Info } from '@/icons';
 import { cn } from '@/utils';
 import ProfileTab from '@/components/settings/ProfileTab';
 import LanguageTab from '@/components/settings/LanguageTab';

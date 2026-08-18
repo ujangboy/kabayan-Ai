@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { AlertTriangle, X } from 'lucide-react';
+import { AlertTriangle, X } from '@/icons';
 import { useTranslation } from 'react-i18next';
 
 export default function DeleteConfirmModal({ title, message, onConfirm, onCancel, isDeleting }) {

@@ -6,7 +6,7 @@ import {
   LayoutDashboard, MessageSquare, BookOpen, FileText,
   BookMarked, CreditCard, HelpCircle,
   Settings, ChevronLeft, Plus, Search, Bot, Brain
-} from 'lucide-react';
+} from '@/icons';
 import { cn } from '@/utils';
 
 export default function Sidebar() {

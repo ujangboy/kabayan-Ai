@@ -6,7 +6,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import {
   CreditCard, Plus, X, Book, Zap, Loader2, Play,
   Trash2, ChevronLeft, ChevronRight, RotateCcw, Trophy, Clock, Calendar, FileText, Brain, Sparkles
-} from 'lucide-react';
+} from '@/icons';
 import { flashcardAPI, subjectAPI } from '@/services/api';
 import { useUiStore } from '@/store';
 import { useToast } from '@/components/Toast';

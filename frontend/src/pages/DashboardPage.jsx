@@ -2,12 +2,14 @@ import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import {
   MessageSquare, FileText, CreditCard, HelpCircle,
-  BookMarked, Zap, TrendingUp, Clock, BookOpen, Trophy, Database
-} from 'lucide-react';
+  BookMarked, Zap, TrendingUp, Clock, BookOpen, Trophy, Database,
+  WavingHand, School,
+} from '@/icons';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useChatStore } from '@/store';
-import { formatDate, fileIcon } from '@/utils';
+import { formatDate } from '@/utils';
+import FileTypeIcon from '@/components/FileTypeIcon';
 import api from '@/services/api';
 
 const formatBytes = (bytes) => {
@@ -83,7 +85,7 @@ export default function DashboardPage() {
         {/* Greeting */}
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-2xl">👋</span>
+            <WavingHand size={26} className="text-primary" />
             <h1 className="text-3xl font-bold text-text">{greeting}!</h1>
           </div>
           <p className="text-text-secondary">
@@ -178,7 +180,7 @@ export default function DashboardPage() {
                       <tr key={m.id} className="border-b border-border/50 last:border-0 hover:bg-background/50 transition-colors">
                         <td className="px-4 py-2.5">
                           <div className="flex items-center gap-2">
-                            <span className="text-base">{fileIcon((m.filename || '').split('.').pop()?.toUpperCase() || m.material_type)}</span>
+                            <FileTypeIcon type={(m.filename || '').split('.').pop()?.toUpperCase() || m.material_type} className="text-base text-text-muted" />
                             <span className="text-text font-medium truncate max-w-[130px] text-xs">{m.filename}</span>
                           </div>
                         </td>
@@ -252,7 +254,7 @@ export default function DashboardPage() {
             transition={{ delay: 0.3 }}
             className="card-base text-center py-16"
           >
-            <div className="text-6xl mb-4">🎓</div>
+            <School size={48} className="mx-auto mb-4 text-text-muted" />
             <h3 className="text-xl font-bold text-text mb-2">{t('dashboard.welcomeTitle')}</h3>
             <p className="text-text-secondary mb-6 max-w-sm mx-auto">
               {t('dashboard.welcomeText')}

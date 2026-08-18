@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Brain, Sparkles } from 'lucide-react';
+import { Brain, Sparkles } from '@/icons';
 import { useTranslation } from 'react-i18next';
 
 export default function LearningProfileCard({ profile }) {

@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, FileText, CreditCard, HelpCircle, Pencil, Trash2,
   TrendingUp, Trophy, Zap,
-} from 'lucide-react';
+} from '@/icons';
 import { subjectAPI, examAPI, studyAPI } from '@/services/api';
 import { useUiStore } from '@/store';
 import { formatDate } from '@/utils';

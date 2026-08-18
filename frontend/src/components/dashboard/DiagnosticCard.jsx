@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Stethoscope, TrendingUp, TrendingDown, AlertTriangle, CheckCircle2, Clock, ChevronDown, ChevronUp } from 'lucide-react';
+import { Stethoscope, TrendingUp, TrendingDown, AlertTriangle, CheckCircle2, Clock, ChevronDown, ChevronUp } from '@/icons';
 import { useTranslation } from 'react-i18next';
 
 const READINESS_META = {

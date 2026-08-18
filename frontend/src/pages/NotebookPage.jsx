@@ -2,7 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileText, Plus, Trash2, Pin, Save, ChevronLeft, MoreHorizontal, Sparkles, X, Search } from 'lucide-react';
+import { FileText, Plus, Trash2, Pin, Save, ChevronLeft, MoreHorizontal, Sparkles, X, Search } from '@/icons';
 import { notesAPI, subjectAPI } from '@/services/api';
 import { formatDate, formatDateTime } from '@/utils';
 import { cn } from '@/utils';

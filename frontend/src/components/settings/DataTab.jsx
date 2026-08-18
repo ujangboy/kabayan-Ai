@@ -4,7 +4,7 @@ import {
   BookOpen, FileText, MessageSquare, BookMarked, CreditCard,
   HelpCircle, Brain, LayoutTemplate, Database as DatabaseIcon, HardDrive,
   Trash2, Loader2, RotateCcw, Trash as TrashIcon, XCircle, Download, Archive,
-} from 'lucide-react';
+} from '@/icons';
 import { dataAPI, materiAPI, trashAPI } from '@/services/api';
 import { useToast } from '@/components/Toast';
 import { formatDate } from '@/utils';

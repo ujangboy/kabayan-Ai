@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Zap, CreditCard, HelpCircle, Brain, Focus } from 'lucide-react';
+import { Zap, CreditCard, HelpCircle, Brain, Focus } from '@/icons';
 import { useTranslation } from 'react-i18next';
 import { useFocusStore } from '@/store';
 

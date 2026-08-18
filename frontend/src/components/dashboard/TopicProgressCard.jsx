@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { BookOpen, ChevronDown, ChevronUp } from 'lucide-react';
+import { BookOpen, ChevronDown, ChevronUp } from '@/icons';
 import { useTranslation } from 'react-i18next';
 
 const TOPIC_STATUS_META = (t) => ({

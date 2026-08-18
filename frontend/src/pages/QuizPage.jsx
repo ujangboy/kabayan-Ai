@@ -2,7 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { HelpCircle, Play, X, Zap, Trophy, Trash2, CheckCircle, XCircle, Loader2, Clock, Calendar, FileText, PenLine } from 'lucide-react';
+import { HelpCircle, Play, X, Zap, Trophy, Trash2, CheckCircle, XCircle, Loader2, Clock, Calendar, FileText, PenLine, Celebration, MenuBook, FitnessCenter } from '@/icons';
 import { quizAPI, subjectAPI } from '@/services/api';
 import { useLocation, useNavigate } from 'react-router-dom';
 import MathMarkdown from '@/components/MathMarkdown';
@@ -656,10 +656,10 @@ function QuizSession({ quizId, onClose }) {
     const { correct, wrong } = computeScore();
     const recommendation =
       score >= 70
-        ? { icon: '🎉', text: 'Bagus! Penguasaan materi sudah baik. Lanjut ke topik berikutnya atau coba soal yang lebih sulit.' }
+        ? { Icon: Celebration, text: 'Bagus! Penguasaan materi sudah baik. Lanjut ke topik berikutnya atau coba soal yang lebih sulit.' }
         : score >= 50
-          ? { icon: '📖', text: 'Cukup baik. Review jawaban yang salah untuk memperkuat pemahaman, lalu coba lagi.' }
-          : { icon: '💪', text: 'Masih perlu banyak latihan. Pelajari kembali materi terkait, lalu ulangi quiz ini.' };
+          ? { Icon: MenuBook, text: 'Cukup baik. Review jawaban yang salah untuk memperkuat pemahaman, lalu coba lagi.' }
+          : { Icon: FitnessCenter, text: 'Masih perlu banyak latihan. Pelajari kembali materi terkait, lalu ulangi quiz ini.' };
     return (
       <div className="flex-1 flex items-center justify-center p-6">
         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="card-base text-center max-w-md w-full p-8">
@@ -681,7 +681,7 @@ function QuizSession({ quizId, onClose }) {
             </div>
           </div>
           <div className="p-3 bg-background rounded-xl border border-border mb-6 text-sm text-text-secondary">
-            <span className="mr-1">{recommendation.icon}</span>
+            <recommendation.Icon size={16} className="mr-1.5 inline-block text-primary" />
             {recommendation.text}
           </div>
           <div className="flex gap-2">

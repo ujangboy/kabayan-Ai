@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ClipboardList, Loader2, Play, ChevronLeft } from 'lucide-react';
+import { ClipboardList, Loader2, Play, ChevronLeft } from '@/icons';
 import { examAPI } from '@/services/api';
 import { Chip, SectionHeader } from './shared';
 

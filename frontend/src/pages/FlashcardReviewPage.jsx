@@ -4,8 +4,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  ChevronLeft, Loader2, Trophy, RotateCcw, CheckCircle2, Brain
-} from 'lucide-react';
+  ChevronLeft, Loader2, Trophy, RotateCcw, CheckCircle2, Brain,
+  SentimentDissatisfied, SentimentSatisfied, Target,
+} from '@/icons';
 import { flashcardAPI } from '@/services/api';
 import MathMarkdown from '@/components/MathMarkdown';
 import { usePageState } from '@/hooks/usePageState';
@@ -53,9 +54,9 @@ export default function FlashcardReviewPage() {
   }, [currentIdx, results, isFinished, rerunQueue]);
 
   const SIMPLE_RATINGS = [
-    { value: 0, emoji: '😕', label: t('flashcard.ratingLupa'),  cls: 'border-danger/50 text-danger hover:bg-danger/10 active:bg-danger/20' },
-    { value: 2, emoji: '🙂', label: t('flashcard.ratingIngat'), cls: 'border-accent-blue/50 text-accent-blue hover:bg-accent-blue/10 active:bg-accent-blue/20' },
-    { value: 3, emoji: '🎯', label: t('flashcard.ratingHafal'), cls: 'border-success/50 text-success hover:bg-success/10 active:bg-success/20' },
+    { value: 0, Icon: SentimentDissatisfied, label: t('flashcard.ratingLupa'),  cls: 'border-danger/50 text-danger hover:bg-danger/10 active:bg-danger/20' },
+    { value: 2, Icon: SentimentSatisfied, label: t('flashcard.ratingIngat'), cls: 'border-accent-blue/50 text-accent-blue hover:bg-accent-blue/10 active:bg-accent-blue/20' },
+    { value: 3, Icon: Target, label: t('flashcard.ratingHafal'), cls: 'border-success/50 text-success hover:bg-success/10 active:bg-success/20' },
   ];
 
   const FEEDBACK_META = {
@@ -346,7 +347,7 @@ export default function FlashcardReviewPage() {
                   disabled={isSaving}
                   className={`flex flex-col items-center gap-1.5 px-4 py-3 rounded-xl border text-sm font-semibold transition-colors disabled:opacity-50 ${r.cls}`}
                 >
-                  <span className="text-2xl">{r.emoji}</span>
+                  <r.Icon size={26} className="mb-0.5" />
                   {r.label}
                 </button>
               ))}

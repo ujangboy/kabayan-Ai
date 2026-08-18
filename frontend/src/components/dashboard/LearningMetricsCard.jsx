@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { BarChart3 } from 'lucide-react';
+import { BarChart3 } from '@/icons';
 import { useTranslation } from 'react-i18next';
 
 export default function LearningMetricsCard({ metrics }) {
