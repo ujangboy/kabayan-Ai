@@ -13,10 +13,12 @@ import { cn, formatDate, formatTimeOnly } from '@/utils';
 import DetailModal from './DetailModal';
 import { Chip, ProgressBar, STATUS_META, getBadge, getGradeColor, Q_TYPE_LABEL } from './shared';
 import { Tooltip } from '@/components/ui/Tooltip';
+import { useToast } from '@/components/Toast';
 
 // ─── Subject picker (shown when no subject selected) ──────────────────────────
 function SubjectPicker({ subjects, onSelectSubject, onStartConfig, t }) {
    const navigate = useNavigate();
+   const { toast } = useToast();
    const queryClient = useQueryClient();
 
    const deleteMutation = useMutation({
@@ -25,9 +27,13 @@ function SubjectPicker({ subjects, onSelectSubject, onStartConfig, t }) {
    });
 
    const handleDelete = (id) => {
-     if (confirm(t('exam.history.deleteSubjectConfirm'))) {
-       deleteMutation.mutate(id);
-     }
+     toast.confirm({
+       title: t('exam.history.deleteSubjectConfirm'),
+       message: t('exam.history.deleteSubjectConfirm'),
+       danger: true,
+       confirmLabel: t('common.delete'),
+       onConfirm: () => deleteMutation.mutate(id),
+     });
    };
 
    if (!subjects.length) {
@@ -176,8 +182,10 @@ function SubjectCard({ subject, onSelectSubject, onStartConfig, onDelete, t }) {
 }
 
 export default function HistoryView({ subjectId, subjects, onSelectSubject, onStartConfig, onResume, detailId, setDetailId, pendingPlanTab, setPendingPlanTab }) {
-   const { t } = useTranslation();
-   const queryClient   = useQueryClient();
+  const { t } = useTranslation();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [search,    setSearch]    = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -223,8 +231,13 @@ export default function HistoryView({ subjectId, subjects, onSelectSubject, onSt
   }
 
    const handleDelete = (id) => {
-     if (!confirm(t('exam.history.deleteSessionConfirm'))) return;
-     deleteMutation.mutate(id);
+     toast.confirm({
+       title: t('exam.history.deleteSessionConfirm'),
+       message: t('exam.history.deleteSessionConfirm'),
+       danger: true,
+       confirmLabel: t('common.delete'),
+       onConfirm: () => deleteMutation.mutate(id),
+     });
    };
 
   if (isLoading) {

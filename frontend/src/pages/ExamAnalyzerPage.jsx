@@ -9,6 +9,7 @@ import { useUiStore } from '@/store';
 import { usePageState } from '@/hooks/usePageState';
 import { VIEW } from '@/components/exam/shared';
 import { Tooltip } from '@/components/ui/Tooltip';
+import { useToast } from '@/components/Toast';
 import DashboardView from '@/components/exam/DashboardView';
 import ConfigView from '@/components/exam/ConfigView';
 import BlueprintView from '@/components/exam/BlueprintView';
@@ -23,6 +24,7 @@ const GENERATE_TIMEOUT_MS = 10 * 60 * 1000;
 // ─── Main Page ───────────────────────────────────────────────────────────────
 export default function ExamAnalyzerPage() {
   const { t } = useTranslation();
+  const { toast } = useToast();
   const location  = useLocation();
   const navigate  = useNavigate();
   const { restore, persist, clear } = usePageState(PAGE_KEY);
@@ -160,33 +162,45 @@ export default function ExamAnalyzerPage() {
             {view !== VIEW.DASHBOARD && subjectId && (
               <Tooltip label={t('common.back')}>
                 <button onClick={() => {
-                  if (view === VIEW.GENERATING) {
-                    if (!confirm(t('exam.confirmExit'))) return;
-                    clearAll(); go(VIEW.HISTORY); return;
-                  }
-                  if (view === VIEW.QUIZ) {
-                    if (!confirm(t('exam.confirmExit'))) return;
-                    clearAll(); go(VIEW.HISTORY); return;
-                  }
-                  if (view === VIEW.HISTORY) {
-                    setSubjectId('');
-                    setAnalysis(null); setBlueprint(null); setSessionData(null); setEvalData(null);
-                    setDetailId(null); setGenerating(null); setQuizClockStart(null); setRecommend(null); clear();
-                    return;
-                  }
-                  if (view === VIEW.RESULT) {
-                    setSubjectId('');
-                    setAnalysis(null); setBlueprint(null); setSessionData(null); setEvalData(null);
-                    setDetailId(null); setGenerating(null); setQuizClockStart(null); setRecommend(null); clear();
-                    return;
-                  }
-                  const back = {
-                    [VIEW.CONFIG]:     null,
-                    [VIEW.BLUEPRINT]:  VIEW.CONFIG,
-                    [VIEW.REVIEW]:     VIEW.RESULT,
-                  }[view] || null;
-                  if (back === null) { go(VIEW.HISTORY); return; }
-                  go(back);
+                  const confirmExit = () => new Promise((resolve) => {
+                    toast.confirm({
+                      title: t('exam.confirmExit'),
+                      message: t('exam.confirmExit'),
+                      danger: true,
+                      confirmLabel: t('common.confirm'),
+                      onConfirm: resolve,
+                    });
+                  });
+                  const doExit = async () => {
+                    if (view === VIEW.GENERATING) {
+                      await confirmExit();
+                      clearAll(); go(VIEW.HISTORY); return;
+                    }
+                    if (view === VIEW.QUIZ) {
+                      await confirmExit();
+                      clearAll(); go(VIEW.HISTORY); return;
+                    }
+                    if (view === VIEW.HISTORY) {
+                      setSubjectId('');
+                      setAnalysis(null); setBlueprint(null); setSessionData(null); setEvalData(null);
+                      setDetailId(null); setGenerating(null); setQuizClockStart(null); setRecommend(null); clear();
+                      return;
+                    }
+                    if (view === VIEW.RESULT) {
+                      setSubjectId('');
+                      setAnalysis(null); setBlueprint(null); setSessionData(null); setEvalData(null);
+                      setDetailId(null); setGenerating(null); setQuizClockStart(null); setRecommend(null); clear();
+                      return;
+                    }
+                    const back = {
+                      [VIEW.CONFIG]:     null,
+                      [VIEW.BLUEPRINT]:  VIEW.CONFIG,
+                      [VIEW.REVIEW]:     VIEW.RESULT,
+                    }[view] || null;
+                    if (back === null) { go(VIEW.HISTORY); return; }
+                    go(back);
+                  };
+                  doExit();
                 }} aria-label={t('common.back')} className="p-1.5 rounded-lg hover:bg-card text-text-secondary transition-colors">
                   <ChevronLeft size={18} />
                 </button>
