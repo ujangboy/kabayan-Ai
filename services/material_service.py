@@ -33,7 +33,13 @@ class MaterialService:
         with open(filepath, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
-        mat_type = self.EXT_TYPE_MAP.get(ext, MaterialType.PDF)
+        mat_type = self.EXT_TYPE_MAP.get(ext)
+        if mat_type is None:
+            logger.warning(
+                "Ekstensi file tak dikenal '%s' untuk '%s' — fallback ke PDF.",
+                ext, original_filename,
+            )
+            mat_type = MaterialType.PDF
 
         mat = material_repository.create(db, {
             "subject_id": subject_id,

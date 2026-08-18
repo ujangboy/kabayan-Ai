@@ -1,0 +1,48 @@
+"""D4 — deteksi material_type saat upload: ekstensi menentukan tipe (regresi Excel/PPT dilabeli PDF)."""
+import io
+import os
+from fastapi import UploadFile
+from services.material_service import material_service
+
+
+def _upload(db, subject_id, filename: str, content: bytes):
+    f = UploadFile(filename=filename, file=io.BytesIO(content))
+    return material_service.upload_material_sync(db, subject_id, f)
+
+
+def test_upload_xlsx_stores_xlsx(db_session, make_subject):
+    subject = make_subject()
+    filepath, mat_id = _upload(db_session, subject.id, "Pekan 11_PAK.xlsx", b"PK\x03\x04fake-xlsx")
+    assert os.path.basename(filepath).endswith(".xlsx")
+
+    from repositories.material_repository import material_repository
+    mat = material_repository.get(db_session, mat_id)
+    assert mat.material_type.value == "XLSX"
+
+
+def test_upload_pptx_stores_pptx(db_session, make_subject):
+    subject = make_subject()
+    filepath, mat_id = _upload(db_session, subject.id, "presentasi.pptx", b"PK\x03\x04fake-pptx")
+    assert os.path.basename(filepath).endswith(".pptx")
+
+    from repositories.material_repository import material_repository
+    mat = material_repository.get(db_session, mat_id)
+    assert mat.material_type.value == "PPTX"
+
+
+def test_upload_pdf_stores_pdf(db_session, make_subject):
+    subject = make_subject()
+    _, mat_id = _upload(db_session, subject.id, "materi.pdf", b"%PDF-fake")
+
+    from repositories.material_repository import material_repository
+    mat = material_repository.get(db_session, mat_id)
+    assert mat.material_type.value == "PDF"
+
+
+def test_upload_unknown_extension_falls_back_to_pdf(db_session, make_subject):
+    subject = make_subject()
+    _, mat_id = _upload(db_session, subject.id, "catatan.xyz", b"data")
+
+    from repositories.material_repository import material_repository
+    mat = material_repository.get(db_session, mat_id)
+    assert mat.material_type.value == "PDF"
