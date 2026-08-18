@@ -447,7 +447,7 @@ function FloatingToolbar({ editor, editorMode }) {
       }}
       onMouseDown={(e) => e.preventDefault()}
     >
-      <div className="flex items-center gap-px px-2 py-1.5 bg-[#1a1b2e]/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.05)]">
+      <div className="flex items-center gap-px px-2 py-1.5 bg-card/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.05)]">
         {/* ── Font size ── */}
         <FontSizeDropdown editor={editor} floating />
         <div className="w-px h-5 bg-white/10 mx-1 shrink-0" />
@@ -506,7 +506,7 @@ function FloatingToolbar({ editor, editorMode }) {
           </ToolBtn>
           {showColors && (
             <div
-              className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 flex items-center gap-1 px-2 py-1.5 bg-[#1a1b2e]/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.5)]"
+              className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 flex items-center gap-1 px-2 py-1.5 bg-card/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.5)]"
               onMouseDown={(e) => e.preventDefault()}
             >
               {COLOR_PALETTE.map(({ color, labelKey }) => (
@@ -535,7 +535,7 @@ function FloatingToolbar({ editor, editorMode }) {
 
       {/* ── Arrow pointer ── */}
       <div className="flex justify-center">
-        <div className="w-2.5 h-2.5 bg-[#1a1b2e]/95 border-r border-b border-white/10 rotate-45 -mt-1.5" />
+        <div className="w-2.5 h-2.5 bg-card/95 border-r border-b border-white/10 rotate-45 -mt-1.5" />
       </div>
     </div>,
     document.body

@@ -145,7 +145,7 @@ export default function MateriPage() {
               onClick={() => setIsYoutubeModalOpen(true)}
               className="btn-ghost border border-border text-xs"
             >
-              <Video size={14} className="text-red-500" />
+              <Video size={14} className="text-danger" />
               {t('materi.importYoutube')}
             </button>
             <button
@@ -532,12 +532,12 @@ function YoutubeModal({ onClose, subjects, onSuccess }) {
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 8 }}
         transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
-        className="w-full max-w-md glass rounded-dialog shadow-modal border-red-500/20"
+        className="w-full max-w-md glass rounded-dialog shadow-modal border-danger/20"
       >
         <div className="flex items-center justify-between p-4 border-b border-border">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-red-500/15 flex items-center justify-center">
-              <Video size={18} className="text-red-500" />
+            <div className="w-8 h-8 rounded-lg bg-danger/15 flex items-center justify-center">
+              <Video size={18} className="text-danger" />
             </div>
             <h3 className="font-semibold text-text">{t('materi.youtubeModalTitle')}</h3>
           </div>
@@ -557,7 +557,7 @@ function YoutubeModal({ onClose, subjects, onSuccess }) {
               required
               value={subjectId}
               onChange={(e) => setSubjectId(e.target.value)}
-              className="input-base focus:border-red-500/60 focus:ring-red-500/30"
+              className="input-base focus:border-danger/60 focus:ring-danger/30"
             >
               <option value="">{t('materi.selectSubject')}</option>
               {subjects.map(s => (
@@ -582,7 +582,7 @@ function YoutubeModal({ onClose, subjects, onSuccess }) {
           </div>
           <div className="flex justify-end gap-2 pt-2">
             <button type="button" onClick={onClose} className="btn-ghost">{t('common.cancel')}</button>
-            <button type="submit" disabled={isSubmitting || !url} className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl text-sm font-medium transition-all active:scale-95">
+            <button type="submit" disabled={isSubmitting || !url} className="px-4 py-2 bg-danger hover:brightness-110 text-white rounded-xl text-sm font-medium transition-all active:scale-95">
               {isSubmitting ? t('materi.youtubeProcessing') : t('materi.importTranscript')}
             </button>
           </div>
