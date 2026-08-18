@@ -155,10 +155,17 @@ export default function SubjectDashboardPage() {
             <ArrowLeft size={16} /> {t('common.back')}
           </button>
           <div className="flex-1 min-w-[200px]">
-            <h1 className="text-2xl font-bold text-text">{subject.name}</h1>
-            <p className="text-text-secondary text-sm mt-0.5">
-              {[subject.semester, subject.lecturer && t('subjectDashboard.headerLecturer', { name: subject.lecturer })].filter(Boolean).join(' • ') || t('subjectDashboard.headerFallback')}
-            </p>
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-gradient-primary flex items-center justify-center shrink-0 shadow-lg shadow-primary/25">
+                <TrendingUp size={17} className="text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-text">{subject.name}</h1>
+                <p className="text-text-secondary text-sm mt-0.5">
+                  {[subject.semester, subject.lecturer && t('subjectDashboard.headerLecturer', { name: subject.lecturer })].filter(Boolean).join(' • ') || t('subjectDashboard.headerFallback')}
+                </p>
+              </div>
+            </div>
           </div>
           <div className="flex gap-2">
             <button onClick={() => setIsEditOpen(true)} className="btn-ghost px-3 py-2 rounded-xl text-sm border border-border">
