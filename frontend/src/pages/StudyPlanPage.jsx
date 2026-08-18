@@ -169,7 +169,7 @@ export default function StudyPlanPage() {
               initial={{ width: 0 }}
               animate={{ width: `${progress}%` }}
               transition={{ duration: 0.6 }}
-              className={`h-full rounded-full ${progress >= 100 ? 'bg-success' : 'bg-primary'}`}
+              className={`h-full rounded-full ${progress >= 100 ? 'bg-gradient-to-r from-success to-accent-teal' : 'bg-gradient-primary'}`}
             />
           </div>
           {(plan.priority_actions || []).length > 0 && (
@@ -257,7 +257,7 @@ export default function StudyPlanPage() {
                               toast.error(err.response?.data?.detail || err.message || 'Gagal memuat soal latihan.');
                             }
                           }}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-warning text-black text-[11px] font-bold hover:bg-warning/80 transition-colors disabled:opacity-40"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-primary text-white text-[11px] font-bold hover:brightness-110 transition-all disabled:opacity-40"
                         >
                           <Play size={11} /> Latihan Quiz
                          </button>
@@ -505,7 +505,7 @@ function InlinePlanPractice({ item, practiceState, onClose, onSubmitted }) {
         </span>
       </div>
       <div className="h-1.5 bg-border rounded-full mb-4 overflow-hidden">
-        <div className="h-full bg-warning rounded-full transition-all duration-300" style={{ width: `${((idx + 1) / total) * 100}%` }} />
+        <div className="h-full bg-gradient-primary rounded-full transition-all duration-300" style={{ width: `${((idx + 1) / total) * 100}%` }} />
       </div>
 
       <h4 className="text-sm font-medium text-text mb-4 leading-relaxed">
@@ -521,7 +521,7 @@ function InlinePlanPractice({ item, practiceState, onClose, onSubmitted }) {
               <button
                 key={i}
                 onClick={() => selectAnswer(key)}
-                className={`w-full text-left px-3 py-2.5 rounded-lg border text-sm transition-all ${isSelected ? 'bg-warning/10 border-warning text-warning font-medium' : 'bg-card border-border text-text hover:border-warning/50'}`}
+                className={`w-full text-left px-3 py-2.5 rounded-lg border text-sm transition-all ${isSelected ? 'bg-primary/10 border-primary text-primary-light font-medium' : 'bg-card border-border text-text hover:border-primary/50'}`}
               >
                 <MathMarkdown>{opt}</MathMarkdown>
               </button>
@@ -534,7 +534,7 @@ function InlinePlanPractice({ item, practiceState, onClose, onSubmitted }) {
           onChange={(e) => selectAnswer(e.target.value)}
           rows={3}
           placeholder="Tulis jawaban Anda..."
-          className="w-full px-3 py-2 bg-card border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary transition-colors resize-y"
+          className="w-full px-3 py-2 bg-card border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-y"
         />
       )}
 
