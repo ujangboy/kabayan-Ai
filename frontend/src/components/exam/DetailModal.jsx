@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Loader2, BarChart2, BookOpen, Calendar, RotateCcw, CheckCircle, XCircle,
   ChevronDown, Lightbulb, FileText, Check, Award, Clock, TrendingUp, Target,
-  AlertTriangle, AlertCircle, RefreshCw, ArrowRight, ExternalLink, PenLine,
+  AlertTriangle, AlertCircle, RefreshCw, ArrowRight, ExternalLink, PenLine, X,
 } from '@/icons';
 import { examAPI, sessionsAPI } from '@/services/api';
 import { cn } from '@/utils';
@@ -729,7 +729,7 @@ function StudyPlanTab({ plan, sessionId, onToggle, onPlanSaved,
         <div className="flex items-start gap-2 p-3 rounded-xl bg-danger/5 border border-danger/20 text-xs text-danger">
           <AlertCircle size={13} className="shrink-0 mt-0.5" />
           <span className="flex-1">{practiceError}</span>
-          <button type="button" onClick={() => setPracticeError('')} className="shrink-0 text-danger/60 hover:text-danger">✕</button>
+          <button type="button" onClick={() => setPracticeError('')} className="shrink-0 text-danger/60 hover:text-danger"><X size={12} /></button>
         </div>
       )}
 

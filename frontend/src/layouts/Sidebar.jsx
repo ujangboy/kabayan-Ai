@@ -5,7 +5,7 @@ import { useAppStore, useChatStore, useUiStore } from '@/store';
 import {
   LayoutDashboard, MessageSquare, BookOpen, FileText,
   BookMarked, CreditCard, HelpCircle,
-  Settings, ChevronLeft, Plus, Search, Bot, Brain
+  Settings, ChevronLeft, ChevronRight, Plus, Search, Bot, Brain
 } from '@/icons';
 import { cn } from '@/utils';
 
@@ -63,11 +63,11 @@ export default function Sidebar() {
         <button
           onClick={toggleSidebar}
           className={cn(
-            "absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-lg text-text-secondary hover:text-text hover:bg-card transition-all duration-150 shrink-0",
-            !sidebarOpen && "rotate-180"
+            "absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-lg text-text-secondary hover:text-text hover:bg-card transition-all duration-150 shrink-0"
           )}
+          title={sidebarOpen ? "Tutup sidebar" : "Buka sidebar"}
         >
-          <ChevronLeft size={16} />
+          {sidebarOpen ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
         </button>
       </div>
 
