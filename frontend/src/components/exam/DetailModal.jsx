@@ -474,7 +474,7 @@ function InlinePractice({ questions, topic, onComplete, onClose, onRetryTopic })
                           setRetryingTopic(null);
                         }
                       }}
-                      className="shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-lg bg-warning text-black text-[10px] font-bold hover:bg-warning/80 transition-colors disabled:opacity-40"
+                      className="shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-lg bg-gradient-primary text-white text-[10px] font-bold hover:brightness-110 transition-all disabled:opacity-40"
                     >
                       {retryingTopic === weakTopic
                         ? <><Loader2 size={9} className="animate-spin" /> Memuat...</>
@@ -824,8 +824,8 @@ function StudyPlanTab({ plan, sessionId, onToggle, onPlanSaved,
                               setLoadingItemId(null);
                             }
                           }}
-                          className="text-[10px] px-2 py-1 rounded bg-warning text-black font-bold
-                                     hover:bg-warning/80 transition-colors shrink-0 shadow-sm disabled:opacity-50 flex items-center gap-1">
+                          className="text-[10px] px-2 py-1 rounded bg-gradient-primary text-white font-bold
+                                     hover:brightness-110 transition-all shrink-0 shadow-sm disabled:opacity-50 flex items-center gap-1">
                           {loadingItemId === item.id
                             ? <><Loader2 size={9} className="animate-spin" /> Memuat...</>
                             : 'Mulai Latihan →'}
