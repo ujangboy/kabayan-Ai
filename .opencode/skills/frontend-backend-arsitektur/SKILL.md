@@ -1,3 +1,8 @@
+---
+name: frontend-backend-arsitektur
+description: Panduan merancang ulang frontend jadi komponen terukur dan merapikan/standarisasi arsitektur backend (API contract, layering, observability) untuk repo kabayan_agent
+---
+
 # SKILL: Desain Frontend & Merapikan Arsitektur Backend
 
 Ringkasan

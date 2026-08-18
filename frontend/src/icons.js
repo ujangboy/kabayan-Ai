@@ -247,6 +247,44 @@ export {
   Zap,
 };
 
+// ─── Inline SVG icons (Material Symbols equivalents) ───────────────────────────
+// Beberapa nama (Folder, Language globe, Notifications bell) tidak konsisten
+// sebagai named export di @material-symbols-svg/react saat di-bundle, sehingga
+// didefinisikan langsung sebagai SVG agar selalu tersedia.
+import { forwardRef, createElement } from 'react';
+
+const svgProps = {
+  fill: 'none',
+  stroke: 'currentColor',
+  strokeWidth: 2,
+  strokeLinecap: 'round',
+  strokeLinejoin: 'round',
+  viewBox: '0 0 24 24',
+};
+
+export const Folder = forwardRef(({ size = 16, className = '', ...props }, ref) =>
+  createElement('svg', { ref, width: size, height: size, className, ...svgProps, ...props },
+    createElement('path', { d: 'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z' })
+  )
+);
+Folder.displayName = 'Folder';
+
+export const Globe = forwardRef(({ size = 16, className = '', ...props }, ref) =>
+  createElement('svg', { ref, width: size, height: size, className, ...svgProps, ...props },
+    createElement('circle', { cx: 12, cy: 12, r: 9 }),
+    createElement('path', { d: 'M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18' })
+  )
+);
+Globe.displayName = 'Globe';
+
+export const Bell = forwardRef(({ size = 16, className = '', ...props }, ref) =>
+  createElement('svg', { ref, width: size, height: size, className, ...svgProps, ...props },
+    createElement('path', { d: 'M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9' }),
+    createElement('path', { d: 'M10.3 21a1.94 1.94 0 0 0 3.4 0' })
+  )
+);
+Bell.displayName = 'Bell';
+
 /**
  * Ukuran icon standar agar konsisten di seluruh UI.
  * Gunakan ICON_SIZES.xs / sm / md / lg / xl / 2xl pada prop size icon.

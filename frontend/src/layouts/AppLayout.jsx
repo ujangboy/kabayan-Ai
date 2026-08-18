@@ -1,7 +1,9 @@
 import { useEffect } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import Sidebar from './Sidebar';
+import IconRail from '@/components/layout/IconRail';
+import ContextSidebar from '@/components/layout/ContextSidebar';
+import TopBar from '@/components/layout/TopBar';
 import CommandSearch from '@/components/search/CommandSearch';
 import BackgroundProcessSync from '@/components/BackgroundProcessSync';
 import FocusModeView from '@/components/FocusModeView';
@@ -60,7 +62,6 @@ export default function AppLayout() {
   const exitFocus = useFocusStore((s) => s.exitFocus);
 
   // Sinkronkan bahasa dari backend saat aplikasi pertama dibuka.
-  // localStorage adalah sumber instant untuk i18n; backend adalah sumber persisten.
   useEffect(() => {
     let cancelled = false;
     profileAPI.get()
@@ -99,21 +100,25 @@ export default function AppLayout() {
   return (
     <div className="flex h-screen overflow-hidden bg-background">
       <BackgroundProcessSync />
-      <Sidebar />
+      <IconRail />
+      <ContextSidebar />
       <main className="flex-1 overflow-hidden flex flex-col min-w-0">
-        <PendingBanner t={t} />
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={location.pathname}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.22, ease: [0.32, 0.72, 0, 1] }}
-            className="flex-1 flex flex-col min-w-0 overflow-hidden"
-          >
-            <Outlet />
-          </motion.div>
-        </AnimatePresence>
+        <TopBar />
+        <div className="flex-1 overflow-hidden flex flex-col min-w-0">
+          <PendingBanner t={t} />
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={location.pathname}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.22, ease: [0.32, 0.72, 0, 1] }}
+              className="flex-1 flex flex-col min-w-0 overflow-hidden"
+            >
+              <Outlet />
+            </motion.div>
+          </AnimatePresence>
+        </div>
       </main>
       {searchOpen && <CommandSearch />}
     </div>

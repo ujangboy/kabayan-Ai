@@ -1,3 +1,8 @@
+---
+name: ahli-pengecekan-bug
+description: Panduan triage, diagnosa, dan perbaikan bug lintas backend/frontend/data/AI beserta langkah migrasi/alihat antar lapisan untuk repo kabayan_agent
+---
+
 # SKILL: Pengcekan Bug dan Alih Backend/Frontend/Data/AI
 
 Deskripsi singkat
@@ -152,7 +157,6 @@ Langkah selanjutnya yang saya rekomendasikan
    - Buat wrapper contoh yang memuat model dari `services/` repo ini.
    - Tambahkan GitHub Actions workflow untuk menjalankan evaluasi pada PR.
 
-
 Contoh perintah cepat untuk agen
 ---
 - "Gunakan skill 'pengcekan bug' untuk triage issue #123." 
@@ -161,4 +165,3 @@ Contoh perintah cepat untuk agen
 Lisensi & pemeliharaan
 ---
 - Dokumen ini milik tim repo; perbarui setiap ada proses release atau perubahan arsitektur besar.
-
