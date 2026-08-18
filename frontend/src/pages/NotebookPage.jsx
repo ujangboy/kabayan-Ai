@@ -9,6 +9,7 @@ import { cn } from '@/utils';
 import NoteEditor from '@/components/NoteEditor';
 import MaterialPicker from '@/components/MaterialPicker';
 import { Tooltip } from '@/components/ui/Tooltip';
+import { useToast } from '@/components/Toast';
 
 // ─── Auto-title: extract title from content (zero AI) ─────────────────────
 function extractTitle(content) {
@@ -44,6 +45,7 @@ function nextPlaceholderTitle(notes, base) {
 
 export default function NotebookPage() {
   const { t } = useTranslation();
+  const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedNote, setSelectedNote] = useState(null);
   const [isCreating, setIsCreating] = useState(false);
@@ -181,11 +183,23 @@ export default function NotebookPage() {
 
   const handleDelete = (id, e) => {
     e.stopPropagation();
-    if (confirm(t('notebook.confirmDeleteNote'))) deleteMutation.mutate(id);
+    toast.confirm({
+      title: t('notebook.confirmDeleteNote'),
+      message: t('notebook.confirmDeleteNote'),
+      danger: true,
+      confirmLabel: t('common.delete'),
+      onConfirm: () => deleteMutation.mutate(id),
+    });
   };
 
   const handleClearAll = () => {
-    if (confirm(t('notebook.confirmClearAll'))) clearMutation.mutate();
+    toast.confirm({
+      title: t('notebook.confirmClearAll'),
+      message: t('notebook.confirmClearAll'),
+      danger: true,
+      confirmLabel: t('common.delete'),
+      onConfirm: () => clearMutation.mutate(),
+    });
   };
 
   // ── Note card ──────────────────────────────────────────────────────────
@@ -204,9 +218,9 @@ export default function NotebookPage() {
       <div
         key={n.id}
         className={cn(
-          'group relative rounded-xl transition-all duration-150',
+          'group relative rounded-xl transition-all duration-200',
           isSelected
-            ? 'bg-primary/10 ring-1 ring-primary/20'
+            ? 'bg-gradient-primary-soft ring-1 ring-primary/30'
             : 'hover:bg-card/80'
         )}
       >
@@ -218,7 +232,7 @@ export default function NotebookPage() {
             {n.is_pinned && <Pin size={9} className="text-primary shrink-0" />}
             <span className={cn(
               'text-sm font-medium truncate',
-              isSelected ? 'text-primary' : 'text-text'
+              isSelected ? 'text-primary-light' : 'text-text'
             )}>
               {n.title || t('notebook.untitled')}
             </span>
@@ -265,7 +279,7 @@ export default function NotebookPage() {
     <div className="flex h-full overflow-hidden bg-background">
 
       {/* ═══ Sidebar ═══ */}
-      <div className="w-72 border-r border-border bg-sidebar flex flex-col shrink-0 hidden md:flex">
+      <div className="w-72 border-r border-border bg-gradient-to-b from-sidebar to-background flex flex-col shrink-0 hidden md:flex">
         {/* Sidebar header */}
         <div className="px-4 pt-4 pb-3 flex items-center justify-between">
           <h2 className="text-sm font-semibold text-text">{t('notebook.notes')}</h2>
@@ -390,7 +404,13 @@ export default function NotebookPage() {
             onSave={handleContentSave}
             onPin={() => pinMutation.mutate(selectedNote.id)}
             onDelete={() => {
-              if (confirm(t('notebook.confirmDeleteNote'))) deleteMutation.mutate(selectedNote.id);
+              toast.confirm({
+                title: t('notebook.confirmDeleteNote'),
+                message: t('notebook.confirmDeleteNote'),
+                danger: true,
+                confirmLabel: t('common.delete'),
+                onConfirm: () => deleteMutation.mutate(selectedNote.id),
+              });
             }}
           />
         ) : (
@@ -679,8 +699,8 @@ function GeneratePanel({ subjects, onClose, onNoteCreated }) {
         initial={{ x: '100%' }}
         animate={{ x: 0 }}
         exit={{ x: '100%' }}
-        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-        className="fixed right-0 top-0 bottom-0 z-50 w-full max-w-md bg-sidebar border-l border-border shadow-2xl flex flex-col"
+        transition={{ type: 'spring', damping: 28, stiffness: 320 }}
+        className="fixed right-0 top-0 bottom-0 z-50 w-full max-w-md glass border-l border-border shadow-modal flex flex-col"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-border shrink-0">
