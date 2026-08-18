@@ -364,7 +364,7 @@ export default function StudyPlanPage() {
                 <X size={18} />
               </button>
             </div>
-            <div className="p-5 overflow-y-auto custom-scrollbar">
+            <div className="p-5 overflow-y-auto">
               <div className="prose prose-sm prose-invert max-w-none text-text-secondary leading-relaxed">
                 <MathMarkdown>{summaryData || ''}</MathMarkdown>
               </div>
