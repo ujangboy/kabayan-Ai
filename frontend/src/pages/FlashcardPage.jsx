@@ -95,7 +95,13 @@ export default function FlashcardPage() {
   }, [activeBatchId]);
 
   const handleClearAll = () => {
-    if (confirm(t('flashcard.confirmClearAll'))) clearAllMutation.mutate();
+    toast.confirm({
+      title: t('flashcard.confirmClearAll'),
+      message: t('flashcard.confirmClearAll'),
+      danger: true,
+      confirmLabel: t('common.delete'),
+      onConfirm: () => clearAllMutation.mutate(),
+    });
   };
 
   // Jika deck aktif, tampilkan session view
@@ -198,12 +204,18 @@ export default function FlashcardPage() {
                 onReview={() => navigate(`/flashcard/review?subject_id=${group.subject.id}`)}
                 onHistory={() => setHistoryBatchId(group.batch_id)}
                 onDeleteAll={() => {
-                  if (confirm(t('flashcard.confirmDeleteDeck', { count: group.cards.length }))) {
-                    const ids = group.cards.map(c => c.id);
-                    flashcardAPI.batchDelete(ids)
-                      .then(() => queryClient.invalidateQueries(['flashcards']))
-                      .catch(err => toast.error(extractErrorMessage(err)));
-                  }
+                  toast.confirm({
+                    title: t('flashcard.confirmDeleteDeck', { count: group.cards.length }),
+                    message: t('flashcard.confirmDeleteDeck', { count: group.cards.length }),
+                    danger: true,
+                    confirmLabel: t('common.delete'),
+                    onConfirm: () => {
+                      const ids = group.cards.map(c => c.id);
+                      flashcardAPI.batchDelete(ids)
+                        .then(() => queryClient.invalidateQueries(['flashcards']))
+                        .catch(err => toast.error(extractErrorMessage(err)));
+                    },
+                  });
                 }}
               />
             ))
@@ -271,8 +283,9 @@ function BatchFlashcardCard({ group, onStart, onReview, onHistory, onDeleteAll }
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="card-base p-5 flex flex-col"
+      className="card-base card-hoverable p-5 flex flex-col relative overflow-hidden"
     >
+      <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-primary" />
       <div className="flex items-start justify-between mb-2">
         <div className="flex-1 min-w-0">
           {/* Label "Mata Kuliah" */}
@@ -560,17 +573,21 @@ function FlashcardSession({ cards, subjectName, onClose }) {
   };
 
   const handleDeleteCard = () => {
-    if (confirm(t('flashcard.confirmDeleteCard'))) {
-      clearTimeout(autoAdvanceTimerRef.current);
-      clearInterval(autoAdvanceIntervalRef.current);
-      deleteMutation.mutate(currentCard.id);
-      setFeedback(null);
-      setAutoAdvanceProgress(0);
-      if (currentIndex >= total - 1) {
-        if (total === 1) { onClose(); } else { setCurrentIndex(total - 2); }
-      }
-      setIsFlipped(false);
-    }
+    toast.confirm({
+      title: t('flashcard.confirmDeleteCard'),
+      message: t('flashcard.confirmDeleteCard'),
+      danger: true,
+      confirmLabel: t('common.delete'),
+      onConfirm: () => {
+        deleteMutation.mutate(currentCard.id);
+        setFeedback(null);
+        setAutoAdvanceProgress(0);
+        if (currentIndex >= total - 1) {
+          if (total === 1) { onClose(); } else { setCurrentIndex(total - 2); }
+        }
+        setIsFlipped(false);
+      },
+    });
   };
 
   // Finished screen
