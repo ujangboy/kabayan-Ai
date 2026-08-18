@@ -62,7 +62,7 @@ function FeedbackButtons({ onFeedback }) {
         <button
           onClick={() => submit('somewhat')}
           disabled={status === 'sending'}
-          className="p-1 rounded-md bg-background border border-border text-text-muted hover:text-amber-400 hover:border-amber-400/50 transition-colors"
+          className="p-1 rounded-md bg-background border border-border text-text-muted hover:text-warning hover:border-warning/50 transition-colors"
         >
           <Hand size={12} />
         </button>
@@ -514,7 +514,7 @@ export default function ChatPage() {
               value={chatSearch}
               onChange={(e) => setChatSearch(e.target.value)}
               placeholder="Cari chat..."
-              className="w-full pl-7 pr-6 py-1.5 bg-background border border-border rounded-lg text-xs text-text placeholder-text-muted focus:outline-none focus:border-primary transition-colors"
+              className="w-full pl-7 pr-6 py-1.5 bg-card border border-border rounded-lg text-xs text-text placeholder-text-muted focus:outline-none focus:border-primary transition-colors"
             />
             {chatSearch && (
               <Tooltip label="Hapus pencarian">
@@ -701,7 +701,7 @@ export default function ChatPage() {
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0 bg-background/50 backdrop-blur-sm">
           <div className="flex items-center gap-2">
-            <Bot size={18} className={cn('transition-colors', tutorMode ? 'text-amber-400' : 'text-primary-light')} />
+            <Bot size={18} className={cn('transition-colors', tutorMode ? 'text-warning' : 'text-primary-light')} />
             <span className="font-semibold text-text text-sm">{chat?.title || (tutorMode ? 'Tutor AI' : 'Chat AI')}</span>
             {/* Tutor badge: show SIMPLE / MEDIUM / COMPLEX tier of last response */}
             {tutorMode && tutorBadge && (
@@ -724,7 +724,7 @@ export default function ChatPage() {
               <div className="flex items-center gap-1.5">
                 {/* RAG Indicator for Tutor Mode */}
                 {tutorActiveDocsCount > 0 && (
-                  <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-[10px] font-medium mr-1" title="AI akan membaca materi ini untuk menjawab">
+                  <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-success/10 border border-success/20 text-success text-[10px] font-medium mr-1" title="AI akan membaca materi ini untuk menjawab">
                     <BookOpen size={10} /> {tutorActiveDocsCount} Materi Aktif
                   </span>
                 )}
@@ -732,7 +732,7 @@ export default function ChatPage() {
                 <select
                   value={tutorSubject}
                   onChange={e => setChatTutor(currentChatId, { tutorSubject: e.target.value })}
-                  className="text-[11px] bg-card border border-border rounded-lg px-2 py-1 text-text-secondary outline-none cursor-pointer hover:border-amber-400/40 transition-colors"
+                  className="text-[11px] bg-card border border-border rounded-lg px-2 py-1 text-text-secondary outline-none cursor-pointer hover:border-warning/40 transition-colors"
                   title={t('chat.selectSubjectTitle')}
                 >
                   <option value="">{t('chat.allSubjects')}</option>
@@ -748,7 +748,7 @@ export default function ChatPage() {
                 <select
                   value={tutorLevel}
                   onChange={e => setChatTutor(currentChatId, { tutorLevel: e.target.value })}
-                  className="text-[11px] bg-card border border-border rounded-lg px-2 py-1 text-text-secondary outline-none cursor-pointer hover:border-amber-400/40 transition-colors"
+                  className="text-[11px] bg-card border border-border rounded-lg px-2 py-1 text-text-secondary outline-none cursor-pointer hover:border-warning/40 transition-colors"
                   title={t('chat.selectLevelTitle')}
                 >
                   <option value="beginner">{t('chat.levelBeginner')}</option>
@@ -766,7 +766,7 @@ export default function ChatPage() {
               className={cn(
                 'flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-medium border transition-all',
                 tutorMode
-                  ? 'bg-amber-500/15 border-amber-500/40 text-amber-400 hover:bg-amber-500/25'
+                  ? 'bg-warning/15 border-warning/40 text-warning hover:bg-warning/25'
                   : 'bg-card border-border text-text-muted hover:text-text hover:border-border'
               )}
             >
@@ -804,7 +804,7 @@ export default function ChatPage() {
               <div>
                 <h2 className="text-2xl font-bold text-text mb-1">
                   {tutorMode
-                    ? <><BookOpen size={18} className="inline mr-1 align-middle text-amber-400" />{t('chat.tutorModeActive')}</>
+                    ? <><BookOpen size={18} className="inline mr-1 align-middle text-warning" />{t('chat.tutorModeActive')}</>
                     : <><GraduationCap size={18} className="inline mr-1 align-middle text-primary-light" />{t('chat.greetingKabayan')}</>
                   }
                 </h2>
@@ -876,8 +876,8 @@ export default function ChatPage() {
                       'px-3 py-1.5 bg-background border rounded-full text-xs font-medium transition-all hover:-translate-y-0.5',
                       q.toNotebook
                         ? isNoteSaving
-                          ? 'border-amber-500/30 text-amber-400 opacity-60 cursor-wait'
-                          : 'border-amber-500/30 text-amber-400 hover:bg-amber-500/10 hover:border-amber-400/50'
+                          ? 'border-warning/30 text-warning opacity-60 cursor-wait'
+                          : 'border-warning/30 text-warning hover:bg-warning/10 hover:border-warning/50'
                         : 'border-border text-text-secondary hover:text-text hover:border-primary/40 hover:bg-primary/5'
                     )}
                     title={q.toNotebook ? t('chat.saveToNotebookTitle') : undefined}
@@ -925,7 +925,7 @@ export default function ChatPage() {
                   className={cn(
                     'w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-200',
                     isCurrentChatStreaming
-                      ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20 active:scale-95'
+                      ? 'bg-danger/10 text-danger hover:bg-danger/20 active:scale-95'
                       : input.trim()
                         ? 'bg-gradient-primary text-white shadow-btn-primary hover:brightness-110 active:scale-95'
                         : 'bg-card text-text-muted cursor-not-allowed'

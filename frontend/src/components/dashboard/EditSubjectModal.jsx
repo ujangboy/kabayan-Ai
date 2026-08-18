@@ -60,7 +60,7 @@ export default function EditSubjectModal({ subject, onClose, onSuccess }) {
               type="text"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary transition-colors"
+              className="input-base"
               required
             />
           </div>
@@ -71,7 +71,7 @@ export default function EditSubjectModal({ subject, onClose, onSuccess }) {
                 type="text"
                 value={formData.semester}
                 onChange={(e) => setFormData({ ...formData, semester: e.target.value })}
-                className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary transition-colors"
+                className="input-base"
               />
             </div>
             <div>
@@ -80,7 +80,7 @@ export default function EditSubjectModal({ subject, onClose, onSuccess }) {
                 type="text"
                 value={formData.lecturer}
                 onChange={(e) => setFormData({ ...formData, lecturer: e.target.value })}
-                className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary transition-colors"
+                className="input-base"
               />
             </div>
           </div>
@@ -90,7 +90,7 @@ export default function EditSubjectModal({ subject, onClose, onSuccess }) {
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               rows={3}
-              className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary transition-colors resize-y"
+              className="input-base resize-y"
             />
           </div>
           <div className="flex justify-end gap-2 pt-2">

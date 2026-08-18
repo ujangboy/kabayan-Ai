@@ -319,7 +319,7 @@ export default function NotebookPage() {
               value={noteSearch}
               onChange={(e) => setNoteSearch(e.target.value)}
               placeholder="Cari catatan..."
-              className="w-full pl-7 pr-7 py-1.5 bg-background border border-border rounded-lg text-xs text-text placeholder-text-muted focus:outline-none focus:border-primary transition-colors"
+              className="w-full pl-7 pr-7 py-1.5 bg-card border border-border rounded-lg text-xs text-text placeholder-text-muted focus:outline-none focus:border-primary transition-colors"
             />
             {noteSearch && (
               <Tooltip label="Bersihkan pencarian">

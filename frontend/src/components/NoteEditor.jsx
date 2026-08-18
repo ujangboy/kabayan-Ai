@@ -241,7 +241,7 @@ function FontSizeDropdown({ editor, floating = false }) {
             className={cn(
               'absolute z-50 flex flex-col overflow-y-auto rounded-xl shadow-xl border p-1',
               floating
-                ? 'bg-[#1a1b2e]/95 backdrop-blur-xl border-white/10'
+                ? 'bg-card/95 backdrop-blur-xl border-white/10'
                 : 'bg-card border-border',
               pos === 'bottom' ? 'top-full mt-1 left-0' : 'bottom-full mb-1 left-0'
             )}
@@ -502,7 +502,7 @@ function FloatingToolbar({ editor, editorMode }) {
             active={showColors}
             title={t('noteEditor.textColor')}
           >
-            <div className="w-3 h-3 rounded-full bg-gradient-to-br from-red-400 via-yellow-400 to-blue-400 ring-1 ring-white/20" />
+            <div className="w-3 h-3 rounded-full bg-gradient-to-br from-primary-light via-warning to-accent-blue ring-1 ring-white/20" />
           </ToolBtn>
           {showColors && (
             <div

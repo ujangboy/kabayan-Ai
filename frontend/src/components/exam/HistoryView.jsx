@@ -271,7 +271,7 @@ export default function HistoryView({ subjectId, subjects, onSelectSubject, onSt
             <input
               value={search} onChange={e => setSearch(e.target.value)}
                placeholder={t('exam.history.searchPlaceholder')}
-              className="w-full pl-9 pr-3 py-2 bg-background border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary"
+              className="w-full pl-9 pr-3 py-2 bg-card border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary"
             />
           </div>
           {search && (
