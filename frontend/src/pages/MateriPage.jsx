@@ -4,14 +4,31 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useChatStore, useUiStore } from '@/store';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileText, Upload, Plus, Trash2, Play, X, Video } from '@/icons';
+import { FileText, Upload, Plus, Trash2, X, Video, Folder, LayoutTemplate } from '@/icons';
 import { materiAPI, subjectAPI } from '@/services/api';
 import { formatDate } from '@/utils';
-import FileTypeIcon from '@/components/FileTypeIcon';
+import FileTypeIcon, { FILE_COLOR_MAP } from '@/components/FileTypeIcon';
 import { useToast } from '@/components/Toast';
 import { Tooltip } from '@/components/ui/Tooltip';
 import { extractErrorMessage } from '@/utils/errors';
 import { usePendingOperation } from '@/hooks/usePendingOperation';
+
+const FILE_TINT = {
+  YOUTUBE: 'bg-violet/10',
+  PDF: 'bg-danger/10',
+  DOCX: 'bg-info/10',
+  PPT: 'bg-orange/10',
+  XLS: 'bg-success/10',
+  TXT: 'bg-text-secondary/10',
+  CSV: 'bg-success/10',
+  MARKDOWN: 'bg-primary/10',
+};
+
+function fileTint(type) {
+  const t = String(type || '').toUpperCase();
+  const key = Object.keys(FILE_TINT).find((k) => t.includes(k));
+  return key ? FILE_TINT[key] : 'bg-text-secondary/10';
+}
 
 export default function MateriPage() {
   const { t } = useTranslation();
@@ -54,6 +71,9 @@ export default function MateriPage() {
     ? materials.filter(m => String(m.subject_id ?? m.subject?.id) === subjectFilter)
     : materials;
   const { selectedDocs, setSelectedDocs } = useChatStore();
+
+  const activeSubject = sortedSubjects.find(s => String(s.id) === subjectFilter);
+  const activeCount = selectedDocs.filter(docId => materials.some(m => `mat_${m.id}` === docId && m.status === 'Ready')).length;
 
   const toggleSelection = (id) => {
     const key = `mat_${id}`;
@@ -107,24 +127,18 @@ export default function MateriPage() {
 
   return (
     <div className="flex-1 overflow-y-auto p-6 md:p-10">
-      <div className="max-w-5xl mx-auto space-y-6">
-        
+      <div className="max-w-6xl mx-auto space-y-6">
+
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-text">{t('materi.pageTitle')}</h1>
             <p className="text-text-secondary text-sm mt-1">{t('materi.pageSubtitle')}</p>
-            {(() => {
-              const activeCount = selectedDocs.filter(docId => materials.some(m => `mat_${m.id}` === docId && m.status === 'Ready')).length;
-              if (activeCount > 0) {
-                return (
-                  <div className="mt-2 inline-flex items-center gap-2">
-                    <span className="badge badge-primary text-[11px]">{t('materi.ragActive', { count: activeCount })}</span>
-                  </div>
-                );
-              }
-              return null;
-            })()}
+            {activeCount > 0 && (
+              <div className="mt-2 inline-flex items-center gap-2">
+                <span className="badge badge-primary text-[11px]">{t('materi.ragActive', { count: activeCount })}</span>
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-3">
             <button
@@ -144,164 +158,96 @@ export default function MateriPage() {
           </div>
         </div>
 
-        {/* Filter Mata Kuliah */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <select
-              value={subjectFilter}
-              onChange={(e) => setSubjectFilter('materi', e.target.value)}
-              className="px-3 py-2 bg-card border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/30 transition-all"
+        {/* Subjects folder cards */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <LayoutTemplate size={15} className="text-primary-light" />
+            <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('nav.subjects')}</h2>
+          </div>
+          <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1">
+            {/* All Materials folder */}
+            <FolderCard
+              active={!subjectFilter}
+              icon={Folder}
+              name={t('materi.folderAll')}
+              count={materials.length}
+              onClick={() => setSubjectFilter('materi', '')}
+            />
+            {sortedSubjects.map((s) => {
+              const count = materials.filter(m => String(m.subject_id ?? m.subject?.id) === String(s.id)).length;
+              return (
+                <FolderCard
+                  key={s.id}
+                  active={String(s.id) === subjectFilter}
+                  icon={Folder}
+                  name={s.name}
+                  count={count}
+                  onClick={() => setSubjectFilter('materi', String(s.id))}
+                />
+              );
+            })}
+            <button
+              onClick={() => navigate('/subjects?new=1')}
+              className="shrink-0 w-40 flex flex-col items-center justify-center gap-2 rounded-card border border-dashed border-border text-text-muted hover:text-primary-light hover:border-primary/40 transition-colors"
             >
-              <option value="">{t('materi.filterAllSubjects')}</option>
-              {sortedSubjects.map(s => (
-                <option key={s.id} value={String(s.id)}>{s.name}</option>
-              ))}
-            </select>
-            <span className="text-xs text-text-muted">
-              {t('materi.showingCount', { shown: filteredMaterials.length, total: materials.length })}
-            </span>
+              <Plus size={20} />
+              <span className="text-xs font-medium">{t('subjects.addNew')}</span>
+            </button>
           </div>
         </div>
 
-        {/* Table */}
-        <div className="card-base overflow-x-auto p-0">
-          <table className="w-full text-sm">
-            <thead className="bg-card">
-              <tr className="border-b border-border">
-                <th className="px-4 py-3 text-left font-semibold text-text-secondary w-4"></th>
-                <th className="px-4 py-3 text-left font-semibold text-text-secondary w-5">#</th>
-                <th className="px-4 py-3 text-left font-semibold text-text-secondary">{t('materi.colFilename')}</th>
-                <th className="px-4 py-3 text-left font-semibold text-text-secondary">{t('materi.colSubject')}</th>
-                <th className="px-4 py-3 text-left font-semibold text-text-secondary">{t('materi.colDate')}</th>
-                <th className="px-4 py-3 text-left font-semibold text-text-secondary">{t('materi.colStatus')}</th>
-                <th className="px-4 py-3 text-right font-semibold text-text-secondary">{t('materi.colActions')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading ? (
-                <tr>
-                  <td colSpan="7" className="text-center py-10 text-text-muted">{t('materi.loadingData')}</td>
-                </tr>
-              ) : materials.length === 0 ? (
-                <tr>
-                  <td colSpan="7" className="text-center py-10 text-text-muted">{t('materi.emptyState')}</td>
-                </tr>
-              ) : filteredMaterials.length === 0 ? (
-                <tr>
-                  <td colSpan="7" className="text-center py-10 text-text-muted">{t('materi.noMaterialsForSubject')}</td>
-                </tr>
-              ) : (
-                filteredMaterials.map((m, idx) => (
-                  <motion.tr
-                    key={m.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.05 }}
-                    className="border-b border-border/50 hover:bg-card-hover/50 transition-colors"
-                  >
-                    <td className="px-4 py-4">
-                      <Tooltip label={m.status !== 'Ready' ? t('materi.notReady', { status: m.status }) : t('materi.enableAsRagSource')}>
-                        <span className="inline-flex items-center">
-                          <input
-                            type="checkbox"
-                            checked={selectedDocs.includes(`mat_${m.id}`)}
-                            onChange={() => m.status === 'Ready' && toggleSelection(m.id)}
-                            disabled={m.status !== 'Ready'}
-                            className="peer sr-only"
-                          />
-                          <span
-                            aria-hidden="true"
-                            className="h-4 w-4 rounded border-2 border-border bg-card flex items-center justify-center
-                              peer-checked:bg-primary peer-checked:border-primary
-                              peer-focus-visible:ring-2 peer-focus-visible:ring-primary/50
-                              peer-disabled:opacity-30 peer-disabled:cursor-not-allowed
-                              cursor-pointer transition-colors"
-                          >
-                            <svg
-                              viewBox="0 0 24 24"
-                              className="w-3 h-3 text-white opacity-0 peer-checked:opacity-100 transition-opacity"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="3"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <path d="M5 13l4 4L19 7" />
-                            </svg>
-                          </span>
-                        </span>
-                      </Tooltip>
-                    </td>
-                    <td className="px-4 py-4 text-text-muted">{idx + 1}</td>
-                    <td className="px-4 py-4">
-                      <div className="flex items-center gap-3">
-                        <FileTypeIcon type={m.material_type} className="text-xl text-text-muted" />
-                        <div className="flex flex-col">
-                          <span className="text-text font-medium max-w-[200px] sm:max-w-xs truncate" title={m.filename}>
-                            {m.filename}
-                          </span>
-                          <span className="text-[10px] text-text-muted uppercase tracking-wider">{m.material_type}</span>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-4 text-text-secondary">{m.subject?.name || '—'}</td>
-                    <td className="px-4 py-4 text-text-secondary">{formatDate(m.upload_date)}</td>
-                    <td className="px-4 py-4 min-w-[160px]">
-                      <div className="space-y-2">
-                        <span className={`badge ${m.status === 'Ready' ? 'badge-success' : m.status === 'Failed' ? 'badge-danger' : 'badge-warning'}`}
-                              title={m.status === 'Failed' && m.failure_reason ? m.failure_reason : ''}>
-                          {m.status}
-                        </span>
-                        {(m.status === 'Pending' || m.status === 'Processing') && (
-                          <div className="space-y-1">
-                            <div className="w-full h-1 bg-border rounded-full overflow-hidden">
-                              <div
-                                className={`h-full transition-all duration-700 ${m.status === 'Pending' ? 'bg-text-muted' : 'bg-gradient-primary'}`}
-                                style={{ width: `${Math.max(m.progress || 0, 4)}%` }}
-                              />
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <div className="text-[10px] text-text-muted leading-tight truncate max-w-[150px]" title={m.stage || t('materi.waitingForProcess')}>
-                                {m.status === 'Pending' ? t('materi.waitingInQueue') : (m.stage || t('materi.processing'))}
-                              </div>
-                              <Tooltip label={t('materi.cancelProcessing')}>
-                              <button
-                                onClick={() => handleCancelProcessing(m.id)}
-                                className="p-0.5 rounded text-text-muted hover:text-danger hover:bg-danger/10 transition-colors shrink-0"
-                                aria-label={t('materi.cancelProcessing')}
-                              >
-                                <X size={11} />
-                              </button>
-                            </Tooltip>
-                            </div>
-                          </div>
-                        )}
-                        {m.status === 'Failed' && m.failure_reason && (
-                          <div className="text-[10px] text-danger leading-tight max-w-[160px] break-words" title={m.failure_reason}>
-                            {m.failure_reason}
-                          </div>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="flex items-center justify-end gap-2">
-                        <Tooltip label={t('materi.deleteMateriTitle')}>
-                        <button
-                          onClick={() => handleDelete(m.id)}
-                          className="p-1.5 rounded-lg text-text-secondary hover:text-danger hover:bg-danger/10 transition-colors"
-                          aria-label={t('materi.deleteMateriTitle')}
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </Tooltip>
-                      </div>
-                    </td>
-                  </motion.tr>
-                ))
-              )}
-            </tbody>
-          </table>
+        {/* Breadcrumb / current folder */}
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-2 text-sm">
+            <FileText size={15} className="text-primary-light" />
+            <span className="text-text-secondary">{t('materi.filesTitle')}</span>
+            <span className="text-text-muted">/</span>
+            <span className="font-semibold text-text">{activeSubject ? activeSubject.name : t('materi.folderAll')}</span>
+          </div>
+          <span className="text-xs text-text-muted">
+            {t('materi.showingCount', { shown: filteredMaterials.length, total: materials.length })}
+          </span>
         </div>
+
+        {/* File manager grid */}
+        {isLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
+              <div key={i} className="card-base h-28 skeleton" />
+            ))}
+          </div>
+        ) : materials.length === 0 ? (
+          <div className="card-base text-center py-16">
+            <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-primary/15 flex items-center justify-center mb-3">
+              <Upload size={26} className="text-primary-light" />
+            </div>
+            <p className="text-text-muted">{t('materi.emptyState')}</p>
+          </div>
+        ) : filteredMaterials.length === 0 ? (
+          <div className="card-base text-center py-16">
+            <div className="w-14 h-14 mx-auto rounded-2xl bg-text-secondary/10 flex items-center justify-center mb-3">
+              <Folder size={26} className="text-text-muted" />
+            </div>
+            <p className="text-text-muted">{t('materi.fileManagerEmpty')}</p>
+          </div>
+        ) : (
+          <motion.div layout className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <AnimatePresence mode="popLayout">
+              {filteredMaterials.map((m, idx) => (
+                <MaterialFileCard
+                  key={m.id}
+                  material={m}
+                  index={idx}
+                  showSubject={!subjectFilter}
+                  isRagActive={selectedDocs.includes(`mat_${m.id}`)}
+                  onToggleRag={() => m.status === 'Ready' && toggleSelection(m.id)}
+                  onDelete={() => handleDelete(m.id)}
+                  onCancel={() => handleCancelProcessing(m.id)}
+                />
+              ))}
+            </AnimatePresence>
+          </motion.div>
+        )}
 
       </div>
 
@@ -329,6 +275,135 @@ export default function MateriPage() {
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+function FolderCard({ active, icon: Icon, name, count, onClick }) {
+  const { t } = useTranslation();
+  return (
+    <button
+      onClick={onClick}
+      className={`shrink-0 w-40 text-left rounded-card border p-3 transition-all duration-200 group
+        ${active
+          ? 'bg-gradient-primary-soft border-primary/40 shadow-glow-sm'
+          : 'bg-card border-border hover:border-primary/30 hover:bg-card-hover'}`}
+    >
+      <div className="flex items-center justify-between mb-2">
+        <div className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors
+          ${active ? 'bg-gradient-primary text-white shadow-btn-primary' : 'bg-text-secondary/10 text-text-muted group-hover:text-primary-light'}`}>
+          <Icon size={18} />
+        </div>
+        <span className="text-[10px] font-medium text-text-muted bg-background/60 px-1.5 py-0.5 rounded-full">{count}</span>
+      </div>
+      <p className={`text-sm font-semibold truncate ${active ? 'text-primary-light' : 'text-text'}`} title={name}>{name}</p>
+      <p className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">{t('materi.folderFiles', { count })}</p>
+    </button>
+  );
+}
+
+function MaterialFileCard({ material: m, index, showSubject, isRagActive, onToggleRag, onDelete, onCancel }) {
+  const { t } = useTranslation();
+  const iconColor = FILE_COLOR_MAP[String(m.material_type || '').toUpperCase().includes('YOUTUBE') ? 'YOUTUBE' : m.material_type] || 'text-text-secondary';
+
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      transition={{ delay: Math.min(index * 0.04, 0.4), duration: 0.25 }}
+      className="card-base card-hoverable group relative flex flex-col gap-3"
+    >
+      {/* Top: icon + name + delete */}
+      <div className="flex items-start gap-3">
+        <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${fileTint(m.material_type)}`}>
+          <FileTypeIcon type={m.material_type} className={`text-xl ${iconColor}`} />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-text font-medium text-sm leading-tight truncate" title={m.filename}>{m.filename}</p>
+          <p className="text-[10px] text-text-muted uppercase tracking-wider mt-0.5">{m.material_type}</p>
+          {showSubject && (m.subject?.name) && (
+            <p className="text-[11px] text-text-secondary mt-1 truncate" title={m.subject.name}>
+              <Folder size={10} className="inline text-amber mr-1" />{m.subject.name}
+            </p>
+          )}
+        </div>
+        <Tooltip label={t('materi.deleteMateriTitle')}>
+          <button
+            onClick={onDelete}
+            aria-label={t('materi.deleteMateriTitle')}
+            className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-text-secondary hover:text-danger hover:bg-danger/10 transition-all shrink-0"
+          >
+            <Trash2 size={15} />
+          </button>
+        </Tooltip>
+      </div>
+
+      {/* Status + progress */}
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <span className={`badge ${m.status === 'Ready' ? 'badge-success' : m.status === 'Failed' ? 'badge-danger' : 'badge-warning'}`}
+                title={m.status === 'Failed' && m.failure_reason ? m.failure_reason : ''}>
+            {m.status}
+          </span>
+          <span className="text-[10px] text-text-muted">{formatDate(m.upload_date)}</span>
+        </div>
+        {(m.status === 'Pending' || m.status === 'Processing') && (
+          <div className="space-y-1">
+            <div className="w-full h-1 bg-border rounded-full overflow-hidden">
+              <div
+                className={`h-full transition-all duration-700 ${m.status === 'Pending' ? 'bg-text-muted' : 'bg-gradient-primary'}`}
+                style={{ width: `${Math.max(m.progress || 0, 4)}%` }}
+              />
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="text-[10px] text-text-muted leading-tight truncate flex-1" title={m.stage || t('materi.waitingForProcess')}>
+                {m.status === 'Pending' ? t('materi.waitingInQueue') : (m.stage || t('materi.processing'))}
+              </div>
+              <Tooltip label={t('materi.cancelProcessing')}>
+                <button
+                  onClick={onCancel}
+                  className="p-0.5 rounded text-text-muted hover:text-danger hover:bg-danger/10 transition-colors shrink-0"
+                  aria-label={t('materi.cancelProcessing')}
+                >
+                  <X size={11} />
+                </button>
+              </Tooltip>
+            </div>
+          </div>
+        )}
+        {m.status === 'Failed' && m.failure_reason && (
+          <div className="text-[10px] text-danger leading-tight break-words" title={m.failure_reason}>
+            {m.failure_reason}
+          </div>
+        )}
+      </div>
+
+      {/* RAG toggle */}
+      <div className="mt-auto pt-2 border-t border-border/50 flex items-center justify-between">
+        <span className="text-[11px] text-text-muted">{t('materi.enableAsRagSource')}</span>
+        <Tooltip label={m.status !== 'Ready' ? t('materi.notReady', { status: m.status }) : t('materi.enableAsRagSource')}>
+          <span className="inline-flex items-center">
+            <input
+              type="checkbox"
+              checked={isRagActive}
+              onChange={onToggleRag}
+              disabled={m.status !== 'Ready'}
+              className="peer sr-only"
+            />
+            <span
+              aria-hidden="true"
+              className="h-4 w-7 rounded-full bg-border relative transition-colors cursor-pointer
+                peer-checked:bg-gradient-primary
+                peer-focus-visible:ring-2 peer-focus-visible:ring-primary/50
+                peer-disabled:opacity-30 peer-disabled:cursor-not-allowed
+                after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:w-3 after:h-3 after:rounded-full after:bg-white
+                after:transition-transform after:duration-200 peer-checked:after:translate-x-3"
+            />
+          </span>
+        </Tooltip>
+      </div>
+    </motion.div>
   );
 }
 
@@ -395,7 +470,7 @@ function UploadModal({ onClose, subjects, onSuccess }) {
           </div>
           <div>
             <label className="block text-xs font-medium text-text-secondary mb-1">{t('materi.uploadSelectFileLabel')}</label>
-            <div 
+            <div
               className="border-2 border-dashed border-border hover:border-primary/50 transition-colors rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer text-center"
               onClick={() => fileInputRef.current?.click()}
             >
