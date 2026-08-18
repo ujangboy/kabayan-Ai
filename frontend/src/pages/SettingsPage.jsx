@@ -36,9 +36,14 @@ export default function SettingsPage() {
     <div className="flex-1 overflow-y-auto p-6 md:p-10">
       <div className="max-w-5xl mx-auto space-y-6">
         {/* Header */}
-        <div>
-          <h1 className="text-2xl font-bold text-text">{t('settings.title')}</h1>
-          <p className="text-text-secondary text-sm mt-0.5">{t('settings.subtitle')}</p>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center shrink-0 shadow-lg shadow-primary/25">
+            <User size={20} className="text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-text">{t('settings.title')}</h1>
+            <p className="text-text-secondary text-sm mt-0.5">{t('settings.subtitle')}</p>
+          </div>
         </div>
 
         {/* Tabs */}
@@ -48,10 +53,10 @@ export default function SettingsPage() {
               key={key}
               onClick={() => setActive(key)}
               className={cn(
-                'flex items-center gap-1.5 px-4 py-2 text-sm rounded-t-lg border-b-2 transition-colors',
+                'flex items-center gap-1.5 px-4 py-2 text-sm rounded-t-lg border-b-2 transition-all',
                 active === key
                   ? 'text-primary border-primary bg-primary/5'
-                  : 'text-text-secondary border-transparent hover:text-text'
+                  : 'text-text-secondary border-transparent hover:text-text hover:bg-card/50'
               )}
             >
               <Icon size={15} />
