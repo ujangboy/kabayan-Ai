@@ -6,7 +6,7 @@ import { cn } from '@/utils';
 import MathMarkdown from '@/components/MathMarkdown';
 import { Chip } from './shared';
 
-export default function QuizView({ sessionData, onDone }) {
+export default function QuizView({ sessionData, clockStart, onDone }) {
   const { t } = useTranslation();
   const questions = sessionData?.questions || [];
   const totalQ    = questions.length;
@@ -15,7 +15,15 @@ export default function QuizView({ sessionData, onDone }) {
   const [idx, setIdx]         = useState(0);
   const [answers, setAnswers] = useState({});
   const [paused, setPaused]   = useState(false);
-  const [timeLeft, setTimeLeft] = useState(duration ? duration * 60 : null);
+  const [timeLeft, setTimeLeft] = useState(() => {
+    if (!duration) return null;
+    const base = duration * 60;
+    if (clockStart) {
+      const elapsed = Math.floor((Date.now() - clockStart) / 1000);
+      return Math.max(0, base - elapsed);
+    }
+    return base;
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError]     = useState('');
 

@@ -22,8 +22,8 @@ export default function QuizTimer({ totalSeconds, onTimeUp, isActive = true }) {
       if (remaining <= 0) onTimeUpRef.current?.();
       return;
     }
-    const t = setTimeout(() => setRemaining(r => r - 1), 1000);
-    return () => clearTimeout(t);
+    const timerId = setTimeout(() => setRemaining(r => r - 1), 1000);
+    return () => clearTimeout(timerId);
   }, [remaining, isActive]);
 
   const warning = remaining <= 60;

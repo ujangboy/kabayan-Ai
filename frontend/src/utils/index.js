@@ -42,6 +42,7 @@ export function fileIcon(type) {
   if (t.includes('PDF')) return '📄';
   if (t.includes('DOCX')) return '📝';
   if (t.includes('PPT')) return '📊';
+  if (t.includes('XLS')) return '📗';
   if (t.includes('TXT')) return '🗒️';
   return '📁';
 }

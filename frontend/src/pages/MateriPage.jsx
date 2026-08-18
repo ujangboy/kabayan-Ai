@@ -1,27 +1,35 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useChatStore, useUiStore } from '@/store';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileText, Upload, Plus, Trash2, Headphones, Play, X, Video, Mic } from 'lucide-react';
-import { materiAPI, subjectAPI, audioAPI } from '@/services/api';
+import { FileText, Upload, Plus, Trash2, Play, X, Video } from 'lucide-react';
+import { materiAPI, subjectAPI } from '@/services/api';
 import { formatDate, fileIcon } from '@/utils';
 import { useToast } from '@/components/Toast';
 import { extractErrorMessage } from '@/utils/errors';
 import { usePendingOperation } from '@/hooks/usePendingOperation';
-import AudioStatus from '@/components/AudioStatus';
 
 export default function MateriPage() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const location = useLocation();
+  const navigate = useNavigate();
   const { toast } = useToast();
-  const audioOp = usePendingOperation('audio');
   const processOp = usePendingOperation('process');
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isYoutubeModalOpen, setIsYoutubeModalOpen] = useState(false);
-  const [isAudioModalOpen, setIsAudioModalOpen] = useState(false);
   const subjectFilter = useUiStore((s) => s.subjectFilterMateri);
   const setSubjectFilter = useUiStore((s) => s.setSubjectFilter);
+
+  // Read subject_id from URL
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const sid = params.get('subject_id');
+    if (sid) setSubjectFilter('materi', sid);
+    if (location.search) navigate('/materi', { replace: true });
+  }, []);
 
   const { data: materiData, isLoading } = useQuery({
     queryKey: ['materials'],
@@ -56,27 +64,10 @@ export default function MateriPage() {
   const deleteMutation = useMutation({
     mutationFn: (id) => materiAPI.delete(id),
     onSuccess: (_, deletedId) => {
-      // Bersihkan dari selectedDocs agar AI tidak pakai materi yang sudah dihapus
       const key = `mat_${deletedId}`;
       setSelectedDocs(selectedDocs.filter((d) => d !== key));
       processOp.finish(`process-${deletedId}`);
-      audioOp.finish(`audio-${deletedId}`);
       queryClient.invalidateQueries(['materials']);
-      queryClient.invalidateQueries(['audioStatuses']);
-    }
-  });
-
-  const generateAudioMutation = useMutation({
-    mutationFn: (id) => audioAPI.generate(id),
-    onSuccess: (_, id) => {
-      audioOp.start(`audio-${id}`);
-      queryClient.invalidateQueries(['audioStatus']);
-      queryClient.invalidateQueries(['audioStatuses']);
-      toast.info(t('materi.audioGeneratingBackground'));
-    },
-    onError: (err, id) => {
-      audioOp.finish(`audio-${id}`);
-      toast.error(extractErrorMessage(err));
     }
   });
 
@@ -92,50 +83,10 @@ export default function MateriPage() {
     }
   });
 
-  const deleteAudioMutation = useMutation({
-    mutationFn: (id) => audioAPI.delete(id),
-    onSuccess: (_, id) => {
-      audioOp.finish(`audio-${id}`);
-      queryClient.invalidateQueries(['materials']);
-      queryClient.invalidateQueries(['audioStatus']);
-      queryClient.invalidateQueries(['audioStatuses']);
-      toast.success(t('materi.audioDeleted'));
-    },
-    onError: (err) => {
-      toast.error(extractErrorMessage(err));
-    }
-  });
-
-  const cancelAudioMutation = useMutation({
-    mutationFn: (id) => audioAPI.cancel(id),
-    onSuccess: (_, id) => {
-      audioOp.finish(`audio-${id}`);
-      queryClient.invalidateQueries(['audioStatus']);
-      queryClient.invalidateQueries(['audioStatuses']);
-      toast.info(t('materi.audioGenerationCancelled'));
-    },
-    onError: (err) => {
-      toast.error(extractErrorMessage(err));
-    }
-  });
-
   const handleDelete = (id) => {
     if (confirm(t('materi.confirmDelete'))) {
       deleteMutation.mutate(id);
     }
-  };
-
-  const handleAudio = (id) => {
-    if (confirm(t('materi.confirmAudio'))) {
-      generateAudioMutation.mutate(id);
-    }
-  };
-
-  const handleRegenerateAudio = (id) => {
-    // D5: hapus audio lama lalu buat ulang (backend menolak regen saat status 'done')
-    deleteAudioMutation.mutate(id, {
-      onSettled: () => generateAudioMutation.mutate(id),
-    });
   };
 
   return (
@@ -160,13 +111,6 @@ export default function MateriPage() {
             })()}
           </div>
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => setIsAudioModalOpen(true)}
-              className="btn-ghost border border-border text-xs"
-            >
-              <Mic size={14} className="text-accent-blue" />
-              {t('materi.importAudio')}
-            </button>
             <button
               onClick={() => setIsYoutubeModalOpen(true)}
               className="btn-ghost border border-border text-xs"
@@ -220,15 +164,15 @@ export default function MateriPage() {
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan="6" className="text-center py-10 text-text-muted">{t('materi.loadingData')}</td>
+                  <td colSpan="7" className="text-center py-10 text-text-muted">{t('materi.loadingData')}</td>
                 </tr>
               ) : materials.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="text-center py-10 text-text-muted">{t('materi.emptyState')}</td>
+                  <td colSpan="7" className="text-center py-10 text-text-muted">{t('materi.emptyState')}</td>
                 </tr>
               ) : filteredMaterials.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="text-center py-10 text-text-muted">{t('materi.noMaterialsForSubject')}</td>
+                  <td colSpan="7" className="text-center py-10 text-text-muted">{t('materi.noMaterialsForSubject')}</td>
                 </tr>
               ) : (
                 filteredMaterials.map((m, idx) => (
@@ -301,26 +245,10 @@ export default function MateriPage() {
                             {m.failure_reason}
                           </div>
                         )}
-                       <AudioStatus
-                         materialId={m.id}
-                         onCancel={(id) => cancelAudioMutation.mutate(id)}
-                         onDelete={(id) => deleteAudioMutation.mutate(id)}
-                         onRetry={handleAudio}
-                         onRegenerate={handleRegenerateAudio}
-                       />
                       </div>
                     </td>
                     <td className="px-4 py-4">
                       <div className="flex items-center justify-end gap-2">
-                        {/* Audio Button */}
-                        <button
-                          onClick={() => handleAudio(m.id)}
-                          className="p-1.5 rounded-lg text-text-secondary hover:text-accent-teal hover:bg-accent-teal/10 transition-colors"
-                          title={t('materi.audioPodcastTitle')}
-                        >
-                          <Headphones size={16} />
-                        </button>
-                        {/* Delete Button */}
                         <button
                           onClick={() => handleDelete(m.id)}
                           className="p-1.5 rounded-lg text-text-secondary hover:text-danger hover:bg-danger/10 transition-colors"
@@ -361,17 +289,6 @@ export default function MateriPage() {
             }}
           />
         )}
-        {isAudioModalOpen && (
-          <AudioUploadModal
-            onClose={() => setIsAudioModalOpen(false)}
-            subjects={sortedSubjects}
-            onSuccess={() => {
-              setIsAudioModalOpen(false);
-              toast.info(t('materi.audioUploading'));
-              queryClient.invalidateQueries(['materials']);
-            }}
-          />
-        )}
       </AnimatePresence>
     </div>
   );
@@ -394,14 +311,11 @@ function UploadModal({ onClose, subjects, onSuccess }) {
     formData.append('file', file);
     formData.append('subject_id', subjectId);
     try {
-      const res = await fetch('/api/materials', { method: 'POST', body: formData });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.message || data.detail || t('materi.uploadFailed'));
-      }
+      const res = await materiAPI.upload(formData);
+      if (res.data?.detail) throw new Error(res.data.detail);
       onSuccess();
     } catch (err) {
-      setError(err.message && err.message.length < 200 ? err.message : t('materi.uploadFailedRetry'));
+      setError(extractErrorMessage(err) || t('materi.uploadFailedRetry'));
       setIsSubmitting(false);
     }
   };
@@ -455,98 +369,6 @@ function UploadModal({ onClose, subjects, onSuccess }) {
                 onChange={(e) => setFile(e.target.files[0])}
                 className="hidden"
                 accept=".pdf,.docx,.txt,.md,.csv,.pptx,.xlsx"
-                required
-              />
-            </div>
-          </div>
-          <div className="flex justify-end gap-2 pt-2">
-            <button type="button" onClick={onClose} className="btn-ghost">{t('common.cancel')}</button>
-            <button type="submit" disabled={isSubmitting || !file} className="btn-primary">
-              {isSubmitting ? t('materi.uploading') : t('materi.uploadAndProcess')}
-            </button>
-          </div>
-        </form>
-      </motion.div>
-    </div>
-  );
-}
-
-function AudioUploadModal({ onClose, subjects, onSuccess }) {
-  const { t } = useTranslation();
-  const [file, setFile] = useState(null);
-  const [subjectId, setSubjectId] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState('');
-  const fileInputRef = useRef(null);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!file || !subjectId) return setError(t('materi.uploadSelectFileSubject'));
-    setError('');
-    setIsSubmitting(true);
-    try {
-      const res = await materiAPI.uploadAudio(subjectId, file);
-      if (res.data?.message && res.status >= 400) throw new Error(res.data.message);
-      onSuccess();
-    } catch (err) {
-      setError(err.message && err.message.length < 200 ? err.message : t('materi.uploadFailedRetry'));
-      setIsSubmitting(false);
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        className="w-full max-w-md card-base shadow-2xl"
-      >
-        <div className="flex items-center justify-between p-4 border-b border-border">
-          <div className="flex items-center gap-2">
-            <Mic size={18} className="text-accent-blue" />
-            <h3 className="font-semibold text-text">{t('materi.audioModalTitle')}</h3>
-          </div>
-          <button onClick={onClose} className="text-text-muted hover:text-text"><X size={18} /></button>
-        </div>
-        <form onSubmit={handleSubmit} className="p-4 space-y-4">
-          <p className="text-xs text-text-muted">{t('materi.audioSubtitle')}</p>
-          {error && (
-            <div className="text-xs text-danger bg-danger/10 border border-danger/20 rounded-lg px-3 py-2">
-              {error}
-            </div>
-          )}
-          <div>
-            <label className="block text-xs font-medium text-text-secondary mb-1">{t('materi.subjectLabel')}</label>
-            <select
-              required
-              value={subjectId}
-              onChange={(e) => setSubjectId(e.target.value)}
-              className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary transition-colors"
-            >
-              <option value="">{t('materi.selectSubject')}</option>
-              {subjects.map(s => (
-                <option key={s.id} value={s.id}>{s.name}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-text-secondary mb-1">{t('materi.uploadSelectFileLabel')}</label>
-            <div
-              className="border-2 border-dashed border-border hover:border-primary/50 transition-colors rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer text-center"
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <Mic size={24} className="text-accent-blue mb-2" />
-              <p className="text-sm text-text font-medium">
-                {file ? file.name : t('materi.uploadDropzone')}
-              </p>
-              <p className="text-xs text-text-muted mt-1">{t('materi.audioFormats')}</p>
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={(e) => setFile(e.target.files[0])}
-                className="hidden"
-                accept=".mp3,.wav,.m4a,.ogg,.flac"
                 required
               />
             </div>

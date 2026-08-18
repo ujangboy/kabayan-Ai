@@ -3,6 +3,7 @@ Question Bank Repository
 Handles persistent storage and retrieval of AI-generated questions.
 """
 import datetime
+from time_utils import utcnow
 import json
 from typing import List, Optional
 from sqlalchemy.orm import Session
@@ -127,7 +128,7 @@ class QuestionBankRepository(BaseRepository[QuestionBank]):
                 tips           = q.get("tips"),
                 created_by_ai  = 1,
                 used_count     = 0,
-                created_at     = datetime.datetime.utcnow(),
+                created_at     = utcnow(),
             )
             db.add(row)
             count += 1

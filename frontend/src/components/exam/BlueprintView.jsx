@@ -1,22 +1,38 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ClipboardList, Loader2, Play, ChevronLeft } from 'lucide-react';
 import { examAPI } from '@/services/api';
 import { Chip, SectionHeader } from './shared';
 
-export default function BlueprintView({ blueprint, onGenerate, onBack }) {
+export default function BlueprintView({ blueprint, onGenerate, onGenerating, onBack }) {
   const { t } = useTranslation();
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState('');
+  const [progress, setProgress] = useState(0);
+  const progressRef = useRef(null);
 
   const items = blueprint?.blueprint_items || [];
   const totalW = items.reduce((s, i) => s + (i.weight_percent || 0), 0);
 
+  useEffect(() => {
+    if (!isGenerating) return;
+    const start = Date.now();
+    const duration = 120000;
+    progressRef.current = setInterval(() => {
+      const elapsed = Date.now() - start;
+      const pct = Math.min(95, Math.round((elapsed / duration) * 95));
+      setProgress(pct);
+    }, 1000);
+    return () => clearInterval(progressRef.current);
+  }, [isGenerating]);
+
   const handleGenerate = async () => {
-    setError(''); setIsGenerating(true);
+    setError(''); setIsGenerating(true); setProgress(0);
+    if (onGenerating) onGenerating();
     try {
       const r = await examAPI.generateQuestions(blueprint.blueprint_id);
       if (r.data?.detail) throw new Error(r.data.detail);
+      setProgress(100);
       onGenerate(r.data);
     } catch (e) {
       setError(e.response?.data?.detail || e.message || t('exam.blueprint.failedGenerate'));
@@ -29,14 +45,20 @@ export default function BlueprintView({ blueprint, onGenerate, onBack }) {
       <div className="card-base p-20 text-center">
         <Loader2 size={48} className="animate-spin text-primary mx-auto mb-6" />
         <h3 className="text-lg font-semibold text-text mb-2">{t('exam.blueprint.generatingTitle')}</h3>
-        <p className="text-text-muted text-sm max-w-sm mx-auto mb-4">
+        <p className="text-text-muted text-sm max-w-sm mx-auto mb-6">
           {t('exam.blueprint.generatingDesc', { strong: <strong className="text-text">1–3 menit</strong> })}
         </p>
-        <div className="flex justify-center gap-1.5 mt-4">
-          {[0,1,2].map(i => (
-            <div key={i} className="w-2 h-2 rounded-full bg-primary animate-bounce"
-              style={{ animationDelay: `${i * 0.15}s` }} />
-          ))}
+        <div className="max-w-md mx-auto">
+          <div className="flex justify-between text-xs text-text-muted mb-1.5">
+            <span>Membuat soal dari blueprint...</span>
+            <span className="font-semibold text-primary">{progress}%</span>
+          </div>
+          <div className="h-3 bg-background rounded-full overflow-hidden border border-border/50">
+            <div
+              className="h-full bg-primary rounded-full transition-all duration-1000"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
         </div>
       </div>
     );

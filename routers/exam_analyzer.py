@@ -3,6 +3,7 @@ import logging
 from typing import Optional
 from fastapi import APIRouter, Depends, Query, Body
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from database import get_db
 from services.exam_service import exam_service
@@ -401,6 +402,23 @@ async def submit_plan_flashcards(
         return JSONResponse(data)
     except Exception as e:
         logger.error(f"submit_plan_flashcards error: {e}", exc_info=True)
+        raise AppError(str(e), status_code=500)
+
+class SummaryRequest(BaseModel):
+    topic: str
+
+@router.post("/sessions/{session_id}/summary")
+async def generate_session_summary(
+    session_id: int,
+    payload: SummaryRequest,
+    db: Session = Depends(get_db),
+):
+    """Generate bite-sized summary for a topic."""
+    try:
+        data = exam_service.generate_study_plan_summary(db, session_id, payload.topic)
+        return JSONResponse(data)
+    except Exception as e:
+        logger.error(f"generate_session_summary error: {e}", exc_info=True)
         raise AppError(str(e), status_code=500)
 
 

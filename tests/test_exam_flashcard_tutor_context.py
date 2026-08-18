@@ -8,6 +8,7 @@ Fokus uji:
 """
 import json
 import datetime
+from time_utils import utcnow
 
 import pytest
 
@@ -31,7 +32,7 @@ def _make_exam(db, subject, score=60, wrong_topics=("Topik Lemah",), submitted=T
         weak_topics_json=json.dumps([{"topic": t, "accuracy": 33} for t in wrong_topics]),
         strong_topics_json=json.dumps([{"topic": "Topik Kuat", "mastery": "Baik"}]),
         evaluation_json=json.dumps({"overall_feedback": "Fokus pada topik lemah."}),
-        submitted_at=datetime.datetime.utcnow() if submitted else None,
+        submitted_at=utcnow() if submitted else None,
     )
     db.add(session)
     db.commit()
@@ -43,7 +44,7 @@ def _make_exam(db, subject, score=60, wrong_topics=("Topik Lemah",), submitted=T
         score=score,
         total_correct=4,
         total_wrong=2,
-        created_at=datetime.datetime.utcnow(),
+        created_at=utcnow(),
     )
     db.add(attempt)
     db.commit()

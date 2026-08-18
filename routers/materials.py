@@ -7,7 +7,6 @@ import config
 from database import get_db
 import models
 from services.material_service import material_service
-from services.audio_service import audio_service
 from repositories.material_repository import material_repository
 
 router = APIRouter()
@@ -105,38 +104,6 @@ async def upload_material(
     finally:
         await file.close()
 
-@router.post("/api/materials/audio")
-async def upload_audio_material(
-    background_tasks: BackgroundTasks,
-    subject_id: int = Form(...),
-    file: UploadFile = File(...),
-    db: Session = Depends(get_db)
-):
-    """US1.1: upload audio → transkripsi Whisper (Groq) → materi siap RAG.
-
-    Status langsung 'Processing' (bukan Pending) agar worker materi biasa tidak
-    mengambil file audio; transkripsi + indexing ditangani background task.
-    """
-    from services.transcription_service import validate_audio
-    try:
-        file_bytes = await file.read()
-        try:
-            validate_audio(file.filename, len(file_bytes))
-        except ValueError as e:
-            return JSONResponse(status_code=400, content={"status": "error", "message": str(e)})
-
-        filepath, mat_id = material_service.create_audio_material(
-            db, subject_id, file.filename or "audio", file_bytes
-        )
-        background_tasks.add_task(material_service.process_audio_material_async, mat_id)
-        return JSONResponse({
-            "status": "processing",
-            "material_id": mat_id,
-            "message": "Audio diterima — transkripsi sedang berjalan di background.",
-        })
-    finally:
-        await file.close()
-
 @router.post("/api/materials/{material_id}/delete")
 async def delete_material(material_id: int, db: Session = Depends(get_db)):
     material_service.delete(db, material_id)
@@ -148,57 +115,4 @@ async def cancel_material(material_id: int, db: Session = Depends(get_db)):
     if not ok:
         return JSONResponse(status_code=400, content={"detail": "Material tidak sedang diproses atau tidak ditemukan."})
     return JSONResponse({"status": "success", "message": "Material dibatalkan."})
-
-@router.post("/api/materials/{material_id}/audio")
-async def generate_audio(material_id: int, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
-    # Trigger audio generation in background
-    background_tasks.add_task(audio_service.generate_audio_for_material_async, material_id)
-    return JSONResponse({"status": "processing", "message": "Audio generating"})
-
-@router.post("/api/materials/{material_id}/audio/delete")
-async def delete_audio(material_id: int, db: Session = Depends(get_db)):
-    ok = audio_service.delete_audio(db, material_id)
-    if not ok:
-        return JSONResponse(status_code=400, content={"detail": "Audio tidak ditemukan untuk materi ini."})
-    return JSONResponse({"status": "success", "message": "Audio dihapus."})
-
-@router.post("/api/materials/{material_id}/audio/cancel")
-async def cancel_audio(material_id: int, db: Session = Depends(get_db)):
-    ok = audio_service.cancel_audio(db, material_id)
-    if not ok:
-        return JSONResponse(status_code=400, content={"detail": "Audio tidak sedang diproses atau tidak ditemukan."})
-    return JSONResponse({"status": "success", "message": "Audio dibatalkan."})
-
-@router.get("/api/audio/statuses")
-async def get_all_audio_statuses(db: Session = Depends(get_db)):
-    """Semua audio generation yang sedang diproses — untuk banner global lintas halaman."""
-    rows = (
-        db.query(models.AudioGeneration)
-        .filter(models.AudioGeneration.status == "processing")
-        .all()
-    )
-    return JSONResponse({"processing": [
-        {
-            "material_id": r.material_id,
-            "status": r.status,
-            "progress": r.progress,
-            "stage": r.stage,
-        }
-        for r in rows
-    ]})
-
-@router.get("/api/materials/{material_id}/audio")
-async def get_audio_status(material_id: int, db: Session = Depends(get_db)):
-    audio_gen = audio_service.get_audio_status(db, material_id)
-    if not audio_gen:
-        return JSONResponse({"status": "none", "filepath": None})
-    return JSONResponse({
-        "status": audio_gen.status,
-        "filepath": audio_gen.filepath,
-        "engine_used": audio_gen.engine_used,
-        "failure_reason": audio_gen.failure_reason,
-        "progress": audio_gen.progress,
-        "stage": audio_gen.stage,
-        "updated_at": audio_gen.created_at.isoformat() if audio_gen.created_at else None
-    })
 

@@ -1,6 +1,6 @@
 """Sampah (recycle bin) — list, restore, hapus permanen, kosongkan.
 
-Materi yang dihapus tidak langsung musnah: file fisik (+ audio) dipindah ke
+Materi yang dihapus tidak langsung musnah: file fisik dipindah ke
 storage/trash dan record Materi ditandai status "Trashed" sehingga bisa
 di-restore dari halaman Pengaturan > Data.
 """
@@ -63,7 +63,7 @@ async def trash_delete(item_id: int, db: Session = Depends(get_db)):
 
 @router.post("/api/trash/materials/{material_id}/restore")
 async def trash_restore_material(material_id: int, db: Session = Depends(get_db)):
-    """Kembalikan materi (beserta audio) dari sampah."""
+    """Kembalikan materi dari sampah."""
     try:
         ok = restore_material(db, material_id)
         if not ok:
@@ -77,7 +77,7 @@ async def trash_restore_material(material_id: int, db: Session = Depends(get_db)
 
 @router.post("/api/trash/materials/{material_id}/delete")
 async def trash_delete_material(material_id: int, db: Session = Depends(get_db)):
-    """Hapus permanen materi (file + audio + record + RAG chunks)."""
+    """Hapus permanen materi (file + record + RAG chunks)."""
     try:
         ok = delete_material_permanent(db, material_id)
         if not ok:

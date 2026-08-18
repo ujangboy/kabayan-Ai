@@ -16,6 +16,7 @@ review flashcard.
 from __future__ import annotations
 
 import datetime
+from time_utils import utcnow
 import json
 import logging
 from typing import Dict, List, Optional
@@ -92,7 +93,7 @@ def _activity_dates(db: Session, subject_id: Optional[int]) -> List[datetime.dat
 
 def compute_streak(db: Session, subject_id: Optional[int] = None) -> Dict:
     """Streak hari belajar berturut-turut + statistik konsistensi."""
-    today = _local_date(datetime.datetime.utcnow())
+    today = _local_date(utcnow())
     date_set = set(_activity_dates(db, subject_id))
     dates = sorted(date_set)
 

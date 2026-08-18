@@ -12,7 +12,6 @@ import { setAppLanguage, STORAGE_KEY } from '@/i18n';
 const OP_LABELS = [
   ['chat', 'appLayout.opChat'],
   ['notebook', 'appLayout.opNotebook'],
-  ['audio', 'appLayout.opAudio'],
   ['process', 'appLayout.opProcess'],
   ['youtube', 'appLayout.opYoutube'],
   ['quiz', 'appLayout.opQuiz'],

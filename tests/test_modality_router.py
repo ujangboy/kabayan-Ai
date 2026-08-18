@@ -10,6 +10,7 @@ Fokus uji:
   - Endpoint /api/study/route: 200 valid, 422 tier invalid, 404 subject hilang
 """
 import datetime
+from time_utils import utcnow
 import asyncio
 
 import pytest
@@ -30,7 +31,7 @@ def _add_flashcards(db, subject_id, n=2, due_days=None):
             ease_factor=250,
         )
         if due_days is not None:
-            fc.next_review = datetime.datetime.utcnow() + datetime.timedelta(days=due_days)
+            fc.next_review = utcnow() + datetime.timedelta(days=due_days)
         db.add(fc)
         cards.append(fc)
     db.commit()

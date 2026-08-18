@@ -1,3 +1,4 @@
+from time_utils import utcnow
 import logging
 from fastapi import APIRouter, Depends, Form, Query
 from fastapi.responses import JSONResponse
@@ -85,7 +86,7 @@ async def get_due_flashcards(subject_id: int = Query(None), db: Session = Depend
     """Kartu yang siap direview: kartu baru (belum pernah direview) + kartu yang sudah jatuh tempo."""
     import datetime
     from models import Flashcard
-    now = datetime.datetime.utcnow()
+    now = utcnow()
     query = db.query(Flashcard).filter(
         Flashcard.mastered == 0,
         or_(
@@ -155,7 +156,7 @@ async def get_flashcard_stats(subject_id: int = Query(None), db: Session = Depen
         query = query.filter(Flashcard.subject_id == subject_id)
     cards = query.all()
 
-    now = datetime.datetime.utcnow()
+    now = utcnow()
     total = len(cards)
     mastered = sum(1 for c in cards if c.mastered)
     due = sum(1 for c in cards if c.next_review and c.next_review <= now and not c.mastered)
@@ -288,4 +289,3 @@ async def generate_flashcards(
         return JSONResponse(status_code=422, content={"detail": str(e)})
     except Exception as e:
         return JSONResponse(status_code=500, content={"detail": str(e)})
-

@@ -1,3 +1,4 @@
+from time_utils import utcnow
 """
 Integration test untuk GET /api/tutor/stats dan optimasi token Task C.
 """
@@ -80,7 +81,7 @@ class TestCacheIntegration:
             models.Cache.prompt_hash == cache_service._hash(key)
         ).first()
         if cached:
-            cached.expired_at = datetime.datetime.utcnow()
+            cached.expired_at = utcnow()
             db_session.commit()
 
         result = cache_service.get_cache(db_session, key, "", "")

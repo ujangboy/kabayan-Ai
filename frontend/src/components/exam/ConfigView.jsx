@@ -63,7 +63,8 @@ export default function ConfigView({ subjectId, analysis, onDone }) {
         {options.map(opt => {
           const val = typeof opt === 'object' ? opt.value : opt;
           const lbl = renderLabel ? renderLabel(opt) : String(opt);
-          const active = form[field] === opt || form[field] === val;
+          const formVal = form[field];
+          const active = formVal === opt || formVal === val || (formVal?.value && formVal.value === val);
           return (
             <button key={lbl} onClick={() => set(field, opt)}
               className={cn('px-3 py-1.5 rounded-lg text-xs font-medium border transition-all',

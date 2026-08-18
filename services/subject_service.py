@@ -83,7 +83,7 @@ class SubjectService:
         success = subject_repository.delete(db, id)
         if success:
             cache_service.invalidate_all(db)
-            # D2: file materi/audio milik subject yang cascade-delete jadi yatim → sweep ke trash
+            # D2: file materi milik subject yang cascade-delete jadi yatim → sweep ke trash
             from services.storage_cleanup_service import cleanup_orphan_files
             cleanup_orphan_files(db)
         return success

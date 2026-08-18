@@ -1,3 +1,4 @@
+from time_utils import utcnow
 from services.ai_service import ai_service
 from prompts.flashcard import FLASHCARD_PROMPT
 from repositories.flashcard_repository import flashcard_repository
@@ -35,7 +36,7 @@ class FlashcardService:
             if not items:
                 raise ValueError("AI tidak menghasilkan flashcard. Coba lagi.")
 
-            now = datetime.datetime.utcnow()
+            now = utcnow()
             # Selalu generate batch_id baru — tidak pernah dari parameter luar
             # agar setiap Generate AI menghasilkan deck yang benar-benar terpisah
             generated_batch_id = str(uuid.uuid4())

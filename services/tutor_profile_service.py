@@ -8,6 +8,7 @@ It influences tutor prompt adaptation and tracks usage statistics.
 import json
 import logging
 import datetime
+from time_utils import utcnow
 from typing import Optional
 
 from sqlalchemy.orm import Session
@@ -44,7 +45,7 @@ def update_after_feedback(db: Session, rating: str) -> TutorUserProfile:
     profile.helpful_rate = (
         round(profile.helpful_count / total * 100, 1) if total > 0 else None
     )
-    profile.updated_at = datetime.datetime.utcnow()
+    profile.updated_at = utcnow()
     db.commit()
     db.refresh(profile)
     return profile
@@ -129,7 +130,7 @@ def update_topics_for_subject(
 
     profile.weak_topics   = _merge_tagged(profile.weak_topics,   subject_id, weak)
     profile.strong_topics = _merge_tagged(profile.strong_topics, subject_id, strong)
-    profile.updated_at    = datetime.datetime.utcnow()
+    profile.updated_at    = utcnow()
     db.commit()
     db.refresh(profile)
     return profile

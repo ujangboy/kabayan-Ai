@@ -423,7 +423,7 @@
     "subtitle": "Analisis kelemahan dan simulasikan ujian nyata dari materimu.",
     "adaptiveBadge": "Adaptif",
     "adaptiveBadgeHint": "Soal ujian disesuaikan dengan profil belajar jangka panjangmu (topik lemah & kuat).",
-    "selectSubjectPlaceholder": "-- Pilih Mata Kuliah --",
+    "selectSubjectPlaceholder": "Semua Mata Kuliah",
     "createSimulation": "Buat Simulasi",
     "confirmExit": "Keluar dari ujian? Progres akan hilang.",
     "dashboard": {

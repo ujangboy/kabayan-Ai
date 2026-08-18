@@ -423,7 +423,7 @@
     "subtitle": "Analyze weaknesses and simulate real exams from your materials.",
     "adaptiveBadge": "Adaptive",
     "adaptiveBadgeHint": "Exam questions adapt to your long-term learning profile (weak & strong topics).",
-    "selectSubjectPlaceholder": "-- Select Subject --",
+    "selectSubjectPlaceholder": "All Subjects",
     "createSimulation": "Create Simulation",
     "confirmExit": "Exit the exam? Progress will be lost.",
     "dashboard": {

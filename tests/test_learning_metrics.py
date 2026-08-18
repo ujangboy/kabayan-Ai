@@ -10,6 +10,7 @@ Fokus uji:
 """
 import asyncio
 import datetime
+from time_utils import utcnow
 import json
 
 import models
@@ -30,7 +31,7 @@ def _quiz(db, subject_id, score, time_taken, total_questions=10, created_at=None
         score=score,
         time_taken=time_taken,
         total_questions=total_questions,
-        created_at=created_at or datetime.datetime.utcnow(),
+        created_at=created_at or utcnow(),
     )
     db.add(q)
     return q
@@ -42,8 +43,8 @@ def _exam(db, subject_id, score, duration_seconds, submitted_at=None):
         subject_name="Matkul",
         score=score,
         total_questions=10,
-        submitted_at=submitted_at or datetime.datetime.utcnow(),
-        started_at=datetime.datetime.utcnow(),
+        submitted_at=submitted_at or utcnow(),
+        started_at=utcnow(),
         status="submitted",
     )
     db.add(e)
@@ -121,7 +122,7 @@ class TestSpeed:
 class TestFatigue:
     def test_long_session_drop(self, db_session, make_subject):
         subject = make_subject()
-        now = datetime.datetime.utcnow()
+        now = utcnow()
         _quiz(db_session, subject.id, score=90, time_taken=600, created_at=now)      # pendek
         _quiz(db_session, subject.id, score=40, time_taken=3600, created_at=now)     # panjang
         db_session.commit()
@@ -146,8 +147,8 @@ class TestFatigue:
         session = models.ExamSession(
             subject_id=subject.id, subject_name="M",
             score=50, total_questions=4,
-            status="submitted", started_at=datetime.datetime.utcnow(),
-            submitted_at=datetime.datetime.utcnow(),
+            status="submitted", started_at=utcnow(),
+            submitted_at=utcnow(),
         )
         db_session.add(session)
         db_session.commit()
@@ -188,7 +189,7 @@ class TestOptimalTime:
 class TestFsrsOverview:
     def test_counts_and_retention(self, db_session, make_subject):
         subject = make_subject()
-        now = datetime.datetime.utcnow()
+        now = utcnow()
         fsrs_state = json.dumps({"stability": 12.5, "difficulty": 4.2})
         _card(db_session, subject.id, next_review=None)                       # new
         _card(db_session, subject.id, next_review=now - datetime.timedelta(days=1),

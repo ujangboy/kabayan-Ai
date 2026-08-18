@@ -11,6 +11,7 @@ Fokus uji:
   - Backward compat: kartu legacy (hanya field SRS lama) tetap berfungsi
 """
 import datetime
+from time_utils import utcnow
 import json
 
 import pytest
@@ -107,12 +108,12 @@ class TestReviewLogic:
     def test_legacy_card_backward_compat(self, db_session, make_subject):
         """Kartu lama (interval 5, ease 250, tanpa fsrs_state) tetap bisa direview."""
         subject = make_subject()
-        past = datetime.datetime.utcnow() - datetime.timedelta(days=5)
+        past = utcnow() - datetime.timedelta(days=5)
         fc = _make_flashcard(
             db_session, subject.id,
             interval=5, ease_factor=250, times_seen=3,
             last_reviewed=past,
-            next_review=datetime.datetime.utcnow() + datetime.timedelta(days=1),
+            next_review=utcnow() + datetime.timedelta(days=1),
         )
         result = review(fc, 2)
         assert result["interval_days"] >= 1

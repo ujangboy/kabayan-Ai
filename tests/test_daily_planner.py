@@ -11,6 +11,7 @@ Fokus uji:
 """
 import asyncio
 import datetime
+from time_utils import utcnow
 import json
 
 import models
@@ -19,7 +20,7 @@ from routers.study import study_daily_plan
 
 
 def _card(db, subject_id, due=True, new=False, times_seen=1, times_correct=1):
-    now = datetime.datetime.utcnow()
+    now = utcnow()
     fc = models.Flashcard(
         subject_id=subject_id, question="q", answer="a",
         times_seen=times_seen, times_correct=times_correct,
@@ -49,7 +50,7 @@ def _weak_profile(db, subject_id, topic, accuracy):
 class TestFsrsItems:
     def test_due_cards_create_flashcard_item(self, db_session, make_subject):
         subj = make_subject()
-        now = datetime.datetime.utcnow()
+        now = utcnow()
         for i in range(10):
             _card(db_session, subj.id, due=True)
         for i in range(2):

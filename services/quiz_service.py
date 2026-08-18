@@ -7,6 +7,7 @@ from pydantic import ValidationError
 from sqlalchemy.orm import Session
 import json
 import datetime
+from time_utils import utcnow
 
 
 class QuizService:
@@ -85,7 +86,7 @@ class QuizService:
                 total_questions=mcq_count_final + essay_count_final,
                 attempt_count=0,
                 difficulty=difficulty,
-                created_at=datetime.datetime.utcnow(),
+                created_at=utcnow(),
             )
             db.add(quiz_record)
             db.flush()

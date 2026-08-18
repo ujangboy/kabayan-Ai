@@ -1,3 +1,4 @@
+from time_utils import utcnow
 from fastapi import APIRouter, Depends, Form, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -170,7 +171,7 @@ async def notebook_generate(request: NotebookGenerateRequest, db: Session = Depe
     title = request.title.strip() or request.content[:30].strip()
     # Idempotency check: skip jika note dengan content yang sama ATAU title yang sama
     # sudah ada dalam 60 detik terakhir — mencegah double-save dari race condition frontend
-    recent_cutoff = datetime.datetime.utcnow() - datetime.timedelta(seconds=60)
+    recent_cutoff = utcnow() - datetime.timedelta(seconds=60)
     from models import Note
     stripped_content = request.content.strip()
     stripped_title = title.strip()

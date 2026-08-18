@@ -6,6 +6,7 @@ import numpy as np
 import lancedb
 import threading
 import datetime
+from time_utils import utcnow
 import pandas as pd
 import pyarrow as pa
 from langchain_huggingface import HuggingFaceEmbeddings
@@ -292,7 +293,7 @@ class RAGService:
                     "timestamp_end": getattr(c, 'timestamp_end', None),
                     "extra_metadata": getattr(c, 'metadata', {}),
                     "deleted": False,
-                    "indexed_at": datetime.datetime.utcnow().isoformat(),
+                    "indexed_at": utcnow().isoformat(),
                     "model_name": model_name,
                     "model_version": model_version,
                 })
@@ -302,7 +303,7 @@ class RAGService:
                     "doc_id": doc_id,
                     "content": c,
                     "deleted": False,
-                    "indexed_at": datetime.datetime.utcnow().isoformat(),
+                    "indexed_at": utcnow().isoformat(),
                     "model_name": model_name,
                     "model_version": model_version,
                 })
@@ -380,7 +381,7 @@ class RAGService:
             for meta in self.chunk_metadata:
                 if meta["doc_id"] == doc_id:
                     meta["deleted"] = True
-                    meta["deleted_at"] = datetime.datetime.utcnow().isoformat()
+                    meta["deleted_at"] = utcnow().isoformat()
 
             self._deleted_doc_ids.add(doc_id)
             self._dirty = True
@@ -506,7 +507,7 @@ class RAGService:
                     "timestamp_end": meta.get("timestamp_end"),
                     "model_name": model_name,
                     "model_version": model_version,
-                    "indexed_at": meta.get("indexed_at", datetime.datetime.utcnow().isoformat()),
+                    "indexed_at": meta.get("indexed_at", utcnow().isoformat()),
                     "extra_metadata": json.dumps(extra, ensure_ascii=False) if extra else None,
                 })
                 new_metadata.append(meta)

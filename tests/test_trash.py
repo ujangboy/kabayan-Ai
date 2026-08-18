@@ -39,7 +39,7 @@ def test_delete_moves_to_trash_soft(db_session, make_subject, make_material):
 
     assert ok is True
     db_session.expire_all()
-    mat2 = db_session.query(Material).get(mat.id)
+    mat2 = db_session.get(Material, mat.id)
     assert mat2 is not None                      # record tidak hilang
     assert mat2.status == "Trashed"
     assert not os.path.exists(fp)                # file fisik sudah di trash
@@ -75,7 +75,7 @@ def test_restore_material_returns_file_and_status(db_session, make_subject, make
 
     assert ok is True
     db_session.expire_all()
-    mat2 = db_session.query(Material).get(mat.id)
+    mat2 = db_session.get(Material, mat.id)
     assert mat2.status == "Ready"
     assert mat2.filepath == fp                       # filepath kembali
     assert os.path.exists(fp)                        # file kembali ke path asli
@@ -96,7 +96,7 @@ def test_delete_material_permanent_removes_record_and_file(db_session, make_subj
     assert ok is True
     assert _trash_contents() == []               # file trunk sudah dihapus
     assert db_session.query(TrashItem).count() == 0
-    assert db_session.query(Material).get(mat.id) is None
+    assert db_session.get(Material, mat.id) is None
 
 
 def test_empty_trash_removes_all_files(db_session, make_subject, make_material):

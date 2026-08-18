@@ -2,7 +2,7 @@
 Test Backup/Export (services/backup_service.py + endpoints di routers/data.py).
 
 Fokus uji:
-  - ZIP berisi kabayan.db + file upload + audio
+  - ZIP berisi kabayan.db + file upload
   - DB di dalam ZIP bisa dibuka & memuat data yang sama (snapshot konsisten)
   - Metadata create: filename, size, files
   - Backup lama dibersihkan (sisakan 5 terbaru)
@@ -34,14 +34,12 @@ def client(db_session):
 
 @pytest.fixture()
 def seeded_fs(tmp_path, monkeypatch):
-    """Layout storage uji: DB + upload + audio dalam tmp_path (sama dgn db_session)."""
+    """Layout storage uji: DB + upload dalam tmp_path (sama dgn db_session)."""
     import config
 
     storage = tmp_path / "storage"
     uploads = storage / "uploads"
-    audio = tmp_path / "static" / "audio"
     uploads.mkdir(parents=True)
-    audio.mkdir(parents=True)
     backups = storage / "backups"
     backups.mkdir(parents=True)
 
@@ -51,8 +49,7 @@ def seeded_fs(tmp_path, monkeypatch):
     monkeypatch.setattr(config, "BACKUPS_DIR", str(backups))
 
     (uploads / "materi.pdf").write_bytes(b"%PDF-materi-uji")
-    (audio / "suara.mp3").write_bytes(b"ID3-audio-uji")
-    return {"storage": storage, "uploads": uploads, "audio": audio, "backups": backups}
+    return {"storage": storage, "uploads": uploads, "backups": backups}
 
 
 def _write_db(path, rows=3):
@@ -65,7 +62,7 @@ def _write_db(path, rows=3):
 
 
 class TestCreateBackup:
-    def test_zip_contains_db_uploads_audio(self, seeded_fs):
+    def test_zip_contains_db_uploads(self, seeded_fs):
         _write_db(str(seeded_fs["storage"] / "kabayan.db"))
         info = create_backup()
         assert info["filename"].startswith(BACKUP_PREFIX)
@@ -77,7 +74,6 @@ class TestCreateBackup:
             names = set(zf.namelist())
         assert "kabayan.db" in names
         assert "uploads/materi.pdf" in names
-        assert "audio/suara.mp3" in names
 
     def test_db_snapshot_is_readable_and_consistent(self, seeded_fs):
         db_path = str(seeded_fs["storage"] / "kabayan.db")

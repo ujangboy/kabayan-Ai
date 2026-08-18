@@ -19,6 +19,7 @@ Murni Python, idempoten, real-time dari data tersimpan — tanpa perubahan schem
 from __future__ import annotations
 
 import datetime
+from time_utils import utcnow
 import json
 import logging
 from collections import defaultdict
@@ -257,7 +258,7 @@ def compute_optimal_time(db: Session, subject_id: Optional[int] = None) -> Dict:
 def compute_fsrs_overview(db: Session, subject_id: Optional[int] = None) -> Dict:
     import models
 
-    now = datetime.datetime.utcnow()
+    now = utcnow()
     cards = db.query(models.Flashcard)
     if subject_id is not None:
         cards = cards.filter(models.Flashcard.subject_id == subject_id)

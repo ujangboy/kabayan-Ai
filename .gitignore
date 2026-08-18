@@ -39,6 +39,8 @@ static/audio/
 # OS
 .DS_Store
 Thumbs.db
+*.Zone.Identifier
+*Zone.Identifier
 
 # IDE
 .vscode/

@@ -7,15 +7,13 @@ Alur yang diverifikasi (semua endpoint HTTP nyata, DB isolasi total):
   2. Semua endpoint belajar Study Engine: route, metrics, daily-plan,
      knowledge-graph, progress, diagnostic — 200 + bentuk payload benar
   3. FSRS: buat flashcard → review → next_review terhitung
-  4. Whisper (US1.1): upload audio (transcribe di-mock) → transkrip → Ready
-  5. Backup ZIP berisi file upload
-  6. Hapus subject → materi masuk trash (safety-net D2)
+  4. Backup ZIP berisi file upload
+  5. Hapus subject → materi masuk trash (safety-net D2)
 
 Test ini jaring pengaman integrasi: kegagalan di sini = fitur tidak nyambung.
 """
 import datetime
 import json
-import os
 import zipfile
 
 import pytest
@@ -45,17 +43,6 @@ def fake_rag(monkeypatch):
 
     monkeypatch.setattr(rag_service, "index_document", _fake_index)
     return indexed
-
-
-@pytest.fixture()
-def fake_transcribe(monkeypatch):
-    from services import transcription_service
-
-    monkeypatch.setattr(
-        transcription_service,
-        "transcribe",
-        lambda audio_path: {"text": "Fotosintesis adalah proses tumbuhan mengubah cahaya menjadi energi.", "language": "id"},
-    )
 
 
 @pytest.fixture()
@@ -92,7 +79,7 @@ def _seed_profile(db, subject_id):
 
 class TestFullChain:
     def test_e2e_full_flow(
-        self, client, db_session, make_subject, fake_rag, fake_transcribe, isolated_backup_dir, tmp_path
+        self, client, db_session, make_subject, fake_rag, isolated_backup_dir, tmp_path
     ):
         # ── 1. Subject + materi TXT ─────────────────────────────────────
         subj = make_subject("Biologi")
@@ -184,26 +171,7 @@ class TestFullChain:
         stats = res.json()
         assert stats["total"] == 1
 
-        # ── 4. Whisper audio (transkrip di-mock) ───────────────────────
-        res = client.post(
-            "/api/materials/audio",
-            data={"subject_id": str(subj.id)},
-            files={"file": ("kuliah.mp3", b"\x00" * 4096, "audio/mpeg")},
-        )
-        assert res.status_code == 200
-
-        res = client.get(f"/api/materials?subject_id={subj.id}")
-        mats = res.json()["materials"]
-        assert len(mats) == 2
-        audio_mat = next(m for m in mats if m["filename"] == "kuliah.mp3")
-        assert audio_mat["material_type"] == "TXT"
-        assert audio_mat["status"] == "Ready"
-        assert audio_mat["filepath"] is not None
-        assert os.path.exists(audio_mat["filepath"])
-        with open(audio_mat["filepath"], encoding="utf-8") as f:
-            assert "Fotosintesis" in f.read()
-
-        # ── 5. Backup ZIP ──────────────────────────────────────────────
+        # ── 4. Backup ZIP ──────────────────────────────────────────────
         res = client.post("/api/backup/create")
         assert res.status_code == 200
         info = res.json()
@@ -211,15 +179,15 @@ class TestFullChain:
             names = set(zf.namelist())
         assert any(n.startswith("uploads/") for n in names)
 
-        # ── 6. Hapus subject → materi masuk trash ──────────────────────
+        # ── 5. Hapus subject → materi masuk trash ──────────────────────
         res = client.post(f"/api/subjects/{subj.id}/delete")
         assert res.status_code == 200
 
         res = client.get("/api/trash")
         trash_items = res.json()["items"]
         trashed_names = " ".join(i.get("original_filename") or "" for i in trash_items)
-        assert len(trash_items) >= 2
-        assert ".mp3" in trashed_names or ".txt" in trashed_names
+        assert len(trash_items) >= 1
+        assert ".txt" in trashed_names
 
         # Study endpoints tetap berjalan (subject 404 ditangani)
         res = client.get(f"/api/study/progress?subject_id={subj.id}")

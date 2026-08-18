@@ -1,20 +1,21 @@
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { useAppStore, useChatStore } from '@/store';
+import { useAppStore, useChatStore, useUiStore } from '@/store';
 import {
   LayoutDashboard, MessageSquare, BookOpen, FileText,
   BookMarked, CreditCard, HelpCircle,
-  Settings, ChevronLeft, Plus, Search, Bot, Brain, History
+  Settings, ChevronLeft, Plus, Search, Bot, Brain
 } from 'lucide-react';
 import { cn } from '@/utils';
 
 export default function Sidebar() {
   const { t } = useTranslation();
+  const lastSubjectId = useUiStore((s) => s.lastSubjectId);
   const NAV = [
     { to: '/dashboard',     icon: LayoutDashboard, label: t('nav.dashboard') },
     { to: '/chat',          icon: MessageSquare,   label: t('nav.chat') },
-    { to: '/subjects',      icon: BookOpen,        label: t('nav.subjects') },
+    { to: lastSubjectId ? `/subjects/${lastSubjectId}` : '/subjects', icon: BookOpen, label: t('nav.subjects') },
     { to: '/materi',        icon: FileText,        label: t('nav.materi') },
     { to: '/notebook',      icon: BookMarked,      label: t('nav.notebook') },
     { to: '/flashcard',     icon: CreditCard,      label: t('nav.flashcard') },
@@ -24,6 +25,7 @@ export default function Sidebar() {
   const { sidebarOpen, toggleSidebar, setSearchOpen } = useAppStore();
   const { createChat } = useChatStore();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleNewChat = () => {
     const id = createChat();
@@ -114,28 +116,34 @@ export default function Sidebar() {
 
       {/* Nav */}
       <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto">
-        {NAV.map(({ to, icon: Icon, label }) => (
-          <NavLink
-            key={to}
-            to={to}
-            className={({ isActive }) =>
-              cn('sidebar-item', isActive && 'active', !sidebarOpen && 'justify-center px-2')
-            }
-            title={!sidebarOpen ? label : undefined}
-          >
-            <Icon size={16} className="shrink-0" />
-            <AnimatePresence>
-              {sidebarOpen && (
-                <motion.span
-                  initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                  className="whitespace-nowrap text-sm"
-                >
-                  {label}
-                </motion.span>
-              )}
-            </AnimatePresence>
-          </NavLink>
-        ))}
+        {NAV.map(({ to, icon: Icon, label }) => {
+          const isExam = to === '/exam-analyzer';
+          return (
+            <NavLink
+              key={to}
+              to={to}
+              className={({ isActive }) => {
+                const active = isExam
+                  ? isActive || location.pathname === '/study-plan'
+                  : isActive;
+                return cn('sidebar-item', active && 'active', !sidebarOpen && 'justify-center px-2');
+              }}
+              title={!sidebarOpen ? label : undefined}
+            >
+              <Icon size={16} className="shrink-0" />
+              <AnimatePresence>
+                {sidebarOpen && (
+                  <motion.span
+                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                    className="whitespace-nowrap text-sm"
+                  >
+                    {label}
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </NavLink>
+          );
+        })}
       </nav>
 
       {/* Bottom: Settings */}

@@ -1,9 +1,10 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { HelpCircle, Play, X, Zap, Trophy, Trash2, CheckCircle, XCircle, Loader2, Clock, Calendar, FileText, PenLine } from 'lucide-react';
 import { quizAPI, subjectAPI } from '@/services/api';
+import { useLocation, useNavigate } from 'react-router-dom';
 import MathMarkdown from '@/components/MathMarkdown';
 import MaterialPicker from '@/components/MaterialPicker';
 import QuizTimer from '@/components/quiz/QuizTimer';
@@ -11,6 +12,7 @@ import QuizProgressBar from '@/components/quiz/QuizProgressBar';
 import { formatDate, formatTimeOnly } from '@/utils';
 import { usePendingOperation } from '@/hooks/usePendingOperation';
 import { useUiStore } from '@/store';
+import { usePageState } from '@/hooks/usePageState';
 
 const QTYPE_LABEL = { mcq: 'quiz.qtypeMcq', essay: 'quiz.qtypeEssay', mixed: 'quiz.qtypeMixed' };
 const DIFFICULTY_BADGE = {
@@ -26,14 +28,32 @@ function formatDuration(seconds, t) {
   return t('quiz.durationFormat', { minutes: m, seconds: String(s).padStart(2, '0') });
 }
 
+const PAGE_KEY = 'quiz';
+
 export default function QuizPage() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const selectedSubject = useUiStore((s) => s.subjectFilterMateri);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { restore, persist, clear } = usePageState(PAGE_KEY);
+  const selectedSubject = useUiStore((s) => s.subjectFilterQuiz);
   const setSubjectFilter = useUiStore((s) => s.setSubjectFilter);
   const [isGeneratorOpen, setIsGeneratorOpen] = useState(false);
   const [activeQuizId, setActiveQuizId] = useState(null);
   const [sessionKey, setSessionKey] = useState(0);
+
+  // Restore active quiz + read subject_id from URL
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const sid = params.get('subject_id');
+    if (sid) setSubjectFilter('quiz', sid);
+    const saved = restore();
+    if (saved?.activeQuizId) {
+      setActiveQuizId(saved.activeQuizId);
+      if (saved.sessionKey) setSessionKey(saved.sessionKey);
+    }
+    if (location.search) navigate('/quiz', { replace: true });
+  }, []);
 
   const { data: quizData, isLoading } = useQuery({
     queryKey: ['quizzes'],
@@ -72,6 +92,11 @@ export default function QuizPage() {
     },
   });
 
+  // Persist active quiz id
+  useEffect(() => {
+    if (activeQuizId) persist({ activeQuizId, sessionKey });
+  }, [activeQuizId, sessionKey]);
+
   const handleDelete = (id) => {
     if (confirm(t('quiz.confirmDeleteSingle'))) {
       deleteMutation.mutate(id);
@@ -91,6 +116,7 @@ export default function QuizPage() {
 
   const closeSession = useCallback(() => {
     setActiveQuizId(null);
+    clear();
     queryClient.invalidateQueries(['quizzes']);
   }, [queryClient]);
 
@@ -112,7 +138,7 @@ export default function QuizPage() {
           <div className="flex items-center gap-3">
             <select
               value={selectedSubject}
-              onChange={(e) => setSubjectFilter('materi', e.target.value)}
+              onChange={(e) => setSubjectFilter('quiz', e.target.value)}
               className="px-3 py-2 bg-card border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary transition-colors"
             >
               <option value="">{t('quiz.allSubjects')}</option>
@@ -236,7 +262,7 @@ export default function QuizPage() {
                   onClick={() => handleStartQuiz(quiz.id)}
                   className="bg-warning text-black font-bold w-full justify-center text-xs mt-auto px-4 py-2 rounded-lg hover:bg-warning/80 transition-colors flex items-center gap-1.5"
                 >
-                  <Play size={12} /> {quiz.score !== null ? t('quiz.playAgain') : t('quiz.start')}
+                  <Play size={12} /> {quiz.score != null ? t('quiz.playAgain') : t('quiz.start')}
                 </button>
               </motion.div>
             ))
@@ -302,8 +328,8 @@ function GenerateQuizModal({ onClose, subjects, onSuccess }) {
       onSuccess(result.id);
     } catch (err) {
       setError(err.message || t('quiz.errorGenerateFailed'));
-      setIsGenerating(false);
     } finally {
+      setIsGenerating(false);
       quizOp.finish();
     }
   };
@@ -430,6 +456,8 @@ function GenerateQuizModal({ onClose, subjects, onSuccess }) {
 }
 
 function QuizSession({ quizId, onClose }) {
+  const { t } = useTranslation();
+  const { restore: restoreSession, persist: persistSession, clear: clearSession } = usePageState('quiz-session');
   const [currentIdx, setCurrentIdx] = useState(0);
   const [answers, setAnswers] = useState({});
   const [isFinished, setIsFinished] = useState(false);
@@ -437,6 +465,31 @@ function QuizSession({ quizId, onClose }) {
   const [score, setScore] = useState(0);
   const [timeTaken, setTimeTaken] = useState(0);
   const startTimeRef = useRef(Date.now());
+  const isFinishingRef = useRef(false);
+
+  // Restore session state on mount
+  useEffect(() => {
+    const saved = restoreSession();
+    if (saved && saved.quizId === quizId) {
+      if (saved.currentIdx) setCurrentIdx(saved.currentIdx);
+      if (saved.answers) setAnswers(saved.answers);
+      if (saved.isFinished) setIsFinished(saved.isFinished);
+      if (saved.showReview) setShowReview(saved.showReview);
+      if (saved.score) setScore(saved.score);
+      if (saved.timeTaken) setTimeTaken(saved.timeTaken);
+      if (saved.startTime) startTimeRef.current = saved.startTime;
+    }
+  }, []);
+
+  // Persist session state on changes
+  useEffect(() => {
+    persistSession({ quizId, currentIdx, answers, isFinished, showReview, score, timeTaken, startTime: startTimeRef.current });
+  }, [quizId, currentIdx, answers, isFinished, showReview, score, timeTaken]);
+
+  // Clear on unmount (close)
+  useEffect(() => {
+    return () => clearSession();
+  }, []);
 
   const { data: quizData, isLoading, error } = useQuery({
     queryKey: ['quiz', quizId],
@@ -498,7 +551,8 @@ function QuizSession({ quizId, onClose }) {
   };
 
   const finishQuiz = async () => {
-    if (isFinished) return;
+    if (isFinished || isFinishingRef.current) return;
+    isFinishingRef.current = true;
     const { correct, wrong, finalScore } = computeScore();
     const elapsed = Math.round((Date.now() - startTimeRef.current) / 1000);
     setScore(finalScore);
@@ -614,7 +668,7 @@ function QuizSession({ quizId, onClose }) {
           <div className="text-6xl font-bold text-primary my-4">{score}</div>
           <p className="text-xs text-text-muted mb-4">
             {mcqTotal > 0 ? `Nilai dari ${mcqTotal} soal pilihan ganda` : 'Semua soal essay (tidak dinilai otomatis)'}
-            {timeTaken > 0 && ` • waktu ${formatDuration(timeTaken)}`}
+            {timeTaken > 0 && ` • waktu ${formatDuration(timeTaken, t)}`}
           </p>
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div className="p-3 bg-success/10 rounded-xl border border-success/20">
@@ -678,7 +732,7 @@ function QuizSession({ quizId, onClose }) {
               const isSelected = answers[currentIdx] === opt;
               return (
                 <button
-                  key={i}
+                  key={`${currentIdx}-${opt}`}
                   onClick={() => handleSelectOption(opt)}
                   className={`w-full text-left p-4 rounded-xl border transition-all ${
                     isSelected

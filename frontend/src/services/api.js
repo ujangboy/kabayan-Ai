@@ -41,20 +41,17 @@ api.interceptors.response.use(
 // --- MATERI ---
 export const materiAPI = {
   getAll: (subjectId) => api.get('/materials', { params: subjectId ? { subject_id: subjectId } : {} }),
+  upload: (data) => api.post('/materials', data),
   delete: (id) => api.post(`/materials/${id}/delete`),
   cancel: (id) => api.post(`/materials/${id}/cancel`),
   importYoutube: (data) => api.post('/materials/youtube', data),
-  // US1.1: upload audio → transkripsi Whisper (Groq) di background
-  uploadAudio: (subjectId, file) => {
-    const fd = new FormData();
-    fd.append('subject_id', String(subjectId));
-    fd.append('file', file);
-    return api.post('/materials/audio', fd);
-  },
 };
 
 // --- SUBJECT ---
 export const subjectAPI = {
+  create: (data) => api.post('/subjects', new URLSearchParams(data).toString(), {
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  }),
   getAll: () => api.get('/subjects'),
   getById: (id) => api.get(`/subjects/${id}`),
   getDashboard: (id) => api.get(`/subjects/${id}/dashboard`),
@@ -136,15 +133,6 @@ export const quizAPI = {
   clear: () => api.post('/quizzes/clear'),
 };
 
-// --- AUDIO ---
-export const audioAPI = {
-  generate: (materialId) => api.post(`/materials/${materialId}/audio`),
-  status: (materialId) => api.get(`/materials/${materialId}/audio`),
-  statuses: () => api.get('/audio/statuses').then(r => r.data),
-  delete: (materialId) => api.post(`/materials/${materialId}/audio/delete`),
-  cancel: (materialId) => api.post(`/materials/${materialId}/audio/cancel`),
-};
-
 // --- EXAM ANALYZER ---
 export const examAPI = {
   analyze: (subjectId) => api.post(`/exam/analyze/${subjectId}`, {}, { timeout: 120000 }),
@@ -174,6 +162,7 @@ export const sessionsAPI = {
   togglePlanItem: (itemId) => api.post(`/exam/sessions/plan-item/${itemId}/toggle`),
   submitPlanQuiz: (itemId, payload) => api.post(`/exam/sessions/plan-item/${itemId}/submit-quiz`, payload),
   submitPlanFlashcards: (itemId, payload) => api.post(`/exam/sessions/plan-item/${itemId}/submit-flashcards`, payload),
+  generateSummary: (sessionId, topic) => api.post(`/exam/sessions/${sessionId}/summary`, { topic }),
   delete: (sessionId) => api.delete(`/exam/sessions/${sessionId}`),
 };
 

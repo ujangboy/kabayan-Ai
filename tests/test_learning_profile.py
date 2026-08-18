@@ -9,6 +9,7 @@ Fokus uji:
 """
 import json
 import datetime
+from time_utils import utcnow
 
 import pytest
 
@@ -105,7 +106,7 @@ def _make_completed_session(db, subject_id, reviews, submitted=True):
     session = ExamSession(
         subject_id=subject_id,
         status="completed",
-        submitted_at=datetime.datetime.utcnow() if submitted else None,
+        submitted_at=utcnow() if submitted else None,
     )
     db.add(session)
     db.commit()

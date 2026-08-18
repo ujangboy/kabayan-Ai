@@ -4,8 +4,7 @@ Backup Service — ekspor data lokal ke satu arsip ZIP portabel.
 Isi backup:
   - kabayan.db      : snapshot SQLite konsisten (API backup, bukan file copy)
                       → seluruh data: materi, flashcards, quiz, ujian, profil.
-  - uploads/        : file materi asli (PDF/docx/txt/audio transkrip)
-  - audio/          : hasil text-to-speech (static/audio)
+  - uploads/        : file materi asli (PDF/docx/txt/xlsx/pptx)
 
 Tidak disertakan (regenerable / bukan data pengguna):
   - lancedb/   indeks vektor — dibuat ulang otomatis dari uploads (0 token)
@@ -29,11 +28,6 @@ logger = logging.getLogger(__name__)
 
 BACKUP_PREFIX = "kabayan_backup_"
 DEFAULT_DB_NAME = "kabayan.db"
-
-
-def _audio_dir() -> str:
-    """Direktori hasil text-to-speech (lazy — mengikuti config.BASE_DIR uji)."""
-    return os.path.join(config.BASE_DIR, "static", "audio")
 
 
 def _snapshot_db_to_zip(zf: zipfile.ZipFile, db_path: str) -> int:
@@ -94,7 +88,6 @@ def create_backup(cleanup_older: bool = True) -> Dict:
         else:
             logger.warning("Backup: kabayan.db tidak ditemukan — arsip tanpa database.")
         files.extend(_add_dir_to_zip(zf, config.UPLOADS_DIR, "uploads"))
-        files.extend(_add_dir_to_zip(zf, _audio_dir(), "audio"))
 
     size = os.path.getsize(zip_path)
 

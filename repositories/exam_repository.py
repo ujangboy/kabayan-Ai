@@ -4,6 +4,7 @@ from models import ExamBlueprint, ExamSession
 from repositories.base import BaseRepository
 from typing import Optional
 import datetime
+from time_utils import utcnow
 
 
 class ExamBlueprintRepository(BaseRepository[ExamBlueprint]):
@@ -43,7 +44,7 @@ class ExamBlueprintRepository(BaseRepository[ExamBlueprint]):
             duration_minutes=duration_minutes,
             blueprint_json=blueprint_json,
             analysis_json=analysis_json,
-            created_at=datetime.datetime.utcnow(),
+            created_at=utcnow(),
         )
         db.add(obj)
         db.flush()
@@ -66,7 +67,7 @@ class ExamSessionRepository(BaseRepository[ExamSession]):
             blueprint_id=blueprint_id,
             subject_id=subject_id,
             questions_json=questions_json,
-            started_at=datetime.datetime.utcnow(),
+            started_at=utcnow(),
         )
         db.add(obj)
         db.flush()

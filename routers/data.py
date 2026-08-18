@@ -74,7 +74,7 @@ async def data_overview(db: Session = Depends(get_db)):
 
 @router.post("/api/backup/create")
 async def create_backup_now():
-    """Buat arsip backup ZIP (DB snapshot + uploads + audio) di storage/backups."""
+    """Buat arsip backup ZIP (DB snapshot + uploads) di storage/backups."""
     try:
         return JSONResponse(create_backup())
     except AppError:

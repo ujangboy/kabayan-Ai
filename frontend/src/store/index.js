@@ -42,8 +42,8 @@ export const useChatStore = create(
         chats: s.chats.map((c) =>
           c.id === chatId ? {
             ...c,
-            messages: [...c.messages, { ...message, timestamp: new Date().toISOString() }],
-            title: c.messages.length === 0 ? message.content.slice(0, 30) + '...' : c.title
+            title: c.messages.length === 0 ? message.content.trim().slice(0, 30) + '...' : c.title,
+            messages: [...c.messages, { ...message, timestamp: new Date().toISOString() }]
           } : c
         ),
       })),
@@ -117,17 +117,25 @@ export const useChatStore = create(
   )
 );
 
-// Filter mata kuliah per halaman — persist agar tidak reset saat pindah menu
+// Filter mata kuliah per halaman — persist agar tidak reset saat pindah menu.
+// Setiap halaman punya slot filter sendiri agar TIDAK cross-contaminate satu sama lain.
 export const useUiStore = create(
   persist(
     (set) => ({
       subjectFilterMateri: '',
       subjectFilterFlashcard: '',
-      setSubjectFilter: (page, value) => set(
-        page === 'flashcard'
-          ? { subjectFilterFlashcard: String(value || '') }
-          : { subjectFilterMateri: String(value || '') }
-      ),
+      subjectFilterQuiz: '',
+      subjectFilterExam: '',
+      lastSubjectId: null,
+      setSubjectFilter: (page, value) => {
+        const v = String(value || '');
+        if (page === 'flashcard') return set({ subjectFilterFlashcard: v });
+        if (page === 'quiz')      return set({ subjectFilterQuiz: v });
+        if (page === 'exam')      return set({ subjectFilterExam: v });
+        // default: 'materi'
+        return set({ subjectFilterMateri: v });
+      },
+      setLastSubjectId: (id) => set({ lastSubjectId: id || null }),
     }),
     { name: 'kabayan-ui-store' }
   )

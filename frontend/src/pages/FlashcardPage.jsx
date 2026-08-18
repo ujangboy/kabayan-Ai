@@ -2,7 +2,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   CreditCard, Plus, X, Book, Zap, Loader2, Play,
   Trash2, ChevronLeft, ChevronRight, RotateCcw, Trophy, Clock, Calendar, FileText, Brain, Sparkles
@@ -15,21 +15,33 @@ import MathMarkdown from '@/components/MathMarkdown';
 import MaterialPicker from '@/components/MaterialPicker';
 import { formatDate, formatDateTime, formatTimeOnly } from '@/utils';
 import { usePendingOperation } from '@/hooks/usePendingOperation';
+import { usePageState } from '@/hooks/usePageState';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Main Page
-// ─────────────────────────────────────────────────────────────────────────────
+const PAGE_KEY = 'flashcard';
+
 export default function FlashcardPage() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const location = useLocation();
+  const { restore, persist, clear } = usePageState(PAGE_KEY);
   const { toast } = useToast();
   const [isAIModalOpen, setIsAIModalOpen] = useState(false);
   const [isManualModalOpen, setIsManualModalOpen] = useState(false);
-  const [activeBatchId, setActiveBatchId] = useState(null); // null = list view
-  const [historyBatchId, setHistoryBatchId] = useState(null); // null = no history modal
+  const [activeBatchId, setActiveBatchId] = useState(null);
+  const [historyBatchId, setHistoryBatchId] = useState(null);
   const subjectFilter = useUiStore((s) => s.subjectFilterFlashcard);
   const setSubjectFilter = useUiStore((s) => s.setSubjectFilter);
+
+  // Restore active session + read subject_id from URL
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const sid = params.get('subject_id');
+    if (sid) setSubjectFilter('flashcard', sid);
+    const saved = restore();
+    if (saved?.activeBatchId) setActiveBatchId(saved.activeBatchId);
+    if (location.search) navigate('/flashcard', { replace: true });
+  }, []);
 
   const { data: flashcardData, isLoading } = useQuery({
     queryKey: ['flashcards'],
@@ -76,6 +88,11 @@ export default function FlashcardPage() {
     onError: (err) => toast.error(extractErrorMessage(err)),
   });
 
+  // Persist active batch id
+  useEffect(() => {
+    if (activeBatchId) persist({ activeBatchId });
+  }, [activeBatchId]);
+
   const handleClearAll = () => {
     if (confirm(t('flashcard.confirmClearAll'))) clearAllMutation.mutate();
   };
@@ -90,6 +107,7 @@ export default function FlashcardPage() {
         subjectName={group?.subject?.name || t('flashcard.defaultName')}
         onClose={() => {
           setActiveBatchId(null);
+          clear();
           queryClient.invalidateQueries(['flashcards']);
         }}
       />
@@ -182,7 +200,8 @@ export default function FlashcardPage() {
                   if (confirm(t('flashcard.confirmDeleteDeck', { count: group.cards.length }))) {
                     const ids = group.cards.map(c => c.id);
                     flashcardAPI.batchDelete(ids)
-                      .then(() => queryClient.invalidateQueries(['flashcards']));
+                      .then(() => queryClient.invalidateQueries(['flashcards']))
+                      .catch(err => toast.error(extractErrorMessage(err)));
                   }
                 }}
               />
@@ -369,12 +388,13 @@ function BatchFlashcardCard({ group, onStart, onReview, onHistory, onDeleteAll }
 // ─────────────────────────────────────────────────────────────────────────────
 function FlashcardSession({ cards, subjectName, onClose }) {
   const { t } = useTranslation();
+  const { restore: restoreSession, persist: persistSession, clear: clearSession } = usePageState('flashcard-session');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [known, setKnown] = useState(new Set());
   const [isFinished, setIsFinished] = useState(false);
-  const [feedback, setFeedback] = useState(null); // { known, srs }
-  const [autoAdvanceProgress, setAutoAdvanceProgress] = useState(0); // 0-100 untuk animasi bar
+  const [feedback, setFeedback] = useState(null);
+  const [autoAdvanceProgress, setAutoAdvanceProgress] = useState(0);
   const [rerunQueue, setRerunQueue] = useState([]);
   const rerunCountRef = useRef({});
   const autoAdvanceTimerRef = useRef(null);
@@ -382,12 +402,52 @@ function FlashcardSession({ cards, subjectName, onClose }) {
   const MAX_RERUN = 3;
   const AUTO_ADVANCE_MS = 1500;
 
+  // Restore session state on mount
+  useEffect(() => {
+    const saved = restoreSession();
+    if (saved) {
+      if (saved.currentIndex != null && saved.currentIndex < cards.length) setCurrentIndex(saved.currentIndex);
+      if (saved.known) setKnown(new Set(saved.known));
+      if (saved.isFinished) setIsFinished(saved.isFinished);
+      if (saved.rerunQueue) setRerunQueue(saved.rerunQueue);
+      if (saved.rerunCounts) rerunCountRef.current = saved.rerunCounts;
+    }
+  }, []);
+
+  // Persist session state on changes
+  useEffect(() => {
+    persistSession({ currentIndex, known: [...known], isFinished, rerunQueue, rerunCounts: rerunCountRef.current });
+  }, [currentIndex, known, isFinished, rerunQueue]);
+
+  // Clear on unmount
+  useEffect(() => {
+    return () => clearSession();
+  }, []);
+
   const queryClient = useQueryClient();
 
   const deleteMutation = useMutation({
     mutationFn: (id) => flashcardAPI.delete(id),
+    onMutate: async (deletedId) => {
+      await queryClient.cancelQueries(['flashcards']);
+      const previous = queryClient.getQueryData(['flashcards']);
+      if (previous) {
+        queryClient.setQueryData(['flashcards'], old => {
+          if (!old || !old.data) return old;
+          const newGroups = old.data.map(g => ({
+            ...g,
+            cards: g.cards.filter(c => c.id !== deletedId)
+          }));
+          return { ...old, data: newGroups };
+        });
+      }
+      return { previous };
+    },
     onSuccess: () => queryClient.invalidateQueries(['flashcards']),
-    onError: (err) => console.error('Failed to delete flashcard:', err),
+    onError: (err, id, context) => {
+      console.error('Failed to delete flashcard:', err);
+      if (context?.previous) queryClient.setQueryData(['flashcards'], context.previous);
+    },
   });
 
   const reviewMutation = useMutation({
@@ -406,19 +466,22 @@ function FlashcardSession({ cards, subjectName, onClose }) {
     };
   }, []);
 
+  const totalRef = useRef(cards.length + rerunQueue.length);
+  useEffect(() => { totalRef.current = cards.length + rerunQueue.length; }, [cards.length, rerunQueue.length]);
+
   const goNext = useCallback(() => {
     setFeedback(null);
     setAutoAdvanceProgress(0);
     setIsFlipped(false);
     setTimeout(() => {
-      const nextIdx = currentIndex + 1;
-      if (nextIdx < cards.length + rerunQueue.length) {
-        setCurrentIndex(nextIdx);
-      } else {
+      setCurrentIndex(prev => {
+        const nextIdx = prev + 1;
+        if (nextIdx < totalRef.current) return nextIdx;
         setIsFinished(true);
-      }
+        return prev;
+      });
     }, 150);
-  }, [currentIndex, cards.length, rerunQueue.length]);
+  }, []);
 
   const goPrev = useCallback(() => {
     clearTimeout(autoAdvanceTimerRef.current);
@@ -930,6 +993,8 @@ function ReviewHistoryModal({ group, onClose }) {
     queryFn: () => flashcardAPI.getReviews(cardIds),
     enabled: cardIds.length > 0,
   });
+
+  if (!group) return null;
 
   const reviewsMap = data?.reviews || {};
 

@@ -2,6 +2,7 @@ import enum
 from sqlalchemy import Column, Integer, String, Text, DateTime, Date, ForeignKey, Enum, UniqueConstraint, Boolean, Float
 from sqlalchemy.orm import relationship
 import datetime
+from time_utils import utcnow
 from database import Base
 
 class MaterialType(str, enum.Enum):
@@ -11,6 +12,8 @@ class MaterialType(str, enum.Enum):
     TXT      = "TXT"
     MARKDOWN = "MARKDOWN"
     YOUTUBE  = "YOUTUBE"
+    PPTX     = "PPTX"
+    XLSX     = "XLSX"
 
     # Planned — belum ada implementasi router/parser
     # WEBSITE = "WEBSITE"
@@ -25,7 +28,7 @@ class Subject(Base):
     semester = Column(String)
     lecturer = Column(String)
     description = Column(Text)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=True)
+    created_at = Column(DateTime, default=utcnow, nullable=True)
     # ─── Statistik agregat (denormalized, dihitung oleh recalculate_subject_stats) ───
     best_score = Column(Integer, nullable=True)          # skor tertinggi dari quiz + simulasi ujian
     avg_score = Column(Integer, nullable=True)           # rata-rata skor quiz + simulasi ujian
@@ -54,9 +57,9 @@ class Material(Base):
     failure_reason = Column(Text, nullable=True)
     progress = Column(Integer, default=0, nullable=False) # 0-100, untuk UI progress bar
     stage = Column(String, nullable=True)                 # label tahap pemrosesan (untuk UI)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
-    upload_date = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
+    upload_date = Column(DateTime, default=utcnow)
 
     subject = relationship("Subject", back_populates="materials")
 
@@ -67,7 +70,7 @@ class Note(Base):
     title = Column(String)
     content = Column(Text)
     is_pinned = Column(Boolean, default=False, nullable=False, server_default="0")
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
 
     subject = relationship("Subject", back_populates="notes")
 
@@ -80,7 +83,7 @@ class Flashcard(Base):
     question = Column(Text)
     answer = Column(Text)
     material_ids = Column(String, nullable=True)   # comma-separated material IDs
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
     # ─── Spaced Repetition fields (Fase 3: SRS) ───
     ease_factor = Column(Integer, default=250)     # 2.5 dalam satuan 1/100 (250 = 2.50)
     interval = Column(Integer, default=1)          # interval review dalam hari
@@ -102,7 +105,7 @@ class FlashcardReview(Base):
     id = Column(Integer, primary_key=True, index=True)
     flashcard_id = Column(Integer, ForeignKey("flashcards.id", ondelete="CASCADE"), index=True)
     rating = Column(Integer)                        # 0=Lupa, 1=Sulit, 2=Biasa, 3=Mudah, 4=Sempurna
-    reviewed_at = Column(DateTime, default=datetime.datetime.utcnow)
+    reviewed_at = Column(DateTime, default=utcnow)
     next_review = Column(DateTime, nullable=True)
     response_time_ms = Column(Integer, nullable=True)  # lama berpikir sebelum menjawab (ms)
 
@@ -116,7 +119,7 @@ class Quiz(Base):
     score = Column(Integer, nullable=True)         # null = belum dimainkan
     questions_json = Column(Text, nullable=True)   # JSON string hasil generate AI
     material_ids = Column(String, nullable=True)   # comma-separated material IDs
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
     # ─── Tracking fields (Fase 2: quiz enhanced) ───
     question_type = Column(String, nullable=True)          # mcq / essay / mixed
     total_questions = Column(Integer, default=0)           # jumlah total soal (mcq + essay)
@@ -133,7 +136,7 @@ class Chat(Base):
     id = Column(Integer, primary_key=True, index=True)
     session_uuid = Column(String, unique=True, nullable=True, index=True)
     title = Column(String)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
     
     messages = relationship("Message", back_populates="chat", cascade="all, delete-orphan")
 
@@ -143,7 +146,7 @@ class Message(Base):
     chat_id = Column(Integer, ForeignKey("chats.id", ondelete="CASCADE"), index=True)
     role = Column(String) # user or assistant
     content = Column(Text)
-    timestamp = Column(DateTime, default=datetime.datetime.utcnow)
+    timestamp = Column(DateTime, default=utcnow)
     # Tutor mode metadata (nullable — normal chat rows stay untouched)
     type = Column(String, nullable=True)              # simple / medium / complex
     tokens_used = Column(Integer, nullable=True)      # estimated tokens consumed
@@ -160,7 +163,7 @@ class Cache(Base):
     context_hash = Column(String, index=True)
     setting_hash = Column(String, index=True)
     response = Column(Text)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
     expired_at = Column(DateTime, nullable=True)
 
 class Setting(Base):
@@ -175,20 +178,20 @@ class TrashItem(Base):
     """Metadata file yang dipindah ke folder sampah — agar bisa di-restore.
 
     Saat materi dihapus (soft-delete), record `Material` ditandai status
-    "Trashed" (row tetap ada) sementara file fisik (+ audio) dipindah ke
+    "Trashed" (row tetap ada) sementara file fisik dipindah ke
     storage/trash dengan nama unik. Tabel ini mencatat pemetaan nama unik di
     trash <-> path asli sehingga restore bisa mengembalikan file & status.
     """
     __tablename__ = "trash_items"
     id = Column(Integer, primary_key=True, index=True)
     material_id = Column(Integer, nullable=True, index=True)  # jika berasal dari materi
-    source_type = Column(String, default="material")          # material / audio / orphan
-    original_path = Column(String)                            # path asli (uploads/audio/...)
+    source_type = Column(String, default="material")          # material / orphan
+    original_path = Column(String)                            # path asli (uploads/...)
     trash_path = Column(String)                               # path file di storage/trash
     original_filename = Column(String)                        # nama asli untuk ditampilkan
     original_status = Column(String, nullable=True)           # status Materi saat di-soft-delete
     size_bytes = Column(Integer, default=0)
-    trashed_at = Column(DateTime, default=datetime.datetime.utcnow)
+    trashed_at = Column(DateTime, default=utcnow)
 
 class YoutubeMetadata(Base):
     __tablename__ = "youtube_metadata"
@@ -203,24 +206,9 @@ class YoutubeMetadata(Base):
     thumbnail_url = Column(String)
     video_url = Column(String)
     transcript_language = Column(String)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
     
     material = relationship("Material", backref="youtube_metadata")
-
-class AudioGeneration(Base):
-    __tablename__ = "audio_generations"
-    id = Column(Integer, primary_key=True, index=True)
-    material_id = Column(Integer, ForeignKey("materials.id", ondelete="CASCADE"))
-    filepath = Column(String)
-    status = Column(String, default="processing") # processing, done, failed
-    failure_reason = Column(String, nullable=True)
-    engine_used = Column(String)
-    progress = Column(Integer, default=0, nullable=False) # 0-100, untuk UI progress bar
-    stage = Column(String, nullable=True)                 # label tahap pembuatan audio (untuk UI)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow, nullable=True)
-
-    material = relationship("Material", backref="audio_generations")
 
 # ─── Exam Analyzer Models ────────────────────────────────────────────────────
 
@@ -238,7 +226,7 @@ class ExamBlueprint(Base):
     duration_minutes = Column(Integer, nullable=True)
     blueprint_json = Column(Text)                 # JSON: list topik + bobot + jumlah soal
     analysis_json = Column(Text, nullable=True)   # JSON: topic priority + weakness
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
 
     subject = relationship("Subject")
     sessions = relationship("ExamSession", back_populates="blueprint", cascade="all, delete-orphan")
@@ -260,7 +248,7 @@ class ExamSession(Base):
     total_correct = Column(Integer, nullable=True)
     total_wrong = Column(Integer, nullable=True)
     evaluation_json = Column(Text, nullable=True) # JSON: topik lemah, topik kuat, rekomendasi
-    started_at = Column(DateTime, default=datetime.datetime.utcnow)
+    started_at = Column(DateTime, default=utcnow)
     submitted_at = Column(DateTime, nullable=True)
     # --- History fields (from ExamHistorySession, added by migration) ---
     subject_name = Column(String, nullable=True)
@@ -277,7 +265,7 @@ class ExamSession(Base):
     status = Column(String, default='active', index=True)     # active / completed / archived / mastered
     weak_topics_json = Column(Text, nullable=True)
     strong_topics_json = Column(Text, nullable=True)
-    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
 
     blueprint = relationship("ExamBlueprint", back_populates="sessions")
     subject = relationship("Subject")
@@ -299,7 +287,7 @@ class ExamAttempt(Base):
     questions_json = Column(Text, nullable=True)   # questions used in this attempt
     answers_json   = Column(Text, nullable=True)   # user answers
     evaluation_json= Column(Text, nullable=True)   # full AI evaluation
-    created_at     = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at     = Column(DateTime, default=utcnow)
 
     session = relationship("ExamSession", back_populates="attempts")
     reviews = relationship("ExamReview", back_populates="attempt", cascade="all, delete-orphan")
@@ -339,8 +327,8 @@ class StudyPlan(Base):
     completed_days     = Column(Integer, default=0)
     progress           = Column(Integer, default=0)      # 0-100
     start_date         = Column(Date, nullable=True)
-    created_at         = Column(DateTime, default=datetime.datetime.utcnow)
-    updated_at         = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    created_at         = Column(DateTime, default=utcnow)
+    updated_at         = Column(DateTime, default=utcnow, onupdate=utcnow)
 
     session = relationship("ExamSession", back_populates="plan")
     items   = relationship("StudyPlanItem", back_populates="plan", cascade="all, delete-orphan", order_by="StudyPlanItem.order_number")
@@ -378,7 +366,7 @@ class PracticeResult(Base):
     correct_count      = Column(Integer, nullable=True)
     flashcard_reviewed = Column(Integer, nullable=True)  # jumlah kartu yang direview
     time_taken_seconds = Column(Integer, nullable=True)
-    created_at         = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at         = Column(DateTime, default=utcnow)
 
     plan_item = relationship("StudyPlanItem", back_populates="practice_results")
     session   = relationship("ExamSession")
@@ -403,7 +391,7 @@ class TutorFAQ(Base):
     difficulty = Column(String, default="sedang")     # mudah / sedang / sulit
     usage_count = Column(Integer, default=0)
     effectiveness = Column(Integer, default=80)       # 0-100
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
     updated_by = Column(String, nullable=True)
     last_updated = Column(DateTime, nullable=True)
 
@@ -421,7 +409,7 @@ class TutorTemplate(Base):
     content = Column(Text)                            # content with {{variable}} placeholders
     variables_json = Column(Text, nullable=True)      # JSON: [{name, description, type}]
     usage_count = Column(Integer, default=0)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
 
 
 class TutorFeedback(Base):
@@ -440,7 +428,7 @@ class TutorFeedback(Base):
     rating = Column(String, nullable=False)           # helpful / somewhat / not_helpful
     comment = Column(Text, nullable=True)
     flag = Column(String, nullable=True)              # incorrect / unclear / irrelevant / inappropriate
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
 
 
 class TutorUserProfile(Base):
@@ -473,8 +461,8 @@ class TutorUserProfile(Base):
     not_helpful_count = Column(Integer, default=0)
     helpful_rate = Column(Float, nullable=True)
 
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
 
 
 # ─── Question Bank Model ─────────────────────────────────────────────────────
@@ -504,7 +492,7 @@ class QuestionBank(Base):
     # Metadata
     created_by_ai  = Column(Integer, default=1)      # 1 = AI-generated
     used_count     = Column(Integer, default=0)      # how many times drawn from bank
-    created_at     = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at     = Column(DateTime, default=utcnow)
 
     subject   = relationship("Subject")
     blueprint = relationship("ExamBlueprint")
@@ -533,7 +521,7 @@ class LearningProfile(Base):
     total_sessions = Column(Integer, default=0)
     total_questions = Column(Integer, default=0)
     total_correct = Column(Integer, default=0)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
 
     subject = relationship("Subject")

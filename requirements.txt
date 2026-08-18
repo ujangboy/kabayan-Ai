@@ -12,6 +12,7 @@ sentence-transformers
 fastapi
 uvicorn
 sqlalchemy
+alembic
 python-multipart
 numpy
 python-pptx
@@ -21,6 +22,6 @@ fsrs
 # Dev
 pytest
 pytest-asyncio
-httpx
+httpx2
 
 

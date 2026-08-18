@@ -17,6 +17,7 @@ Prioritas pengisian slot waktu:
 from __future__ import annotations
 
 import datetime
+from time_utils import utcnow
 import json
 import logging
 from typing import Dict, List, Optional
@@ -48,7 +49,7 @@ def _subject_items(db: Session, subject_id: int) -> Dict:
     """Kumpulkan bahan plan untuk satu mata kuliah: FSRS + mastery."""
     import models
 
-    now = datetime.datetime.utcnow()
+    now = utcnow()
 
     cards = (
         db.query(models.Flashcard)
@@ -93,7 +94,7 @@ def generate_daily_plan(
     import models
 
     free_minutes = max(5, min(480, int(free_minutes or 60)))
-    now = datetime.datetime.utcnow()
+    now = utcnow()
     plan: List[Dict] = []
     used = 0
 

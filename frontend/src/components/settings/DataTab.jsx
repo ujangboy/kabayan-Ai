@@ -170,7 +170,6 @@ export default function DataTab() {
 
   const STORAGE_ROWS = [
     { label: t('settings.data.storageUploads'), value: storage.uploads },
-    { label: t('settings.data.storageAudio'), value: storage.audio },
     { label: t('settings.data.storageTrash'), value: storage.trash },
   ];
 

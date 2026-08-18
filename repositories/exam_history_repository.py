@@ -7,6 +7,7 @@ from models import (
 from repositories.base import BaseRepository
 from typing import List, Optional
 import datetime
+from time_utils import utcnow
 
 
 class ExamAttemptRepository(BaseRepository[ExamAttempt]):
@@ -55,7 +56,7 @@ class StudyPlanItemRepository(BaseRepository[StudyPlanItem]):
         done  = sum(1 for i in items if i.completed)
         plan.completed_days = done
         plan.progress = int((done / len(items)) * 100) if items else 0
-        plan.updated_at = datetime.datetime.utcnow()
+        plan.updated_at = utcnow()
         db.flush()
 
     def toggle_completed(self, db: Session, item_id: int) -> Optional[StudyPlanItem]:

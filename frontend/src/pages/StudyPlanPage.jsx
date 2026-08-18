@@ -1,15 +1,16 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft, Check, Loader2, Clock, Play, Brain, Trophy,
-  CheckCircle, XCircle, Award, Target, ClipboardCheck, MessageSquare
+  CheckCircle, XCircle, Award, Target, ClipboardCheck, MessageSquare, FileText, X
 } from 'lucide-react';
-import { sessionsAPI } from '@/services/api';
+import { sessionsAPI, materiAPI } from '@/services/api';
 import MathMarkdown from '@/components/MathMarkdown';
 import { extractErrorMessage } from '@/utils/errors';
 import { useToast } from '@/components/Toast';
+import { usePageState } from '@/hooks/usePageState';
 
 const TYPE_META = {
   review:     { label: 'Review',    cls: 'bg-accent-blue/10 text-accent-blue border-accent-blue/20' },
@@ -33,12 +34,45 @@ export default function StudyPlanPage() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const sessionId = Number(searchParams.get('session_id'));
-  const [practiceState, setPracticeState] = useState(null); // {itemId, topic, questions}
+  const { restore, persist, clear } = usePageState(`study-plan-${sessionId}`);
+  const [practiceState, setPracticeState] = useState(null);
+  const [isGeneratingSummary, setIsGeneratingSummary] = useState(null);
+  const [summaryModalOpen, setSummaryModalOpen] = useState(false);
+  const [summaryData, setSummaryData] = useState(null);
+  const [summaryTopic, setSummaryTopic] = useState('');
+  const [generatedSummaries, setGeneratedSummaries] = useState({});
+
+  // Restore practice state on mount
+  useEffect(() => {
+    const saved = restore();
+    if (saved) {
+      if (saved.practiceState) setPracticeState(saved.practiceState);
+      if (saved.isGeneratingSummary) setIsGeneratingSummary(saved.isGeneratingSummary);
+    }
+  }, []);
+
+  // Persist practice state on changes
+  useEffect(() => {
+    persist({ practiceState, isGeneratingSummary });
+  }, [practiceState, isGeneratingSummary]);
+
+  // Clear on unmount
+  useEffect(() => {
+    return () => clear();
+  }, []);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['session-detail', sessionId],
     queryFn: () => sessionsAPI.detail(sessionId).then(r => r.data),
     enabled: !!sessionId,
+  });
+
+  const subjectId = data?.subject_id;
+
+  const { data: materialsData } = useQuery({
+    queryKey: ['materials', subjectId],
+    queryFn: () => materiAPI.getAll(subjectId).then(r => r.data),
+    enabled: !!subjectId,
   });
 
   const toggleMutation = useMutation({
@@ -52,10 +86,20 @@ export default function StudyPlanPage() {
 
   const plan = data?.study_plan;
   const items = plan?.items || [];
-  const subjectId = data?.subject_id;
+  const readyMaterialIds = (materialsData?.materials || []).filter(m => m.status === 'Ready').map(m => m.id);
   const completedItems = items.filter(i => i.completed).length;
   const totalItems = items.length;
   const progress = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
+
+  // Initialize generatedSummaries from persisted data
+  const persistedSummaries = {};
+  items.forEach(item => {
+    if (item.summary) {
+      persistedSummaries[item.id] = { summary: item.summary, topic: item.topic };
+    }
+  });
+  // Merge: local cache (for newly generated) takes precedence over persisted
+  const allSummaries = { ...persistedSummaries, ...generatedSummaries };
 
   if (isLoading) {
     return (
@@ -216,14 +260,57 @@ export default function StudyPlanPage() {
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-warning text-black text-[11px] font-bold hover:bg-warning/80 transition-colors disabled:opacity-40"
                         >
                           <Play size={11} /> Latihan Quiz
-                        </button>
+                         </button>
                       )}
                       {subjectId && (
                         <button
-                          onClick={() => navigate(`/flashcard/review?subject_id=${subjectId}`)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-accent-purple/40 text-accent-purple text-[11px] font-semibold hover:bg-accent-purple/10 transition-colors"
+                          disabled={isGeneratingSummary === item.id}
+                          onClick={async () => {
+                            if (isGeneratingSummary) return;
+                            
+                            // Check cache (persisted + local) first
+                            if (allSummaries[item.id]) {
+                              setSummaryData(allSummaries[item.id].summary);
+                              setSummaryTopic(allSummaries[item.id].topic);
+                              setSummaryModalOpen(true);
+                              return;
+                            }
+
+                            setIsGeneratingSummary(item.id);
+                            try {
+                              const result = await sessionsAPI.generateSummary(sessionId, item.topic || '');
+                              if (result.data?.summary) {
+                                const sumData = result.data.summary;
+                                const sumTopic = item.topic || '';
+                                setGeneratedSummaries(prev => ({
+                                  ...prev,
+                                  [item.id]: { summary: sumData, topic: sumTopic }
+                                }));
+                                setSummaryData(sumData);
+                                setSummaryTopic(sumTopic);
+                                setSummaryModalOpen(true);
+                              } else {
+                                throw new Error('Rangkuman kosong.');
+                              }
+                            } catch (err) {
+                              toast.error(err.response?.data?.detail || err.message || 'Gagal membuat rangkuman.');
+                            } finally {
+                              setIsGeneratingSummary(null);
+                            }
+                          }}
+                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-colors disabled:opacity-50 border ${
+                            allSummaries[item.id]
+                              ? 'border-success/40 text-success hover:bg-success/10'
+                              : 'border-accent-blue/40 text-accent-blue hover:bg-accent-blue/10'
+                          }`}
                         >
-                          <Brain size={11} /> Review Flashcard
+                          {isGeneratingSummary === item.id ? (
+                            <><Loader2 size={11} className="animate-spin" /> Menyusun...</>
+                          ) : allSummaries[item.id] ? (
+                            <><CheckCircle size={11} /> Lihat Rangkuman</>
+                          ) : (
+                            <><FileText size={11} /> Lihat Rangkuman</>
+                          )}
                         </button>
                       )}
                       {subjectId && !item.completed && (
@@ -245,9 +332,10 @@ export default function StudyPlanPage() {
                   <InlinePlanPractice
                     item={item}
                     practiceState={practiceState}
-                    onClose={() => setPracticeState(null)}
+                    onClose={() => { setPracticeState(null); clear(); }}
                     onSubmitted={() => {
                       setPracticeState(null);
+                      clear();
                       queryClient.invalidateQueries(['session-detail', sessionId]);
                       queryClient.invalidateQueries(['subject-dashboard']);
                     }}
@@ -258,6 +346,35 @@ export default function StudyPlanPage() {
           })}
         </div>
       </div>
+
+      {/* SUMMARY MODAL */}
+      {summaryModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-card w-full max-w-lg rounded-2xl border border-border shadow-2xl overflow-hidden flex flex-col max-h-[85vh]"
+          >
+            <div className="p-4 border-b border-border flex items-center justify-between bg-background/50">
+              <h3 className="font-bold text-text flex items-center gap-2">
+                <FileText size={16} className="text-accent-blue" />
+                Rangkuman: {summaryTopic}
+              </h3>
+              <button onClick={() => setSummaryModalOpen(false)} className="text-text-muted hover:text-text transition-colors">
+                <X size={18} />
+              </button>
+            </div>
+            <div className="p-5 overflow-y-auto custom-scrollbar">
+              <div className="prose prose-sm prose-invert max-w-none text-text-secondary leading-relaxed">
+                <MathMarkdown>{summaryData || ''}</MathMarkdown>
+              </div>
+            </div>
+            <div className="p-4 border-t border-border flex justify-end bg-background/50">
+              <button onClick={() => setSummaryModalOpen(false)} className="btn-primary text-sm px-6">Tutup</button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }
@@ -267,12 +384,30 @@ export default function StudyPlanPage() {
 // ─────────────────────────────────────────────────────────────────────────────
 function InlinePlanPractice({ item, practiceState, onClose, onSubmitted }) {
   const { toast } = useToast();
+  const practiceKey = `practice-${item.id}`;
+  const { restore: restorePractice, persist: persistPractice } = usePageState(practiceKey);
 
   const [idx, setIdx] = useState(0);
   const [answers, setAnswers] = useState({});
   const [results, setResults] = useState({});
   const [showSummary, setShowSummary] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  // Restore practice progress on mount
+  useEffect(() => {
+    const saved = restorePractice();
+    if (saved) {
+      if (saved.idx != null) setIdx(saved.idx);
+      if (saved.answers) setAnswers(saved.answers);
+      if (saved.results) setResults(saved.results);
+      if (saved.showSummary) setShowSummary(saved.showSummary);
+    }
+  }, []);
+
+  // Persist practice progress on changes
+  useEffect(() => {
+    persistPractice({ idx, answers, results, showSummary });
+  }, [idx, answers, results, showSummary]);
 
   const questions = practiceState.questions;
   const q = questions[idx];
@@ -380,11 +515,12 @@ function InlinePlanPractice({ item, practiceState, onClose, onSubmitted }) {
       {isObjective ? (
         <div className="space-y-2">
           {optionsList.map((opt, i) => {
-            const isSelected = userAnswer === opt;
+            const key = (q.options ? Object.keys(q.options)[i] : null) || opt.split('.')[0].trim();
+            const isSelected = userAnswer === key;
             return (
               <button
                 key={i}
-                onClick={() => selectAnswer(opt)}
+                onClick={() => selectAnswer(key)}
                 className={`w-full text-left px-3 py-2.5 rounded-lg border text-sm transition-all ${isSelected ? 'bg-warning/10 border-warning text-warning font-medium' : 'bg-card border-border text-text hover:border-warning/50'}`}
               >
                 <MathMarkdown>{opt}</MathMarkdown>

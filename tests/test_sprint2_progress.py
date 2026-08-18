@@ -10,6 +10,7 @@ Fokus uji:
   - Endpoint: 200 valid, 404 subject hilang
 """
 import datetime
+from time_utils import utcnow
 import json
 
 import pytest
@@ -32,7 +33,7 @@ def client(db_session):
 def _quiz(db, subject_id, days_ago, score=80):
     db.add(models.Quiz(
         subject_id=subject_id, title="q", score=score,
-        created_at=datetime.datetime.utcnow() - datetime.timedelta(days=days_ago),
+        created_at=utcnow() - datetime.timedelta(days=days_ago),
     ))
     db.commit()
 
@@ -105,7 +106,7 @@ class TestStreak:
         subj = make_subject()
         _quiz(db_session, subj.id, 0)
         window = compute_streak(db_session, subj.id)["activity_last_14_days"]
-        today = _local_date(datetime.datetime.utcnow()).isoformat()
+        today = _local_date(utcnow()).isoformat()
         assert window[-1]["date"] == today
         assert window[-1]["active"] is True
 

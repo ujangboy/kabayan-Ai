@@ -6,12 +6,79 @@ import glob
 import tempfile
 import urllib.request
 import logging
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 from youtube_transcript_api import YouTubeTranscriptApi
 from sources.base_source import BaseSource, Document
 import config
 
 logger = logging.getLogger(__name__)
+
+WHISPER_MODEL = "whisper-large-v3"
+
+
+def _groq_transcribe_audio(file_path: str) -> Dict:
+    """Transkripsi audio via Groq Whisper (jalur fallback YouTube).
+
+    Return {"text", "segments": [{"text", "start", "end"}], "duration", "language"}.
+    Mengangkat ValueError untuk error yang bisa dipahami user.
+    """
+    if not config.GROQ_API_KEY:
+        raise ValueError("GROQ_API_KEY belum diatur — transkripsi audio tidak tersedia.")
+    if not os.path.exists(file_path):
+        raise ValueError("File audio tidak ditemukan di server.")
+
+    from groq import Groq  # lazy import — dependency hanya diperlukan saat transkripsi
+
+    client = Groq(api_key=config.GROQ_API_KEY)
+    try:
+        with open(file_path, "rb") as f:
+            transcription = client.audio.transcriptions.create(
+                file=(os.path.basename(file_path), f.read()),
+                model=WHISPER_MODEL,
+                response_format="verbose_json",
+            )
+    except Exception as e:
+        err_str = str(e).lower()
+        if "429" in err_str or "rate limit" in err_str:
+            raise ValueError("Batas permintaan transkripsi terlampaui. Coba lagi beberapa saat.")
+        if "timeout" in err_str or "timed out" in err_str:
+            raise ValueError("Waktu transkripsi habis (audio terlalu panjang). Coba video yang lebih pendek.")
+        if "invalid" in err_str and "file" in err_str:
+            raise ValueError("File audio rusak atau tidak dapat dibaca Groq.")
+        raise ValueError(f"Transkripsi gagal: {str(e)[:160]}")
+
+    if isinstance(transcription, dict):
+        duration = int(transcription.get("duration") or 0)
+        language = transcription.get("language") or "id"
+        segments_raw = transcription.get("segments") or []
+        text_content = transcription.get("text") or ""
+    else:
+        duration = int(getattr(transcription, "duration", 0) or 0)
+        language = getattr(transcription, "language", "id") or "id"
+        segments_raw = getattr(transcription, "segments", None) or []
+        text_content = getattr(transcription, "text", "") or ""
+
+    segments = []
+    for seg in segments_raw:
+        if isinstance(seg, dict):
+            start = seg.get("start", 0.0) or 0.0
+            end = seg.get("end", 0.0) or 0.0
+            text = seg.get("text") or ""
+        else:
+            start = getattr(seg, "start", 0.0) or 0.0
+            end = getattr(seg, "end", 0.0) or 0.0
+            text = getattr(seg, "text", "") or ""
+        segments.append({"text": text, "start": float(start), "end": float(end)})
+
+    if not text_content and not segments:
+        raise ValueError("Audio tampaknya kosong — tidak ada ucapan yang terdeteksi.")
+
+    return {
+        "text": text_content,
+        "segments": segments,
+        "duration": duration,
+        "language": language,
+    }
 
 class YoutubeSource(BaseSource):
     def __init__(self, url: str):
@@ -275,11 +342,8 @@ class YoutubeSource(BaseSource):
             if size_mb > 24:
                 raise ValueError(f"Audio terlalu besar untuk Whisper ({size_mb:.0f}MB > 24MB). Video terlalu panjang untuk jalur fallback.")
 
-            # Transkripsi via layanan umum (US1.1) — Groq Whisper, 0 token lokal.
-            # validate_ext=False: file unduhan bisa webm/opus (Groq menerimanya).
-            from services.transcription_service import transcribe
-
-            data = transcribe(filename, validate_ext=False)
+            # Transkripsi via Groq Whisper (fallback last resort).
+            data = _groq_transcribe_audio(filename)
 
             result = []
             for seg in data["segments"]:

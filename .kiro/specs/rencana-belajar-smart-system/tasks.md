@@ -80,7 +80,7 @@ This plan upgrades the existing 7-day study plan from a generic queue-based list
     - Use `hypothesis` with mocked DB that returns varying counts; assert correct `resources` string per scenario
     - _Requirements: 9.1, 9.2, 9.3_
 
-- [-] 3. Checkpoint — backend engine
+- [ ] 3. Checkpoint — backend engine
   - Ensure all tests pass, ask the user if questions arise.
 
 - [x] 4. Backend — update `ExamService` serialization in `services/exam_service.py`
@@ -108,7 +108,7 @@ This plan upgrades the existing 7-day study plan from a generic queue-based list
     - _Requirements: 8.4_
 
 - [ ] 5. Frontend — enhance `StudyPlanTab` in `ExamAnalyzerPage.jsx`
-  - [~] 5.1 Add start-date state, date picker, and `handleDateChange` handler
+  - [ ] 5.1 Add start-date state, date picker, and `handleDateChange` handler
     - Add `startDate` state initialized to `plan?.start_date || today` (today = `new Date().toISOString().split('T')[0]`)
     - Add `dateSaving` and `dateError` state
     - Add `handleDateChange(newDate)` async function that sends the full plan payload via `sessionsAPI.saveStudyPlan()`, updates `startDate` on success, restores previous value on error, and shows inline error
@@ -116,14 +116,14 @@ This plan upgrades the existing 7-day study plan from a generic queue-based list
     - Accept `sessionId` and `onPlanSaved` as new props from `DetailModal`
     - _Requirements: 3.1, 3.2, 3.3, 3.4_
 
-  - [~] 5.2 Add real-date label computation and "Lewati" skip button
+  - [ ] 5.2 Add real-date label computation and "Lewati" skip button
     - Add `formatItemDate(startDateStr, orderNumber)` helper using `DAYS_ID` and `MONTHS_ID` Indonesian locale arrays (no new libraries)
     - In the item render loop, compute `dateLabel = plan.start_date ? formatItemDate(startDate, item.order_number) : item.day_label`
     - Display `dateLabel` instead of the raw `item.day_label`
     - For each incomplete item, render a "Lewati" button that calls `onToggle(item.id)` — styled with `border-border hover:border-warning/40 hover:text-warning`
     - _Requirements: 4.1, 4.2, 4.3, 5.1, 5.2, 5.3_
 
-  - [~] 5.3 Add visual progress bar with percentage and completion label
+  - [ ] 5.3 Add visual progress bar with percentage and completion label
     - Compute `completedItems` and `totalItems` from `plan.items`
     - Compute `progressValue = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0`
     - Replace the existing static progress display with dynamic values
@@ -144,14 +144,14 @@ This plan upgrades the existing 7-day study plan from a generic queue-based list
     - _Requirements: 4.1_
 
 - [ ] 6. Frontend — add "Lihat Rencana Belajar" button to `ResultView` and lift state in `ExamAnalyzerPage`
-  - [~] 6.1 Add `planSaved`, `loadingPlanNav`, `planNavError` state and `handleLihatRencana` handler in `ResultView`
+  - [ ] 6.1 Add `planSaved`, `loadingPlanNav`, `planNavError` state and `handleLihatRencana` handler in `ResultView`
     - Add `planSaved`, `loadingPlanNav`, `planNavError` state to `ResultView`
     - Implement `handleLihatRencana`: if plan already saved (`planSaved || saved`), call `onFinish()` and `onOpenPlanTab()`; otherwise fetch via `examAPI.getRecommendation()`, save via `sessionsAPI.saveStudyPlan()`, set `planSaved(true)`, then call both callbacks
     - Render a "Lihat Rencana Belajar" `<button>` in the action row with `<Calendar>` icon; show `<Loader2>` while `loadingPlanNav` is true; show inline error paragraph on failure
     - Accept `onOpenPlanTab` as a new prop
     - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5_
 
-  - [~] 6.2 Lift `detailId` and pre-set `tab` state in `ExamAnalyzerPage` and wire `onOpenPlanTab`
+  - [ ] 6.2 Lift `detailId` and pre-set `tab` state in `ExamAnalyzerPage` and wire `onOpenPlanTab`
     - Lift `detailId` state from `HistoryView` into `ExamAnalyzerPage` (or pass it down via callback)
     - Add `pendingPlanTab` state to `ExamAnalyzerPage` that pre-sets the modal tab to `'plan'` when navigating from `ResultView`
     - Pass `onOpenPlanTab` to `ResultView` as `() => { setPendingPlanTab(true); setDetailId(sessionData.session_id); }`
@@ -160,7 +160,7 @@ This plan upgrades the existing 7-day study plan from a generic queue-based list
     - _Requirements: 7.2, 7.3, 10.1, 10.3_
 
 - [ ] 7. Frontend — add date range display to `HistoryCard`
-  - [~] 7.1 Render date range chip in `HistoryCard` when `study_plan_start_date` is present
+  - [ ] 7.1 Render date range chip in `HistoryCard` when `study_plan_start_date` is present
     - Define `MONTHS_ID` array inline in the render (no new library)
     - Compute `start` and `end` (`start + 6 days`) from `s.study_plan_start_date`
     - Format each as `"{D} {MonthAbbr}"` using `MONTHS_ID`
@@ -174,7 +174,7 @@ This plan upgrades the existing 7-day study plan from a generic queue-based list
     - Use `fast-check` to generate ISO date strings for `study_plan_start_date`; render `HistoryCard` and assert the displayed date range equals `formatDate(start) + " – " + formatDate(start + 6 days)` in Indonesian locale
     - _Requirements: 8.1_
 
-- [~] 8. Final checkpoint — integration
+- [ ] 8. Final checkpoint — integration
   - Ensure all tests pass, ask the user if questions arise.
 
 ---

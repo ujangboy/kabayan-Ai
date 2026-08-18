@@ -1,5 +1,6 @@
 import logging
 import datetime
+from time_utils import utcnow
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse, JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -108,8 +109,8 @@ def run_exam_unification_migration():
                          best_score, latest_score, grade, progress, status,
                          weak_topics_json, strong_topics_json,
                          evaluation_json, questions_json, answers_json,
-                         created_at or datetime.datetime.utcnow(),
-                         updated_at or datetime.datetime.utcnow())
+                         created_at or utcnow(),
+                         updated_at or utcnow())
                     )
                     inserted_ids.append((old_id, cursor.lastrowid))
 
@@ -182,24 +183,6 @@ def fix_stuck_materials():
 
 fix_stuck_materials()
 
-# Recover audio generations stuck on "processing" from dead background tasks
-def fix_stuck_audio():
-    """Recover audio generations stuck on 'processing' from dead background tasks."""
-    import models
-    try:
-        db = SessionLocal()
-        stuck = db.query(models.AudioGeneration).filter(models.AudioGeneration.status == "processing").all()
-        for ag in stuck:
-            ag.status = "failed"
-            ag.failure_reason = "Proses audio terputus (server restart). Klik tombol audio untuk mencoba lagi."
-            logger.info(f"Recovered stuck audio generation {ag.id} -> failed")
-        db.commit()
-        db.close()
-    except Exception as e:
-        logger.error(f"fix_stuck_audio error: {e}")
-
-fix_stuck_audio()
-
 # Clean stale LanceDB lock files from unexpected shutdowns
 try:
     for fname in os.listdir(config.LANCEDB_DIR):
@@ -234,7 +217,58 @@ except Exception as e:
     except Exception as e2:
         logger.warning(f"Alembic stamp skipped (first run?): {e2}")
 
-app = FastAPI(title="Kabayan AI Study Workspace")
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    # Cleanup LanceDB orphaned locks
+    if os.path.exists(config.LANCEDB_DIR):
+        for root, dirs, files in os.walk(config.LANCEDB_DIR):
+            for file in files:
+                if file.endswith(".lck"):
+                    try:
+                        os.remove(os.path.join(root, file))
+                        logger.info(f"Cleaned up orphaned lock file: {file}")
+                    except Exception as e:
+                        logger.warning(f"Failed to remove lock file {file}: {e}")
+
+    # Recovery: materi yang terjebak "Processing" saat server restart
+    import models
+    try:
+        db = SessionLocal()
+        cutoff = utcnow() - datetime.timedelta(minutes=30)
+        for m in db.query(models.Material).filter(
+            models.Material.status == "Processing",
+            models.Material.updated_at < cutoff
+        ).all():
+            if m.material_type == models.MaterialType.YOUTUBE:
+                m.status = "Failed"
+                m.failure_reason = "Proses terputus (server restart). Silakan import ulang."
+                logger.warning(f"Recovery: YouTube material {m.id} di-set Failed (restart).")
+            else:
+                m.status = "Pending"  # worker akan memproses ulang dari awal
+                m.progress = 0
+                logger.warning(f"Recovery: material {m.id} di-set Pending untuk diproses ulang (restart).")
+        db.commit()
+        db.close()
+    except Exception as e:
+        logger.warning(f"Recovery stuck rows gagal: {e}")
+
+    # C5/D2/D3: sweep file yatim ke trash + bersihkan trash kedaluwarsa + temp yt-dlp
+    try:
+        db = SessionLocal()
+        from services.storage_cleanup_service import cleanup_orphan_files, cleanup_trash, cleanup_ytdlp_temp
+        cleanup_orphan_files(db)
+        db.close()
+        cleanup_trash()
+        cleanup_ytdlp_temp()
+    except Exception as e:
+        logger.warning(f"Storage cleanup startup gagal: {e}")
+
+    asyncio.create_task(material_worker())
+    yield
+
+app = FastAPI(title="Kabayan AI Study Workspace", lifespan=lifespan)
 register_all_handlers(app)
 
 import asyncio
@@ -269,62 +303,6 @@ async def material_worker():
         except Exception as e:
             logger.error(f"material_worker error: {e}")
             await asyncio.sleep(5)
-
-@app.on_event("startup")
-async def startup_event():
-    # Cleanup LanceDB orphaned locks
-    if os.path.exists(config.LANCEDB_DIR):
-        for root, dirs, files in os.walk(config.LANCEDB_DIR):
-            for file in files:
-                if file.endswith(".lck"):
-                    try:
-                        os.remove(os.path.join(root, file))
-                        logger.info(f"Cleaned up orphaned lock file: {file}")
-                    except Exception as e:
-                        logger.warning(f"Failed to remove lock file {file}: {e}")
-
-    # Recovery: materi/audio yang terjebak "Processing" saat server restart
-    import models
-    try:
-        db = SessionLocal()
-        cutoff = datetime.datetime.utcnow() - datetime.timedelta(minutes=30)
-        for m in db.query(models.Material).filter(
-            models.Material.status == "Processing",
-            models.Material.updated_at < cutoff
-        ).all():
-            if m.material_type == models.MaterialType.YOUTUBE:
-                m.status = "Failed"
-                m.failure_reason = "Proses terputus (server restart). Silakan import ulang."
-                logger.warning(f"Recovery: YouTube material {m.id} di-set Failed (restart).")
-            else:
-                m.status = "Pending"  # worker akan memproses ulang dari awal
-                m.progress = 0
-                logger.warning(f"Recovery: material {m.id} di-set Pending untuk diproses ulang (restart).")
-        for a in db.query(models.AudioGeneration).filter(
-            models.AudioGeneration.status == "processing"
-        ).all():
-            last = a.updated_at or a.created_at
-            if last and last < cutoff:
-                a.status = "failed"
-                a.failure_reason = "Proses terputus (server restart). Coba buat ulang."
-                logger.warning(f"Recovery: audio generation {a.id} di-set Failed (restart).")
-        db.commit()
-        db.close()
-    except Exception as e:
-        logger.warning(f"Recovery stuck rows gagal: {e}")
-
-    # C5/D2/D3: sweep file yatim ke trash + bersihkan trash kedaluwarsa + temp yt-dlp
-    try:
-        db = SessionLocal()
-        from services.storage_cleanup_service import cleanup_orphan_files, cleanup_trash, cleanup_ytdlp_temp
-        cleanup_orphan_files(db)
-        db.close()
-        cleanup_trash()
-        cleanup_ytdlp_temp()
-    except Exception as e:
-        logger.warning(f"Storage cleanup startup gagal: {e}")
-
-    asyncio.create_task(material_worker())
 
 from fastapi.middleware.cors import CORSMiddleware
 app.add_middleware(

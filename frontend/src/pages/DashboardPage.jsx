@@ -139,8 +139,6 @@ export default function DashboardPage() {
               <span className="opacity-50">·</span>
               <span>{t('dashboard.storageUploads', { size: formatBytes(data.storage.uploads) })}</span>
               <span className="opacity-50">·</span>
-              <span>{t('dashboard.storageAudio', { size: formatBytes(data.storage.audio) })}</span>
-              <span className="opacity-50">·</span>
               <span>{t('dashboard.storageTrash', { size: formatBytes(data.storage.trash) })}</span>
             </div>
           )}
@@ -180,7 +178,7 @@ export default function DashboardPage() {
                       <tr key={m.id} className="border-b border-border/50 last:border-0 hover:bg-background/50 transition-colors">
                         <td className="px-4 py-2.5">
                           <div className="flex items-center gap-2">
-                            <span className="text-base">{fileIcon(m.material_type)}</span>
+                            <span className="text-base">{fileIcon((m.filename || '').split('.').pop()?.toUpperCase() || m.material_type)}</span>
                             <span className="text-text font-medium truncate max-w-[130px] text-xs">{m.filename}</span>
                           </div>
                         </td>

@@ -9,6 +9,7 @@ Menggunakan TestClient dengan dependency_overrides agar memakai session
 temporer dari fixture db_session (tidak menyentuh DB produksi).
 """
 import datetime
+from time_utils import utcnow
 
 import pytest
 
@@ -36,7 +37,7 @@ class TestReviewDueQueue:
     def test_kartu_baru_muncul_di_antrian(self, client, db_session, make_subject):
         """Kartu baru (times_seen=0, next_review di masa depan) wajib muncul."""
         subject = make_subject()
-        now = datetime.datetime.utcnow()
+        now = utcnow()
         # Kartu AI baru: belum pernah direview, next_review besok
         self._make_flashcard(db_session, subject.id, times_seen=0,
                              next_review=now + datetime.timedelta(days=1))
@@ -59,7 +60,7 @@ class TestReviewDueQueue:
     def test_kartu_sudah_review_dan_belum_due_tidak_muncul(self, client, db_session, make_subject):
         """Kartu yang sudah direview & dijadwalkan besok tidak muncul sekarang."""
         subject = make_subject()
-        now = datetime.datetime.utcnow()
+        now = utcnow()
         self._make_flashcard(db_session, subject.id, times_seen=2,
                              next_review=now + datetime.timedelta(days=5))
 
@@ -69,7 +70,7 @@ class TestReviewDueQueue:
     def test_kartu_due_muncul(self, client, db_session, make_subject):
         """Kartu yang sudah jatuh tempo (next_review di masa lalu) tetap muncul."""
         subject = make_subject()
-        now = datetime.datetime.utcnow()
+        now = utcnow()
         self._make_flashcard(db_session, subject.id, times_seen=3,
                              next_review=now - datetime.timedelta(days=1))
 
@@ -88,7 +89,7 @@ class TestReviewDueQueue:
         """Filter subject_id hanya mengembalikan kartu milik subject tsb."""
         subj_a = make_subject("Matematika")
         subj_b = make_subject("Fisika")
-        now = datetime.datetime.utcnow()
+        now = utcnow()
         self._make_flashcard(db_session, subj_a.id, times_seen=0,
                              next_review=now + datetime.timedelta(days=1))
         self._make_flashcard(db_session, subj_b.id, times_seen=0,
@@ -123,7 +124,7 @@ class TestReviewHistory:
         """Beberapa review untuk kartu yang sama terkelompok dan terurut."""
         subject = make_subject()
         fc = self._make_flashcard(db_session, subject.id)
-        now = datetime.datetime.utcnow()
+        now = utcnow()
         for rating in (0, 2, 3):
             review = models.FlashcardReview(
                 flashcard_id=fc.id,
@@ -145,7 +146,7 @@ class TestReviewHistory:
         subject = make_subject()
         fc1 = self._make_flashcard(db_session, subject.id)
         fc2 = self._make_flashcard(db_session, subject.id)
-        now = datetime.datetime.utcnow()
+        now = utcnow()
         for fid in (fc1.id, fc2.id):
             db_session.add(models.FlashcardReview(
                 flashcard_id=fid, rating=2,
@@ -164,8 +165,8 @@ class TestReviewHistory:
         fc = self._make_flashcard(db_session, subject.id)
         db_session.add(models.FlashcardReview(
             flashcard_id=fc.id, rating=2,
-            reviewed_at=datetime.datetime.utcnow(),
-            next_review=datetime.datetime.utcnow() + datetime.timedelta(days=1),
+            reviewed_at=utcnow(),
+            next_review=utcnow() + datetime.timedelta(days=1),
         ))
         db_session.commit()
 

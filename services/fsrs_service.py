@@ -17,6 +17,7 @@ Catatan fsrs API: datetime WAJIB timezone-aware UTC.
 from __future__ import annotations
 
 import datetime
+from time_utils import utcnow
 import json
 import logging
 from typing import Dict, Optional
@@ -123,7 +124,7 @@ def review(flashcard, rating: int, now: Optional[datetime.datetime] = None) -> D
         "ease_factor": int(round(max(130.0, min(400.0, (10.0 - (new_card.difficulty or 6.5)) * 30.0 + 130.0)))),
         "times_seen": (flashcard.times_seen or 0) + 1,
         "times_correct": (flashcard.times_correct or 0) + (1 if rating >= 2 else 0),
-        "last_reviewed": datetime.datetime.utcnow(),
+        "last_reviewed": utcnow(),
         "mastered": mastered,
         # ── Metadata respons ──
         "interval_days": interval_days,
@@ -153,7 +154,7 @@ def apply_review(db, flashcard, rating: int, response_time_ms: int = None) -> Di
     review_row = models.FlashcardReview(
         flashcard_id=flashcard.id,
         rating=int(rating),
-        reviewed_at=datetime.datetime.utcnow(),
+        reviewed_at=utcnow(),
         next_review=result["next_review"],
     )
     if response_time_ms is not None:

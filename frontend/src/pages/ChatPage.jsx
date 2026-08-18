@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, X, BookOpen, Trash2, Bot, User, Copy, Check, Pin, Edit3, GraduationCap, ThumbsUp, ThumbsDown, Hand, Lightbulb, Target, FileText, Clipboard, Square } from 'lucide-react';
+import { Send, X, BookOpen, Trash2, Bot, User, Copy, Check, Pin, Edit3, GraduationCap, ThumbsUp, ThumbsDown, Hand, Lightbulb, Target, FileText, Clipboard, Square, Search } from 'lucide-react';
 import MathMarkdown from '@/components/MathMarkdown';
 import { useChatStore } from '@/store';
 import { cn, formatDateTime } from '@/utils';
@@ -172,6 +172,7 @@ export default function ChatPage() {
   const navigate = useNavigate();
   const { chats, currentChatId, setCurrentChat, createChat, deleteChat, deleteAllChats, togglePinChat, renameChat, addMessage, updateLastMessage, patchLastMessage, setMessageFeedback, getCurrentChat, selectedDocs, clearSelectedDocs, streamingChatIds, tutorBadge, setStreaming, setTutorBadge, setChatTutor } = useChatStore();
   const [input, setInput] = useState('');
+  const [chatSearch, setChatSearch] = useState('');
   const [showQuickPrompts, setShowQuickPrompts] = useState(false);
   const [editingChatId, setEditingChatId] = useState(null);
   const [editingTitle, setEditingTitle] = useState('');
@@ -196,6 +197,7 @@ export default function ChatPage() {
   const notebookOp = usePendingOperation('notebook');
 
   // Handle URL params
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const id = searchParams.get('id');
     const tutorParam = searchParams.get('tutor');
@@ -286,12 +288,15 @@ export default function ChatPage() {
   const tutorSubject = chat?.tutorSubject || '';
   const tutorLevel = chat?.tutorLevel || 'intermediate';
   const isCurrentChatStreaming = streamingChatIds.includes(currentChatId);
-  const sortedChats = [...chats].sort((a, b) => {
-    const aPinned = !!a.pinned;
-    const bPinned = !!b.pinned;
-    if (aPinned !== bPinned) return aPinned ? -1 : 1;
-    return new Date(b.createdAt) - new Date(a.createdAt);
-  });
+  const chatSearchQuery = chatSearch.trim().toLowerCase();
+  const sortedChats = [...chats]
+    .sort((a, b) => {
+      const aPinned = !!a.pinned;
+      const bPinned = !!b.pinned;
+      if (aPinned !== bPinned) return aPinned ? -1 : 1;
+      return new Date(b.createdAt) - new Date(a.createdAt);
+    })
+    .filter(c => !chatSearchQuery || (c.title || '').toLowerCase().includes(chatSearchQuery));
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -402,13 +407,14 @@ export default function ChatPage() {
       }
     } catch (err) {
       if (err?.name !== 'AbortError') {
-        updateLastMessage(chatId, '⚠ ' + t('chat.errorRetry'));
+        const errorMsg = '⚠ ' + t('chat.errorRetry');
+        updateLastMessage(chatId, full ? full + '\n\n' + errorMsg : errorMsg);
       }
     } finally {
       setStreaming(false, chatId);
       chatOp.finish('chat-' + chatId);
     }
-  }, [currentChatId, selectedDocs, chat, addMessage, updateLastMessage, patchLastMessage, chatOp, tutorMode, tutorSubject, tutorLevel, setStreaming, setTutorBadge]);
+  }, [currentChatId, selectedDocs, chat, addMessage, updateLastMessage, patchLastMessage, chatOp, tutorMode, tutorSubject, tutorLevel, setStreaming, setTutorBadge, isChatStreaming]);
 
   // Kirim rating feedback untuk satu respons tutor
   const handleFeedback = useCallback(async (message, rating) => {
@@ -487,9 +493,34 @@ export default function ChatPage() {
           </button>
         </div>
 
+        {/* Search chat */}
+        <div className="px-3 pb-2">
+          <div className="relative">
+            <Search size={11} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
+            <input
+              type="text"
+              value={chatSearch}
+              onChange={(e) => setChatSearch(e.target.value)}
+              placeholder="Cari chat..."
+              className="w-full pl-7 pr-6 py-1.5 bg-background border border-border rounded-lg text-xs text-text placeholder-text-muted focus:outline-none focus:border-primary transition-colors"
+            />
+            {chatSearch && (
+              <button
+                onClick={() => setChatSearch('')}
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-text transition-colors"
+              >
+                <X size={10} />
+              </button>
+            )}
+          </div>
+        </div>
+
         {/* Chat list */}
         <div className="flex-1 overflow-y-auto p-2 space-y-0.5">
-          {(() => {
+          {sortedChats.length === 0 && chatSearch ? (
+            <p className="text-xs text-text-muted text-center py-6">Tidak ada chat ditemukan</p>
+          ) : (
+            (() => {
             // Group chats by relative time
             const now = new Date();
             const today = new Date(now); today.setHours(0,0,0,0);
@@ -619,7 +650,7 @@ export default function ChatPage() {
                 ))}
               </div>
             ));
-          })()}
+            })())}
         </div>
 
         {/* Bottom: hapus semua */}
@@ -764,7 +795,7 @@ export default function ChatPage() {
           ) : (
             <>
               {chat.messages.map((m, i) => (
-                <MessageBubble key={i} message={m} isLast={i === chat.messages.length - 1} tutorMode={tutorMode} onFeedback={handleFeedback} />
+                <MessageBubble key={m.id || `${i}-${m.role}`} message={m} isLast={i === chat.messages.length - 1} tutorMode={tutorMode} onFeedback={handleFeedback} />
               ))}
               {isCurrentChatStreaming && chat.messages[chat.messages.length - 1]?.content === '' && (
                 <TypingIndicator />

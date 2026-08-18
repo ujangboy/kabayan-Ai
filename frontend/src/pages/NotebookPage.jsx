@@ -1,8 +1,8 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileText, Plus, Trash2, Pin, Save, ChevronLeft, MoreHorizontal, Sparkles, X } from 'lucide-react';
+import { FileText, Plus, Trash2, Pin, Save, ChevronLeft, MoreHorizontal, Sparkles, X, Search } from 'lucide-react';
 import { notesAPI, subjectAPI } from '@/services/api';
 import { formatDate, formatDateTime } from '@/utils';
 import { cn } from '@/utils';
@@ -47,6 +47,7 @@ export default function NotebookPage() {
   const [selectedNote, setSelectedNote] = useState(null);
   const [isCreating, setIsCreating] = useState(false);
   const [showGeneratePanel, setShowGeneratePanel] = useState(false);
+  const [noteSearch, setNoteSearch] = useState('');
   const createMutexRef = useRef(false);
   // Refs to avoid stale closures in callbacks
   const rawNotesRef = useRef([]);
@@ -75,8 +76,16 @@ export default function NotebookPage() {
   rawNotesRef.current = rawNotes;
   notesRef.current = notes;
 
-  const pinnedNotes = notes.filter(n => n.is_pinned);
-  const unpinnedNotes = notes.filter(n => !n.is_pinned);
+  const searchQuery = noteSearch.trim().toLowerCase();
+  const filteredNotes = searchQuery
+    ? notes.filter(n =>
+        (n.title || '').toLowerCase().includes(searchQuery) ||
+        (n.content || '').replace(/<[^>]+>/g, ' ').toLowerCase().includes(searchQuery)
+      )
+    : notes;
+
+  const pinnedNotes = filteredNotes.filter(n => n.is_pinned);
+  const unpinnedNotes = filteredNotes.filter(n => !n.is_pinned);
 
   const deleteMutation = useMutation({
     mutationFn: (id) => notesAPI.delete(id),
@@ -278,6 +287,28 @@ export default function NotebookPage() {
           </div>
         </div>
 
+        {/* Search bar */}
+        <div className="px-3 pb-2">
+          <div className="relative">
+            <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
+            <input
+              type="text"
+              value={noteSearch}
+              onChange={(e) => setNoteSearch(e.target.value)}
+              placeholder="Cari catatan..."
+              className="w-full pl-7 pr-7 py-1.5 bg-background border border-border rounded-lg text-xs text-text placeholder-text-muted focus:outline-none focus:border-primary transition-colors"
+            />
+            {noteSearch && (
+              <button
+                onClick={() => setNoteSearch('')}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted hover:text-text transition-colors"
+              >
+                <X size={11} />
+              </button>
+            )}
+          </div>
+        </div>
+
         {/* Note list */}
         <div className="flex-1 overflow-y-auto px-2 pb-2 space-y-0.5">
           {isLoading ? (
@@ -294,6 +325,11 @@ export default function NotebookPage() {
               >
                 {t('notebook.createNote')}
               </button>
+            </div>
+          ) : filteredNotes.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <Search size={20} className="text-text-muted mb-2 opacity-50" />
+              <p className="text-xs text-text-muted">Tidak ada catatan yang cocok</p>
             </div>
           ) : (
             <>
@@ -377,6 +413,10 @@ function NoteView({ note, onBack, onSave, onPin, onDelete }) {
   const titleRef = useRef(null);
   const saveTimerRef = useRef(null);
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    return () => clearTimeout(saveTimerRef.current);
+  }, []);
 
   const renameMutation = useMutation({
     mutationFn: ({ id, title }) => notesAPI.rename(id, title),

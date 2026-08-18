@@ -5,7 +5,7 @@ import tempfile
 import logging
 import config
 from sqlalchemy.orm import Session
-from models import AudioGeneration, Material
+from models import Material
 
 logger = logging.getLogger(__name__)
 
@@ -116,26 +116,21 @@ def cleanup_ytdlp_temp(max_age_hours: int = 24) -> dict:
 # ─── Orphan sweep ──────────────────────────────────────────────────────────
 
 def cleanup_orphan_files(db: Session) -> dict:
-    """Bersihkan file yatim: file upload/audio yang tidak lagi direferensikan DB.
+    """Bersihkan file yatim: file upload yang tidak lagi direferensikan DB.
 
     Referensi:
-    - audio_generations.filepath (semua status)
     - materials.filepath KECUALI status 'Failed' (materi gagal → file-nya dihapus)
 
     File yatim DIPINDAHKAN ke trash (safety-net D2), bukan langsung dihapus permanen.
-    Scan: storage/uploads + static/audio. Kembalikan ringkasan hasil.
+    Scan: storage/uploads. Kembalikan ringkasan hasil.
     """
     referenced = set()
-    for (fp,) in db.query(AudioGeneration.filepath).all():
-        if fp:
-            referenced.add(_basename(fp))
     for (fp,) in db.query(Material.filepath).filter(Material.status != "Failed").all():
         if fp:
             referenced.add(_basename(fp))
 
     targets = [
         ("uploads", config.UPLOADS_DIR),
-        ("audio", os.path.join(config.BASE_DIR, "static", "audio")),
     ]
 
     removed = []
@@ -163,10 +158,9 @@ def cleanup_orphan_files(db: Session) -> dict:
 # ─── D6: storage usage ─────────────────────────────────────────────────────
 
 def get_storage_usage() -> dict:
-    """Ukuran total storage yang sedang dipakai (uploads + audio + trash)."""
+    """Ukuran total storage yang sedang dipakai (uploads + trash)."""
     dirs = {
         "uploads": config.UPLOADS_DIR,
-        "audio": os.path.join(config.BASE_DIR, "static", "audio"),
         "trash": config.TRASH_DIR,
     }
     result = {}

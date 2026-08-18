@@ -17,6 +17,7 @@ Murni logika (tanpa side-effect), agar mudah diuji & dipakai oleh endpoint.
 from __future__ import annotations
 
 import datetime
+from time_utils import utcnow
 from typing import Dict, Optional
 
 MODALITY_BY_TIER: Dict[str, str] = {
@@ -38,7 +39,7 @@ def collect_resources(db, subject_id: int) -> Dict:
     """Snapshot sumber daya latihan untuk satu mata kuliah."""
     import models
 
-    now = datetime.datetime.utcnow()
+    now = utcnow()
     flashcards_total = (
         db.query(models.Flashcard).filter(models.Flashcard.subject_id == subject_id).count()
     )

@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { flashcardAPI } from '@/services/api';
 import MathMarkdown from '@/components/MathMarkdown';
+import { usePageState } from '@/hooks/usePageState';
 
 const AUTO_ADVANCE_MS = 1200;
 
@@ -17,6 +18,7 @@ export default function FlashcardReviewPage() {
   const [searchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const subjectId = searchParams.get('subject_id') ? Number(searchParams.get('subject_id')) : undefined;
+  const { restore: restoreSession, persist: persistSession, clear: clearSession } = usePageState('flashcard-review');
 
   const [currentIdx, setCurrentIdx] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
@@ -32,6 +34,23 @@ export default function FlashcardReviewPage() {
   const autoIntervalRef = useRef(null);
 
   const MAX_RERUN = 3;
+
+  // Restore session state on mount
+  useEffect(() => {
+    const saved = restoreSession();
+    if (saved) {
+      if (saved.currentIdx) setCurrentIdx(saved.currentIdx);
+      if (saved.results) setResults(saved.results);
+      if (saved.isFinished) setIsFinished(saved.isFinished);
+      if (saved.rerunQueue) setRerunQueue(saved.rerunQueue);
+      if (saved.rerunCounts) rerunCountRef.current = saved.rerunCounts;
+    }
+  }, []);
+
+  // Persist session state on changes
+  useEffect(() => {
+    persistSession({ currentIdx, results, isFinished, rerunQueue, rerunCounts: rerunCountRef.current });
+  }, [currentIdx, results, isFinished, rerunQueue]);
 
   const SIMPLE_RATINGS = [
     { value: 0, emoji: '😕', label: t('flashcard.ratingLupa'),  cls: 'border-danger/50 text-danger hover:bg-danger/10 active:bg-danger/20' },
@@ -136,6 +155,7 @@ export default function FlashcardReviewPage() {
   const handleRestart = () => {
     clearTimeout(autoTimerRef.current);
     clearInterval(autoIntervalRef.current);
+    clearSession();
     setCurrentIdx(0);
     setIsFlipped(false);
     setResults([]);
@@ -147,6 +167,7 @@ export default function FlashcardReviewPage() {
   };
 
   const handleDone = () => {
+    clearSession();
     queryClient.invalidateQueries(['flashcards']);
     queryClient.invalidateQueries(['flashcard-due']);
     navigate('/flashcard');

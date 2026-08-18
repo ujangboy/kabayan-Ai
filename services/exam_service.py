@@ -8,6 +8,7 @@ import re
 import random
 import logging
 import datetime
+from time_utils import utcnow
 from typing import Optional, List
 from sqlalchemy.orm import Session, selectinload
 from sqlalchemy.exc import SQLAlchemyError
@@ -721,7 +722,7 @@ class ExamService:
             session.total_correct        = eval_data["total_correct"]
             session.total_wrong          = eval_data["total_wrong"]
             session.evaluation_json      = json.dumps(eval_data, ensure_ascii=False)
-            session.submitted_at         = datetime.datetime.utcnow()
+            session.submitted_at         = utcnow()
 
             grade_val = eval_data.get("grade") or calculate_grade(eval_data["score"])
             session.status               = "completed"
@@ -738,7 +739,7 @@ class ExamService:
             session.total_questions      = len(questions)
             session.weak_topics_json     = json.dumps(eval_data.get("weak_topics", []), ensure_ascii=False)
             session.strong_topics_json   = json.dumps(eval_data.get("strong_topics", []), ensure_ascii=False)
-            session.updated_at           = datetime.datetime.utcnow()
+            session.updated_at           = utcnow()
 
             attempt = ExamAttempt(
                 session_id=session_id,
@@ -750,7 +751,7 @@ class ExamService:
                 questions_json=session.questions_json,
                 answers_json=json.dumps(answers, ensure_ascii=False),
                 evaluation_json=json.dumps(eval_data, ensure_ascii=False),
-                created_at=datetime.datetime.utcnow(),
+                created_at=utcnow(),
             )
             db.add(attempt)
             db.flush()
@@ -951,6 +952,7 @@ class ExamService:
                            "time_slot": i.time_slot or TIME_SLOTS[i.order_number % len(TIME_SLOTS)] if i.order_number is not None else "",
                            "resources": i.resources,
                            "completed": bool(i.completed),
+                           "summary": i.summary,
                            "practice_results": [
                                {"id": pr.id, "practice_type": pr.practice_type,
                                 "score": pr.score, "total_questions": pr.total_questions,
@@ -1038,6 +1040,7 @@ class ExamService:
             material_names = blueprint_material_map.get(s.blueprint_id, []) if s.blueprint_id else []
             result.append({
                 "id": s.id, "subject_id": s.subject_id,
+                "blueprint_id": s.blueprint_id,
                 "subject_name": s.subject_name,
                 "title": s.title or f"Sesi #{s.id}",
                 "exam_type": s.exam_type, "difficulty": s.difficulty,
@@ -1228,8 +1231,8 @@ class ExamService:
                 session.evaluation_json = None
                 session.submitted_at    = None
                 session.status          = "active"
-                session.started_at      = datetime.datetime.utcnow()
-                session.updated_at      = datetime.datetime.utcnow()
+                session.started_at      = utcnow()
+                session.updated_at      = utcnow()
                 db.flush()
                 return {"session_id": session.id, "is_new_session": False, **new_payload}
 
@@ -1329,8 +1332,8 @@ class ExamService:
                 total_days=len(sp_items),
                 completed_days=0, progress=0,
                 start_date=start_date_val,
-                created_at=datetime.datetime.utcnow(),
-                updated_at=datetime.datetime.utcnow(),
+                created_at=utcnow(),
+                updated_at=utcnow(),
             )
             db.add(plan)
             db.flush()
@@ -1396,7 +1399,7 @@ class ExamService:
             total_questions=payload.total_questions,
             correct_count=payload.correct_count,
             time_taken_seconds=payload.time_taken_seconds,
-            created_at=datetime.datetime.utcnow(),
+            created_at=utcnow(),
         )
         db.add(result)
         if item.completed != 1:
@@ -1429,7 +1432,7 @@ class ExamService:
             session_id=plan.session_id if plan else None,
             practice_type="flashcard",
             flashcard_reviewed=reviewed,
-            created_at=datetime.datetime.utcnow(),
+            created_at=utcnow(),
         )
         db.add(result)
         if item.completed != 1:
@@ -1452,6 +1455,56 @@ class ExamService:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Gagal menghapus sesi.",
             )
+    def generate_study_plan_summary(self, db: Session, session_id: int, topic: str) -> dict:
+        if not (session := exam_session_repository.get(db, session_id)):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Sesi tidak ditemukan.",
+            )
+        
+        # Check if summary already exists for this topic in the plan
+        if session.plan:
+            for item in session.plan.items:
+                if item.topic == topic and item.summary:
+                    return {"summary": item.summary}
 
+        from langchain_core.prompts import PromptTemplate
+        prompt_template = PromptTemplate(
+            input_variables=["topic"],
+            template=(
+                "Kamu adalah AI Tutor. Berikut adalah topik kelemahan siswa: '{topic}'.\n"
+                "Tugasmu: Berikan rangkuman super padat (bite-sized summary) yang hanya terdiri dari 3 hingga 5 poin penting "
+                "untuk memudahkan siswa mengulang (review) materi ini dengan cepat.\n"
+                "Jangan gunakan kalimat basa-basi, langsung ke poin-poin utama dalam format markdown (* list)."
+            )
+        )
+        try:
+            from services.ai_service import ai_service
+            result = ai_service.generate(
+                capability="reasoning",
+                prompt_template=prompt_template,
+                input_variables={"topic": topic},
+                use_cache=False,
+            )
+            
+            # Since output_schema is None, result is a string. If dict, convert to string
+            summary_text = result if isinstance(result, str) else str(result)
+            summary_text = summary_text.strip()
+
+            # Save summary to the plan item
+            if session.plan:
+                for item in session.plan.items:
+                    if item.topic == topic:
+                        item.summary = summary_text
+                        db.commit()
+                        break
+
+            return {"summary": summary_text}
+        except Exception as err:
+            logger.error(f"generate_study_plan_summary error: {err}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Gagal menghasilkan rangkuman: {str(err)}",
+            )
 
 exam_service = ExamService()

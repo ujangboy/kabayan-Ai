@@ -11,6 +11,7 @@ export default function SubjectsPage() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [subjectFilter, setSubjectFilter] = useState('');
 
   const { data: subjectData, isLoading } = useQuery({
     queryKey: ['subjects'],
@@ -18,6 +19,13 @@ export default function SubjectsPage() {
   });
 
   const subjects = subjectData?.subjects || [];
+  const sortedSubjects = [...subjects].sort((a, b) => a.name.localeCompare(b.name, 'id', { sensitivity: 'base' }));
+  const filteredSubjects = subjectFilter
+    ? subjects.filter(s => String(s.id) === subjectFilter)
+    : subjects;
+  const shownCount = filteredSubjects.length;
+
+
 
   const deleteMutation = useMutation({
     mutationFn: (id) => subjectAPI.delete(id),
@@ -44,13 +52,25 @@ export default function SubjectsPage() {
             <h1 className="text-2xl font-bold text-text">{t('subjects.title')}</h1>
             <p className="text-text-secondary text-sm mt-1">{t('subjects.subtitle')}</p>
           </div>
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="btn-primary text-xs"
-          >
-            <Plus size={14} />
-            {t('subjects.addNew')}
-          </button>
+          <div className="flex items-center gap-2">
+            <select
+              value={subjectFilter}
+              onChange={(e) => setSubjectFilter(e.target.value)}
+              className="px-3 py-2 bg-card border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary transition-colors"
+            >
+              <option value="">Semua Mata Kuliah</option>
+              {sortedSubjects.map(s => (
+                <option key={s.id} value={String(s.id)}>{s.name}</option>
+              ))}
+            </select>
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="btn-primary text-xs"
+            >
+              <Plus size={14} />
+              {t('subjects.addNew')}
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -61,8 +81,12 @@ export default function SubjectsPage() {
               <p className="text-text-muted mb-2">{t('subjects.empty')}</p>
               <button onClick={() => setIsModalOpen(true)} className="text-primary hover:underline text-sm">{t('subjects.createNow')}</button>
             </div>
+          ) : shownCount === 0 ? (
+            <div className="col-span-full card-base text-center py-10">
+              <p className="text-text-muted text-sm">Tidak ada mata kuliah yang cocok.</p>
+            </div>
           ) : (
-            subjects.map((s, idx) => (
+            filteredSubjects.map((s, idx) => (
               <Link key={s.id} to={`/subjects/${s.id}`} className="group block">
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
@@ -154,12 +178,8 @@ function CreateSubjectModal({ onClose, onSuccess }) {
     data.append('description', formData.description);
 
     try {
-      const res = await fetch('/api/subjects', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: data.toString(),
-      });
-      if (!res.ok) throw new Error(t('subjects.createError'));
+      const res = await subjectAPI.create(formData);
+      if (res.data?.detail) throw new Error(res.data.detail);
       onSuccess();
     } catch (err) {
       alert(err.message);

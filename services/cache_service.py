@@ -1,5 +1,6 @@
 import hashlib
 import datetime
+from time_utils import utcnow
 from sqlalchemy.orm import Session
 from repositories.cache_repository import cache_repository
 from models import Cache
@@ -21,7 +22,7 @@ class CacheService:
         cached = cache_repository.get_cache(db, prompt_hash, context_hash, setting_hash)
         if cached:
             # TTL: entri yang sudah kedaluwarsa dihapus dan dianggap miss
-            if cached.expired_at and cached.expired_at < datetime.datetime.utcnow():
+            if cached.expired_at and cached.expired_at < utcnow():
                 db.delete(cached)
                 db.commit()
                 return None
@@ -33,7 +34,7 @@ class CacheService:
         context_hash = self._hash(context)
         setting_hash = self._hash(setting)
 
-        expires = datetime.datetime.utcnow() + datetime.timedelta(seconds=CACHE_TTL_SECONDS)
+        expires = utcnow() + datetime.timedelta(seconds=CACHE_TTL_SECONDS)
 
         existing = db.query(Cache).filter(
             Cache.prompt_hash == prompt_hash,

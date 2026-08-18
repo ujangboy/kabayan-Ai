@@ -1,7 +1,7 @@
 """Sampah (recycle bin) — soft-delete materi agar bisa di-restore.
 
 Saat materi dihapus, record `Material` tidak dihapus permanen melainkan
-ditandai status "Trashed". File fisik (+ audio) dipindah ke storage/trash
+ditandai status "Trashed". File fisik dipindah ke storage/trash
 dengan nama unik, dan pemetaan path asli <-> path trash dicatat di tabel
 `TrashItem`. Dari sampah user bisa: restore (kembalikan file & status) atau
 hapus permanen (file + record). File yatim (orphan) juga dicatat agar tampil.
@@ -10,6 +10,7 @@ import os
 import uuid
 import logging
 import datetime
+from time_utils import utcnow
 
 from sqlalchemy.orm import Session
 from models import TrashItem, Material
@@ -58,7 +59,7 @@ def trash_file_with_meta(db: Session, filepath: str, source_type: str = "materia
         original_filename=original_filename or os.path.basename(filepath),
         original_status=original_status,
         size_bytes=size,
-        trashed_at=datetime.datetime.utcnow(),
+        trashed_at=utcnow(),
     ))
     return True
 
@@ -66,7 +67,7 @@ def trash_file_with_meta(db: Session, filepath: str, source_type: str = "materia
 # ─── Materi (soft-delete) ──────────────────────────────────────────────────
 
 def trash_material(db: Session, material_id: int) -> bool:
-    """Soft-delete materi: pindah file + audio ke trash, tandai status Trashed."""
+    """Soft-delete materi: pindah file ke trash, tandai status Trashed."""
     mat = db.query(Material).filter(Material.id == material_id).first()
     if not mat:
         return False
@@ -77,16 +78,6 @@ def trash_material(db: Session, material_id: int) -> bool:
     # File fisik materi utama -> trash (jika ada & bukan online/youtube semata)
     if filepath:
         trash_file_with_meta(db, filepath, "material", material_id, mat.filename, original_status)
-
-    # Audio milik materi -> trash
-    from models import AudioGeneration
-    audio_rows = db.query(AudioGeneration).filter(AudioGeneration.material_id == material_id).all()
-    for row in audio_rows:
-        if row.filepath:
-            full = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", row.filepath.lstrip("/"))
-            full = os.path.normpath(full)
-            if os.path.isfile(full):
-                trash_file_with_meta(db, full, "audio", material_id, os.path.basename(full))
 
     # Cegah cleanup_orphan_files memindah file yang sudah di-trash ke tmp naming conflict
     mat.status = "Trashed"
@@ -136,7 +127,7 @@ def _register_orphan_files(db: Session) -> None:
             original_filename=original,
             original_status=None,
             size_bytes=size,
-            trashed_at=datetime.datetime.utcnow(),
+            trashed_at=utcnow(),
         ))
         known.add(name)
         changed = True
@@ -204,7 +195,7 @@ def _restore_for_material(db: Session, mat: Material) -> bool:
 
 
 def delete_material_permanent(db: Session, material_id: int) -> bool:
-    """Hapus permanen materi dari sampah: file trunk + audio + record + RAG chunks."""
+    """Hapus permanen materi dari sampah: file trunk + record + RAG chunks."""
     mat = db.query(Material).filter(Material.id == material_id).first()
     if not mat:
         return False
@@ -217,7 +208,7 @@ def delete_material_permanent(db: Session, material_id: int) -> bool:
         import threading
         threading.Thread(target=rag_service.rebuild_index, daemon=True).start()
 
-    # Hapus file fisik di trash (termasuk audio) + row TrashItem
+    # Hapus file fisik di trash + row TrashItem
     items = db.query(TrashItem).filter(TrashItem.material_id == material_id).all()
     for it in items:
         if it.trash_path:
@@ -228,9 +219,7 @@ def delete_material_permanent(db: Session, material_id: int) -> bool:
         db.delete(it)
     db.flush()
 
-    # Hapus audio records + materi record (cascade)
-    from models import AudioGeneration
-    db.query(AudioGeneration).filter(AudioGeneration.material_id == material_id).delete(synchronize_session=False)
+    # Hapus materi record (cascade)
     db.delete(mat)
     db.commit()
     cache_service.invalidate_all(db)
@@ -244,7 +233,7 @@ def delete_item_permanent(db: Session, item_id: int) -> bool:
         return False
     if it.material_id:
         # Row milik materi: delegasikan ke penghapusan menyeluruh materi
-        # (file + audio + record + RAG) agar tak meninggalkan materi sampah nyangkut.
+        # (file + record + RAG) agar tak meninggalkan materi sampah nyangkut.
         return delete_material_permanent(db, it.material_id)
     if it.trash_path:
         try:
@@ -278,7 +267,7 @@ def empty_trash(db: Session) -> int:
     """Kosongkan sampah permanen.
 
     Semua file trunk + row TrashItem dihapus. Record materi yang ditandai
-    Trashed ikut dihapus permanen (file + audio + record + RAG chunks) supaya
+    Trashed ikut dihapus permanen (file + record + RAG chunks) supaya
     tidak tersisa materi zombie tanpa TrashItem yang tak bisa di-restore.
     """
     _register_orphan_files(db)
@@ -293,11 +282,9 @@ def empty_trash(db: Session) -> int:
         db.delete(it)
         count += 1
 
-    from models import AudioGeneration
     trashed = db.query(Material).filter(Material.status == "Trashed").all()
     for mat in trashed:
         rag_service.delete_document_chunks(f"mat_{mat.id}")
-        db.query(AudioGeneration).filter(AudioGeneration.material_id == mat.id).delete(synchronize_session=False)
         db.delete(mat)
         count += 1
 
