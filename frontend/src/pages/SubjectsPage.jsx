@@ -7,9 +7,11 @@ import { Book, Plus, Trash2, X, FileText, HelpCircle, CreditCard, Trophy, Calend
 import { subjectAPI } from '@/services/api';
 import { formatDate, formatTimeOnly } from '@/utils';
 import { Tooltip } from '@/components/ui/Tooltip';
+import { useToast } from '@/components/Toast';
 
 export default function SubjectsPage() {
   const { t } = useTranslation();
+  const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [subjectFilter, setSubjectFilter] = useState('');
@@ -39,9 +41,13 @@ export default function SubjectsPage() {
   });
 
   const handleDelete = (id) => {
-    if (confirm(t('subjects.deleteConfirm'))) {
-      deleteMutation.mutate(id);
-    }
+    toast.confirm({
+      title: t('subjects.deleteTitle', 'Hapus Mata Kuliah'),
+      message: t('subjects.deleteConfirm'),
+      danger: true,
+      confirmLabel: t('common.delete'),
+      onConfirm: () => deleteMutation.mutate(id),
+    });
   };
 
   return (
@@ -57,7 +63,7 @@ export default function SubjectsPage() {
             <select
               value={subjectFilter}
               onChange={(e) => setSubjectFilter(e.target.value)}
-              className="px-3 py-2 bg-card border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary transition-colors"
+              className="px-3 py-2 bg-card border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/30 transition-all"
             >
               <option value="">Semua Mata Kuliah</option>
               {sortedSubjects.map(s => (
@@ -80,7 +86,7 @@ export default function SubjectsPage() {
           ) : subjects.length === 0 ? (
             <div className="col-span-full card-base text-center py-10">
               <p className="text-text-muted mb-2">{t('subjects.empty')}</p>
-              <button onClick={() => setIsModalOpen(true)} className="text-primary hover:underline text-sm">{t('subjects.createNow')}</button>
+              <button onClick={() => setIsModalOpen(true)} className="text-primary-light hover:underline text-sm">{t('subjects.createNow')}</button>
             </div>
           ) : shownCount === 0 ? (
             <div className="col-span-full card-base text-center py-10">
@@ -93,10 +99,10 @@ export default function SubjectsPage() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.05 }}
-                  className="card-base group flex flex-col relative overflow-hidden hover:border-primary/40"
+                  className="card-base card-hoverable group flex flex-col relative overflow-hidden hover:border-primary/40"
                 >
-                  <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
-                  <div className="flex justify-between items-start mb-2 pl-2">
+                  <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-primary" />
+                  <div className="flex justify-between items-start mb-2 pl-2 pt-1">
                     <h3 className="font-semibold text-text text-lg">{s.name}</h3>
                     <Tooltip label={t('common.delete')}>
                       <button
@@ -167,6 +173,7 @@ export default function SubjectsPage() {
 
 function CreateSubjectModal({ onClose, onSuccess }) {
   const { t } = useTranslation();
+  const { toast } = useToast();
   const [formData, setFormData] = useState({ name: '', semester: '', lecturer: '', description: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -186,22 +193,25 @@ function CreateSubjectModal({ onClose, onSuccess }) {
       if (res.data?.detail) throw new Error(res.data.detail);
       onSuccess();
     } catch (err) {
-      alert(err.message);
+      toast.error(err.message);
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        className="w-full max-w-md card-base shadow-2xl"
+        initial={{ opacity: 0, scale: 0.92, y: 12 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 8 }}
+        transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
+        className="w-full max-w-md glass rounded-dialog shadow-modal"
       >
         <div className="flex items-center justify-between p-4 border-b border-border">
           <div className="flex items-center gap-2">
-            <Book size={18} className="text-primary" />
+            <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center shadow-btn-primary">
+              <Book size={16} className="text-white" />
+            </div>
             <h3 className="font-semibold text-text">{t('subjects.addNew')}</h3>
           </div>
           <Tooltip label={t('common.close')}>
@@ -216,7 +226,7 @@ function CreateSubjectModal({ onClose, onSuccess }) {
               required
               value={formData.name}
               onChange={(e) => setFormData(p => ({ ...p, name: e.target.value }))}
-              className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary transition-colors"
+              className="input-base"
               placeholder={t('subjects.formNamePlaceholder')}
             />
           </div>
@@ -227,7 +237,7 @@ function CreateSubjectModal({ onClose, onSuccess }) {
                 type="text"
                 value={formData.semester}
                 onChange={(e) => setFormData(p => ({ ...p, semester: e.target.value }))}
-                className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary transition-colors"
+                className="input-base"
                 placeholder={t('subjects.formSemesterPlaceholder')}
               />
             </div>
@@ -237,7 +247,7 @@ function CreateSubjectModal({ onClose, onSuccess }) {
                 type="text"
                 value={formData.lecturer}
                 onChange={(e) => setFormData(p => ({ ...p, lecturer: e.target.value }))}
-                className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary transition-colors"
+                className="input-base"
                 placeholder={t('subjects.formLecturerPlaceholder')}
               />
             </div>
@@ -248,7 +258,7 @@ function CreateSubjectModal({ onClose, onSuccess }) {
               value={formData.description}
               onChange={(e) => setFormData(p => ({ ...p, description: e.target.value }))}
               rows={2}
-              className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary transition-colors resize-none"
+              className="input-base resize-none"
               placeholder={t('subjects.formNotesPlaceholder')}
             />
           </div>
