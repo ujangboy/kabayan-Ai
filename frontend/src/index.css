@@ -13,7 +13,7 @@
 
   :root {
     --scrollbar-width: 6px;
-    --scrollbar-color: #1E293B;
+    --scrollbar-color: #263349;
   }
 
   html {
@@ -22,8 +22,8 @@
 
   body {
     font-family: 'Inter', system-ui, sans-serif;
-    background-color: #0B0F19;
-    color: #F1F5F9;
+    background-color: #0E1520;
+    color: #EDF1F7;
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -38,7 +38,7 @@
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: #1E293B;
+    background: #263349;
     border-radius: 99px;
   }
   ::-webkit-scrollbar-thumb:hover {
@@ -75,17 +75,17 @@
 
 @layer components {
   .glass {
-    background: rgba(21, 28, 44, 0.75);
+    background: rgba(26, 35, 50, 0.75);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(30, 41, 59, 0.8);
+    border: 1px solid rgba(38, 51, 73, 0.8);
   }
 
   .glass-light {
-    background: rgba(28, 37, 56, 0.5);
+    background: rgba(33, 45, 64, 0.5);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(51, 65, 85, 0.5);
+    border: 1px solid rgba(38, 51, 73, 0.5);
   }
 
   .sidebar-item {
