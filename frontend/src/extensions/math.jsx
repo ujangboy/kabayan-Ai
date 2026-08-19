@@ -61,7 +61,7 @@ function KaTeXNode({ node, updateAttributes }) {
       trust: true,
     });
   } catch {
-    html = `<span style="color:var(--color-warning,#f59e0b)">⚠ ${latex}</span>`;
+    html = `<span style="color:var(--warning,#F6B93B)">⚠ ${latex}</span>`;
   }
 
   return (

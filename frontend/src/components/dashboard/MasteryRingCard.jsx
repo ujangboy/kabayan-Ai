@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { Target, CalendarCheck } from '@/icons';
 import { useTranslation } from 'react-i18next';
-import { formatDate } from '@/utils';
+import { formatDate, cn } from '@/utils';
 
 export default function MasteryRingCard({ subject }) {
   const { t } = useTranslation();
@@ -17,10 +17,10 @@ export default function MasteryRingCard({ subject }) {
       <div className="flex items-center gap-6 flex-wrap">
         <div className="relative w-28 h-28 shrink-0">
           <svg viewBox="0 0 120 120" className="w-full h-full -rotate-90">
-            <circle cx="60" cy="60" r="52" fill="none" stroke="var(--border)" strokeWidth="10" />
+            <circle cx="60" cy="60" r="52" fill="none" className="stroke-border" strokeWidth="10" />
             <circle
               cx="60" cy="60" r="52" fill="none"
-              stroke={masteryPct >= 70 ? 'var(--success)' : masteryPct >= 40 ? 'var(--warning)' : 'var(--danger)'}
+              className={cn(masteryPct >= 70 ? 'stroke-success' : masteryPct >= 40 ? 'stroke-warning' : 'stroke-danger')}
               strokeWidth="10" strokeLinecap="round"
               strokeDasharray={`${(masteryPct / 100) * 326.7} 326.7`}
             />

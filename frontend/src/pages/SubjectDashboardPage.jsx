@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   ArrowLeft, FileText, CreditCard, HelpCircle, Pencil, Trash2,
   TrendingUp, Trophy, Zap,
@@ -10,7 +10,7 @@ import {
 import { subjectAPI, examAPI, studyAPI } from '@/services/api';
 import { useUiStore } from '@/store';
 import { formatDate } from '@/utils';
-import { Tooltip } from '@/components/ui/Tooltip';
+import { Tooltip, ConfirmDialog } from '@/components/ui';
 import ProgressCard from '@/components/ProgressCard';
 import { useToast } from '@/components/Toast';
 import { extractErrorMessage } from '@/utils/errors';
@@ -18,7 +18,6 @@ import { extractErrorMessage } from '@/utils/errors';
 import StatCard from '@/components/dashboard/StatCard';
 import ScoreChart from '@/components/dashboard/ScoreChart';
 import EditSubjectModal from '@/components/dashboard/EditSubjectModal';
-import DeleteConfirmModal from '@/components/dashboard/DeleteConfirmModal';
 import MasteryProfileCard from '@/components/dashboard/MasteryProfileCard';
 import TopicProgressCard from '@/components/dashboard/TopicProgressCard';
 import LearningMetricsCard from '@/components/dashboard/LearningMetricsCard';
@@ -302,32 +301,28 @@ export default function SubjectDashboardPage() {
         <MaterialsTable materials={materials} subjectId={subjectId} />
       </div>
 
-      <AnimatePresence>
-        {isEditOpen && (
-          <EditSubjectModal
-            subject={subject}
-            onClose={() => setIsEditOpen(false)}
-            onSuccess={() => {
-              setIsEditOpen(false);
-              queryClient.invalidateQueries(['subject-dashboard', subjectId]);
-              queryClient.invalidateQueries(['subjects']);
-            }}
-          />
-        )}
-      </AnimatePresence>
+      <EditSubjectModal
+        subject={subject}
+        open={isEditOpen}
+        onClose={() => setIsEditOpen(false)}
+        onSuccess={() => {
+          setIsEditOpen(false);
+          queryClient.invalidateQueries(['subject-dashboard', subjectId]);
+          queryClient.invalidateQueries(['subjects']);
+        }}
+      />
 
-      {isDeleteOpen && (
-        <DeleteConfirmModal
-          title={t('subjectDashboard.deleteTitle', 'Hapus Mata Kuliah')}
-          message={t('subjectDashboard.deleteConfirm', { name: subject.name })}
-          onConfirm={() => {
-            setIsDeleteOpen(false);
-            deleteMutation.mutate();
-          }}
-          onCancel={() => setIsDeleteOpen(false)}
-          isDeleting={deleteMutation.isPending}
-        />
-      )}
+      <ConfirmDialog
+        open={isDeleteOpen}
+        onClose={() => setIsDeleteOpen(false)}
+        onConfirm={() => {
+          setIsDeleteOpen(false);
+          deleteMutation.mutate();
+        }}
+        title={t('subjectDashboard.deleteTitle', 'Hapus Mata Kuliah')}
+        message={t('subjectDashboard.deleteConfirm', { name: subject.name })}
+        loading={deleteMutation.isPending}
+      />
     </div>
   );
 }

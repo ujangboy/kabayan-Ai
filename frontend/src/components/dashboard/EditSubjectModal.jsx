@@ -1,12 +1,10 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { X } from '@/icons';
 import { useTranslation } from 'react-i18next';
 import { subjectAPI } from '@/services/api';
 import { extractErrorMessage } from '@/utils/errors';
-import { Tooltip } from '@/components/ui/Tooltip';
+import { Modal, Button, Input, Textarea } from '@/components/ui';
 
-export default function EditSubjectModal({ subject, onClose, onSuccess }) {
+export default function EditSubjectModal({ subject, open, onClose, onSuccess }) {
   const { t } = useTranslation();
   const [formData, setFormData] = useState({
     name: subject?.name || '',
@@ -24,7 +22,7 @@ export default function EditSubjectModal({ subject, onClose, onSuccess }) {
     setError('');
     try {
       await subjectAPI.update(subject.id, formData);
-      onSuccess();
+      onSuccess?.();
     } catch (err) {
       setError(extractErrorMessage(err) || t('subjectDashboard.editError'));
     } finally {
@@ -33,76 +31,72 @@ export default function EditSubjectModal({ subject, onClose, onSuccess }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        className="bg-card w-full max-w-lg rounded-2xl border border-border shadow-2xl overflow-hidden"
-      >
-        <div className="p-4 divider-gradient-b relative flex items-center justify-between bg-background/50">
-          <h3 className="font-bold text-text">{t('subjectDashboard.editTitle')}</h3>
-          <Tooltip label={t('common.close')}>
-            <button onClick={onClose} aria-label={t('common.close')} className="text-text-muted hover:text-text transition-colors">
-              <X size={18} />
-            </button>
-          </Tooltip>
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={t('subjectDashboard.editTitle')}
+      size="md"
+      footer={
+        <>
+          <Button variant="ghost" onClick={onClose} disabled={isSubmitting}>
+            {t('common.cancel', 'Batal')}
+          </Button>
+          <Button type="submit" form="edit-subject-form" loading={isSubmitting} disabled={!formData.name.trim()}>
+            {t('common.save', 'Simpan')}
+          </Button>
+        </>
+      }
+    >
+      <form id="edit-subject-form" onSubmit={handleSubmit} className="space-y-4 p-5">
+        {error && (
+          <div className="rounded-lg border border-danger/20 bg-danger/10 px-3 py-2 text-sm text-danger">
+            {error}
+          </div>
+        )}
+        <div>
+          <label className="mb-1 block text-xs font-semibold text-text-secondary">
+            {t('subjectDashboard.editName')} *
+          </label>
+          <Input
+            type="text"
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            required
+          />
         </div>
-        <form onSubmit={handleSubmit} className="p-5 space-y-4">
-          {error && (
-            <div className="text-sm text-danger bg-danger/10 border border-danger/20 rounded-lg px-3 py-2">
-              {error}
-            </div>
-          )}
+        <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-semibold text-text-secondary mb-1">{t('subjectDashboard.editName')} *</label>
-            <input
+            <label className="mb-1 block text-xs font-semibold text-text-secondary">
+              {t('subjectDashboard.editSemester')}
+            </label>
+            <Input
               type="text"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="input-base"
-              required
+              value={formData.semester}
+              onChange={(e) => setFormData({ ...formData, semester: e.target.value })}
             />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-semibold text-text-secondary mb-1">{t('subjectDashboard.editSemester')}</label>
-              <input
-                type="text"
-                value={formData.semester}
-                onChange={(e) => setFormData({ ...formData, semester: e.target.value })}
-                className="input-base"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-text-secondary mb-1">{t('subjectDashboard.editLecturer')}</label>
-              <input
-                type="text"
-                value={formData.lecturer}
-                onChange={(e) => setFormData({ ...formData, lecturer: e.target.value })}
-                className="input-base"
-              />
-            </div>
           </div>
           <div>
-            <label className="block text-xs font-semibold text-text-secondary mb-1">{t('subjectDashboard.editDescription')}</label>
-            <textarea
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              rows={3}
-              className="input-base resize-y"
+            <label className="mb-1 block text-xs font-semibold text-text-secondary">
+              {t('subjectDashboard.editLecturer')}
+            </label>
+            <Input
+              type="text"
+              value={formData.lecturer}
+              onChange={(e) => setFormData({ ...formData, lecturer: e.target.value })}
             />
           </div>
-          <div className="flex justify-end gap-2 pt-2">
-            <button type="button" onClick={onClose} className="btn-ghost text-sm px-4 py-2 border border-border">
-              {t('common.cancel', 'Batal')}
-            </button>
-            <button type="submit" disabled={isSubmitting || !formData.name.trim()} className="btn-primary text-sm px-4 py-2 disabled:opacity-50">
-              {isSubmitting ? t('common.saving', 'Menyimpan...') : t('common.save', 'Simpan')}
-            </button>
-          </div>
-        </form>
-      </motion.div>
-    </div>
+        </div>
+        <div>
+          <label className="mb-1 block text-xs font-semibold text-text-secondary">
+            {t('subjectDashboard.editDescription')}
+          </label>
+          <Textarea
+            rows={3}
+            value={formData.description}
+            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          />
+        </div>
+      </form>
+    </Modal>
   );
 }

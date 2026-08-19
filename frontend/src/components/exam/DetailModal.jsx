@@ -12,7 +12,7 @@ import { examAPI, sessionsAPI } from '@/services/api';
 import { cn } from '@/utils';
 import MathMarkdown from '@/components/MathMarkdown';
 import { Chip, ProgressBar, STATUS_META, getBadge, getGradeColor } from './shared';
-import { Tooltip } from '@/components/ui/Tooltip';
+import { Tooltip, Modal } from '@/components/ui';
 
 // ─── Detail Modal ─────────────────────────────────────────────────────────────
 export default function DetailModal({ historySessionId, onClose, onResume, pendingPlanTab, setPendingPlanTab }) {
@@ -46,15 +46,15 @@ export default function DetailModal({ historySessionId, onClose, onResume, pendi
     },
   });
 
-  if (isLoading) {
-    return (
-      <ModalShell>
-        <div className="flex-1 flex items-center justify-center p-20">
-          <Loader2 size={36} className="animate-spin text-primary" />
-        </div>
-      </ModalShell>
-    );
-  }
+   if (isLoading) {
+     return (
+       <ModalShell onClose={onClose}>
+         <div className="flex-1 flex items-center justify-center p-20">
+           <Loader2 size={36} className="animate-spin text-primary" />
+         </div>
+       </ModalShell>
+     );
+   }
   if (!data) return null;
 
   const latestAttempt = data.attempts?.[data.attempts.length - 1];
@@ -62,7 +62,7 @@ export default function DetailModal({ historySessionId, onClose, onResume, pendi
   const badge = getBadge(data.best_score || 0);
 
   return (
-    <ModalShell>
+    <ModalShell onClose={onClose}>
       <div className="p-5 divider-gradient-b relative shrink-0">
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1">
@@ -129,19 +129,16 @@ export default function DetailModal({ historySessionId, onClose, onResume, pendi
   );
 }
 
-function ModalShell({ children }) {
+function ModalShell({ children, onClose }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.97 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.97 }}
-        transition={{ duration: 0.2 }}
-        className="w-full max-w-3xl max-h-[90vh] flex flex-col glass rounded-dialog shadow-modal overflow-hidden"
-      >
-        {children}
-      </motion.div>
-    </div>
+    <Modal
+      onClose={onClose}
+      hideClose
+      contentClassName="glass"
+      bodyClassName="!p-0 !overflow-hidden flex flex-col"
+    >
+      {children}
+    </Modal>
   );
 }
 

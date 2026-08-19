@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { FileText, Eye, Trash2 } from '@/icons';
 import { useTranslation } from 'react-i18next';
 import { materiAPI } from '@/services/api';
@@ -8,9 +7,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { extractErrorMessage } from '@/utils/errors';
 import { formatDate } from '@/utils';
 import FileTypeIcon from '@/components/FileTypeIcon';
-import DeleteConfirmModal from './DeleteConfirmModal';
 import { useToast } from '@/components/Toast';
-import { Tooltip } from '@/components/ui/Tooltip';
+import { Tooltip, ConfirmDialog } from '@/components/ui';
 
 export default function MaterialsTable({ materials, subjectId }) {
   const { t } = useTranslation();
@@ -106,15 +104,14 @@ export default function MaterialsTable({ materials, subjectId }) {
         </table>
       </div>
 
-      {deleteTarget && (
-        <DeleteConfirmModal
-          title={t('subjectDashboard.deleteMaterialTitle', 'Hapus Materi')}
-          message={t('subjectDashboard.deleteMaterialConfirm', { name: deleteTarget.filename })}
-          onConfirm={handleDelete}
-          onCancel={() => setDeleteTarget(null)}
-          isDeleting={isDeleting}
-        />
-      )}
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleDelete}
+        title={t('subjectDashboard.deleteMaterialTitle', 'Hapus Materi')}
+        message={t('subjectDashboard.deleteMaterialConfirm', { name: deleteTarget?.filename })}
+        loading={isDeleting}
+      />
     </>
   );
 }

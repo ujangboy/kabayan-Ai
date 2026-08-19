@@ -1,6 +1,8 @@
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useUiStore, useAppStore, useChatStore } from '@/store';
+import { Tooltip } from '@/components/ui';
 import {
   LayoutDashboard, MessageSquare, BookOpen, FileText,
   BookMarked, CreditCard, HelpCircle, Brain, Settings, Bot,
@@ -41,68 +43,78 @@ export default function IconRail() {
     return location.pathname === to || location.pathname.startsWith(to + '/');
   };
 
+  const railItem = 'relative w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 group';
+
   return (
-    <aside className="flex flex-col items-center w-14 h-screen bg-rail divider-gradient-r relative shrink-0 z-20 py-3 gap-1">
+    <aside className="flex h-screen w-14 flex-col items-center bg-rail py-3 relative z-20 shrink-0 divider-gradient-r gap-1">
       {/* Logo */}
-      <div className="w-9 h-9 rounded-xl bg-gradient-primary flex items-center justify-center shadow-btn-primary mb-3 shrink-0">
-        <Bot size={20} className="text-white" />
+      <div className="relative mb-3 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-primary shadow-btn-primary">
+        <span className="absolute inset-0 rounded-xl bg-gradient-primary opacity-50 blur-md" />
+        <Bot size={20} className="relative text-white" />
       </div>
 
       {/* Search trigger */}
-      <button
-        onClick={() => setSearchOpen(true)}
-        title={t('common.search')}
-        className="w-10 h-10 flex items-center justify-center rounded-xl text-text-secondary hover:text-text hover:bg-card transition-all duration-200"
-      >
-        <SearchGlyph />
-      </button>
+      <Tooltip label={t('common.search')} side="right">
+        <button
+          onClick={() => setSearchOpen(true)}
+          className="flex h-10 w-10 items-center justify-center rounded-xl text-text-secondary transition-all duration-200 hover:bg-card hover:text-text"
+        >
+          <SearchGlyph />
+        </button>
+      </Tooltip>
 
-      <div className="w-8 h-px bg-border my-1" />
+      <div className="my-1 h-px w-8 bg-border" />
 
       {/* Nav items */}
-      <nav className="flex-1 flex flex-col items-center gap-1 w-full">
+      <nav className="flex w-full flex-1 flex-col items-center gap-1">
         {NAV.map(({ to, icon: Icon, label, action }) => {
           const active = isActive(to);
           return (
-            <NavLink
-              key={to}
-              to={to}
-              onClick={action}
-              title={label}
-              className="relative w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 group"
-            >
-              {active && (
-                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-6 rounded-full bg-gradient-primary" />
-              )}
-              <span className={cn(
-                'w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200',
-                active ? 'bg-primary/15 text-primary-light' : 'text-text-secondary group-hover:bg-card group-hover:text-text'
-              )}>
-                <Icon size={20} />
-              </span>
-            </NavLink>
+            <Tooltip key={to} label={label} side="right">
+              <NavLink to={to} onClick={action} className={railItem}>
+                {active && (
+                  <motion.span
+                    layoutId="nav-active-indicator"
+                    className="absolute left-0 top-1/2 h-6 w-[3px] -translate-y-1/2 rounded-full bg-gradient-primary"
+                    transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                  />
+                )}
+                <span
+                  className={cn(
+                    'flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-200',
+                    active ? 'bg-primary/15 text-primary-light' : 'text-text-secondary group-hover:bg-card group-hover:text-text'
+                  )}
+                >
+                  <Icon size={20} />
+                </span>
+              </NavLink>
+            </Tooltip>
           );
         })}
       </nav>
 
-      <div className="w-8 h-px bg-border my-1" />
+      <div className="my-1 h-px w-8 bg-border" />
 
       {/* Settings */}
-      <NavLink
-        to="/settings"
-        title={t('nav.settings')}
-        className="relative w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 group"
-      >
-        {location.pathname.startsWith('/settings') && (
-          <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-6 rounded-full bg-gradient-primary" />
-        )}
-        <span className={cn(
-          'w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200',
-          location.pathname.startsWith('/settings') ? 'bg-primary/15 text-primary-light' : 'text-text-secondary group-hover:bg-card group-hover:text-text'
-        )}>
-          <Settings size={20} />
-        </span>
-      </NavLink>
+      <Tooltip label={t('nav.settings')} side="right">
+        <NavLink to="/settings" className={railItem}>
+          {location.pathname.startsWith('/settings') && (
+            <motion.span
+              layoutId="nav-active-indicator"
+              className="absolute left-0 top-1/2 h-6 w-[3px] -translate-y-1/2 rounded-full bg-gradient-primary"
+              transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+            />
+          )}
+          <span
+            className={cn(
+              'flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-200',
+              location.pathname.startsWith('/settings') ? 'bg-primary/15 text-primary-light' : 'text-text-secondary group-hover:bg-card group-hover:text-text'
+            )}
+          >
+            <Settings size={20} />
+          </span>
+        </NavLink>
+      </Tooltip>
     </aside>
   );
 }

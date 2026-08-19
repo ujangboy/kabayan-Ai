@@ -1,16 +1,16 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { motion, AnimatePresence } from 'framer-motion';
-import { HelpCircle, Play, X, Zap, Trophy, Trash2, CheckCircle, XCircle, Loader2, Clock, Calendar, FileText, PenLine, Celebration, MenuBook, FitnessCenter } from '@/icons';
+import { motion } from 'framer-motion';
+import { HelpCircle, Play, Zap, Trophy, Trash2, CheckCircle, XCircle, Loader2, Clock, Calendar, FileText, PenLine, Celebration, MenuBook, FitnessCenter } from '@/icons';
 import { quizAPI, subjectAPI } from '@/services/api';
 import { useLocation, useNavigate } from 'react-router-dom';
 import MathMarkdown from '@/components/MathMarkdown';
 import MaterialPicker from '@/components/MaterialPicker';
 import QuizTimer from '@/components/quiz/QuizTimer';
 import QuizProgressBar from '@/components/quiz/QuizProgressBar';
-import { formatDate, formatTimeOnly } from '@/utils';
-import { Tooltip } from '@/components/ui/Tooltip';
+import { formatDate, formatTimeOnly, cn } from '@/utils';
+import { Tooltip, Modal, Button, Input, Select } from '@/components/ui';
 import { usePendingOperation } from '@/hooks/usePendingOperation';
 import { useUiStore } from '@/store';
 import { usePageState } from '@/hooks/usePageState';
@@ -290,26 +290,23 @@ export default function QuizPage() {
 
       </div>
 
-      <AnimatePresence>
-        {isGeneratorOpen && (
-          <GenerateQuizModal
-            onClose={() => setIsGeneratorOpen(false)}
-            subjects={subjects}
-            onSuccess={(quizId) => {
-              setIsGeneratorOpen(false);
-              queryClient.invalidateQueries(['quizzes']);
-              // Langsung mulai quiz yang baru dibuat
-              setActiveQuizId(quizId);
-              setSessionKey(k => k + 1);
-            }}
-          />
-        )}
-      </AnimatePresence>
+      <GenerateQuizModal
+        open={isGeneratorOpen}
+        onClose={() => setIsGeneratorOpen(false)}
+        subjects={subjects}
+        onSuccess={(quizId) => {
+          setIsGeneratorOpen(false);
+          queryClient.invalidateQueries(['quizzes']);
+          // Langsung mulai quiz yang baru dibuat
+          setActiveQuizId(quizId);
+          setSessionKey(k => k + 1);
+        }}
+      />
     </div>
   );
 }
 
-function GenerateQuizModal({ onClose, subjects, onSuccess }) {
+function GenerateQuizModal({ open, onClose, subjects, onSuccess }) {
   const { t } = useTranslation();
   const [subjectId, setSubjectId] = useState('');
   const [mcqCount, setMcqCount] = useState(5);
@@ -354,125 +351,109 @@ function GenerateQuizModal({ onClose, subjects, onSuccess }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        className="w-full max-w-sm glass rounded-dialog shadow-modal"
-      >
-        <div className="flex items-center justify-between p-4 divider-gradient-b relative">
-          <div className="flex items-center gap-2">
-            <Zap size={18} className="text-primary" />
-            <h3 className="font-semibold text-text">{t('quiz.modalTitle')}</h3>
+    <Modal
+      open={open}
+      onClose={onClose}
+      size="sm"
+      title={<span className="flex items-center gap-2"><Zap size={18} className="text-primary" />{t('quiz.modalTitle')}</span>}
+      footer={
+        <>
+          <Button variant="ghost" onClick={onClose} disabled={isGenerating}>{t('common.cancel')}</Button>
+          <Button type="submit" form="quiz-gen-form" loading={isGenerating} disabled={!subjectId || selectedMaterialIds.length === 0}>
+            {isGenerating ? t('quiz.generating') : t('quiz.generateButton')}
+          </Button>
+        </>
+      }
+    >
+      <form id="quiz-gen-form" onSubmit={handleSubmit} className="space-y-4 p-5">
+        {error && (
+          <div className="text-xs text-danger bg-danger/10 border border-danger/20 rounded-lg px-3 py-2">
+            {error}
           </div>
-          <Tooltip label={t('common.close')}>
-            <button onClick={onClose} disabled={isGenerating} aria-label={t('common.close')} className="text-text-muted hover:text-text disabled:opacity-40">
-              <X size={18} />
-            </button>
-          </Tooltip>
+        )}
+        <div>
+          <label className="block text-xs font-medium text-text-secondary mb-1">{t('quiz.sourceLabel')}</label>
+          <Select
+            required
+            value={subjectId}
+            onChange={(e) => { setSubjectId(e.target.value); setSelectedMaterialIds([]); }}
+            disabled={isGenerating}
+          >
+            <option value="">{t('quiz.selectPlaceholder')}</option>
+            {subjects.map(s => (
+              <option key={s.id} value={s.id}>{s.name}</option>
+            ))}
+          </Select>
         </div>
-        <form onSubmit={handleSubmit} className="p-4 space-y-4">
-          {error && (
-            <div className="text-xs text-danger bg-danger/10 border border-danger/20 rounded-lg px-3 py-2">
-              {error}
-            </div>
-          )}
+        <MaterialPicker
+          subjectId={subjectId}
+          selectedMaterialIds={selectedMaterialIds}
+          onSelectionChange={setSelectedMaterialIds}
+        />
+        {/* Tingkat Kesulitan */}
+        <div>
+          <label className="block text-xs font-medium text-text-secondary mb-2">{t('quiz.difficultyLabel')}</label>
+          <div className="flex gap-2">
+            {DIFFICULTIES.map(d => (
+              <button
+                key={d.value}
+                type="button"
+                disabled={isGenerating}
+                onClick={() => setDifficulty(d.value)}
+                title={t(d.desc)}
+                className={`flex-1 py-2 px-1 rounded-lg text-xs font-semibold border transition-colors disabled:opacity-50 ${
+                  difficulty === d.value
+                    ? d.value === 'mudah'
+                      ? 'bg-success/20 text-success border-success/50'
+                      : d.value === 'sedang'
+                        ? 'bg-warning/20 text-warning border-warning/50'
+                        : 'bg-danger/20 text-danger border-danger/50'
+                    : 'bg-background text-text-secondary border-border hover:border-primary/40 hover:text-text'
+                }`}
+              >
+                {t(d.label)}
+              </button>
+            ))}
+          </div>
+          <p className="text-[10px] text-text-muted mt-1">{t(DIFFICULTIES.find(d => d.value === difficulty)?.desc)}</p>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-medium text-text-secondary mb-1">{t('quiz.sourceLabel')}</label>
-            <select
-              required
-              value={subjectId}
-              onChange={(e) => { setSubjectId(e.target.value); setSelectedMaterialIds([]); }}
+            <label className="block text-xs font-medium text-text-secondary mb-1">Soal Pilihan Ganda</label>
+            <Input
+              type="number"
+              min="0"
+              max="15"
+              value={mcqCount}
+              onChange={(e) => setMcqCount(e.target.value)}
               disabled={isGenerating}
-              className="input-base disabled:opacity-60"
-            >
-              <option value="">{t('quiz.selectPlaceholder')}</option>
-              {subjects.map(s => (
-                <option key={s.id} value={s.id}>{s.name}</option>
-              ))}
-            </select>
+            />
           </div>
-          <MaterialPicker
-            subjectId={subjectId}
-            selectedMaterialIds={selectedMaterialIds}
-            onSelectionChange={setSelectedMaterialIds}
-          />
-          {/* Tingkat Kesulitan */}
           <div>
-            <label className="block text-xs font-medium text-text-secondary mb-2">{t('quiz.difficultyLabel')}</label>
-            <div className="flex gap-2">
-              {DIFFICULTIES.map(d => (
-                <button
-                  key={d.value}
-                  type="button"
-                  disabled={isGenerating}
-                  onClick={() => setDifficulty(d.value)}
-                  title={t(d.desc)}
-                  className={`flex-1 py-2 px-1 rounded-lg text-xs font-semibold border transition-colors disabled:opacity-50 ${
-                    difficulty === d.value
-                      ? d.value === 'mudah'
-                        ? 'bg-success/20 text-success border-success/50'
-                        : d.value === 'sedang'
-                          ? 'bg-warning/20 text-warning border-warning/50'
-                          : 'bg-danger/20 text-danger border-danger/50'
-                      : 'bg-background text-text-secondary border-border hover:border-primary/40 hover:text-text'
-                  }`}
-                >
-                  {t(d.label)}
-                </button>
-              ))}
-            </div>
-            <p className="text-[10px] text-text-muted mt-1">{t(DIFFICULTIES.find(d => d.value === difficulty)?.desc)}</p>
+            <label className="block text-xs font-medium text-text-secondary mb-1">Soal Essay</label>
+            <Input
+              type="number"
+              min="0"
+              max="5"
+              value={essayCount}
+              onChange={(e) => setEssayCount(e.target.value)}
+              disabled={isGenerating}
+            />
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-medium text-text-secondary mb-1">Soal Pilihan Ganda</label>
-              <input
-                type="number"
-                min="0"
-                max="15"
-                value={mcqCount}
-                onChange={(e) => setMcqCount(e.target.value)}
-                disabled={isGenerating}
-                className="input-base disabled:opacity-60"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-text-secondary mb-1">Soal Essay</label>
-              <input
-                type="number"
-                min="0"
-                max="5"
-                value={essayCount}
-                onChange={(e) => setEssayCount(e.target.value)}
-                disabled={isGenerating}
-                className="input-base disabled:opacity-60"
-              />
-            </div>
+        </div>
+        {Number(essayCount) > 0 && (
+          <p className="text-[10px] text-text-muted">
+            Soal essay tidak dinilai otomatis — tujuannya untuk latihan menulis jawaban.
+          </p>
+        )}
+        {isGenerating && (
+          <div className="flex items-center gap-2 text-sm text-primary py-1">
+            <Loader2 size={16} className="animate-spin" />
+            <span>{t('quiz.analyzing')}</span>
           </div>
-          {Number(essayCount) > 0 && (
-            <p className="text-[10px] text-text-muted">
-              Soal essay tidak dinilai otomatis — tujuannya untuk latihan menulis jawaban.
-            </p>
-          )}
-          {isGenerating && (
-            <div className="flex items-center gap-2 text-sm text-primary py-1">
-              <Loader2 size={16} className="animate-spin" />
-              <span>Menganalisis materi...</span>
-            </div>
-          )}
-          <div className="flex justify-end gap-2 pt-1">
-            <button type="button" onClick={onClose} disabled={isGenerating} className="btn-ghost disabled:opacity-40">
-              Batal
-            </button>
-            <button type="submit" disabled={isGenerating || !subjectId || selectedMaterialIds.length === 0} className="btn-primary disabled:opacity-40">
-              {isGenerating ? 'Generating...' : 'Generate'}
-            </button>
-          </div>
-        </form>
-      </motion.div>
-    </div>
+        )}
+      </form>
+    </Modal>
   );
 }
 
@@ -608,7 +589,7 @@ function QuizSession({ quizId, onClose }) {
         <div className="max-w-4xl mx-auto space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold text-text">Review Jawaban</h2>
-            <button onClick={onClose} className="btn-ghost text-sm">Tutup</button>
+            <button onClick={onClose} className="btn-ghost text-sm">{t('common.close', 'Tutup')}</button>
           </div>
 
           {questions.map((q, idx) => {
@@ -616,10 +597,9 @@ function QuizSession({ quizId, onClose }) {
             const userAnswer = answers[idx];
             const isCorrect = !isEssay && userAnswer === q.answer;
             return (
-              <div key={idx} className="card-base p-5 border-l-4" style={{ borderColor: isEssay ? 'var(--color-warning)' : isCorrect ? 'var(--color-success)' : 'var(--color-danger)' }}>
+              <div key={idx} className={cn('card-base p-5 border-l-4', isEssay ? 'border-warning' : isCorrect ? 'border-success' : 'border-danger')}>
                 <div className="flex items-start gap-3 mb-3">
-                  <div className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center"
-                    style={{ backgroundColor: isEssay ? 'var(--color-warning)' : isCorrect ? 'var(--color-success)' : 'var(--color-danger)' }}>
+                  <div className={cn('flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center', isEssay ? 'bg-warning' : isCorrect ? 'bg-success' : 'bg-danger')}>
                     {isEssay ? <PenLine size={14} className="text-white" /> : isCorrect ? <CheckCircle size={16} className="text-white" /> : <XCircle size={16} className="text-white" />}
                   </div>
                   <div className="flex-1">

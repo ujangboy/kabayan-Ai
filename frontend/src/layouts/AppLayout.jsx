@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, MotionConfig } from 'framer-motion';
 import IconRail from '@/components/layout/IconRail';
 import ContextSidebar from '@/components/layout/ContextSidebar';
 import TopBar from '@/components/layout/TopBar';
@@ -85,42 +85,46 @@ export default function AppLayout() {
 
   if (isFocusMode) {
     return (
-      <FocusModeView
-        activity={focusActivity}
-        onExit={() => {
-          exitFocus();
-          navigate(focusActivity?.subjectId ? `/subjects/${focusActivity.subjectId}` : '/dashboard');
-        }}
-      >
-        <Outlet />
-      </FocusModeView>
+      <MotionConfig reducedMotion="user">
+        <FocusModeView
+          activity={focusActivity}
+          onExit={() => {
+            exitFocus();
+            navigate(focusActivity?.subjectId ? `/subjects/${focusActivity.subjectId}` : '/dashboard');
+          }}
+        >
+          <Outlet />
+        </FocusModeView>
+      </MotionConfig>
     );
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
-      <BackgroundProcessSync />
-      <IconRail />
-      <ContextSidebar />
-      <main className="flex-1 overflow-hidden flex flex-col min-w-0">
-        <TopBar />
-        <div className="flex-1 overflow-hidden flex flex-col min-w-0">
-          <PendingBanner t={t} />
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={location.pathname}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.22, ease: [0.32, 0.72, 0, 1] }}
-              className="flex-1 flex flex-col min-w-0 overflow-hidden"
-            >
-              <Outlet />
-            </motion.div>
-          </AnimatePresence>
-        </div>
-      </main>
-      {searchOpen && <CommandSearch />}
-    </div>
+    <MotionConfig reducedMotion="user">
+      <div className="flex h-screen overflow-hidden bg-background">
+        <BackgroundProcessSync />
+        <IconRail />
+        <ContextSidebar />
+        <main className="flex-1 overflow-hidden flex flex-col min-w-0">
+          <TopBar />
+          <div className="flex-1 overflow-hidden flex flex-col min-w-0">
+            <PendingBanner t={t} />
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={location.pathname}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.22, ease: [0.32, 0.72, 0, 1] }}
+                className="flex-1 flex flex-col min-w-0 overflow-hidden"
+              >
+                <Outlet />
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </main>
+        {searchOpen && <CommandSearch />}
+      </div>
+    </MotionConfig>
   );
 }

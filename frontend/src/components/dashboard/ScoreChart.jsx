@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { cn } from '@/utils';
 
 export default function ScoreChart({ history }) {
   const { t } = useTranslation();
@@ -40,16 +41,16 @@ export default function ScoreChart({ history }) {
           const yy = y(val);
           return (
             <g key={g}>
-              <line x1={PAD_X} y1={yy} x2={W - PAD_X} y2={yy} stroke="var(--border)" strokeWidth="1" strokeDasharray="4 4" />
-              <text x={4} y={yy + 3} fontSize="9" fill="var(--text-muted)">{Math.round(val)}</text>
+              <line x1={PAD_X} y1={yy} x2={W - PAD_X} y2={yy} className="stroke-border" strokeWidth="1" strokeDasharray="4 4" />
+              <text x={4} y={yy + 3} fontSize="9" className="fill-text-muted">{Math.round(val)}</text>
             </g>
           );
         })}
         <polygon
           points={`${PAD_X},${bottomY} ${chartPoints} ${lastX},${bottomY}`}
-          fill="var(--primary)" opacity="0.08"
+          className="fill-primary" opacity="0.08"
         />
-        <polyline points={chartPoints} fill="none" stroke="var(--primary)" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
+        <polyline points={chartPoints} fill="none" className="stroke-primary" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
         {data.map((d, i) => {
           const isHovered = hoverIdx === i;
           return (
@@ -62,17 +63,17 @@ export default function ScoreChart({ history }) {
               <circle
                 cx={x(i)} cy={y(d.score)}
                 r={isHovered ? 6 : 4}
-                fill={d.score >= 70 ? 'var(--success)' : d.score >= 50 ? 'var(--warning)' : 'var(--danger)'}
-                stroke="var(--card)" strokeWidth="1.5"
+                className={cn('stroke-card', d.score >= 70 ? 'fill-success' : d.score >= 50 ? 'fill-warning' : 'fill-danger')}
+                strokeWidth="1.5"
               />
-              <text x={x(i)} y={y(d.score) - 10} fontSize="10" fontWeight="700" fill="var(--text)" textAnchor="middle">
+              <text x={x(i)} y={y(d.score) - 10} fontSize="10" fontWeight="700" className="fill-text" textAnchor="middle">
                 {d.score}
               </text>
             </g>
           );
         })}
         {data.map((d, i) => (
-          <text key={i} x={x(i)} y={H - 8} fontSize="9" fill="var(--text-muted)" textAnchor="middle">
+          <text key={i} x={x(i)} y={H - 8} fontSize="9" className="fill-text-muted" textAnchor="middle">
             {new Date(d.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
           </text>
         ))}

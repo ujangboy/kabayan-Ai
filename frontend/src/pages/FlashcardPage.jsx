@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
-  CreditCard, Plus, X, Book, Zap, Loader2, Play,
+  CreditCard, Plus, Book, Zap, Loader2, Play,
   Trash2, ChevronLeft, ChevronRight, RotateCcw, Trophy, Clock, Calendar, FileText, Brain, Sparkles
 } from '@/icons';
 import { flashcardAPI, subjectAPI } from '@/services/api';
@@ -14,7 +14,7 @@ import { extractErrorMessage } from '@/utils/errors';
 import MathMarkdown from '@/components/MathMarkdown';
 import MaterialPicker from '@/components/MaterialPicker';
 import { formatDate, formatDateTime, formatTimeOnly } from '@/utils';
-import { Tooltip } from '@/components/ui/Tooltip';
+import { Tooltip, Modal, Button, Select, Textarea } from '@/components/ui';
 import { usePendingOperation } from '@/hooks/usePendingOperation';
 import { usePageState } from '@/hooks/usePageState';
 
@@ -229,36 +229,31 @@ export default function FlashcardPage() {
 
       </div>
 
-      <AnimatePresence>
-        {isAIModalOpen && (
-          <GenerateAIModal
-            subjects={subjects}
-            onClose={() => setIsAIModalOpen(false)}
-            onSuccess={(batchId) => {
-              setIsAIModalOpen(false);
-              queryClient.invalidateQueries(['flashcards']);
-              // langsung masuk session deck yang baru di-generate
-              setTimeout(() => setActiveBatchId(batchId), 400);
-            }}
-          />
-        )}
-        {isManualModalOpen && (
-          <CreateFlashcardModal
-            subjects={subjects}
-            onClose={() => setIsManualModalOpen(false)}
-            onSuccess={() => {
-              setIsManualModalOpen(false);
-              queryClient.invalidateQueries(['flashcards']);
-            }}
-          />
-        )}
-        {historyBatchId !== null && (
-          <ReviewHistoryModal
-            group={groups.find(g => g.batch_id === historyBatchId)}
-            onClose={() => setHistoryBatchId(null)}
-          />
-        )}
-      </AnimatePresence>
+      <GenerateAIModal
+        open={isAIModalOpen}
+        subjects={subjects}
+        onClose={() => setIsAIModalOpen(false)}
+        onSuccess={(batchId) => {
+          setIsAIModalOpen(false);
+          queryClient.invalidateQueries(['flashcards']);
+          // langsung masuk session deck yang baru di-generate
+          setTimeout(() => setActiveBatchId(batchId), 400);
+        }}
+      />
+      <CreateFlashcardModal
+        open={isManualModalOpen}
+        subjects={subjects}
+        onClose={() => setIsManualModalOpen(false)}
+        onSuccess={() => {
+          setIsManualModalOpen(false);
+          queryClient.invalidateQueries(['flashcards']);
+        }}
+      />
+      <ReviewHistoryModal
+        open={historyBatchId !== null}
+        group={groups.find(g => g.batch_id === historyBatchId)}
+        onClose={() => setHistoryBatchId(null)}
+      />
     </div>
   );
 }
@@ -779,7 +774,7 @@ function FlashcardSession({ cards, subjectName, onClose }) {
 // ─────────────────────────────────────────────────────────────────────────────
 // Generate AI Modal
 // ─────────────────────────────────────────────────────────────────────────────
-function GenerateAIModal({ subjects, onClose, onSuccess }) {
+function GenerateAIModal({ open, subjects, onClose, onSuccess }) {
   const { t } = useTranslation();
   const [subjectId, setSubjectId] = useState('');
   const [count, setCount] = useState(10);
@@ -816,98 +811,84 @@ function GenerateAIModal({ subjects, onClose, onSuccess }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        className="w-full max-w-sm glass rounded-dialog shadow-modal"
-      >
-        <div className="flex items-center justify-between p-4 divider-gradient-b relative">
-          <div className="flex items-center gap-2">
-            <Zap size={18} className="text-primary" />
-            <h3 className="font-semibold text-text">{t('flashcard.generateAiModalTitle')}</h3>
+    <Modal
+      open={open}
+      onClose={onClose}
+      size="sm"
+      title={<span className="flex items-center gap-2"><Zap size={18} className="text-primary" />{t('flashcard.generateAiModalTitle')}</span>}
+      footer={
+        <>
+          <Button variant="ghost" onClick={onClose} disabled={isGenerating}>{t('common.cancel')}</Button>
+          <Button type="submit" form="ai-gen-form" loading={isGenerating} disabled={!subjectId || selectedMaterialIds.length === 0}>
+            {t('flashcard.generate')}
+          </Button>
+        </>
+      }
+    >
+      <form id="ai-gen-form" onSubmit={handleSubmit} className="space-y-4 p-5">
+        {error && (
+          <div className="text-xs text-danger bg-danger/10 border border-danger/20 rounded-lg px-3 py-2">
+            {error}
           </div>
-          <Tooltip label={t('common.close')}>
-            <button onClick={onClose} disabled={isGenerating} aria-label={t('common.close')} className="text-text-muted hover:text-text disabled:opacity-40">
-              <X size={18} />
-            </button>
-          </Tooltip>
+        )}
+        <div>
+          <label className="block text-xs font-medium text-text-secondary mb-1">{t('flashcard.materialSourceLabel')}</label>
+          <Select
+            required
+            value={subjectId}
+            onChange={(e) => { setSubjectId(e.target.value); setSelectedMaterialIds([]); }}
+            disabled={isGenerating}
+          >
+            <option value="">{t('flashcard.selectSubjectPlaceholder')}</option>
+            {subjects.map(s => (
+              <option key={s.id} value={s.id}>{s.name}</option>
+            ))}
+          </Select>
+          <p className="text-[10px] text-text-muted mt-1">
+            {t('flashcard.materialReadyHint')}
+          </p>
         </div>
-        <form onSubmit={handleSubmit} className="p-4 space-y-4">
-          {error && (
-            <div className="text-xs text-danger bg-danger/10 border border-danger/20 rounded-lg px-3 py-2">
-              {error}
-            </div>
-          )}
-          <div>
-            <label className="block text-xs font-medium text-text-secondary mb-1">{t('flashcard.materialSourceLabel')}</label>
-            <select
-              required
-              value={subjectId}
-              onChange={(e) => { setSubjectId(e.target.value); setSelectedMaterialIds([]); }}
-              disabled={isGenerating}
-              className="input-base disabled:opacity-60"
-            >
-              <option value="">{t('flashcard.selectSubjectPlaceholder')}</option>
-              {subjects.map(s => (
-                <option key={s.id} value={s.id}>{s.name}</option>
-              ))}
-            </select>
-            <p className="text-[10px] text-text-muted mt-1">
-              {t('flashcard.materialReadyHint')}
-            </p>
+        <MaterialPicker
+          subjectId={subjectId}
+          selectedMaterialIds={selectedMaterialIds}
+          onSelectionChange={setSelectedMaterialIds}
+        />
+        <div>
+          <label className="block text-xs font-medium text-text-secondary mb-1">{t('flashcard.countLabel')}</label>
+          <div className="flex gap-2">
+            {PRESETS.map(p => (
+              <button
+                key={p}
+                type="button"
+                disabled={isGenerating}
+                onClick={() => setCount(p)}
+                className={`flex-1 py-2 rounded-lg text-sm font-semibold border transition-colors disabled:opacity-50 ${
+                  count === p
+                    ? 'bg-primary text-white border-primary'
+                    : 'bg-background text-text-secondary border-border hover:border-primary/50 hover:text-text'
+                }`}
+              >
+                {p}
+              </button>
+            ))}
           </div>
-          <MaterialPicker
-            subjectId={subjectId}
-            selectedMaterialIds={selectedMaterialIds}
-            onSelectionChange={setSelectedMaterialIds}
-          />
-          <div>
-            <label className="block text-xs font-medium text-text-secondary mb-1">{t('flashcard.countLabel')}</label>
-            <div className="flex gap-2">
-              {PRESETS.map(p => (
-                <button
-                  key={p}
-                  type="button"
-                  disabled={isGenerating}
-                  onClick={() => setCount(p)}
-                  className={`flex-1 py-2 rounded-lg text-sm font-semibold border transition-colors disabled:opacity-50 ${
-                    count === p
-                      ? 'bg-primary text-white border-primary'
-                      : 'bg-background text-text-secondary border-border hover:border-primary/50 hover:text-text'
-                  }`}
-                >
-                  {p}
-                </button>
-              ))}
-            </div>
-            <p className="text-[10px] text-text-muted mt-1">{t('flashcard.generatePerDeckHint')}</p>
+          <p className="text-[10px] text-text-muted mt-1">{t('flashcard.generatePerDeckHint')}</p>
+        </div>
+        {isGenerating && (
+          <div className="flex items-center gap-2 text-sm text-primary py-1">
+            <Loader2 size={16} className="animate-spin" />
+            <span>{t('flashcard.aiAnalyzing')}</span>
           </div>
-          {isGenerating && (
-            <div className="flex items-center gap-2 text-sm text-primary py-1">
-              <Loader2 size={16} className="animate-spin" />
-              <span>{t('flashcard.aiAnalyzing')}</span>
-            </div>
-          )}
-          <div className="flex justify-end gap-2 pt-1">
-<button type="button" onClick={onClose} disabled={isGenerating} className="btn-ghost disabled:opacity-40">
-               {t('common.cancel')}
-             </button>
-             <button type="submit" disabled={isGenerating || !subjectId || selectedMaterialIds.length === 0} className="btn-primary disabled:opacity-40">
-               {isGenerating ? t('flashcard.generating') : t('flashcard.generate')}
-             </button>
-          </div>
-        </form>
-      </motion.div>
-    </div>
+        )}
+      </form>
+    </Modal>
   );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Manual Create Modal
 // ─────────────────────────────────────────────────────────────────────────────
-function CreateFlashcardModal({ subjects, onClose, onSuccess }) {
+function CreateFlashcardModal({ open, subjects, onClose, onSuccess }) {
   const { t } = useTranslation();
   const [formData, setFormData] = useState({ question: '', answer: '', subject_id: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -938,76 +919,62 @@ if (!formData.question || !formData.answer || !formData.subject_id) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        className="w-full max-w-lg glass rounded-dialog shadow-modal"
-      >
-        <div className="flex items-center justify-between p-4 divider-gradient-b relative">
-          <div className="flex items-center gap-2">
-            <CreditCard size={18} className="text-primary" />
-            <h3 className="font-semibold text-text">{t('flashcard.manualModalTitle')}</h3>
-          </div>
-          <Tooltip label={t('common.close')}>
-            <button onClick={onClose} aria-label={t('common.close')} className="text-text-muted hover:text-text"><X size={18} /></button>
-          </Tooltip>
+    <Modal
+      open={open}
+      onClose={onClose}
+      size="md"
+      title={<span className="flex items-center gap-2"><CreditCard size={18} className="text-primary" />{t('flashcard.manualModalTitle')}</span>}
+      footer={
+        <>
+          <Button variant="ghost" onClick={onClose} disabled={isSubmitting}>{t('common.cancel')}</Button>
+          <Button type="submit" form="create-flashcard-form" loading={isSubmitting} disabled={!formData.question}>{t('common.save')}</Button>
+        </>
+      }
+    >
+      <form id="create-flashcard-form" onSubmit={handleSubmit} className="space-y-4 p-5">
+        {error && (
+          <div className="rounded-lg border border-danger/20 bg-danger/10 px-3 py-2 text-xs text-danger">{error}</div>
+        )}
+        <div>
+          <label className="mb-1 block text-xs font-medium text-text-secondary">{t('flashcard.subjectLabel')}</label>
+          <Select
+            required
+            value={formData.subject_id}
+            onChange={(e) => setFormData(p => ({ ...p, subject_id: e.target.value }))}
+          >
+            <option value="">{t('flashcard.selectSubjectPlaceholder')}</option>
+            {subjects.map(s => (
+              <option key={s.id} value={s.id}>{s.name}</option>
+            ))}
+          </Select>
         </div>
-        <form onSubmit={handleSubmit} className="p-4 space-y-4">
-          {error && (
-            <div className="text-xs text-danger bg-danger/10 border border-danger/20 rounded-lg px-3 py-2">{error}</div>
-          )}
-          <div>
-<label className="block text-xs font-medium text-text-secondary mb-1">{t('flashcard.subjectLabel')}</label>
-             <select
-               required
-               value={formData.subject_id}
-               onChange={(e) => setFormData(p => ({ ...p, subject_id: e.target.value }))}
-                className="input-base"
-              >
-                <option value="">{t('flashcard.selectSubjectPlaceholder')}</option>
-              {subjects.map(s => (
-                <option key={s.id} value={s.id}>{s.name}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-text-secondary mb-1">{t('flashcard.questionFrontLabel')}</label>
-            <textarea
-              required
-              rows={2}
-              value={formData.question}
-              onChange={(e) => setFormData(p => ({ ...p, question: e.target.value }))}
-               className="input-base resize-none"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-text-secondary mb-1">{t('flashcard.answerBackLabel')}</label>
-            <textarea
-              required
-              rows={3}
-              value={formData.answer}
-              onChange={(e) => setFormData(p => ({ ...p, answer: e.target.value }))}
-               className="input-base resize-none"
-            />
-          </div>
-          <div className="flex justify-end gap-2 pt-2">
-<button type="button" onClick={onClose} className="btn-ghost">{t('common.cancel')}</button>
-             <button type="submit" disabled={isSubmitting || !formData.question} className="btn-primary disabled:opacity-40">
-               {isSubmitting ? t('flashcard.saving') : t('common.save')}
-             </button>
-          </div>
-        </form>
-      </motion.div>
-    </div>
+        <div>
+          <label className="mb-1 block text-xs font-medium text-text-secondary">{t('flashcard.questionFrontLabel')}</label>
+          <Textarea
+            required
+            rows={2}
+            value={formData.question}
+            onChange={(e) => setFormData(p => ({ ...p, question: e.target.value }))}
+          />
+        </div>
+        <div>
+          <label className="mb-1 block text-xs font-medium text-text-secondary">{t('flashcard.answerBackLabel')}</label>
+          <Textarea
+            required
+            rows={3}
+            value={formData.answer}
+            onChange={(e) => setFormData(p => ({ ...p, answer: e.target.value }))}
+          />
+        </div>
+      </form>
+    </Modal>
   );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Riwayat Review per kartu (log Lupa/Ingat/Hafal + jadwal next_review)
 // ─────────────────────────────────────────────────────────────────────────────
-function ReviewHistoryModal({ group, onClose }) {
+function ReviewHistoryModal({ open, group, onClose }) {
   const { t } = useTranslation();
   const { subject, cards } = group || {};
   const RATING_META = {
@@ -1030,70 +997,54 @@ function ReviewHistoryModal({ group, onClose }) {
   const reviewsMap = data?.reviews || {};
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        className="w-full max-w-2xl glass rounded-dialog shadow-modal max-h-[85vh] flex flex-col"
-      >
-        <div className="flex items-center justify-between p-4 divider-gradient-b relative shrink-0">
-          <div className="flex items-center gap-2">
-            <Brain size={18} className="text-accent-purple" />
-            <h3 className="font-semibold text-text">{t('flashcard.reviewHistoryTitle', { subjectName: subject?.name || t('flashcard.defaultName') })}</h3>
+    <Modal
+      open={open}
+      onClose={onClose}
+      size="lg"
+      title={<span className="flex items-center gap-2"><Brain size={18} className="text-accent-purple" />{t('flashcard.reviewHistoryTitle', { subjectName: subject?.name || t('flashcard.defaultName') })}</span>}
+      footer={<Button variant="ghost" onClick={onClose}>{t('common.close')}</Button>}
+      bodyClassName="space-y-3"
+    >
+      {isLoading && <p className="text-center text-text-muted py-8">{t('common.loading')}</p>}
+      {error && <p className="text-center text-danger py-8">{t('flashcard.loadHistoryError', { message: error?.message })}</p>}
+      {!isLoading && !error && (cards || []).length === 0 && (
+        <p className="text-center text-text-muted py-8">{t('flashcard.noCardsInDeck')}</p>
+      )}
+      {(cards || []).map(card => {
+        const history = reviewsMap[card.id] || [];
+        return (
+          <div key={card.id} className="rounded-xl border border-border bg-background p-3">
+            <div className="flex items-start justify-between gap-3">
+              <MathMarkdown className="text-sm font-medium text-text">{card.question}</MathMarkdown>
+              <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${card.mastered ? 'border-success/30 bg-success/5 text-success' : 'border-border text-text-muted'}`}>
+                {card.mastered ? t('flashcard.mastered') : t('flashcard.processing')}
+              </span>
+            </div>
+            <div className="mt-2 flex items-center gap-3 text-[11px] text-text-muted">
+              <span>Direview: <b className="text-text">{card.times_seen || 0}×</b></span>
+              {card.last_reviewed && <span>Terakhir: {formatDateTime(card.last_reviewed)}</span>}
+            </div>
+            {history.length === 0 ? (
+              <p className="mt-2 text-xs text-text-muted">{t('flashcard.neverReviewed')}</p>
+            ) : (
+              <ul className="mt-2 space-y-1">
+                {history.map(r => {
+                  const meta = RATING_META[r.rating] || RATING_META[0];
+                  return (
+                    <li key={r.id} className={`flex items-center justify-between rounded-lg border px-2 py-1 text-xs ${meta.cls}`}>
+                      <span className="font-medium">{meta.label}</span>
+                      <span className="flex items-center gap-3 text-text-muted">
+                        <span className="capitalize">{formatDate(r.reviewed_at)} · {formatTimeOnly(r.reviewed_at)}</span>
+                        {r.next_review && <span>Next: {formatDate(r.next_review)}</span>}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
           </div>
-          <Tooltip label={t('common.close')}>
-            <button onClick={onClose} aria-label={t('common.close')} className="text-text-muted hover:text-text"><X size={18} /></button>
-          </Tooltip>
-        </div>
-
-        <div className="flex-1 overflow-y-auto p-4 space-y-3">
-          {isLoading && <p className="text-center text-text-muted py-8">{t('common.loading')}</p>}
-          {error && <p className="text-center text-danger py-8">{t('flashcard.loadHistoryError', { message: error?.message })}</p>}
-          {!isLoading && !error && (cards || []).length === 0 && (
-            <p className="text-center text-text-muted py-8">{t('flashcard.noCardsInDeck')}</p>
-          )}
-          {(cards || []).map(card => {
-            const history = reviewsMap[card.id] || [];
-            return (
-              <div key={card.id} className="border border-border rounded-xl p-3 bg-background">
-                <div className="flex items-start justify-between gap-3">
-                  <MathMarkdown className="text-sm font-medium text-text">{card.question}</MathMarkdown>
-                  <span className={`shrink-0 text-[10px] px-2 py-0.5 rounded-full border font-semibold ${card.mastered ? 'text-success border-success/30 bg-success/5' : 'text-text-muted border-border'}`}>
-                    {card.mastered ? t('flashcard.mastered') : t('flashcard.processing')}
-                  </span>
-                </div>
-                <div className="mt-2 flex items-center gap-3 text-[11px] text-text-muted">
-                  <span>Direview: <b className="text-text">{card.times_seen || 0}×</b></span>
-                  {card.last_reviewed && <span>Terakhir: {formatDateTime(card.last_reviewed)}</span>}
-                </div>
-                {history.length === 0 ? (
-                  <p className="mt-2 text-xs text-text-muted">{t('flashcard.neverReviewed')}</p>
-                ) : (
-                  <ul className="mt-2 space-y-1">
-                    {history.map(r => {
-                      const meta = RATING_META[r.rating] || RATING_META[0];
-                      return (
-                        <li key={r.id} className={`flex items-center justify-between text-xs rounded-lg border px-2 py-1 ${meta.cls}`}>
-                          <span className="font-medium">{meta.label}</span>
-                          <span className="flex items-center gap-3 text-text-muted">
-                            <span className="capitalize">{formatDate(r.reviewed_at)} · {formatTimeOnly(r.reviewed_at)}</span>
-                            {r.next_review && <span>Next: {formatDate(r.next_review)}</span>}
-                          </span>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-              </div>
-            );
-          })}
-        </div>
-
-        <div className="p-3 border-t border-border shrink-0 flex justify-end">
-          <button onClick={onClose} className="btn-ghost border border-border text-sm">{t('common.close')}</button>
-        </div>
-      </motion.div>
-    </div>
+        );
+      })}
+    </Modal>
   );
 }

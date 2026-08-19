@@ -151,7 +151,7 @@ export default function MathMarkdown({ children = '', className = '' }) {
             rehypeKatex,
             {
               throwOnError: false,
-              errorColor: 'var(--color-warning, #f59e0b)',
+              errorColor: 'var(--warning, #F6B93B)',
               strict: false,
             },
           ],

@@ -4,13 +4,14 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft, Check, Loader2, Clock, Play, Brain, Trophy,
-  CheckCircle, XCircle, Award, Target, ClipboardCheck, MessageSquare, FileText, X
+  CheckCircle, XCircle, Award, Target, ClipboardCheck, MessageSquare, FileText
 } from '@/icons';
 import { sessionsAPI, materiAPI } from '@/services/api';
 import MathMarkdown from '@/components/MathMarkdown';
 import { extractErrorMessage } from '@/utils/errors';
 import { useToast } from '@/components/Toast';
 import { usePageState } from '@/hooks/usePageState';
+import { Modal, Button } from '@/components/ui';
 
 const TYPE_META = {
   review:     { label: 'Review',    cls: 'bg-accent-blue/10 text-accent-blue border-accent-blue/20' },
@@ -348,33 +349,17 @@ export default function StudyPlanPage() {
       </div>
 
       {/* SUMMARY MODAL */}
-      {summaryModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="glass rounded-dialog shadow-modal overflow-hidden flex flex-col max-h-[85vh]"
-          >
-            <div className="p-4 divider-gradient-b relative flex items-center justify-between bg-background/50">
-              <h3 className="font-bold text-text flex items-center gap-2">
-                <FileText size={16} className="text-accent-blue" />
-                Rangkuman: {summaryTopic}
-              </h3>
-              <button onClick={() => setSummaryModalOpen(false)} className="text-text-muted hover:text-text transition-colors">
-                <X size={18} />
-              </button>
-            </div>
-            <div className="p-5 overflow-y-auto">
-              <div className="prose prose-sm prose-invert max-w-none text-text-secondary leading-relaxed">
-                <MathMarkdown>{summaryData || ''}</MathMarkdown>
-              </div>
-            </div>
-            <div className="p-4 border-t border-border flex justify-end bg-background/50">
-              <button onClick={() => setSummaryModalOpen(false)} className="btn-primary text-sm px-6">Tutup</button>
-            </div>
-          </motion.div>
+      <Modal
+        open={summaryModalOpen}
+        onClose={() => setSummaryModalOpen(false)}
+        size="lg"
+        title={<span className="flex items-center gap-2"><FileText size={16} className="text-accent-blue" />Rangkuman: {summaryTopic}</span>}
+        footer={<Button onClick={() => setSummaryModalOpen(false)}>Tutup</Button>}
+      >
+        <div className="prose prose-sm prose-invert max-w-none leading-relaxed text-text-secondary">
+          <MathMarkdown>{summaryData || ''}</MathMarkdown>
         </div>
-      )}
+      </Modal>
     </div>
   );
 }

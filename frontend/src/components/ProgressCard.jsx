@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { Flame, TrendingUp, TrendingDown, Minus, CalendarDays, Trophy } from '@/icons';
+import { cn } from '@/utils';
 
 const DIRECTION_META = (t) => ({
   naik:   { cls: 'badge-success', icon: TrendingUp,   label: t('studyProgress.trendUp') },
@@ -121,12 +122,12 @@ function TrendMiniChart({ series }) {
   return (
     <div className="relative">
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto">
-        <polygon points={`${PAD},${H - PAD} ${points} ${x(series.length - 1).toFixed(1)},${H - PAD}`} fill="var(--primary)" opacity="0.08" />
-        <polyline points={points} fill="none" stroke="var(--primary)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+        <polygon points={`${PAD},${H - PAD} ${points} ${x(series.length - 1).toFixed(1)},${H - PAD}`} className="fill-primary" opacity="0.08" />
+        <polyline points={points} fill="none" className="stroke-primary" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
         {series.map((s, i) => (
           <g key={i} className="cursor-pointer" onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(null)}>
             <rect x={x(i) - 8} y={0} width="16" height={H} fill="transparent" />
-            <circle cx={x(i)} cy={y(s.avg_accuracy)} r={hover === i ? 4.5 : 3} fill={s.avg_accuracy >= 70 ? 'var(--success)' : s.avg_accuracy >= 40 ? 'var(--warning)' : 'var(--danger)'} stroke="var(--card)" strokeWidth="1.5" />
+            <circle cx={x(i)} cy={y(s.avg_accuracy)} r={hover === i ? 4.5 : 3} className={cn('stroke-card', s.avg_accuracy >= 70 ? 'fill-success' : s.avg_accuracy >= 40 ? 'fill-warning' : 'fill-danger')} strokeWidth="1.5" />
           </g>
         ))}
       </svg>

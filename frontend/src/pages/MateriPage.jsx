@@ -9,7 +9,7 @@ import { materiAPI, subjectAPI } from '@/services/api';
 import { formatDate } from '@/utils';
 import FileTypeIcon, { FILE_COLOR_MAP } from '@/components/FileTypeIcon';
 import { useToast } from '@/components/Toast';
-import { Tooltip } from '@/components/ui/Tooltip';
+import { Tooltip, Modal, Button, Input, Select } from '@/components/ui';
 import { extractErrorMessage } from '@/utils/errors';
 import { usePendingOperation } from '@/hooks/usePendingOperation';
 
@@ -251,29 +251,25 @@ export default function MateriPage() {
 
       </div>
 
-      {/* Upload Modal placeholder */}
-      <AnimatePresence>
-        {isUploadModalOpen && (
-          <UploadModal
-            onClose={() => setIsUploadModalOpen(false)}
-            subjects={sortedSubjects}
-            onSuccess={() => {
-              setIsUploadModalOpen(false);
-              queryClient.invalidateQueries(['materials']);
-            }}
-          />
-        )}
-        {isYoutubeModalOpen && (
-          <YoutubeModal
-            onClose={() => setIsYoutubeModalOpen(false)}
-            subjects={sortedSubjects}
-            onSuccess={() => {
-              setIsYoutubeModalOpen(false);
-              queryClient.invalidateQueries(['materials']);
-            }}
-          />
-        )}
-      </AnimatePresence>
+      {/* Upload & YouTube modals */}
+      <UploadModal
+        open={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        subjects={sortedSubjects}
+        onSuccess={() => {
+          setIsUploadModalOpen(false);
+          queryClient.invalidateQueries(['materials']);
+        }}
+      />
+      <YoutubeModal
+        open={isYoutubeModalOpen}
+        onClose={() => setIsYoutubeModalOpen(false)}
+        subjects={sortedSubjects}
+        onSuccess={() => {
+          setIsYoutubeModalOpen(false);
+          queryClient.invalidateQueries(['materials']);
+        }}
+      />
     </div>
   );
 }
@@ -407,7 +403,7 @@ function MaterialFileCard({ material: m, index, showSubject, isRagActive, onTogg
   );
 }
 
-function UploadModal({ onClose, subjects, onSuccess }) {
+function UploadModal({ open, onClose, subjects, onSuccess }) {
   const { t } = useTranslation();
   const [file, setFile] = useState(null);
   const [subjectId, setSubjectId] = useState('');
@@ -434,76 +430,64 @@ function UploadModal({ onClose, subjects, onSuccess }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.92, y: 12 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 8 }}
-        transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
-        className="w-full max-w-md glass rounded-dialog shadow-modal"
-      >
-        <div className="flex items-center justify-between p-4 divider-gradient-b relative">
-          <h3 className="font-semibold text-text">{t('materi.uploadModalTitle')}</h3>
-          <Tooltip label={t('common.close')}>
-            <button onClick={onClose} className="text-text-muted hover:text-text" aria-label={t('common.close')}><X size={18} /></button>
-          </Tooltip>
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={t('materi.uploadModalTitle')}
+      size="md"
+      footer={
+        <>
+          <Button variant="ghost" onClick={onClose} disabled={isSubmitting}>{t('common.cancel')}</Button>
+          <Button type="submit" form="upload-form" loading={isSubmitting} disabled={!file}>{t('materi.uploadAndProcess')}</Button>
+        </>
+      }
+    >
+      <form id="upload-form" onSubmit={handleSubmit} className="space-y-4 p-5">
+        {error && (
+          <div className="rounded-lg border border-danger/20 bg-danger/10 px-3 py-2 text-xs text-danger">
+            {error}
+          </div>
+        )}
+        <div>
+          <label className="mb-1 block text-xs font-medium text-text-secondary">{t('materi.subjectLabel')}</label>
+          <Select
+            required
+            value={subjectId}
+            onChange={(e) => setSubjectId(e.target.value)}
+          >
+            <option value="">{t('materi.selectSubject')}</option>
+            {subjects.map(s => (
+              <option key={s.id} value={s.id}>{s.name}</option>
+            ))}
+          </Select>
         </div>
-        <form onSubmit={handleSubmit} className="p-4 space-y-4">
-          {error && (
-            <div className="text-xs text-danger bg-danger/10 border border-danger/20 rounded-lg px-3 py-2">
-              {error}
+        <div>
+          <label className="mb-1 block text-xs font-medium text-text-secondary">{t('materi.uploadSelectFileLabel')}</label>
+          <div
+            className="cursor-pointer rounded-xl border-2 border-dashed border-border p-8 flex flex-col items-center justify-center text-center transition-colors hover:border-primary/50"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-primary/15">
+              <Upload size={24} className="text-primary-light" />
             </div>
-          )}
-          <div>
-            <label className="block text-xs font-medium text-text-secondary mb-1">{t('materi.subjectLabel')}</label>
-            <select
+            <p className="text-sm font-medium text-text">{file ? file.name : t('materi.uploadDropzone')}</p>
+            <p className="mt-1 text-xs text-text-muted">{t('materi.uploadMaxSize')}</p>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={(e) => setFile(e.target.files[0])}
+              className="hidden"
+              accept=".pdf,.docx,.txt,.md,.csv,.pptx,.xlsx"
               required
-              value={subjectId}
-              onChange={(e) => setSubjectId(e.target.value)}
-              className="input-base"
-            >
-              <option value="">{t('materi.selectSubject')}</option>
-              {subjects.map(s => (
-                <option key={s.id} value={s.id}>{s.name}</option>
-              ))}
-            </select>
+            />
           </div>
-          <div>
-            <label className="block text-xs font-medium text-text-secondary mb-1">{t('materi.uploadSelectFileLabel')}</label>
-            <div
-              className="border-2 border-dashed border-border hover:border-primary/50 transition-colors rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer text-center"
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <div className="w-12 h-12 rounded-2xl bg-gradient-primary/15 flex items-center justify-center mb-2">
-                <Upload size={24} className="text-primary-light" />
-              </div>
-              <p className="text-sm text-text font-medium">
-                {file ? file.name : t('materi.uploadDropzone')}
-              </p>
-              <p className="text-xs text-text-muted mt-1">{t('materi.uploadMaxSize')}</p>
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={(e) => setFile(e.target.files[0])}
-                className="hidden"
-                accept=".pdf,.docx,.txt,.md,.csv,.pptx,.xlsx"
-                required
-              />
-            </div>
-          </div>
-          <div className="flex justify-end gap-2 pt-2">
-            <button type="button" onClick={onClose} className="btn-ghost">{t('common.cancel')}</button>
-            <button type="submit" disabled={isSubmitting || !file} className="btn-primary">
-              {isSubmitting ? t('materi.uploading') : t('materi.uploadAndProcess')}
-            </button>
-          </div>
-        </form>
-      </motion.div>
-    </div>
+        </div>
+      </form>
+    </Modal>
   );
 }
 
-function YoutubeModal({ onClose, subjects, onSuccess }) {
+function YoutubeModal({ open, onClose, subjects, onSuccess }) {
   const { t } = useTranslation();
   const [url, setUrl] = useState('');
   const [subjectId, setSubjectId] = useState('');
@@ -526,68 +510,52 @@ function YoutubeModal({ onClose, subjects, onSuccess }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.92, y: 12 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 8 }}
-        transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
-        className="w-full max-w-md glass rounded-dialog shadow-modal border-danger/20"
-      >
-        <div className="flex items-center justify-between p-4 divider-gradient-b relative">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-danger/15 flex items-center justify-center">
-              <Video size={18} className="text-danger" />
-            </div>
-            <h3 className="font-semibold text-text">{t('materi.youtubeModalTitle')}</h3>
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={t('materi.youtubeModalTitle')}
+      size="md"
+      footer={
+        <>
+          <Button variant="ghost" onClick={onClose} disabled={isSubmitting}>{t('common.cancel')}</Button>
+          <Button variant="danger" type="submit" form="youtube-form" loading={isSubmitting} disabled={!url}>{t('materi.importTranscript')}</Button>
+        </>
+      }
+    >
+      <form id="youtube-form" onSubmit={handleSubmit} className="space-y-4 p-5">
+        {error && (
+          <div className="rounded-lg border border-danger/20 bg-danger/10 px-3 py-2 text-xs text-danger">
+            {error}
           </div>
-          <Tooltip label={t('common.close')}>
-            <button onClick={onClose} className="text-text-muted hover:text-text" aria-label={t('common.close')}><X size={18} /></button>
-          </Tooltip>
+        )}
+        <div>
+          <label className="mb-1 block text-xs font-medium text-text-secondary">{t('materi.subjectLabel')}</label>
+          <Select
+            required
+            value={subjectId}
+            onChange={(e) => setSubjectId(e.target.value)}
+          >
+            <option value="">{t('materi.selectSubject')}</option>
+            {subjects.map(s => (
+              <option key={s.id} value={s.id}>{s.name}</option>
+            ))}
+          </Select>
         </div>
-        <form onSubmit={handleSubmit} className="p-4 space-y-4">
-          {error && (
-            <div className="text-xs text-danger bg-danger/10 border border-danger/20 rounded-lg px-3 py-2">
-              {error}
-            </div>
-          )}
-          <div>
-            <label className="block text-xs font-medium text-text-secondary mb-1">{t('materi.subjectLabel')}</label>
-            <select
-              required
-              value={subjectId}
-              onChange={(e) => setSubjectId(e.target.value)}
-              className="input-base focus:border-danger/60 focus:ring-danger/30"
-            >
-              <option value="">{t('materi.selectSubject')}</option>
-              {subjects.map(s => (
-                <option key={s.id} value={s.id}>{s.name}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <input
-              type="url"
-              required
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://www.youtube.com/watch?v=... atau https://youtu.be/..."
-              className="input-base"
-            />
-            <p className="text-[10px] text-text-muted mt-1">
-              {t('materi.youtubeSubtitleInfo')}
-              <br />
-              {t('materi.youtubeSubtitleHelp')}
-            </p>
-          </div>
-          <div className="flex justify-end gap-2 pt-2">
-            <button type="button" onClick={onClose} className="btn-ghost">{t('common.cancel')}</button>
-            <button type="submit" disabled={isSubmitting || !url} className="px-4 py-2 bg-danger hover:brightness-110 text-white rounded-xl text-sm font-medium transition-all active:scale-95">
-              {isSubmitting ? t('materi.youtubeProcessing') : t('materi.importTranscript')}
-            </button>
-          </div>
-        </form>
-      </motion.div>
-    </div>
+        <div>
+          <Input
+            type="url"
+            required
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            placeholder="https://www.youtube.com/watch?v=... atau https://youtu.be/..."
+          />
+          <p className="mt-1 text-[10px] text-text-muted">
+            {t('materi.youtubeSubtitleInfo')}
+            <br />
+            {t('materi.youtubeSubtitleHelp')}
+          </p>
+        </div>
+      </form>
+    </Modal>
   );
 }

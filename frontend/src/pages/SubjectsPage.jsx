@@ -2,11 +2,11 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Book, Plus, Trash2, X, FileText, HelpCircle, CreditCard, Trophy, Calendar, Clock } from '@/icons';
+import { motion } from 'framer-motion';
+import { Plus, Trash2, FileText, HelpCircle, CreditCard, Trophy, Calendar, Clock } from '@/icons';
 import { subjectAPI } from '@/services/api';
 import { formatDate, formatTimeOnly } from '@/utils';
-import { Tooltip } from '@/components/ui/Tooltip';
+import { Tooltip, Modal, Button, Input, Textarea, Select } from '@/components/ui';
 import { useToast } from '@/components/Toast';
 
 export default function SubjectsPage() {
@@ -60,16 +60,16 @@ export default function SubjectsPage() {
             <p className="text-text-secondary text-sm mt-1">{t('subjects.subtitle')}</p>
           </div>
           <div className="flex items-center gap-2">
-            <select
+            <Select
               value={subjectFilter}
               onChange={(e) => setSubjectFilter(e.target.value)}
-              className="px-3 py-2 bg-card border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/30 transition-all"
+              className="min-w-[180px]"
             >
-              <option value="">Semua Mata Kuliah</option>
+              <option value="">{t('subjects.allSubjects', 'Semua Mata Kuliah')}</option>
               {sortedSubjects.map(s => (
                 <option key={s.id} value={String(s.id)}>{s.name}</option>
               ))}
-            </select>
+            </Select>
             <button
               onClick={() => setIsModalOpen(true)}
               className="btn-primary text-xs"
@@ -89,9 +89,9 @@ export default function SubjectsPage() {
               <button onClick={() => setIsModalOpen(true)} className="text-primary-light hover:underline text-sm">{t('subjects.createNow')}</button>
             </div>
           ) : shownCount === 0 ? (
-            <div className="col-span-full card-base text-center py-10">
-              <p className="text-text-muted text-sm">Tidak ada mata kuliah yang cocok.</p>
-            </div>
+              <div className="col-span-full card-base text-center py-10">
+                <p className="text-text-muted text-sm">{t('subjects.noMatch')}</p>
+              </div>
           ) : (
             filteredSubjects.map((s, idx) => (
               <Link key={s.id} to={`/subjects/${s.id}`} className="group block">
@@ -156,22 +156,19 @@ export default function SubjectsPage() {
 
       </div>
 
-      <AnimatePresence>
-        {isModalOpen && (
-          <CreateSubjectModal
-            onClose={() => setIsModalOpen(false)}
-            onSuccess={() => {
-              setIsModalOpen(false);
-              queryClient.invalidateQueries(['subjects']);
-            }}
-          />
-        )}
-      </AnimatePresence>
+      <CreateSubjectModal
+        open={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={() => {
+          setIsModalOpen(false);
+          queryClient.invalidateQueries(['subjects']);
+        }}
+      />
     </div>
   );
 }
 
-function CreateSubjectModal({ onClose, onSuccess }) {
+function CreateSubjectModal({ open, onClose, onSuccess }) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const [formData, setFormData] = useState({ name: '', semester: '', lecturer: '', description: '' });
@@ -199,77 +196,61 @@ function CreateSubjectModal({ onClose, onSuccess }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.92, y: 12 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 8 }}
-        transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
-        className="w-full max-w-md glass rounded-dialog shadow-modal"
-      >
-        <div className="flex items-center justify-between p-4 divider-gradient-b relative">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center shadow-btn-primary">
-              <Book size={16} className="text-white" />
-            </div>
-            <h3 className="font-semibold text-text">{t('subjects.addNew')}</h3>
-          </div>
-          <Tooltip label={t('common.close')}>
-            <button onClick={onClose} aria-label={t('common.close')} className="text-text-muted hover:text-text"><X size={18} /></button>
-          </Tooltip>
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={t('subjects.addNew')}
+      size="md"
+      footer={
+        <>
+          <Button variant="ghost" onClick={onClose} disabled={isSubmitting}>{t('common.cancel')}</Button>
+          <Button type="submit" form="create-subject-form" loading={isSubmitting} disabled={!formData.name}>
+            {t('common.save')}
+          </Button>
+        </>
+      }
+    >
+      <form id="create-subject-form" onSubmit={handleSubmit} className="space-y-4 p-5">
+        <div>
+          <label className="mb-1 block text-xs font-medium text-text-secondary">{t('subjects.formNameLabel')}</label>
+          <Input
+            type="text"
+            required
+            value={formData.name}
+            onChange={(e) => setFormData(p => ({ ...p, name: e.target.value }))}
+            placeholder={t('subjects.formNamePlaceholder')}
+          />
         </div>
-        <form onSubmit={handleSubmit} className="p-4 space-y-4">
+        <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-medium text-text-secondary mb-1">{t('subjects.formNameLabel')}</label>
-            <input
+            <label className="mb-1 block text-xs font-medium text-text-secondary">{t('subjects.formSemesterLabel')}</label>
+            <Input
               type="text"
-              required
-              value={formData.name}
-              onChange={(e) => setFormData(p => ({ ...p, name: e.target.value }))}
-              className="input-base"
-              placeholder={t('subjects.formNamePlaceholder')}
+              value={formData.semester}
+              onChange={(e) => setFormData(p => ({ ...p, semester: e.target.value }))}
+              placeholder={t('subjects.formSemesterPlaceholder')}
             />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-medium text-text-secondary mb-1">{t('subjects.formSemesterLabel')}</label>
-              <input
-                type="text"
-                value={formData.semester}
-                onChange={(e) => setFormData(p => ({ ...p, semester: e.target.value }))}
-                className="input-base"
-                placeholder={t('subjects.formSemesterPlaceholder')}
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-text-secondary mb-1">{t('subjects.formLecturerLabel')}</label>
-              <input
-                type="text"
-                value={formData.lecturer}
-                onChange={(e) => setFormData(p => ({ ...p, lecturer: e.target.value }))}
-                className="input-base"
-                placeholder={t('subjects.formLecturerPlaceholder')}
-              />
-            </div>
           </div>
           <div>
-            <label className="block text-xs font-medium text-text-secondary mb-1">{t('subjects.formNotesLabel')}</label>
-            <textarea
-              value={formData.description}
-              onChange={(e) => setFormData(p => ({ ...p, description: e.target.value }))}
-              rows={2}
-              className="input-base resize-none"
-              placeholder={t('subjects.formNotesPlaceholder')}
+            <label className="mb-1 block text-xs font-medium text-text-secondary">{t('subjects.formLecturerLabel')}</label>
+            <Input
+              type="text"
+              value={formData.lecturer}
+              onChange={(e) => setFormData(p => ({ ...p, lecturer: e.target.value }))}
+              placeholder={t('subjects.formLecturerPlaceholder')}
             />
           </div>
-          <div className="flex justify-end gap-2 pt-2">
-            <button type="button" onClick={onClose} className="btn-ghost">{t('common.cancel')}</button>
-            <button type="submit" disabled={isSubmitting || !formData.name} className="btn-primary">
-              {isSubmitting ? t('subjects.saving') : t('common.save')}
-            </button>
-          </div>
-        </form>
-      </motion.div>
-    </div>
+        </div>
+        <div>
+          <label className="mb-1 block text-xs font-medium text-text-secondary">{t('subjects.formNotesLabel')}</label>
+          <Textarea
+            value={formData.description}
+            onChange={(e) => setFormData(p => ({ ...p, description: e.target.value }))}
+            rows={2}
+            placeholder={t('subjects.formNotesPlaceholder')}
+          />
+        </div>
+      </form>
+    </Modal>
   );
 }
