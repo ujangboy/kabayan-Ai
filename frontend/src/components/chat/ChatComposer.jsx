@@ -1,0 +1,110 @@
+import { useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Send, Square, Notes } from '@/icons';
+import { Tooltip, Spinner } from '@/components/ui';
+import { cn } from '@/utils';
+
+const QUICK_PROMPTS = [
+  { icon: '📝', label: 'Ringkas materi', prompt: 'Tolong ringkas materi ini dengan poin-poin penting.' },
+  { icon: '❓', label: 'Buat soal', prompt: 'Buatkan 3 soal latihan beserta pembahasannya.' },
+  { icon: '🔍', label: 'Jelaskan konsep', prompt: 'Jelaskan konsep ini seperti sedang mengajarkan pemula.' },
+  { icon: '🧠', label: 'Quiz cepat', prompt: 'Berikan kuis cepat 5 pertanyaan untuk menguji pemahaman saya.' },
+];
+
+export default function ChatComposer({ onSend, isStreaming, onStop, onSaveNote, isNoteSaving, tutorMode }) {
+  const { t } = useTranslation();
+  const [input, setInput] = useState('');
+  const [showQuickPrompts, setShowQuickPrompts] = useState(false);
+  const textareaRef = useRef(null);
+
+  const handleSend = () => {
+    const text = input;
+    if (!text.trim()) return;
+    onSend(text);
+    setInput('');
+    if (textareaRef.current) textareaRef.current.style.height = 'auto';
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
+  const autoResize = (e) => {
+    setInput(e.target.value);
+    const el = e.target;
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 200) + 'px';
+  };
+
+  return (
+    <div className="shrink-0 border-t border-border px-4 py-3 bg-surface relative">
+      {showQuickPrompts && (
+        <div className="absolute bottom-full mb-2 left-4 right-4">
+          <div className="rounded-xl border border-border bg-surface shadow-lg p-2 grid grid-cols-2 gap-2">
+            {QUICK_PROMPTS.map((q) => (
+              <button
+                key={q.label}
+                onClick={() => {
+                  onSend(q.prompt);
+                  setShowQuickPrompts(false);
+                }}
+                className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-text hover:bg-base transition-colors text-left"
+              >
+                <span className="text-base">{q.icon}</span>
+                <span>{q.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+      <div className="flex items-end gap-2">
+        <div className="flex-1 relative">
+          <textarea
+            ref={textareaRef}
+            value={input}
+            onChange={autoResize}
+            onKeyDown={handleKeyDown}
+            rows={1}
+            placeholder={tutorMode ? t('chat.tutorInputPlaceholder') : t('chat.inputPlaceholder')}
+            className="w-full resize-none rounded-xl border border-border bg-base px-4 py-3 pr-10 text-sm text-text placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/40 max-h-[200px]"
+          />
+          <button
+            onClick={() => setShowQuickPrompts((v) => !v)}
+            className={cn(
+              'absolute right-2 bottom-2.5 p-1.5 rounded-lg text-text-muted hover:text-text hover:bg-base transition-colors',
+              showQuickPrompts && 'text-primary bg-base'
+            )}
+            title={t('chat.quickPrompts')}
+          >
+            ✨
+          </button>
+        </div>
+        <Tooltip label={t('chat.saveNote')}>
+          <button
+            onClick={onSaveNote}
+            disabled={isNoteSaving || isStreaming}
+            className="p-3 rounded-xl bg-base text-text-muted hover:text-text border border-border transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {isNoteSaving ? <Spinner size={18} className="animate-spin" /> : <Notes size={18} />}
+          </button>
+        </Tooltip>
+        {isStreaming ? (
+          <button onClick={onStop} className="p-3 rounded-xl bg-danger text-white transition-colors">
+            <Square size={18} />
+          </button>
+        ) : (
+          <button
+            onClick={handleSend}
+            disabled={!input.trim()}
+            className="p-3 rounded-xl bg-primary text-primary-foreground transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <Send size={18} />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}

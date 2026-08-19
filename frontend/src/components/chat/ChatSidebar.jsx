@@ -1,0 +1,220 @@
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
+import { Search, Trash2, Pin, Edit3, Bot } from '@/icons';
+import { Tooltip, EmptyState } from '@/components/ui';
+import { useToast } from '@/components/Toast';
+import { useChatStore } from '@/store';
+import { cn } from '@/utils';
+
+export default function ChatSidebar() {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const {
+    chats,
+    currentChatId,
+    createChat,
+    setCurrentChat,
+    renameChat,
+    togglePinChat,
+    deleteChat,
+    deleteAllChats,
+  } = useChatStore();
+
+  const [chatSearch, setChatSearch] = useState('');
+  const [editingChatId, setEditingChatId] = useState(null);
+  const [editingTitle, setEditingTitle] = useState('');
+
+  const formatChatDate = (iso) => {
+    const d = new Date(iso);
+    return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+  };
+  const isToday = (d) => {
+    const now = new Date();
+    return d.toDateString() === now.toDateString();
+  };
+  const isYesterday = (d) => {
+    const y = new Date();
+    y.setDate(y.getDate() - 1);
+    return d.toDateString() === y.toDateString();
+  };
+  const groupDateLabel = (d) => {
+    if (isToday(d)) return t('chat.today');
+    if (isYesterday(d)) return t('chat.yesterday');
+    return formatChatDate(d.toISOString());
+  };
+
+  const sortedChats = [...chats].sort((a, b) => {
+    if (!!b.pinned !== !!a.pinned) return (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0);
+    const at = new Date(a.updatedAt || a.created_at || 0).getTime();
+    const bt = new Date(b.updatedAt || b.created_at || 0).getTime();
+    return bt - at;
+  });
+  const filteredChats = chatSearch.trim()
+    ? sortedChats.filter((c) => (c.title || '').toLowerCase().includes(chatSearch.trim().toLowerCase()))
+    : sortedChats;
+
+  const groups = [];
+  const map = {};
+  filteredChats.forEach((c) => {
+    const key = groupDateLabel(new Date(c.updatedAt || c.created_at));
+    if (!map[key]) {
+      map[key] = [];
+      groups.push(key);
+    }
+    map[key].push(c);
+  });
+
+  const handleNewChat = async () => {
+    await createChat();
+    navigate('/chat');
+  };
+  const handleDeleteAll = () => {
+    toast(t('chat.deleteAllConfirm'), {
+      actionLabel: t('common.delete'),
+      variant: 'danger',
+      onAction: async () => {
+        await deleteAllChats();
+        navigate('/chat');
+      },
+    });
+  };
+  const handleDeleteChat = async (c) => {
+    await deleteChat(c.id);
+    if (currentChatId === c.id) navigate('/chat');
+  };
+  const handleRename = (c) => {
+    setEditingChatId(c.id);
+    setEditingTitle(c.title || '');
+  };
+  const submitRename = async () => {
+    if (editingChatId) {
+      await renameChat(editingChatId, editingTitle);
+    }
+    setEditingChatId(null);
+    setEditingTitle('');
+  };
+
+  return (
+    <aside className="w-72 lg:w-80 shrink-0 border-r border-border bg-surface flex flex-col">
+      <div className="p-4 border-b border-border">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-semibold text-text">{t('chat.history')}</h2>
+          <div className="flex items-center gap-1">
+            <Tooltip label={t('chat.newChat')}>
+              <button
+                onClick={handleNewChat}
+                className="p-1.5 rounded-md hover:bg-base text-text-muted hover:text-text transition-colors"
+              >
+                <Bot size={16} />
+              </button>
+            </Tooltip>
+            <Tooltip label={t('chat.deleteAll')}>
+              <button
+                onClick={handleDeleteAll}
+                disabled={chats.length === 0}
+                className="p-1.5 rounded-md hover:bg-base text-text-muted hover:text-danger transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <Trash2 size={16} />
+              </button>
+            </Tooltip>
+          </div>
+        </div>
+        <div className="relative">
+          <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-text-muted" />
+          <input
+            value={chatSearch}
+            onChange={(e) => setChatSearch(e.target.value)}
+            placeholder={t('chat.searchPlaceholder')}
+            className="w-full pl-8 pr-2 py-1.5 text-sm rounded-md bg-base border border-border focus:outline-none focus:ring-2 focus:ring-primary/40 text-text placeholder:text-text-muted"
+          />
+        </div>
+      </div>
+      <div className="flex-1 overflow-y-auto px-2 py-2 space-y-3">
+        {filteredChats.length === 0 && <EmptyState title={t('chat.noChats')} description={t('chat.noChatsDesc')} compact />}
+        {groups.map((key) => (
+          <div key={key}>
+            <div className="px-2 py-1 text-[11px] font-medium uppercase tracking-wide text-text-muted">{key}</div>
+            <div className="space-y-1">
+              {map[key].map((c) => (
+                <div
+                  key={c.id}
+                  className={cn(
+                    'group flex items-center gap-2 rounded-md px-2 py-1.5 cursor-pointer transition-colors',
+                    c.id === currentChatId ? 'bg-primary/10' : 'hover:bg-base'
+                  )}
+                  onClick={() => {
+                    setCurrentChat(c.id);
+                    navigate('/chat');
+                  }}
+                >
+                  <div className="flex-1 min-w-0">
+                    {editingChatId === c.id ? (
+                      <input
+                        autoFocus
+                        value={editingTitle}
+                        onChange={(e) => setEditingTitle(e.target.value)}
+                        onBlur={submitRename}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') submitRename();
+                          if (e.key === 'Escape') {
+                            setEditingChatId(null);
+                            setEditingTitle('');
+                          }
+                        }}
+                        className="w-full text-sm bg-base border border-border rounded px-1 py-0.5 text-text focus:outline-none"
+                      />
+                    ) : (
+                      <div className="flex items-center gap-1.5">
+                        <span className="truncate text-sm text-text">{c.title || t('chat.untitled')}</span>
+                        {c.pinned && <Pin size={12} className="text-warning shrink-0" />}
+                      </div>
+                    )}
+                  </div>
+                  {editingChatId !== c.id && (
+                    <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Tooltip label={t('chat.rename')}>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRename(c);
+                          }}
+                          className="p-1 rounded hover:bg-base text-text-muted hover:text-text"
+                        >
+                          <Edit3 size={13} />
+                        </button>
+                      </Tooltip>
+                      <Tooltip label={t('chat.pin')}>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            togglePinChat(c.id);
+                          }}
+                          className="p-1 rounded hover:bg-base text-text-muted hover:text-text"
+                        >
+                          <Pin size={13} />
+                        </button>
+                      </Tooltip>
+                      <Tooltip label={t('chat.delete')}>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteChat(c);
+                          }}
+                          className="p-1 rounded hover:bg-base text-text-muted hover:text-danger"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </Tooltip>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </aside>
+  );
+}
