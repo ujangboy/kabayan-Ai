@@ -181,7 +181,7 @@ function SubjectCard({ subject, onSelectSubject, onStartConfig, onDelete, t }) {
   );
 }
 
-export default function HistoryView({ subjectId, subjects, onSelectSubject, onStartConfig, onResume, detailId, setDetailId, pendingPlanTab, setPendingPlanTab }) {
+export default function HistoryView({ subjectId, subjects, onSelectSubject, onStartConfig, onRetry, onResume, detailId, setDetailId, pendingPlanTab, setPendingPlanTab }) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -352,6 +352,7 @@ export default function HistoryView({ subjectId, subjects, onSelectSubject, onSt
                <HistoryCard key={s.id} session={s} t={t}
                  onDetail={() => setDetailId(s.id)}
                  onDelete={() => handleDelete(s.id)}
+                 onRetry={() => onRetry?.(s)}
                />
             ))}
           </AnimatePresence>
@@ -368,7 +369,7 @@ export default function HistoryView({ subjectId, subjects, onSelectSubject, onSt
   );
 }
 
-function HistoryCard({ session: s, onDetail, onDelete, t }) {
+function HistoryCard({ session: s, onDetail, onDelete, onRetry, t }) {
   const meta    = STATUS_META[s.status] || STATUS_META.completed;
   const badge   = getBadge(s.best_score || 0);
   const gradeC  = getGradeColor(s.grade);
@@ -470,6 +471,15 @@ function HistoryCard({ session: s, onDetail, onDelete, t }) {
           className="btn-primary text-xs flex-1 justify-center">
            <ChevronRight size={12} /> {t('exam.history.detail')}
         </button>
+        {onRetry && (
+          <Tooltip label={t('exam.history.retry') || 'Latihan Lagi'}>
+            <button onClick={onRetry}
+              aria-label={t('exam.history.retry') || 'Latihan Lagi'}
+              className="p-2 rounded-lg border border-border bg-card text-text-secondary hover:text-primary hover:border-primary/30 transition-colors">
+              <RotateCcw size={13} />
+            </button>
+          </Tooltip>
+        )}
         <Tooltip label={t('common.delete')}>
           <button onClick={onDelete}
             aria-label={t('common.delete')}

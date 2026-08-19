@@ -436,6 +436,7 @@
     "createSimulation": "Create Simulation",
     "confirmExit": "Exit the exam? Progress will be lost.",
     "dashboard": {
+      "tab": "Analysis",
       "title": "Material Analysis",
       "selectSubjectPrompt": "Select a subject from the dropdown above to start analysis.",
       "analysisTitle": "Analysis of {{subjectname}}",
@@ -466,6 +467,10 @@
       "addSubject": "Add Materials",
       "loadingMaterials": "Loading materials...",
       "history": "History",
+      "tab": "History",
+      "retry": "Practice Again",
+      "retryNoBlueprint": "Configuration unavailable",
+      "retryNoBlueprintDesc": "Create a new simulation to start a retry.",
       "simulation": "Simulation",
       "deleteSubject": "Delete subject",
       "deleteSubjectConfirm": "Delete this subject? All related data will be deleted.",

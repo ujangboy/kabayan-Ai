@@ -78,7 +78,7 @@ export default function ConfigView({ subjectId, analysis, onDone }) {
   );
 
   return (
-    <div className="card-base p-6 space-y-6">
+    <div className="p-6 space-y-6">
       <SectionHeader icon={ClipboardList} title={t('exam.config.title')}
         subtitle={t('exam.config.subtitle')} />
 

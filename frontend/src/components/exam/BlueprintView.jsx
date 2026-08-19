@@ -42,7 +42,7 @@ export default function BlueprintView({ blueprint, onGenerate, onGenerating, onB
 
   if (isGenerating) {
     return (
-      <div className="card-base p-20 text-center">
+      <div className="p-20 text-center">
         <Loader2 size={48} className="animate-spin text-primary mx-auto mb-6" />
         <h3 className="text-lg font-semibold text-text mb-2">{t('exam.blueprint.generatingTitle')}</h3>
         <p className="text-text-muted text-sm max-w-sm mx-auto mb-6">
@@ -65,8 +65,8 @@ export default function BlueprintView({ blueprint, onGenerate, onGenerating, onB
   }
 
   return (
-    <div className="space-y-5">
-      <div className="card-base p-5">
+    <div className="space-y-5 p-6">
+      <div>
         <SectionHeader icon={ClipboardList} title={blueprint?.title || t('exam.blueprint.title')}
           subtitle={t('exam.blueprint.subtitle', { count: items.length, total: totalW })} />
 

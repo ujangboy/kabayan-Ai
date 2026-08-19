@@ -2,13 +2,14 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Brain, ChevronLeft, Zap, Loader2 } from '@/icons';
+import { Brain, ChevronLeft, Zap } from '@/icons';
 import { subjectAPI, sessionsAPI } from '@/services/api';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useUiStore } from '@/store';
+import { cn } from '@/utils';
 import { usePageState } from '@/hooks/usePageState';
 import { VIEW } from '@/components/exam/shared';
-import { Tooltip, Select } from '@/components/ui';
+import { Tooltip, Select, Modal } from '@/components/ui';
 import { useToast } from '@/components/Toast';
 import DashboardView from '@/components/exam/DashboardView';
 import ConfigView from '@/components/exam/ConfigView';
@@ -20,6 +21,30 @@ import HistoryView from '@/components/exam/HistoryView';
 
 const PAGE_KEY = 'exam-analyzer';
 const GENERATE_TIMEOUT_MS = 10 * 60 * 1000;
+
+// Rekonstruksi blueprint_items dari questions_json sesi yang ada,
+// supaya tombol "Latihan Lagi" bisa memicu modal blueprint tanpa endpoint baru.
+function deriveBlueprintItems(questions = []) {
+  const map = new Map();
+  questions.forEach((q) => {
+    const topic = q.topic || 'Umum';
+    if (!map.has(topic)) {
+      map.set(topic, { topic, question_count: 0, question_types: new Set(), bloom_level: q.bloom_level || '', difficulty: q.difficulty || '', weight_percent: 0 });
+    }
+    const e = map.get(topic);
+    e.question_count += 1;
+    if (q.question_type) e.question_types.add(q.question_type);
+  });
+  const total = questions.length || 1;
+  return [...map.values()].map((e) => ({
+    topic: e.topic,
+    question_count: e.question_count,
+    question_types: [...e.question_types],
+    bloom_level: e.bloom_level,
+    difficulty: e.difficulty,
+    weight_percent: Math.round((e.question_count / total) * 100),
+  }));
+}
 
 // ─── Main Page ───────────────────────────────────────────────────────────────
 export default function ExamAnalyzerPage() {
@@ -42,6 +67,10 @@ export default function ExamAnalyzerPage() {
   const [generating, setGenerating]   = useState(null);
   const [quizClockStart, setQuizClockStart] = useState(null);
   const [restored, setRestored]       = useState(false);
+
+  // ── Modal state untuk Config & Blueprint (sesuai proposal unifikasi) ──
+  const [configOpen, setConfigOpen]       = useState(false);
+  const [blueprintModal, setBlueprintModal] = useState(null);
 
   // ── Mount: restore saved state + pick up URL params ──
   useEffect(() => {
@@ -73,7 +102,8 @@ export default function ExamAnalyzerPage() {
     // 3) Restore persisted page state
     const saved = restore();
     if (saved) {
-      setView(saved.view ?? VIEW.HISTORY);
+      const validViews = [VIEW.HISTORY, VIEW.DASHBOARD, VIEW.QUIZ, VIEW.RESULT, VIEW.REVIEW];
+      setView(validViews.includes(saved.view) ? saved.view : VIEW.HISTORY);
       if (saved.analysis != null) setAnalysis(saved.analysis);
       if (saved.blueprint != null) setBlueprint(saved.blueprint);
       if (saved.sessionData != null) setSessionData(saved.sessionData);
@@ -101,7 +131,7 @@ export default function ExamAnalyzerPage() {
     persist({ view, analysis, blueprint, sessionData, evalData, detailId, pendingPlanTab, recommend, generating, quizClockStart });
   }, [restored, view, analysis, blueprint, sessionData, evalData, detailId, pendingPlanTab, recommend, generating, quizClockStart]);
 
-  // ── Polling: find generated session while generating ──
+  // ── Polling legacy (tidak dipakai di alur modal, tetap dipertahankan sebagai guard) ──
   useEffect(() => {
     if (!restored || !generating || view !== VIEW.GENERATING) return;
     let stop = false;
@@ -139,8 +169,6 @@ export default function ExamAnalyzerPage() {
   const go = (v) => setView(v);
 
   const handleAnalysisDone = (data) => { setAnalysis(data); go(VIEW.DASHBOARD); };
-  const handleBlueprintDone = (data) => { setBlueprint(data); go(VIEW.BLUEPRINT); };
-  const handleGenerating = () => { setGenerating({ blueprintId: blueprint?.blueprint_id, startedAt: Date.now() }); go(VIEW.GENERATING); };
   const handleSessionReady  = (data) => { setGenerating(null); setSessionData(data); setQuizClockStart(Date.now()); go(VIEW.QUIZ); };
   const handleEvalDone      = (data, answersSnapshot) => {
     if (answersSnapshot) setSessionData(prev => ({ ...prev, answers: answersSnapshot }));
@@ -148,9 +176,50 @@ export default function ExamAnalyzerPage() {
     go(VIEW.RESULT);
   };
 
+  // ── Modal handlers (Config + Blueprint sebagai modal/drawer) ──
   const clearAll = () => { setAnalysis(null); setBlueprint(null); setSessionData(null); setEvalData(null); setGenerating(null); setQuizClockStart(null); setRecommend(null); clear(); };
-  const resetToConfig = () => { clearAll(); go(VIEW.CONFIG); };
-  const startConfigFor = (id) => { setSubjectId(id); clearAll(); go(VIEW.CONFIG); };
+
+  const openConfig = (id) => {
+    if (id) setSubjectId(id);
+    clearAll();
+    setBlueprintModal(null);
+    setConfigOpen(true);
+  };
+  const closeConfig = () => setConfigOpen(false);
+
+  const handleConfigDone = (data) => {
+    setBlueprint(data);
+    setConfigOpen(false);
+    setBlueprintModal(data);
+  };
+  const handleBlueprintBack = () => {
+    setBlueprintModal(null);
+    setConfigOpen(true);
+  };
+  const handleBlueprintGenerate = (data) => {
+    setBlueprintModal(null);
+    handleSessionReady(data);
+  };
+  // Progress generate ditangani di dalam BlueprintView (modal), tidak ganti view.
+  const handleGenerating = () => {};
+
+  // "Latihan Lagi" dari kartu riwayat → modal blueprint (reuse blueprint_id sesi).
+  const handleRetry = async (session) => {
+    if (!session.blueprint_id) {
+      toast({ title: t('exam.history.retryNoBlueprint') || 'Konfigurasi tidak tersedia', message: t('exam.history.retryNoBlueprintDesc') || 'Buat simulasi baru untuk memulai.' });
+      openConfig(session.subject_id || subjectId);
+      return;
+    }
+    try {
+      const d = (await sessionsAPI.detail(session.id)).data;
+      const items = deriveBlueprintItems(d.questions_json || []);
+      setBlueprintModal({ blueprint_id: session.blueprint_id, title: d.title || session.title, blueprint_items: items });
+    } catch {
+      openConfig(session.subject_id || subjectId);
+    }
+  };
+
+  const showTabs = !!subjectId && (view === VIEW.HISTORY || view === VIEW.DASHBOARD);
 
   return (
     <div className="flex-1 overflow-y-auto p-6 md:p-10">
@@ -193,8 +262,6 @@ export default function ExamAnalyzerPage() {
                       return;
                     }
                     const back = {
-                      [VIEW.CONFIG]:     null,
-                      [VIEW.BLUEPRINT]:  VIEW.CONFIG,
                       [VIEW.REVIEW]:     VIEW.RESULT,
                     }[view] || null;
                     if (back === null) { go(VIEW.HISTORY); return; }
@@ -234,10 +301,7 @@ export default function ExamAnalyzerPage() {
             </Select>
             {(view === VIEW.DASHBOARD || view === VIEW.HISTORY) && (
               <button
-                onClick={() => {
-                  if (!subjectId) return;
-                  resetToConfig();
-                }}
+                onClick={() => { if (!subjectId) return; openConfig(); }}
                 disabled={!subjectId}
                 className="btn-primary text-xs disabled:opacity-40 disabled:cursor-not-allowed"
               >
@@ -247,6 +311,30 @@ export default function ExamAnalyzerPage() {
           </div>
         </div>
 
+        {/* ── Tab Riwayat / Analisis ── */}
+        {showTabs && (
+          <div className="flex gap-1 border-b border-border">
+            {[
+              { v: VIEW.HISTORY,  label: t('exam.history.tab') },
+              { v: VIEW.DASHBOARD, label: t('exam.dashboard.tab') },
+            ].map(tab => (
+              <button
+                key={tab.v}
+                onClick={() => go(tab.v)}
+                className={cn(
+                  'relative px-4 py-2 text-sm font-medium transition-colors',
+                  view === tab.v ? 'text-text' : 'text-text-secondary hover:text-text'
+                )}
+              >
+                {tab.label}
+                {view === tab.v && (
+                  <motion.span layoutId="exam-tab-indicator" className="absolute left-0 right-0 -bottom-px h-0.5 bg-primary" />
+                )}
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* ── View Router ── */}
         <AnimatePresence mode="wait">
           <motion.div key={view}
@@ -255,24 +343,32 @@ export default function ExamAnalyzerPage() {
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.2 }}
           >
-            {view === VIEW.DASHBOARD  && <DashboardView subjectId={subjectId} subjects={subjects} analysis={analysis} onAnalysisDone={handleAnalysisDone} onStartConfig={resetToConfig} />}
-            {view === VIEW.CONFIG     && <ConfigView subjectId={subjectId} analysis={analysis} onDone={handleBlueprintDone} />}
-            {view === VIEW.BLUEPRINT  && <BlueprintView blueprint={blueprint} onGenerate={handleSessionReady} onGenerating={handleGenerating} onBack={() => go(VIEW.CONFIG)} />}
-            {view === VIEW.GENERATING && (
-              <div className="card-base p-20 text-center">
-                <Loader2 size={48} className="animate-spin text-primary mx-auto mb-6" />
-                <h3 className="text-lg font-semibold text-text mb-2">{t('exam.blueprint.generatingTitle')}</h3>
-                <p className="text-text-muted text-sm max-w-sm mx-auto">{t('exam.blueprint.generatingDesc', { strong: <strong className="text-text">1–3 menit</strong> })}</p>
-              </div>
-            )}
+            {view === VIEW.DASHBOARD  && <DashboardView subjectId={subjectId} subjects={subjects} analysis={analysis} onAnalysisDone={handleAnalysisDone} onStartConfig={() => openConfig(subjectId)} />}
+            {view === VIEW.HISTORY    && <HistoryView subjectId={subjectId} subjects={subjects} onSelectSubject={(id) => { setSubjectId(id); go(VIEW.HISTORY); }} onStartConfig={(id) => openConfig(id)} onRetry={handleRetry} onResume={(sd) => { setSessionData(sd); setQuizClockStart(Date.now()); go(VIEW.QUIZ); }} detailId={detailId} setDetailId={setDetailId} pendingPlanTab={pendingPlanTab} setPendingPlanTab={setPendingPlanTab} />}
             {view === VIEW.QUIZ       && <QuizView sessionData={sessionData} clockStart={quizClockStart} onDone={handleEvalDone} />}
             {view === VIEW.RESULT     && <ResultView evalData={evalData} onReview={() => go(VIEW.REVIEW)} onFinish={() => { clearAll(); go(VIEW.HISTORY); }} sessionId={sessionData?.session_id} onOpenPlanTab={() => { setPendingPlanTab(true); setDetailId(sessionData?.session_id); }} subjectName={sessionData?.subject_name || ''} />}
             {view === VIEW.REVIEW     && <ReviewView sessionData={sessionData} evalData={evalData} />}
-            {view === VIEW.HISTORY    && <HistoryView subjectId={subjectId} subjects={subjects} onSelectSubject={(id) => { setSubjectId(id); go(VIEW.HISTORY); }} onStartConfig={startConfigFor} onResume={(sd) => { setSessionData(sd); setQuizClockStart(Date.now()); go(VIEW.QUIZ); }} detailId={detailId} setDetailId={setDetailId} pendingPlanTab={pendingPlanTab} setPendingPlanTab={setPendingPlanTab} />}
           </motion.div>
         </AnimatePresence>
 
       </div>
+
+      {/* ── Config modal ── */}
+      <Modal open={configOpen} onClose={closeConfig} title={t('exam.config.title')} size="lg">
+        {configOpen && <ConfigView subjectId={subjectId} analysis={analysis} onDone={handleConfigDone} />}
+      </Modal>
+
+      {/* ── Blueprint modal ── */}
+      <Modal open={!!blueprintModal} onClose={() => setBlueprintModal(null)} title={blueprintModal?.title || t('exam.blueprint.title')} size="xl">
+        {blueprintModal && (
+          <BlueprintView
+            blueprint={blueprintModal}
+            onGenerate={handleBlueprintGenerate}
+            onGenerating={handleGenerating}
+            onBack={handleBlueprintBack}
+          />
+        )}
+      </Modal>
     </div>
   );
 }

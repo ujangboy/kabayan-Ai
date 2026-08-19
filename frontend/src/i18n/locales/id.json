@@ -436,6 +436,7 @@
     "createSimulation": "Buat Simulasi",
     "confirmExit": "Keluar dari ujian? Progres akan hilang.",
     "dashboard": {
+      "tab": "Analisis",
       "title": "Analisis Materi",
       "selectSubjectPrompt": "Pilih mata kuliah dari dropdown di atas untuk memulai analisis.",
       "analysisTitle": "Analisis {{subjectname}}",
@@ -466,6 +467,10 @@
       "addSubject": "Tambah Materi",
       "loadingMaterials": "Memuat materi...",
       "history": "Riwayat",
+      "tab": "Riwayat",
+      "retry": "Latihan Lagi",
+      "retryNoBlueprint": "Konfigurasi tidak tersedia",
+      "retryNoBlueprintDesc": "Buat simulasi baru untuk memulai latihan ulang.",
       "simulation": "Simulasi",
       "deleteSubject": "Hapus mata kuliah",
       "deleteSubjectConfirm": "Hapus mata kuliah ini? Semua data terkait akan dihapus.",

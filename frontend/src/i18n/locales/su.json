@@ -425,6 +425,7 @@
     "createSimulation": "Jieun Simulasi",
     "confirmExit": "Kaluar tina ujian? Progres bakal leungit.",
     "dashboard": {
+      "tab": "Analisis",
       "title": "Analisis Materi",
       "selectSubjectPrompt": "Pilih mata pelajaran tina dropdown di luhur pikeun mimitian analisis.",
       "analysisTitle": "Analisis {{subjectname}}",
@@ -455,6 +456,10 @@
       "addSubject": "Tambah Materi",
       "loadingMaterials": "Ngamuat materi...",
       "history": "Riwayat",
+      "tab": "Riwayat",
+      "retry": "Latihan Deui",
+      "retryNoBlueprint": "Konfigurasi teu sadia",
+      "retryNoBlueprintDesc": "Jieun simulasi anyar pikeun ngamimitian latihan ulang.",
       "simulation": "Simulasi",
       "deleteSubject": "Hapus mata pelajaran",
       "deleteSubjectConfirm": "Hapus mata pelajaran ieu? Sadaya data anu aya hubunganana bakal dihapus.",
