@@ -5,7 +5,7 @@ import { useUiStore, useAppStore, useChatStore } from '@/store';
 import { Tooltip } from '@/components/ui';
 import {
   LayoutDashboard, MessageSquare, BookOpen, FileText,
-  BookMarked, CreditCard, HelpCircle, Brain, Settings, Bot,
+  BookMarked, CreditCard, HelpCircle, Brain, Settings, Bot, CalendarCheck,
 } from '@/icons';
 import { cn } from '@/utils';
 
@@ -35,15 +35,17 @@ export default function IconRail() {
     { to: '/flashcard', icon: CreditCard, label: t('nav.flashcard') },
     { to: '/quiz', icon: HelpCircle, label: t('nav.quiz') },
     { to: '/exam-analyzer', icon: Brain, label: t('nav.exam') },
+    { to: '/study-plan', icon: CalendarCheck, label: t('nav.studyPlan') },
   ];
 
   const isActive = (to) => {
-    if (to === '/exam-analyzer') return location.pathname === '/exam-analyzer' || location.pathname === '/study-plan';
+    if (to === '/exam-analyzer') return location.pathname === '/exam-analyzer';
+    if (to === '/study-plan') return location.pathname === '/study-plan';
     if (to.startsWith('/subjects')) return location.pathname.startsWith('/subjects');
     return location.pathname === to || location.pathname.startsWith(to + '/');
   };
 
-  const railItem = 'relative w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 group';
+  const railItem = 'relative w-10 h-10 shrink-0 flex items-center justify-center rounded-xl transition-all duration-200 group';
 
   return (
     <aside className="flex h-screen w-14 flex-col items-center bg-rail py-3 relative z-20 shrink-0 divider-gradient-r gap-1">
@@ -57,16 +59,16 @@ export default function IconRail() {
       <Tooltip label={t('common.search')} side="right">
         <button
           onClick={() => setSearchOpen(true)}
-          className="flex h-10 w-10 items-center justify-center rounded-xl text-text-secondary transition-all duration-200 hover:bg-card hover:text-text"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-text-secondary transition-all duration-200 hover:bg-card hover:text-text"
         >
           <SearchGlyph />
         </button>
       </Tooltip>
 
-      <div className="my-1 h-px w-8 bg-border" />
+      <div className="my-1 h-px w-8 bg-border shrink-0" />
 
       {/* Nav items */}
-      <nav className="flex w-full flex-1 flex-col items-center gap-1">
+      <nav className="flex w-full flex-1 min-h-0 flex-col items-center gap-1 overflow-y-auto">
         {NAV.map(({ to, icon: Icon, label, action }) => {
           const active = isActive(to);
           return (
@@ -93,7 +95,7 @@ export default function IconRail() {
         })}
       </nav>
 
-      <div className="my-1 h-px w-8 bg-border" />
+      <div className="my-1 h-px w-8 bg-border shrink-0" />
 
       {/* Settings */}
       <Tooltip label={t('nav.settings')} side="right">

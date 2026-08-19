@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import { Search, Globe, Bell, Check } from '@/icons';
+import { Search, Globe, Bell, Check, PanelClose } from '@/icons';
 import { profileAPI } from '@/services/api';
 import { useAppStore } from '@/store';
 import { setAppLanguage, STORAGE_KEY } from '@/i18n';
@@ -18,6 +18,7 @@ export default function TopBar() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const setSearchOpen = useAppStore((s) => s.setSearchOpen);
+  const toggleSidebar = useAppStore((s) => s.toggleSidebar);
   const queryClient = useQueryClient();
 
   const { data: profile } = useQuery({
@@ -42,6 +43,15 @@ export default function TopBar() {
 
   return (
     <header className="divider-gradient-b relative z-10 flex h-14 shrink-0 items-center gap-3 bg-surface/80 px-4 backdrop-blur-md">
+      {/* Mobile sidebar toggle */}
+      <button
+        onClick={toggleSidebar}
+        className="lg:hidden flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-text-secondary transition-colors hover:bg-card hover:text-text"
+        title={t('common.menu')}
+      >
+        <PanelClose size={20} />
+      </button>
+
       {/* Search */}
       <button
         onClick={() => setSearchOpen(true)}
@@ -49,7 +59,7 @@ export default function TopBar() {
       >
         <Search size={15} />
         <span className="flex-1 text-left">{t('common.search')}</span>
-        <kbd className="rounded border border-border bg-background px-1.5 py-0.5 text-[10px]">⌘K</kbd>
+        <kbd className="hidden sm:inline rounded border border-border bg-background px-1.5 py-0.5 text-[10px]">⌘K</kbd>
       </button>
 
       <div className="flex-1" />
@@ -62,7 +72,7 @@ export default function TopBar() {
             title={t('settings.tabs.language')}
           >
             <Globe size={16} />
-            <span className="text-xs font-semibold uppercase">{currentLang}</span>
+            <span className="hidden sm:inline text-xs font-semibold uppercase">{currentLang}</span>
           </button>
         </DropdownMenu.Trigger>
         <DropdownMenu.Portal>

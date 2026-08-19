@@ -169,5 +169,6 @@ export const useAppStore = create((set) => ({
   }),
   clearPendingOperations: () => set({ pendingOperations: new Set() }),
   toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
+  setSidebarOpen: (v) => set({ sidebarOpen: v }),
   setSearchOpen: (v) => set({ searchOpen: v }),
 }));

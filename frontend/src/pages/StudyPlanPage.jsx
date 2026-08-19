@@ -4,7 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft, Check, Loader2, Clock, Play, Brain, Trophy,
-  CheckCircle, XCircle, Award, Target, ClipboardCheck, MessageSquare, FileText
+  CheckCircle, XCircle, Award, Target, ClipboardCheck, MessageSquare, FileText, CalendarCheck
 } from '@/icons';
 import { sessionsAPI, materiAPI } from '@/services/api';
 import MathMarkdown from '@/components/MathMarkdown';
@@ -101,6 +101,19 @@ export default function StudyPlanPage() {
   });
   // Merge: local cache (for newly generated) takes precedence over persisted
   const allSummaries = { ...persistedSummaries, ...generatedSummaries };
+
+  if (!sessionId) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+        <EmptyState
+          icon={CalendarCheck}
+          title={t('studyplan.noSessionTitle', 'Belum ada rencana belajar')}
+          description={t('studyplan.noSessionDesc', 'Buat Ujian Simulasi terlebih dahulu untuk mendapatkan rencana belajar yang dipersonalisasi.')}
+          action={<button onClick={() => navigate('/exam-analyzer')} className="btn-primary">{t('nav.exam')}</button>}
+        />
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
