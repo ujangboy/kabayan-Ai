@@ -8,7 +8,7 @@ import { formatDate, formatDateTime } from '@/utils';
 import { cn } from '@/utils';
 import NoteEditor from '@/components/NoteEditor';
 import MaterialPicker from '@/components/MaterialPicker';
-import { Tooltip } from '@/components/ui/Tooltip';
+import { Tooltip, Select } from '@/components/ui';
 import { useToast } from '@/components/Toast';
 
 // ─── Auto-title: extract title from content (zero AI) ─────────────────────
@@ -723,20 +723,20 @@ function GeneratePanel({ subjects, onClose, onNoteCreated }) {
             <label className="text-xs font-medium text-text-secondary mb-1.5 block">
               {t('notebook.subjectLabel')}
             </label>
-            <select
+            <Select
               value={subjectId}
               onChange={(e) => {
                 setSubjectId(e.target.value);
                 setSelectedMaterialIds([]);
                 setError('');
               }}
-              className="w-full px-3 py-2 bg-background border border-border rounded-xl text-sm text-text focus:outline-none focus:border-primary transition-colors"
+              className="w-full"
             >
               <option value="">{t('notebook.selectSubjectPlaceholder')}</option>
               {subjects.map(s => (
                 <option key={s.id} value={s.id}>{s.name}</option>
               ))}
-            </select>
+            </Select>
           </div>
 
           {/* Material picker */}

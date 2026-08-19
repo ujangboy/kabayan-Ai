@@ -8,7 +8,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useUiStore } from '@/store';
 import { usePageState } from '@/hooks/usePageState';
 import { VIEW } from '@/components/exam/shared';
-import { Tooltip } from '@/components/ui/Tooltip';
+import { Tooltip, Select } from '@/components/ui';
 import { useToast } from '@/components/Toast';
 import DashboardView from '@/components/exam/DashboardView';
 import ConfigView from '@/components/exam/ConfigView';
@@ -225,14 +225,13 @@ export default function ExamAnalyzerPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <select
+            <Select
               value={subjectId}
               onChange={e => { setSubjectId(e.target.value); setAnalysis(null); setBlueprint(null); setSessionData(null); setEvalData(null); setRecommend(null); go(VIEW.HISTORY); }}
-              className="px-3 py-2 bg-card border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary"
             >
               <option value="">{t('exam.selectSubjectPlaceholder')}</option>
               {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-            </select>
+            </Select>
             {(view === VIEW.DASHBOARD || view === VIEW.HISTORY) && (
               <button
                 onClick={() => {

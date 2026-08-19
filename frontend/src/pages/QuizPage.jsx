@@ -152,16 +152,15 @@ export default function QuizPage() {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <select
+            <Select
               value={selectedSubject}
               onChange={(e) => setSubjectFilter('quiz', e.target.value)}
-              className="px-3 py-2 bg-card border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary transition-colors"
             >
               <option value="">{t('quiz.allSubjects')}</option>
               {subjects.map(s => (
                 <option key={s.id} value={s.id}>{s.name}</option>
               ))}
-            </select>
+            </Select>
             <button onClick={() => setIsGeneratorOpen(true)} className="btn-primary text-xs">
               <Zap size={14} /> {t('quiz.generateButton')}
             </button>

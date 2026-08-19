@@ -168,16 +168,15 @@ export default function FlashcardPage() {
         {/* Filter Mata Kuliah */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <select
+            <Select
               value={subjectFilter}
               onChange={(e) => setSubjectFilter('flashcard', e.target.value)}
-              className="px-3 py-2 bg-card border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary transition-colors"
             >
               <option value="">{t('flashcard.filterAllSubjects')}</option>
               {[...subjects].sort((a, b) => a.name.localeCompare(b.name, 'id', { sensitivity: 'base' })).map(s => (
                 <option key={s.id} value={String(s.id)}>{s.name}</option>
               ))}
-            </select>
+            </Select>
             <span className="text-xs text-text-muted">
               {t('flashcard.showingCount', { shown: filteredGroups.length, total: groups.length })}
             </span>

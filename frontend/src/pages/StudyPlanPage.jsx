@@ -11,7 +11,7 @@ import MathMarkdown from '@/components/MathMarkdown';
 import { extractErrorMessage } from '@/utils/errors';
 import { useToast } from '@/components/Toast';
 import { usePageState } from '@/hooks/usePageState';
-import { Modal, Button } from '@/components/ui';
+import { Modal, Button, Textarea } from '@/components/ui';
 
 const TYPE_META = {
   review:     { label: 'Review',    cls: 'bg-accent-blue/10 text-accent-blue border-accent-blue/20' },
@@ -514,12 +514,12 @@ function InlinePlanPractice({ item, practiceState, onClose, onSubmitted }) {
           })}
         </div>
       ) : (
-        <textarea
+        <Textarea
           value={userAnswer}
           onChange={(e) => selectAnswer(e.target.value)}
           rows={3}
           placeholder="Tulis jawaban Anda..."
-          className="w-full px-3 py-2 bg-card border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-y"
+          className="w-full resize-y"
         />
       )}
 
