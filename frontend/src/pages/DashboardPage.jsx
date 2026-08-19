@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useChatStore } from '@/store';
 import { formatDate } from '@/utils';
+import { EmptyState } from '@/components/ui';
 import FileTypeIcon from '@/components/FileTypeIcon';
 import api from '@/services/api';
 
@@ -285,24 +286,24 @@ export default function DashboardPage() {
 
         {/* Empty state */}
         {!isLoading && stats.materials === 0 && stats.subjects === 0 && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.3, duration: 0.4, ease: [0.32, 0.72, 0, 1] }}
-            className="card-base text-center py-16"
-          >
-            <div className="w-20 h-20 rounded-3xl bg-gradient-primary/10 flex items-center justify-center mx-auto mb-4">
-              <School size={48} className="text-primary-light" />
-            </div>
-            <h3 className="text-xl font-bold text-text mb-2">{t('dashboard.welcomeTitle')}</h3>
-            <p className="text-text-secondary mb-6 max-w-sm mx-auto">
-              {t('dashboard.welcomeText')}
-            </p>
-            <div className="flex gap-3 justify-center">
-              <button onClick={() => navigate('/subjects')} className="btn-primary">{t('dashboard.createSubject')}</button>
-              <button onClick={() => navigate('/materi')} className="btn-ghost border border-border">{t('dashboard.uploadMaterial')}</button>
-            </div>
-          </motion.div>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.3, duration: 0.4, ease: [0.32, 0.72, 0, 1] }}
+              className="card-base"
+            >
+              <EmptyState
+                icon={School}
+                title={t('dashboard.welcomeTitle')}
+                description={t('dashboard.welcomeText')}
+                action={
+                  <div className="flex gap-3 justify-center">
+                    <button onClick={() => navigate('/subjects')} className="btn-primary">{t('dashboard.createSubject')}</button>
+                    <button onClick={() => navigate('/materi')} className="btn-ghost border border-border">{t('dashboard.uploadMaterial')}</button>
+                  </div>
+                }
+              />
+            </motion.div>
         )}
 
       </div>

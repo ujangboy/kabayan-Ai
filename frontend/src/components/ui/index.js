@@ -6,4 +6,5 @@ export { Input, Textarea, Select } from './Input';
 export { Badge } from './Badge';
 export { Spinner } from './Spinner';
 export { Skeleton } from './Skeleton';
+export { EmptyState } from './EmptyState';
 export { Tooltip, TooltipProvider } from './Tooltip';
