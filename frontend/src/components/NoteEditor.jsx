@@ -278,7 +278,7 @@ function Toolbar({ editor, onPreview, onInsertMath }) {
   const ia = (n, a) => editor.isActive(n, a);
 
   return (
-    <div className="flex flex-wrap items-center gap-0.5 px-3 py-1.5 border-b border-border bg-sidebar sticky top-0 z-10">
+    <div className="flex flex-wrap items-center gap-0.5 px-3 py-1.5 divider-gradient-b relative bg-sidebar sticky top-0 z-10">
       <button
         type="button"
         onClick={onPreview}

@@ -361,7 +361,7 @@ function GenerateQuizModal({ onClose, subjects, onSuccess }) {
         exit={{ opacity: 0, scale: 0.95 }}
         className="w-full max-w-sm glass rounded-dialog shadow-modal"
       >
-        <div className="flex items-center justify-between p-4 border-b border-border">
+        <div className="flex items-center justify-between p-4 divider-gradient-b relative">
           <div className="flex items-center gap-2">
             <Zap size={18} className="text-primary" />
             <h3 className="font-semibold text-text">{t('quiz.modalTitle')}</h3>

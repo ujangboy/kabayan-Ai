@@ -53,7 +53,7 @@ export default function CommandSearch() {
         >
           <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-primary" />
           {/* Search Input */}
-          <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
+          <div className="flex items-center gap-3 px-4 py-3 divider-gradient-b relative">
             <Search size={16} className="text-text-secondary shrink-0" />
             <input
               autoFocus

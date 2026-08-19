@@ -73,7 +73,7 @@ export default function BlueprintView({ blueprint, onGenerate, onGenerating, onB
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-border text-xs text-text-muted uppercase tracking-wider">
+              <tr className="divider-gradient-b relative text-xs text-text-muted uppercase tracking-wider">
                 <th className="text-left py-2 px-2 font-semibold">{t('exam.blueprint.topic')}</th>
                 <th className="text-center py-2 px-2 font-semibold">{t('exam.blueprint.weight')}</th>
                 <th className="text-center py-2 px-2 font-semibold">{t('exam.blueprint.questions')}</th>
@@ -84,7 +84,7 @@ export default function BlueprintView({ blueprint, onGenerate, onGenerating, onB
             </thead>
             <tbody>
               {items.map((item, i) => (
-                <tr key={i} className="border-b border-border/50 last:border-0 hover:bg-background/40">
+                <tr key={i} className="divider-gradient-b relative last:after:hidden hover:bg-background/40">
                   <td className="py-3 px-2">
                     <p className="font-medium text-text">{item.topic}</p>
                     {item.key_concepts?.length > 0 && (

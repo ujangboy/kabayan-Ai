@@ -442,7 +442,7 @@ function UploadModal({ onClose, subjects, onSuccess }) {
         transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
         className="w-full max-w-md glass rounded-dialog shadow-modal"
       >
-        <div className="flex items-center justify-between p-4 border-b border-border">
+        <div className="flex items-center justify-between p-4 divider-gradient-b relative">
           <h3 className="font-semibold text-text">{t('materi.uploadModalTitle')}</h3>
           <Tooltip label={t('common.close')}>
             <button onClick={onClose} className="text-text-muted hover:text-text" aria-label={t('common.close')}><X size={18} /></button>
@@ -534,7 +534,7 @@ function YoutubeModal({ onClose, subjects, onSuccess }) {
         transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
         className="w-full max-w-md glass rounded-dialog shadow-modal border-danger/20"
       >
-        <div className="flex items-center justify-between p-4 border-b border-border">
+        <div className="flex items-center justify-between p-4 divider-gradient-b relative">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-danger/15 flex items-center justify-center">
               <Video size={18} className="text-danger" />

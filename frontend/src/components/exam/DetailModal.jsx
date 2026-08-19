@@ -63,7 +63,7 @@ export default function DetailModal({ historySessionId, onClose, onResume, pendi
 
   return (
     <ModalShell>
-      <div className="p-5 border-b border-border shrink-0">
+      <div className="p-5 divider-gradient-b relative shrink-0">
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1 flex-wrap">

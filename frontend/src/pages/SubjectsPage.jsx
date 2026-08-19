@@ -207,7 +207,7 @@ function CreateSubjectModal({ onClose, onSuccess }) {
         transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
         className="w-full max-w-md glass rounded-dialog shadow-modal"
       >
-        <div className="flex items-center justify-between p-4 border-b border-border">
+        <div className="flex items-center justify-between p-4 divider-gradient-b relative">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center shadow-btn-primary">
               <Book size={16} className="text-white" />

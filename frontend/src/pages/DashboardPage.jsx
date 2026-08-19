@@ -214,7 +214,7 @@ export default function DashboardPage() {
                 <table className="w-full text-sm">
                   <tbody>
                     {recentMaterials.map((m) => (
-                      <tr key={m.id} className="border-b border-border/50 last:border-0 hover:bg-card-hover/50 transition-colors">
+                      <tr key={m.id} className="divider-gradient-b relative last:after:hidden hover:bg-card-hover/50 transition-colors">
                         <td className="px-4 py-2.5">
                           <div className="flex items-center gap-2">
                              <FileTypeIcon type={m.material_type} className="text-base text-text-muted" />
@@ -259,7 +259,7 @@ export default function DashboardPage() {
                 <table className="w-full text-sm">
                   <tbody>
                     {recentQuizzes.map((q) => (
-                      <tr key={q.id} className="border-b border-border/50 last:border-0 hover:bg-card-hover/50 transition-colors">
+                      <tr key={q.id} className="divider-gradient-b relative last:after:hidden hover:bg-card-hover/50 transition-colors">
                         <td className="px-4 py-2.5">
                           <span className="text-text font-medium text-xs truncate max-w-[150px] block">{q.title}</span>
                           <span className="text-text-muted text-[10px]">{q.subject?.name || '—'}</span>

@@ -42,7 +42,7 @@ export default function IconRail() {
   };
 
   return (
-    <aside className="flex flex-col items-center w-14 h-screen bg-rail border-r border-border shrink-0 z-20 py-3 gap-1">
+    <aside className="flex flex-col items-center w-14 h-screen bg-rail divider-gradient-r relative shrink-0 z-20 py-3 gap-1">
       {/* Logo */}
       <div className="w-9 h-9 rounded-xl bg-gradient-primary flex items-center justify-center shadow-btn-primary mb-3 shrink-0">
         <Bot size={20} className="text-white" />

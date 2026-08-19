@@ -40,7 +40,7 @@ export default function EditSubjectModal({ subject, onClose, onSuccess }) {
         exit={{ opacity: 0, scale: 0.95 }}
         className="bg-card w-full max-w-lg rounded-2xl border border-border shadow-2xl overflow-hidden"
       >
-        <div className="p-4 border-b border-border flex items-center justify-between bg-background/50">
+        <div className="p-4 divider-gradient-b relative flex items-center justify-between bg-background/50">
           <h3 className="font-bold text-text">{t('subjectDashboard.editTitle')}</h3>
           <Tooltip label={t('common.close')}>
             <button onClick={onClose} aria-label={t('common.close')} className="text-text-muted hover:text-text transition-colors">

@@ -494,9 +494,9 @@ export default function ChatPage() {
   return (
     <div className="flex h-full">
       {/* Chat history sidebar */}
-      <div className="w-56 border-r border-border flex flex-col bg-gradient-to-b from-sidebar to-background shrink-0 hidden md:flex">
+      <div className="w-56 divider-gradient-r relative flex flex-col bg-gradient-to-b from-sidebar to-background shrink-0 hidden md:flex">
         {/* New chat button */}
-        <div className="p-3 border-b border-border">
+        <div className="p-3 divider-gradient-b relative">
           <button
             onClick={() => { const id = createChat(); navigate(`/chat?id=${id}`); }}
             className="btn-primary w-full text-xs justify-center"
@@ -531,7 +531,7 @@ export default function ChatPage() {
         </div>
 
         {/* Chat list */}
-        <div className="flex-1 overflow-y-auto p-2 space-y-0.5">
+        <div className="flex-1 overflow-y-auto sidebar-scroll p-2 space-y-0.5">
           {sortedChats.length === 0 && chatSearch ? (
             <p className="text-xs text-text-muted text-center py-6">Tidak ada chat ditemukan</p>
           ) : (
@@ -699,7 +699,7 @@ export default function ChatPage() {
       {/* Main chat area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0 bg-background/50 backdrop-blur-sm">
+        <div className="flex items-center justify-between px-4 py-3 divider-gradient-b relative shrink-0 bg-background/50 backdrop-blur-sm">
           <div className="flex items-center gap-2">
             <Bot size={18} className={cn('transition-colors', tutorMode ? 'text-warning' : 'text-primary-light')} />
             <span className="font-semibold text-text text-sm">{chat?.title || (tutorMode ? 'Tutor AI' : 'Chat AI')}</span>

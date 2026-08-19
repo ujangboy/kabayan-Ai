@@ -823,7 +823,7 @@ function GenerateAIModal({ subjects, onClose, onSuccess }) {
         exit={{ opacity: 0, scale: 0.95 }}
         className="w-full max-w-sm glass rounded-dialog shadow-modal"
       >
-        <div className="flex items-center justify-between p-4 border-b border-border">
+        <div className="flex items-center justify-between p-4 divider-gradient-b relative">
           <div className="flex items-center gap-2">
             <Zap size={18} className="text-primary" />
             <h3 className="font-semibold text-text">{t('flashcard.generateAiModalTitle')}</h3>
@@ -945,7 +945,7 @@ if (!formData.question || !formData.answer || !formData.subject_id) {
         exit={{ opacity: 0, scale: 0.95 }}
         className="w-full max-w-lg glass rounded-dialog shadow-modal"
       >
-        <div className="flex items-center justify-between p-4 border-b border-border">
+        <div className="flex items-center justify-between p-4 divider-gradient-b relative">
           <div className="flex items-center gap-2">
             <CreditCard size={18} className="text-primary" />
             <h3 className="font-semibold text-text">{t('flashcard.manualModalTitle')}</h3>
@@ -1037,7 +1037,7 @@ function ReviewHistoryModal({ group, onClose }) {
         exit={{ opacity: 0, scale: 0.95 }}
         className="w-full max-w-2xl glass rounded-dialog shadow-modal max-h-[85vh] flex flex-col"
       >
-        <div className="flex items-center justify-between p-4 border-b border-border shrink-0">
+        <div className="flex items-center justify-between p-4 divider-gradient-b relative shrink-0">
           <div className="flex items-center gap-2">
             <Brain size={18} className="text-accent-purple" />
             <h3 className="font-semibold text-text">{t('flashcard.reviewHistoryTitle', { subjectName: subject?.name || t('flashcard.defaultName') })}</h3>

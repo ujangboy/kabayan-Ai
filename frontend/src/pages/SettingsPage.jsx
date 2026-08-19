@@ -47,7 +47,7 @@ export default function SettingsPage() {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 flex-wrap border-b border-border pb-px">
+        <div className="flex gap-1 flex-wrap divider-gradient-b relative pb-px">
           {TABS.map(({ key, icon: Icon }) => (
             <button
               key={key}

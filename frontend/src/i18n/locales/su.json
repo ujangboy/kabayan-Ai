@@ -192,7 +192,8 @@
     "stopAI": "Eureunkeun AI",
     "send": "Kirim",
     "tutorModeNote": "Mode Tutor — waleran disaluyukeun sareng tingkat diajar anjeun.",
-    "disclaimerNote": "AI tiasa ngadamel kasalahan. Pariksa inpormasi anu penting."
+    "disclaimerNote": "AI tiasa ngadamel kasalahan. Pariksa inpormasi anu penting.",
+    "empty": "Acan aya obrolan"
   },
   "materi": {
     "pageTitle": "Materi Diajar",
@@ -252,7 +253,7 @@
     "notes": "Catetan",
     "pinned": "Disematkeun",
     "newNoteTitle": "Catetan Anyar",
-    "untitled": "Tanpa Judul",
+    "untitled": "Tanpa judul",
     "noNotes": "Can aya catetan.",
     "createNote": "Jieun catetan",
     "generating": "Nyieun...",
@@ -580,7 +581,7 @@
     "title": "Mata Pelajaran",
     "subtitle": "Kelola sadaya mata pelajaran anu anjeun arsa.",
     "addNew": "Tambah Mata Pelajaran",
-    "empty": "Can aya mata pelajaran.",
+    "empty": "Acan aya mata kuliah",
     "createNow": "Jieun ayeuna",
     "semesterLabel": "Semester",
     "lecturerLabel": "Dosen",
@@ -881,5 +882,8 @@
   },
   "toast": {
     "confirmTitle": "Konfirmasi"
+  },
+  "sidebar": {
+    "contextHint": "Pilih menu di beulah kenca pikeun ngamimitian diajar"
   }
 }

@@ -199,7 +199,8 @@
     "stopAI": "Hentikan AI",
     "send": "Kirim",
     "tutorModeNote": "Mode Tutor — jawaban disesuaikan dengan level belajarmu.",
-    "disclaimerNote": "AI dapat membuat kesalahan. Verifikasi informasi penting."
+    "disclaimerNote": "AI dapat membuat kesalahan. Verifikasi informasi penting.",
+    "empty": "Belum ada percakapan"
   },
   "materi": {
     "pageTitle": "Materi Belajar",
@@ -263,7 +264,7 @@
     "notes": "Catatan",
     "pinned": "Disematkan",
     "newNoteTitle": "Catatan Baru",
-    "untitled": "Tanpa Judul",
+    "untitled": "Tanpa judul",
     "noNotes": "Belum ada catatan.",
     "createNote": "Buat catatan",
     "generating": "Membuat...",
@@ -591,7 +592,7 @@
     "title": "Mata Kuliah",
     "subtitle": "Kelola semua mata kuliah yang kamu ikuti.",
     "addNew": "Tambah Mata Kuliah",
-    "empty": "Belum ada mata kuliah.",
+    "empty": "Belum ada mata kuliah",
     "createNow": "Buat sekarang",
     "semesterLabel": "Semester",
     "lecturerLabel": "Dosen",
@@ -892,5 +893,8 @@
   },
   "toast": {
     "confirmTitle": "Konfirmasi"
+  },
+  "sidebar": {
+    "contextHint": "Pilih menu di sebelah kiri untuk mulai belajar"
   }
 }

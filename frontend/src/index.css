@@ -74,6 +74,57 @@
 }
 
 @layer components {
+  /* ── Gradient dividers (replace hard 1px borders) ─────────────────────── */
+  .divider-gradient-r {
+    position: relative;
+  }
+  .divider-gradient-r::after {
+    content: '';
+    position: absolute;
+    inset-y: 0;
+    right: 0;
+    width: 1px;
+    background: linear-gradient(to bottom, rgba(38, 51, 73, 0.6), transparent 80%);
+  }
+
+  .divider-gradient-b {
+    position: relative;
+  }
+  .divider-gradient-b::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 1px;
+    background: linear-gradient(to right, rgba(38, 51, 73, 0.6), transparent 80%);
+  }
+
+  /* ── Sidebar scrollbar overlay (no layout shift) ──────────────────────── */
+  .sidebar-scroll {
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+    transition: scrollbar-color 0.2s ease;
+  }
+  .sidebar-scroll:hover {
+    scrollbar-color: #263349 transparent;
+  }
+  .sidebar-scroll::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .sidebar-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .sidebar-scroll::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 99px;
+  }
+  .sidebar-scroll:hover::-webkit-scrollbar-thumb {
+    background: #263349;
+  }
+
   .glass {
     background: rgba(26, 35, 50, 0.75);
     backdrop-filter: blur(16px);

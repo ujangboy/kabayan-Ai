@@ -355,7 +355,7 @@ export default function StudyPlanPage() {
             animate={{ opacity: 1, scale: 1 }}
             className="glass rounded-dialog shadow-modal overflow-hidden flex flex-col max-h-[85vh]"
           >
-            <div className="p-4 border-b border-border flex items-center justify-between bg-background/50">
+            <div className="p-4 divider-gradient-b relative flex items-center justify-between bg-background/50">
               <h3 className="font-bold text-text flex items-center gap-2">
                 <FileText size={16} className="text-accent-blue" />
                 Rangkuman: {summaryTopic}

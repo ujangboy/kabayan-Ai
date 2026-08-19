@@ -43,7 +43,7 @@ export default function TopBar() {
   const initial = (profile?.name || profile?.username || 'U').charAt(0).toUpperCase();
 
   return (
-    <header className="h-14 shrink-0 flex items-center gap-3 px-4 border-b border-border bg-surface/80 backdrop-blur-md z-10">
+    <header className="h-14 shrink-0 flex items-center gap-3 px-4 divider-gradient-b relative bg-surface/80 backdrop-blur-md z-10">
       {/* Search */}
       <button
         onClick={() => setSearchOpen(true)}

@@ -199,7 +199,8 @@
     "stopAI": "Stop AI",
     "send": "Send",
     "tutorModeNote": "Tutor Mode — answers tailored to your learning level.",
-    "disclaimerNote": "AI can make mistakes. Verify important information."
+    "disclaimerNote": "AI can make mistakes. Verify important information.",
+    "empty": "No conversations yet"
   },
   "materi": {
     "pageTitle": "Study Materials",
@@ -591,7 +592,7 @@
     "title": "Subjects",
     "subtitle": "Manage all the subjects you are enrolled in.",
     "addNew": "Add Subject",
-    "empty": "No subjects yet.",
+    "empty": "No subjects yet",
     "createNow": "Create now",
     "semesterLabel": "Semester",
     "lecturerLabel": "Lecturer",
@@ -892,5 +893,8 @@
   },
   "toast": {
     "confirmTitle": "Confirm"
+  },
+  "sidebar": {
+    "contextHint": "Pick a menu on the left to start learning"
   }
 }
