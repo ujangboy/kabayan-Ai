@@ -10,7 +10,7 @@ import {
 import { subjectAPI, examAPI, studyAPI } from '@/services/api';
 import { useUiStore } from '@/store';
 import { formatDate } from '@/utils';
-import { Tooltip, ConfirmDialog } from '@/components/ui';
+import { Tooltip, ConfirmDialog, Skeleton } from '@/components/ui';
 import ProgressCard from '@/components/ProgressCard';
 import { useToast } from '@/components/Toast';
 import { extractErrorMessage } from '@/utils/errors';
@@ -128,7 +128,7 @@ export default function SubjectDashboardPage() {
     return (
       <div className="flex-1 overflow-y-auto p-6 md:p-10">
         <div className="max-w-5xl mx-auto card-base p-8 space-y-4">
-          {[1, 2, 3, 4, 5].map(i => <div key={i} className="h-5 bg-border rounded animate-pulse" />)}
+          {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-5 w-full" />)}
         </div>
       </div>
     );

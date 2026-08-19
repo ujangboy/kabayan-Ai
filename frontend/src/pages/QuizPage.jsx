@@ -10,7 +10,7 @@ import MaterialPicker from '@/components/MaterialPicker';
 import QuizTimer from '@/components/quiz/QuizTimer';
 import QuizProgressBar from '@/components/quiz/QuizProgressBar';
 import { formatDate, formatTimeOnly, cn } from '@/utils';
-import { Tooltip, Modal, Button, Input, Select } from '@/components/ui';
+import { Tooltip, Modal, Button, Input, Select, EmptyState } from '@/components/ui';
 import { usePendingOperation } from '@/hooks/usePendingOperation';
 import { useUiStore } from '@/store';
 import { usePageState } from '@/hooks/usePageState';
@@ -177,12 +177,16 @@ export default function QuizPage() {
           {isLoading ? (
             <div className="col-span-full text-center py-10 text-text-muted">{t('quiz.loading')}</div>
           ) : quizzes.length === 0 ? (
-            <div className="col-span-full card-base p-10 text-center">
-              <HelpCircle size={48} className="mx-auto mb-4 text-text-muted opacity-50" />
-              <p className="text-text-muted mb-4">{selectedSubject ? t('quiz.emptyForSubject') : t('quiz.empty')}</p>
-              <button onClick={() => setIsGeneratorOpen(true)} className="btn-primary text-sm">
-                <Zap size={14} /> {t('quiz.generateFirst')}
-              </button>
+            <div className="col-span-full card-base">
+              <EmptyState
+                icon={HelpCircle}
+                title={selectedSubject ? t('quiz.emptyForSubject') : t('quiz.empty')}
+                action={
+                  <button onClick={() => setIsGeneratorOpen(true)} className="btn-primary text-sm">
+                    <Zap size={14} /> {t('quiz.generateFirst')}
+                  </button>
+                }
+              />
             </div>
           ) : (
             quizzes.map((quiz) => (

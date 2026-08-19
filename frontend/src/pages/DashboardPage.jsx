@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useChatStore } from '@/store';
 import { formatDate } from '@/utils';
-import { EmptyState } from '@/components/ui';
+import { EmptyState, Skeleton } from '@/components/ui';
 import FileTypeIcon from '@/components/FileTypeIcon';
 import api from '@/services/api';
 
@@ -53,7 +53,7 @@ function StatCard({ icon: Icon, label, value, tone, loading }) {
       </div>
       <div>
         <p className="text-2xl font-bold bg-gradient-to-r from-text to-text-secondary bg-clip-text text-transparent">
-          {loading ? <span className="inline-block w-8 h-6 bg-border animate-pulse rounded" /> : (value ?? 0)}
+            {loading ? <Skeleton className="inline-block h-6 w-8" /> : (value ?? 0)}
         </p>
         <p className="text-xs text-text-secondary">{label}</p>
       </div>
@@ -203,13 +203,13 @@ export default function DashboardPage() {
               </button>
             </div>
             <div className="card-base overflow-hidden p-0">
-              {isLoading ? (
-                <div className="p-6 space-y-3">
-                  {[1,2,3].map(i => (
-                    <div key={i} className="h-4 bg-border rounded animate-pulse" />
-                  ))}
-                </div>
-              ) : recentMaterials.length === 0 ? (
+                {isLoading ? (
+                  <div className="p-6 space-y-3">
+                    {[1,2,3].map(i => (
+                      <Skeleton key={i} className="h-4 w-full" />
+                    ))}
+                  </div>
+                ) : recentMaterials.length === 0 ? (
                 <div className="p-6 text-center text-xs text-text-muted">{t('dashboard.noMaterials')}</div>
               ) : (
                 <table className="w-full text-sm">
@@ -248,13 +248,13 @@ export default function DashboardPage() {
               </button>
             </div>
             <div className="card-base overflow-hidden p-0">
-              {isLoading ? (
-                <div className="p-6 space-y-3">
-                  {[1,2,3].map(i => (
-                    <div key={i} className="h-4 bg-border rounded animate-pulse" />
-                  ))}
-                </div>
-              ) : recentQuizzes.length === 0 ? (
+                {isLoading ? (
+                  <div className="p-6 space-y-3">
+                    {[1,2,3].map(i => (
+                      <Skeleton key={i} className="h-4 w-full" />
+                    ))}
+                  </div>
+                ) : recentQuizzes.length === 0 ? (
                 <div className="p-6 text-center text-xs text-text-muted">{t('dashboard.noQuizzes')}</div>
               ) : (
                 <table className="w-full text-sm">

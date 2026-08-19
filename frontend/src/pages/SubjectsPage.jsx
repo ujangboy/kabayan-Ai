@@ -3,10 +3,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { Plus, Trash2, FileText, HelpCircle, CreditCard, Trophy, Calendar, Clock } from '@/icons';
+import { Plus, Trash2, FileText, HelpCircle, CreditCard, Trophy, Calendar, Clock, BookOpen } from '@/icons';
 import { subjectAPI } from '@/services/api';
 import { formatDate, formatTimeOnly } from '@/utils';
-import { Tooltip, Modal, Button, Input, Textarea, Select } from '@/components/ui';
+import { Tooltip, Modal, Button, Input, Textarea, Select, EmptyState } from '@/components/ui';
 import { useToast } from '@/components/Toast';
 
 export default function SubjectsPage() {
@@ -84,14 +84,19 @@ export default function SubjectsPage() {
           {isLoading ? (
             <p className="text-text-muted text-sm">{t('common.loading')}</p>
           ) : subjects.length === 0 ? (
-            <div className="col-span-full card-base text-center py-10">
-              <p className="text-text-muted mb-2">{t('subjects.empty')}</p>
-              <button onClick={() => setIsModalOpen(true)} className="text-primary-light hover:underline text-sm">{t('subjects.createNow')}</button>
+            <div className="col-span-full card-base">
+              <EmptyState
+                icon={BookOpen}
+                title={t('subjects.empty')}
+                action={
+                  <button onClick={() => setIsModalOpen(true)} className="btn-primary text-sm">{t('subjects.createNow')}</button>
+                }
+              />
             </div>
           ) : shownCount === 0 ? (
-              <div className="col-span-full card-base text-center py-10">
-                <p className="text-text-muted text-sm">{t('subjects.noMatch')}</p>
-              </div>
+            <div className="col-span-full card-base">
+              <EmptyState title={t('subjects.noMatch')} />
+            </div>
           ) : (
             filteredSubjects.map((s, idx) => (
               <Link key={s.id} to={`/subjects/${s.id}`} className="group block">

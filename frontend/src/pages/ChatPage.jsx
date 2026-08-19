@@ -10,6 +10,7 @@ import { notesAPI, subjectAPI, tutorAPI } from '@/services/api';
 import { streamChat, abortActiveStream, isChatStreaming } from '@/services/tutorStream';
 import { usePendingOperation } from '@/hooks/usePendingOperation';
 import { Tooltip } from '@/components/ui/Tooltip';
+import { EmptyState } from '@/components/ui';
 import { useToast } from '@/components/Toast';
 
 function CopyButton({ text }) {
@@ -533,7 +534,7 @@ export default function ChatPage() {
         {/* Chat list */}
         <div className="flex-1 overflow-y-auto sidebar-scroll p-2 space-y-0.5">
           {sortedChats.length === 0 && chatSearch ? (
-            <p className="text-xs text-text-muted text-center py-6">Tidak ada chat ditemukan</p>
+            <EmptyState icon={Search} title={t('chat.noResults', 'Tidak ada chat ditemukan')} className="py-6" />
           ) : (
             (() => {
             // Group chats by relative time

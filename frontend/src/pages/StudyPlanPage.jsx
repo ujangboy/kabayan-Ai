@@ -11,7 +11,7 @@ import MathMarkdown from '@/components/MathMarkdown';
 import { extractErrorMessage } from '@/utils/errors';
 import { useToast } from '@/components/Toast';
 import { usePageState } from '@/hooks/usePageState';
-import { Modal, Button, Textarea } from '@/components/ui';
+import { Modal, Button, Textarea, EmptyState } from '@/components/ui';
 
 const TYPE_META = {
   review:     { label: 'Review',    cls: 'bg-accent-blue/10 text-accent-blue border-accent-blue/20' },
@@ -122,8 +122,10 @@ export default function StudyPlanPage() {
   if (!plan) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-        <p className="text-text-muted mb-4">Belum ada rencana belajar untuk sesi ini.</p>
-        <button onClick={() => navigate('/exam-analyzer')} className="btn-ghost border border-border">Kembali</button>
+        <EmptyState
+          title={t('studyplan.noPlan', 'Belum ada rencana belajar untuk sesi ini.')}
+          action={<button onClick={() => navigate('/exam-analyzer')} className="btn-ghost border border-border">Kembali</button>}
+        />
       </div>
     );
   }

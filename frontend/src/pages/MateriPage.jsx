@@ -9,7 +9,7 @@ import { materiAPI, subjectAPI } from '@/services/api';
 import { formatDate } from '@/utils';
 import FileTypeIcon, { FILE_COLOR_MAP } from '@/components/FileTypeIcon';
 import { useToast } from '@/components/Toast';
-import { Tooltip, Modal, Button, Input, Select } from '@/components/ui';
+import { Tooltip, Modal, Button, Input, Select, EmptyState, Skeleton } from '@/components/ui';
 import { extractErrorMessage } from '@/utils/errors';
 import { usePendingOperation } from '@/hooks/usePendingOperation';
 
@@ -213,22 +213,16 @@ export default function MateriPage() {
         {isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
-              <div key={i} className="card-base h-28 skeleton" />
+              <Skeleton key={i} className="h-28 w-full" />
             ))}
           </div>
         ) : materials.length === 0 ? (
-          <div className="card-base text-center py-16">
-            <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-primary/15 flex items-center justify-center mb-3">
-              <Upload size={26} className="text-primary-light" />
-            </div>
-            <p className="text-text-muted">{t('materi.emptyState')}</p>
+          <div className="card-base">
+            <EmptyState icon={Upload} title={t('materi.emptyState')} />
           </div>
         ) : filteredMaterials.length === 0 ? (
-          <div className="card-base text-center py-16">
-            <div className="w-14 h-14 mx-auto rounded-2xl bg-text-secondary/10 flex items-center justify-center mb-3">
-              <Folder size={26} className="text-text-muted" />
-            </div>
-            <p className="text-text-muted">{t('materi.fileManagerEmpty')}</p>
+          <div className="card-base">
+            <EmptyState icon={Folder} title={t('materi.fileManagerEmpty')} />
           </div>
         ) : (
           <motion.div layout className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">

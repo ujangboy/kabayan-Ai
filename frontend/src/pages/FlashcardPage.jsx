@@ -14,7 +14,7 @@ import { extractErrorMessage } from '@/utils/errors';
 import MathMarkdown from '@/components/MathMarkdown';
 import MaterialPicker from '@/components/MaterialPicker';
 import { formatDate, formatDateTime, formatTimeOnly } from '@/utils';
-import { Tooltip, Modal, Button, Select, Textarea } from '@/components/ui';
+import { Tooltip, Modal, Button, Select, Textarea, EmptyState } from '@/components/ui';
 import { usePendingOperation } from '@/hooks/usePendingOperation';
 import { usePageState } from '@/hooks/usePageState';
 
@@ -188,16 +188,20 @@ export default function FlashcardPage() {
           {isLoading ? (
             <div className="col-span-full text-center py-10 text-text-muted">{t('flashcard.loading')}</div>
           ) : groups.length === 0 ? (
-            <div className="col-span-full card-base p-10 text-center">
-              <CreditCard size={48} className="mx-auto mb-4 text-text-muted opacity-50" />
-<p className="text-text-muted mb-4">{t('flashcard.emptyState')}</p>
-              <button onClick={() => setIsAIModalOpen(true)} className="btn-primary text-sm">
-                <Zap size={14} /> {t('flashcard.generateAi')}
-              </button>
+            <div className="col-span-full card-base">
+              <EmptyState
+                icon={CreditCard}
+                title={t('flashcard.emptyState')}
+                action={
+                  <button onClick={() => setIsAIModalOpen(true)} className="btn-primary text-sm">
+                    <Zap size={14} /> {t('flashcard.generateAi')}
+                  </button>
+                }
+              />
             </div>
           ) : filteredGroups.length === 0 ? (
-            <div className="col-span-full card-base p-10 text-center">
-              <p className="text-text-muted">{t('flashcard.noDeckForSubject')}</p>
+            <div className="col-span-full card-base">
+              <EmptyState title={t('flashcard.noDeckForSubject')} />
             </div>
           ) : (
             filteredGroups.map((group) => (
