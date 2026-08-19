@@ -46,7 +46,7 @@ export default function MaterialsTable({ materials, subjectId }) {
         </div>
         <table className="w-full text-sm">
           <thead>
-            <tr className="divider-gradient-b relative text-[10px] text-text-muted uppercase tracking-wider">
+            <tr className="tr-divider text-[10px] text-text-muted uppercase tracking-wider">
               <th className="px-4 py-2 text-left font-semibold">#</th>
               <th className="px-4 py-2 text-left font-semibold">{t('subjectDashboard.materialName', 'Nama')}</th>
               <th className="px-4 py-2 text-left font-semibold">{t('subjectDashboard.materialType', 'Tipe')}</th>
@@ -62,7 +62,7 @@ export default function MaterialsTable({ materials, subjectId }) {
               </tr>
             ) : (
               materials.map((m, idx) => (
-                <tr key={m.id} className="divider-gradient-b relative last:after:hidden hover:bg-background/50 transition-colors">
+                <tr key={m.id} className="tr-divider last:border-0 hover:bg-background/50 transition-colors">
                   <td className="px-4 py-3 text-text-muted text-xs w-8">{idx + 1}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">

@@ -100,6 +100,13 @@
     background: linear-gradient(to right, rgba(38, 51, 73, 0.6), transparent 80%);
   }
 
+  /* Table-row divider: border-image gradient (safe on <tr>, no pseudo-element
+     layer cost). Gunakan bersama `last:border-0` untuk baris terakhir. */
+  .tr-divider {
+    border-bottom: 1px solid transparent;
+    border-image: linear-gradient(to right, rgba(38, 51, 73, 0.6), transparent 80%) 1;
+  }
+
   /* ── Sidebar scrollbar overlay (no layout shift) ──────────────────────── */
   .sidebar-scroll {
     scrollbar-gutter: stable;

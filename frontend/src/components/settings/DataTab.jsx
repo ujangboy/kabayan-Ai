@@ -236,7 +236,7 @@ export default function DataTab() {
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="text-left text-text-muted divider-gradient-b relative">
+                <tr className="text-left text-text-muted tr-divider">
                   <th className="py-2 pr-3 font-medium">{t('settings.data.materials')}</th>
                   <th className="py-2 pr-3 font-medium">{t('settings.data.materialSubject')}</th>
                   <th className="py-2 pr-3 font-medium">{t('settings.data.materialType')}</th>
@@ -248,7 +248,7 @@ export default function DataTab() {
               </thead>
               <tbody>
                 {materials.map((m) => (
-                  <tr key={m.id} className="divider-gradient-b relative last:after:hidden">
+                  <tr key={m.id} className="tr-divider last:border-0">
                     <td className="py-2 pr-3 text-text max-w-[220px] truncate" title={m.filename}>
                       {m.filename}
                     </td>
@@ -367,7 +367,7 @@ export default function DataTab() {
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="text-left text-text-muted divider-gradient-b relative">
+                <tr className="text-left text-text-muted tr-divider">
                   <th className="py-2 pr-3 font-medium">{t('settings.data.trashName')}</th>
                   <th className="py-2 pr-3 font-medium">{t('settings.data.trashOrigin')}</th>
                   <th className="py-2 pr-3 font-medium">{t('settings.data.trashSize')}</th>
@@ -377,7 +377,7 @@ export default function DataTab() {
               </thead>
               <tbody>
                 {trashData.items.map((item) => (
-                  <tr key={item.id} className="divider-gradient-b relative last:after:hidden">
+                  <tr key={item.id} className="tr-divider last:border-0">
                     <td className="py-2 pr-3 text-text max-w-[220px] truncate" title={item.original_filename}>
                       {item.original_filename}
                     </td>
