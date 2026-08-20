@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -17,6 +18,7 @@ export default function StudyPlanPage() {
   const [searchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const sessionId = Number(searchParams.get('session_id'));
   const { restore, persist, clear } = usePageState(`study-plan-${sessionId}`);
   const [practiceState, setPracticeState] = useState(null);

@@ -5,7 +5,7 @@ import { useUiStore, useAppStore, useChatStore } from '@/store';
 import { Tooltip } from '@/components/ui';
 import {
   LayoutDashboard, MessageSquare, BookOpen, FileText,
-  BookMarked, CreditCard, HelpCircle, Brain, Settings, Bot, CalendarCheck,
+  BookMarked, CreditCard, HelpCircle, Brain, Settings, Bot,
 } from '@/icons';
 import { cn } from '@/utils';
 
@@ -35,12 +35,10 @@ export default function IconRail() {
     { to: '/flashcard', icon: CreditCard, label: t('nav.flashcard') },
     { to: '/quiz', icon: HelpCircle, label: t('nav.quiz') },
     { to: '/exam-analyzer', icon: Brain, label: t('nav.exam') },
-    { to: '/study-plan', icon: CalendarCheck, label: t('nav.studyPlan') },
   ];
 
   const isActive = (to) => {
     if (to === '/exam-analyzer') return location.pathname === '/exam-analyzer';
-    if (to === '/study-plan') return location.pathname === '/study-plan';
     if (to.startsWith('/subjects')) return location.pathname.startsWith('/subjects');
     return location.pathname === to || location.pathname.startsWith(to + '/');
   };
