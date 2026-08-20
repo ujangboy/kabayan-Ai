@@ -16,6 +16,7 @@ import { useToast } from '@/components/Toast';
 import { extractErrorMessage } from '@/utils/errors';
 
 import StatCard from '@/components/dashboard/StatCard';
+import ScoreChart from '@/components/dashboard/ScoreChart';
 import EditSubjectModal from '@/components/dashboard/EditSubjectModal';
 import StudyRecommendationCard from '@/components/dashboard/StudyRecommendationCard';
 import MaterialsTable from '@/components/dashboard/MaterialsTable';
@@ -91,9 +92,11 @@ export default function SubjectDashboardPage() {
   });
 
   const subject = data?.subject;
+  const scoreHistory = data?.score_history || [];
   const recentActivity = data?.recent_activity || [];
   const materials = subject?.materials || [];
   const masteryPct = subject?.best_score ?? learningProfile?.estimated_level ?? null;
+  const hasScores = scoreHistory.filter(d => d && d.score != null).length >= 2;
 
   if (isLoading) {
     return (
@@ -205,6 +208,64 @@ export default function SubjectDashboardPage() {
 
             {/* Materials table — now in main workspace */}
             <MaterialsTable materials={materials} subjectId={subjectId} />
+
+            {/* Bottom row — aktivitas terbaru + riwayat skor */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+              {/* Recent activity */}
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-2xl p-5 ${!hasScores ? 'lg:col-span-2' : ''}`}
+              >
+                <div className="flex items-center gap-2 mb-3">
+                  <Zap size={16} className="text-text-secondary" />
+                  <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('subjectDashboard.recentActivityTitle')}</h2>
+                </div>
+                {recentActivity.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Zap size={26} className="mx-auto mb-2 text-text-muted opacity-40" />
+                    <p className="text-xs text-text-muted">{t('subjectDashboard.recentActivityEmpty')}</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {recentActivity.map((a, i) => {
+                      const meta = activityMeta[a.type] || activityMeta.materi;
+                      const Icon = meta.icon;
+                      return (
+                        <div key={i} className="flex items-start gap-2.5">
+                          <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${meta.cls}`}>
+                            <Icon size={13} />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-[11px] font-medium text-text truncate" title={a.label}>{a.label}</p>
+                            <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-white/[0.04] border border-white/[0.06] text-[9px] text-text-secondary">
+                                {meta.label}
+                              </span>
+                              <span className="text-[10px] text-text-muted">{formatDate(a.date)}</span>
+                              {a.score != null && (
+                                <span className="text-[10px] font-semibold text-success">{a.score}</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </motion.div>
+
+              {/* Score history chart */}
+              {hasScores && (
+                <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-2xl p-5">
+                  <div className="flex items-center gap-2 mb-3">
+                    <TrendingUp size={16} className="text-primary" />
+                    <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('subjectDashboard.scoreHistoryTitle')}</h2>
+                  </div>
+                  <ScoreChart history={scoreHistory} />
+                </motion.div>
+              )}
+            </div>
           </div>
 
           {/* RIGHT — insight sidebar */}
@@ -220,46 +281,6 @@ export default function SubjectDashboardPage() {
             ) : (
               <StudyRecommendationCard route={studyRoute} subjectId={subjectId} />
             )}
-
-            {/* Recent activity */}
-            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-2xl p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <Zap size={16} className="text-text-secondary" />
-                <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('subjectDashboard.recentActivityTitle')}</h2>
-              </div>
-              {recentActivity.length === 0 ? (
-                <div className="text-center py-8">
-                  <Zap size={26} className="mx-auto mb-2 text-text-muted opacity-40" />
-                  <p className="text-xs text-text-muted">{t('subjectDashboard.recentActivityEmpty')}</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {recentActivity.map((a, i) => {
-                    const meta = activityMeta[a.type] || activityMeta.materi;
-                    const Icon = meta.icon;
-                    return (
-                      <div key={i} className="flex items-start gap-2.5">
-                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${meta.cls}`}>
-                          <Icon size={13} />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-[11px] font-medium text-text truncate" title={a.label}>{a.label}</p>
-                          <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                            <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-white/[0.04] border border-white/[0.06] text-[9px] text-text-secondary">
-                              {meta.label}
-                            </span>
-                            <span className="text-[10px] text-text-muted">{formatDate(a.date)}</span>
-                            {a.score != null && (
-                              <span className="text-[10px] font-semibold text-success">{a.score}</span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </motion.div>
           </div>
         </div>
       </div>
