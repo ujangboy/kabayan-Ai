@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { SentimentDissatisfied, SentimentSatisfied, Target } from '@/icons';
 import MathMarkdown from '@/components/MathMarkdown';
 
@@ -49,54 +49,60 @@ export default function FlashcardReviewCard({
       </div>
 
       {/* 3 tombol rating — muncul setelah flip, sebelum pilih */}
-      {!feedback && isFlipped && (
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mt-8 w-full max-w-xl"
-        >
-          <p className="text-center text-xs text-text-muted mb-4">{t('flashcard.howWell')}</p>
-          <div className="grid grid-cols-3 gap-3">
-            {SIMPLE_RATINGS.map(r => (
-              <button
-                key={r.value}
-                onClick={() => onRate(r.value)}
-                disabled={isSaving}
-                className={`flex flex-col items-center gap-1.5 px-4 py-3 rounded-xl border text-sm font-semibold transition-all hover:scale-[1.03] active:scale-95 disabled:opacity-50 ${r.cls}`}
-              >
-                <r.Icon size={26} className="mb-0.5" />
-                {r.label}
-              </button>
-            ))}
-          </div>
-        </motion.div>
-      )}
+      <AnimatePresence mode="wait" initial={false}>
+        {!feedback && isFlipped && (
+          <motion.div
+            key="ratings"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 8 }}
+            className="mt-8 w-full max-w-xl"
+          >
+            <p className="text-center text-xs text-text-muted mb-4">{t('flashcard.howWell')}</p>
+            <div className="grid grid-cols-3 gap-3">
+              {SIMPLE_RATINGS.map(r => (
+                <button
+                  key={r.value}
+                  onClick={() => onRate(r.value)}
+                  disabled={isSaving}
+                  className={`flex flex-col items-center gap-1.5 px-4 py-3 rounded-xl border text-sm font-semibold transition-all hover:scale-[1.03] active:scale-95 disabled:opacity-50 ${r.cls}`}
+                >
+                  <r.Icon size={26} className="mb-0.5" />
+                  {r.label}
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
 
-      {/* Feedback mini strip + auto-advance bar */}
-      {feedback && meta && (
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mt-6 w-full max-w-xl"
-        >
-          <div className={`flex items-center justify-between rounded-xl px-4 py-2.5 mb-3 border ${meta.color}`}>
-            <span className="text-sm font-semibold text-text">{meta.label}</span>
-            <button
-              onClick={onSkipAutoAdvance}
-              className="text-xs text-text-muted hover:text-text transition-colors ml-4 shrink-0"
-            >
-              {t('flashcard.skipAdvance')}
-            </button>
-          </div>
-          {/* Auto-advance progress bar */}
-          <div className="w-full h-1 bg-border rounded-full overflow-hidden">
-            <motion.div
-              className={`h-full rounded-full ${feedback.rating === 0 ? 'bg-danger' : feedback.rating === 2 ? 'bg-accent-blue' : 'bg-success'}`}
-              style={{ width: `${autoProgress}%` }}
-            />
-          </div>
-        </motion.div>
-      )}
+        {/* Feedback mini strip + auto-advance bar */}
+        {feedback && meta && (
+          <motion.div
+            key="feedback"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 8 }}
+            className="mt-6 w-full max-w-xl"
+          >
+            <div className={`flex items-center justify-between rounded-xl px-4 py-2.5 mb-3 border ${meta.color}`}>
+              <span className="text-sm font-semibold text-text">{meta.label}</span>
+              <button
+                onClick={onSkipAutoAdvance}
+                className="text-xs text-text-muted hover:text-text transition-colors ml-4 shrink-0"
+              >
+                {t('flashcard.skipAdvance')}
+              </button>
+            </div>
+            {/* Auto-advance progress bar */}
+            <div className="w-full h-1 bg-border rounded-full overflow-hidden">
+              <motion.div
+                className={`h-full rounded-full ${feedback.rating === 0 ? 'bg-danger' : feedback.rating === 2 ? 'bg-accent-blue' : 'bg-success'}`}
+                style={{ width: `${autoProgress}%` }}
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

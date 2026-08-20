@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { useMutation } from '@tanstack/react-query';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, Save, Pin, MoreHorizontal } from '@/icons';
 import { notesAPI } from '@/services/api';
 import NoteEditor from '@/components/NoteEditor';
@@ -104,19 +105,34 @@ export function NoteView({ note, onBack, onSave, onPin, onDelete }) {
                 <MoreHorizontal size={15} />
               </button>
             </Tooltip>
-            {showMenu && (
-              <>
-                <div className="fixed inset-0 z-30" onClick={() => setShowMenu(false)} />
-                <div className="absolute right-0 top-full mt-1 z-40 bg-card border border-border rounded-xl shadow-xl py-1 min-w-[140px]">
-                  <button
-                    onClick={() => { onDelete(); setShowMenu(false); }}
-                    className="w-full text-left px-3 py-2 text-xs text-danger hover:bg-danger/5 transition-colors"
+            <AnimatePresence>
+              {showMenu && (
+                <>
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.12 }}
+                    className="fixed inset-0 z-30"
+                    onClick={() => setShowMenu(false)}
+                  />
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95, y: -4 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: -4 }}
+                    transition={{ duration: 0.15, ease: [0.32, 0.72, 0, 1] }}
+                    className="absolute right-0 top-full mt-1 z-40 bg-card border border-border rounded-xl shadow-xl py-1 min-w-[140px] origin-top-right"
                   >
-                    {t('notebook.deleteNote')}
-                  </button>
-                </div>
-              </>
-            )}
+                    <button
+                      onClick={() => { onDelete(); setShowMenu(false); }}
+                      className="w-full text-left px-3 py-2 text-xs text-danger hover:bg-danger/5 transition-colors"
+                    >
+                      {t('notebook.deleteNote')}
+                    </button>
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </div>

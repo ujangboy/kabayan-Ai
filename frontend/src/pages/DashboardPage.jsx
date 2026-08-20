@@ -46,7 +46,7 @@ const item = {
 
 function StatCard({ icon: Icon, label, value, tone, loading }) {
   return (
-    <motion.div whileHover={{ scale: 1.02, y: -2 }} className="card-base card-hoverable relative overflow-hidden flex items-center gap-4 p-4">
+    <motion.div className="card-base card-hoverable relative overflow-hidden flex items-center gap-4 p-4">
       <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-primary opacity-70" />
       <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${STAT_TONES[tone]}`}>
         <Icon size={18} />
@@ -138,10 +138,9 @@ export default function DashboardPage() {
               <motion.button
                 key={to}
                 variants={item}
-                whileHover={{ scale: 1.03, y: -3 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={() => handleQuickAction(to)}
-                className="card-base card-hoverable flex flex-col items-start gap-3 p-4 text-left hover:border-primary/30 transition-colors cursor-pointer"
+                className="card-base card-hoverable flex flex-col items-start gap-3 p-4 text-left hover:border-primary/30 transition-all duration-300 cursor-pointer"
               >
                 <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${color} ${shadow}`}>
                   <Icon size={17} />

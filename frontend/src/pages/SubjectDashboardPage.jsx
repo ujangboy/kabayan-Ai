@@ -2,14 +2,14 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, CreditCard, Description, FileText, HelpCircle, Pencil,
   Timer, Trash2, TrendingUp, Trophy, Upload, Zap,
 } from '@/icons';
 import { subjectAPI, examAPI, studyAPI } from '@/services/api';
 import { useUiStore } from '@/store';
-import { formatDate } from '@/utils';
+import { formatDate, fadeSlide } from '@/utils';
 import { Tooltip, ConfirmDialog, Skeleton } from '@/components/ui';
 import ProgressCard from '@/components/ProgressCard';
 import { useToast } from '@/components/Toast';
@@ -100,19 +100,23 @@ export default function SubjectDashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="flex-1 overflow-y-auto p-6 md:p-10">
-        <div className="w-full card-base p-8 space-y-4">
-          {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-5 w-full" />)}
-        </div>
-      </div>
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div key="loading" {...fadeSlide} className="flex-1 overflow-y-auto p-6 md:p-10">
+          <div className="w-full card-base p-8 space-y-4">
+            {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-5 w-full" />)}
+          </div>
+        </motion.div>
+      </AnimatePresence>
     );
   }
 
   if (error || !subject) {
     return (
-      <div className="flex-1 overflow-y-auto p-6 md:p-10">
-        <div className="w-full card-base p-8 text-center text-text-muted">{t('subjectDashboard.notFound')}</div>
-      </div>
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div key="notfound" {...fadeSlide} className="flex-1 overflow-y-auto p-6 md:p-10">
+          <div className="w-full card-base p-8 text-center text-text-muted">{t('subjectDashboard.notFound')}</div>
+        </motion.div>
+      </AnimatePresence>
     );
   }
 
@@ -126,8 +130,9 @@ export default function SubjectDashboardPage() {
   ];
 
   return (
-    <div className="flex-1 overflow-y-auto p-6 md:p-10">
-      <div className="w-full space-y-6">
+    <AnimatePresence mode="wait" initial={false}>
+      <motion.div key="main" {...fadeSlide} className="flex-1 overflow-y-auto p-6 md:p-10">
+        <div className="w-full space-y-6">
 
         {/* Subject header + quick action bar */}
         <motion.div
@@ -307,6 +312,7 @@ export default function SubjectDashboardPage() {
         message={t('subjectDashboard.deleteConfirm', { name: subject.name })}
         loading={deleteMutation.isPending}
       />
-    </div>
+      </motion.div>
+    </AnimatePresence>
   );
 }

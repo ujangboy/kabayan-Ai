@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion';
 import { Star } from '@/icons';
 import { cn } from '@/utils';
 
@@ -128,8 +129,12 @@ export function ProgressBar({ value = 0, color = 'primary' }) {
            : color === 'danger'  ? 'bg-danger'  : 'bg-primary';
   return (
     <div className="w-full h-1.5 bg-border rounded-full overflow-hidden">
-      <div className={cn('h-full rounded-full transition-all', bg)}
-        style={{ width: `${Math.min(100, value)}%` }} />
+      <motion.div
+        className={cn('h-full rounded-full', bg)}
+        initial={{ width: 0 }}
+        animate={{ width: `${Math.min(100, value)}%` }}
+        transition={{ duration: 0.5, ease: [0.32, 0.72, 0, 1] }}
+      />
     </div>
   );
 }

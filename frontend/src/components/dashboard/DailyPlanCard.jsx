@@ -100,7 +100,12 @@ export default function DailyPlanCard({ subjectId }) {
           {doneCount > 0 && (
             <div className="flex items-center gap-2">
               <div className="h-1.5 flex-1 bg-background rounded-full overflow-hidden border border-border/50">
-                <div className="h-full rounded-full bg-success transition-all duration-300" style={{ width: `${(doneCount / items.length) * 100}%` }} />
+                <motion.div
+                  className="h-full rounded-full bg-success"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${(doneCount / items.length) * 100}%` }}
+                  transition={{ duration: 0.5, ease: [0.32, 0.72, 0, 1] }}
+                />
               </div>
               <span className="text-[10px] text-text-muted shrink-0">
                 {t('studyPlan.doneCount', { done: doneCount, total: items.length })}

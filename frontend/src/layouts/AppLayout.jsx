@@ -134,7 +134,7 @@ export default function AppLayout() {
             </AnimatePresence>
           </div>
         </main>
-        {searchOpen && <CommandSearch />}
+        <AnimatePresence>{searchOpen && <CommandSearch />}</AnimatePresence>
       </div>
     </MotionConfig>
   );

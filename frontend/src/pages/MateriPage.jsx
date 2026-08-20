@@ -158,6 +158,7 @@ export default function MateriPage() {
               name={t('materi.folderAll')}
               count={materials.length}
               tone={0}
+              index={0}
               onClick={() => setSubjectFilter('materi', '')}
             />
             {sortedSubjects.map((s, i) => {
@@ -170,6 +171,7 @@ export default function MateriPage() {
                   name={s.name}
                   count={count}
                   tone={i + 1}
+                  index={i + 1}
                   onClick={() => setSubjectFilter('materi', String(s.id))}
                 />
               );
@@ -213,7 +215,7 @@ export default function MateriPage() {
             <EmptyState icon={Folder} title={t('materi.fileManagerEmpty')} />
           </div>
         ) : (
-          <motion.div layout className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <motion.div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             <AnimatePresence mode="popLayout">
               {filteredMaterials.map((m, idx) => (
                 <MaterialFileCard

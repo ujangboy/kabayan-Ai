@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { notesAPI, subjectAPI } from '@/services/api';
 import { useToast } from '@/components/Toast';
@@ -207,26 +207,45 @@ export default function NotebookPage() {
 
       {/* ═══ Main content ═══ */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {selectedNote ? (
-          <NoteView
-            key={selectedNote.id}
-            note={selectedNote}
-            onBack={() => setSelectedNote(null)}
-            onSave={handleContentSave}
-            onPin={() => pinMutation.mutate(selectedNote.id)}
-            onDelete={() => {
-              toast.confirm({
-                title: t('notebook.confirmDeleteNote'),
-                message: t('notebook.confirmDeleteNote'),
-                danger: true,
-                confirmLabel: t('common.delete'),
-                onConfirm: () => deleteMutation.mutate(selectedNote.id),
-              });
-            }}
-          />
-        ) : (
-          <NotebookEmptyState onCreate={handleCreateNote} isCreating={isCreating} />
-        )}
+        <AnimatePresence mode="wait" initial={false}>
+          {selectedNote ? (
+            <motion.div
+              key={selectedNote.id}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.22, ease: [0.32, 0.72, 0, 1] }}
+              className="flex-1 flex flex-col min-w-0 overflow-hidden"
+            >
+              <NoteView
+                note={selectedNote}
+                onBack={() => setSelectedNote(null)}
+                onSave={handleContentSave}
+                onPin={() => pinMutation.mutate(selectedNote.id)}
+                onDelete={() => {
+                  toast.confirm({
+                    title: t('notebook.confirmDeleteNote'),
+                    message: t('notebook.confirmDeleteNote'),
+                    danger: true,
+                    confirmLabel: t('common.delete'),
+                    onConfirm: () => deleteMutation.mutate(selectedNote.id),
+                  });
+                }}
+              />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="empty"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.22, ease: [0.32, 0.72, 0, 1] }}
+              className="flex-1 flex flex-col min-w-0 overflow-hidden"
+            >
+              <NotebookEmptyState onCreate={handleCreateNote} isCreating={isCreating} />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* ═══ Generate Panel (slide from right) ═══ */}

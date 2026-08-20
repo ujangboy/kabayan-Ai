@@ -18,11 +18,13 @@ export default function MasteryRingCard({ subject }) {
         <div className="relative w-28 h-28 shrink-0">
           <svg viewBox="0 0 120 120" className="w-full h-full -rotate-90">
             <circle cx="60" cy="60" r="52" fill="none" className="stroke-border" strokeWidth="10" />
-            <circle
+            <motion.circle
               cx="60" cy="60" r="52" fill="none"
               className={cn(masteryPct >= 70 ? 'stroke-success' : masteryPct >= 40 ? 'stroke-warning' : 'stroke-danger')}
               strokeWidth="10" strokeLinecap="round"
-              strokeDasharray={`${(masteryPct / 100) * 326.7} 326.7`}
+              initial={{ strokeDasharray: '0 326.7', opacity: 0 }}
+              animate={{ strokeDasharray: `${(masteryPct / 100) * 326.7} 326.7`, opacity: 1 }}
+              transition={{ duration: 1, ease: [0.32, 0.72, 0, 1] }}
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">

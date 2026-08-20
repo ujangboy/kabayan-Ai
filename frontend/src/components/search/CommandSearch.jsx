@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Search, FileText, MessageSquare, BookMarked, CreditCard, HelpCircle, X } from '@/icons';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -35,22 +35,21 @@ export default function CommandSearch() {
   const go = (to) => { navigate(to); setSearchOpen(false); };
 
   return (
-    <AnimatePresence>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh] bg-black/60 backdrop-blur-md"
+      onClick={() => setSearchOpen(false)}
+    >
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh] bg-black/60 backdrop-blur-md"
-        onClick={() => setSearchOpen(false)}
+        initial={{ scale: 0.95, opacity: 0, y: -10 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.95, opacity: 0 }}
+        transition={{ duration: 0.15 }}
+        className="glass-elevated w-full max-w-lg overflow-hidden relative"
+        onClick={(e) => e.stopPropagation()}
       >
-        <motion.div
-          initial={{ scale: 0.95, opacity: 0, y: -10 }}
-          animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.95, opacity: 0 }}
-          transition={{ duration: 0.15 }}
-          className="glass-elevated w-full max-w-lg overflow-hidden relative"
-          onClick={(e) => e.stopPropagation()}
-        >
           <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-purple-500/60 via-purple-500/20 to-transparent" />
           {/* Search Input */}
           <div className="flex items-center gap-3 px-4 py-3 divider-gradient-b relative">
@@ -101,6 +100,5 @@ export default function CommandSearch() {
           </div>
         </motion.div>
       </motion.div>
-    </AnimatePresence>
   );
 }

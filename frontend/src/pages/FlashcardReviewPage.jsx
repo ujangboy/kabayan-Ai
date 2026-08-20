@@ -1,10 +1,12 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ChevronLeft, Loader2, Brain } from '@/icons';
 import { flashcardAPI } from '@/services/api';
 import { usePageState } from '@/hooks/usePageState';
+import { fadeSlide } from '@/utils';
 import FlashcardReviewCard from '@/components/flashcard/FlashcardReviewCard';
 import FlashcardReviewFinishScreen from '@/components/flashcard/FlashcardReviewFinishScreen';
 import FlashcardReviewEmptyScreen from '@/components/flashcard/FlashcardReviewEmptyScreen';
@@ -163,52 +165,67 @@ export default function FlashcardReviewPage() {
   // ─── Loading ───
   if (isLoading) {
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <Loader2 size={32} className="animate-spin text-primary" />
-      </div>
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div key="loading" {...fadeSlide} className="flex-1 flex items-center justify-center">
+          <Loader2 size={32} className="animate-spin text-primary" />
+        </motion.div>
+      </AnimatePresence>
     );
   }
 
   // ─── Error ───
   if (error) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-        <p className="text-danger mb-4">{t('flashcard.loadError', { message: error?.message || 'Unknown error' })}</p>
-        <button onClick={() => navigate('/flashcard')} className="btn-ghost border border-border">{t('common.back')}</button>
-      </div>
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div key="error" {...fadeSlide} className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+          <p className="text-danger mb-4">{t('flashcard.loadError', { message: error?.message || 'Unknown error' })}</p>
+          <button onClick={() => navigate('/flashcard')} className="btn-ghost border border-border">{t('common.back')}</button>
+        </motion.div>
+      </AnimatePresence>
     );
   }
 
   // ─── Tidak ada kartu due ───
   if (total === 0 && !isFinished) {
     return (
-      <FlashcardReviewEmptyScreen
-        onGenerate={() => navigate(subjectId ? `/flashcard?subject_id=${subjectId}` : '/flashcard')}
-        onBack={handleDone}
-      />
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div key="empty" {...fadeSlide} className="flex-1 flex flex-col">
+          <FlashcardReviewEmptyScreen
+            onGenerate={() => navigate(subjectId ? `/flashcard?subject_id=${subjectId}` : '/flashcard')}
+            onBack={handleDone}
+          />
+        </motion.div>
+      </AnimatePresence>
     );
   }
 
   // ─── Selesai ───
   if (isFinished) {
     return (
-      <FlashcardReviewFinishScreen results={results} onRestart={handleRestart} onDone={handleDone} />
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div key="finished" {...fadeSlide} className="flex-1 flex flex-col">
+          <FlashcardReviewFinishScreen results={results} onRestart={handleRestart} onDone={handleDone} />
+        </motion.div>
+      </AnimatePresence>
     );
   }
 
   if (!currentCard) {
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <div className="text-center text-text-muted">
-          <p className="mb-4">{t('flashcard.noCards')}</p>
-          <button onClick={handleDone} className="btn-ghost border border-border">{t('common.back')}</button>
-        </div>
-      </div>
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div key="nocards" {...fadeSlide} className="flex-1 flex items-center justify-center">
+          <div className="text-center text-text-muted">
+            <p className="mb-4">{t('flashcard.noCards')}</p>
+            <button onClick={handleDone} className="btn-ghost border border-border">{t('common.back')}</button>
+          </div>
+        </motion.div>
+      </AnimatePresence>
     );
   }
 
   return (
-    <div className="flex-1 flex flex-col w-full p-6 md:p-10">
+    <AnimatePresence mode="wait" initial={false}>
+      <motion.div key="main" {...fadeSlide} className="flex-1 flex flex-col w-full p-6 md:p-10">
 
       {/* Top bar */}
       <div className="flex items-center justify-between mb-4 shrink-0">
@@ -233,9 +250,11 @@ export default function FlashcardReviewPage() {
 
       {/* Progress bar */}
       <div className="w-full h-1.5 bg-border rounded-full mb-8 shrink-0">
-        <div
-          className="h-full bg-accent-purple rounded-full transition-all duration-300"
-          style={{ width: `${((currentIdx + 1) / total) * 100}%` }}
+        <motion.div
+          className="h-full bg-accent-purple rounded-full"
+          initial={{ width: 0 }}
+          animate={{ width: `${((currentIdx + 1) / total) * 100}%` }}
+          transition={{ duration: 0.4, ease: [0.32, 0.72, 0, 1] }}
         />
       </div>
 
@@ -250,6 +269,7 @@ export default function FlashcardReviewPage() {
         onRate={handleRate}
         onSkipAutoAdvance={handleSkipAutoAdvance}
       />
-    </div>
+      </motion.div>
+    </AnimatePresence>
   );
 }

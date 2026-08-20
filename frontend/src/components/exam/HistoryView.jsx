@@ -380,11 +380,14 @@ export default function HistoryView({ subjectId, subjects, onSelectSubject, onSt
       )}
 
       {/* Detail modal */}
-      <AnimatePresence>
-        {detailId && (
-          <DetailModal historySessionId={detailId} onClose={() => setDetailId(null)} onResume={onResume} pendingPlanTab={pendingPlanTab} setPendingPlanTab={setPendingPlanTab} />
-        )}
-      </AnimatePresence>
+      <DetailModal
+        open={!!detailId}
+        historySessionId={detailId}
+        onClose={() => setDetailId(null)}
+        onResume={onResume}
+        pendingPlanTab={pendingPlanTab}
+        setPendingPlanTab={setPendingPlanTab}
+      />
     </div>
   );
 }

@@ -16,7 +16,7 @@ import { Chip, ProgressBar, STATUS_META, getBadge, getGradeColor } from './share
 import { Tooltip, Modal } from '@/components/ui';
 
 // ─── Detail Modal ─────────────────────────────────────────────────────────────
-export default function DetailModal({ historySessionId, onClose, onResume, pendingPlanTab, setPendingPlanTab }) {
+export default function DetailModal({ open = false, historySessionId, onClose, onResume, pendingPlanTab, setPendingPlanTab }) {
    const { t } = useTranslation();
    const queryClient = useQueryClient();
   const [tab, setTab] = useState(pendingPlanTab ? 'plan' : 'overview');
@@ -33,6 +33,7 @@ export default function DetailModal({ historySessionId, onClose, onResume, pendi
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['exam-history-detail', historySessionId],
     queryFn:  () => sessionsAPI.detail(historySessionId).then(r => r.data),
+    enabled: !!historySessionId,
   });
 
   const toggleMutation = useMutation({
@@ -49,7 +50,7 @@ export default function DetailModal({ historySessionId, onClose, onResume, pendi
 
    if (isLoading) {
      return (
-       <ModalShell onClose={onClose}>
+       <ModalShell open={open} onClose={onClose}>
          <div className="flex-1 flex items-center justify-center p-20">
            <Loader2 size={36} className="animate-spin text-primary" />
          </div>
@@ -63,7 +64,7 @@ export default function DetailModal({ historySessionId, onClose, onResume, pendi
   const badge = getBadge(data.best_score || 0);
 
   return (
-    <ModalShell onClose={onClose}>
+    <ModalShell open={open} onClose={onClose}>
       <div className="p-5 divider-gradient-b relative shrink-0">
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1">
@@ -98,26 +99,36 @@ export default function DetailModal({ historySessionId, onClose, onResume, pendi
       </div>
 
       <div className="flex-1 overflow-y-auto p-5">
-        {tab === 'overview'  && <OverviewTab data={data} />}
-        {tab === 'review'    && <ReviewTab attempt={latestAttempt} />}
-        {tab === 'plan'      && <StudyPlanTab
-          plan={data.study_plan}
-          sessionId={historySessionId}
-          onToggle={(id) => toggleMutation.mutate(id)}
-          onPlanSaved={() => refetch()}
-          practiceMode={practiceMode}
-          setPracticeMode={setPracticeMode}
-          practiceError={practiceError}
-          setPracticeError={setPracticeError}
-          loadingItemId={loadingItemId}
-          setLoadingItemId={setLoadingItemId}
-          onPracticeClose={() => {
-            // Refetch plan data now that practice is closed
-            refetch();
-            queryClient.invalidateQueries(['exam-sessions']);
-          }}
-        />}
-        {tab === 'attempts'  && <AttemptsTab attempts={data.attempts || []} />}
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={tab}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2, ease: [0.32, 0.72, 0, 1] }}
+          >
+            {tab === 'overview'  && <OverviewTab data={data} />}
+            {tab === 'review'    && <ReviewTab attempt={latestAttempt} />}
+            {tab === 'plan'      && <StudyPlanTab
+              plan={data.study_plan}
+              sessionId={historySessionId}
+              onToggle={(id) => toggleMutation.mutate(id)}
+              onPlanSaved={() => refetch()}
+              practiceMode={practiceMode}
+              setPracticeMode={setPracticeMode}
+              practiceError={practiceError}
+              setPracticeError={setPracticeError}
+              loadingItemId={loadingItemId}
+              setLoadingItemId={setLoadingItemId}
+              onPracticeClose={() => {
+                // Refetch plan data now that practice is closed
+                refetch();
+                queryClient.invalidateQueries(['exam-sessions']);
+              }}
+            />}
+            {tab === 'attempts'  && <AttemptsTab attempts={data.attempts || []} />}
+          </motion.div>
+        </AnimatePresence>
       </div>
 
       <div className="p-4 border-t border-border shrink-0 flex gap-2 flex-wrap">
@@ -130,9 +141,10 @@ export default function DetailModal({ historySessionId, onClose, onResume, pendi
   );
 }
 
-function ModalShell({ children, onClose }) {
+function ModalShell({ children, onClose, open }) {
   return (
     <Modal
+      open={open}
       onClose={onClose}
       hideClose
       contentClassName="glass"
@@ -540,10 +552,19 @@ function InlinePractice({ questions, topic, onComplete, onClose, onRetryTopic })
         </div>
       </div>
 
-      {/* Question */}
-      <div className="text-sm text-text">
-        <MathMarkdown>{q.question}</MathMarkdown>
-      </div>
+      {/* Question — crossfade per soal */}
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={idx}
+          initial={{ opacity: 0, x: 16 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -16 }}
+          transition={{ duration: 0.2, ease: [0.32, 0.72, 0, 1] }}
+          className="space-y-3"
+        >
+          <div className="text-sm text-text">
+            <MathMarkdown>{q.question}</MathMarkdown>
+          </div>
 
       {/* Options */}
       {isObjective ? (
@@ -628,6 +649,8 @@ function InlinePractice({ questions, topic, onComplete, onClose, onRetryTopic })
           {isLast ? <><Check size={12} /> Lihat Hasil</> : <><ArrowRight size={12} /> Soal Berikutnya</>}
         </button>
       )}
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 }

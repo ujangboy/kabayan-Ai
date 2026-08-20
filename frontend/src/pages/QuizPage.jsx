@@ -1,11 +1,11 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { HelpCircle, Play, Zap, Trophy, Trash2, Clock, Calendar, FileText, Brain } from '@/icons';
 import { quizAPI, subjectAPI } from '@/services/api';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { formatDate, formatTimeOnly } from '@/utils';
+import { formatDate, formatTimeOnly, fadeSlide } from '@/utils';
 import { Tooltip, EmptyState, Select, Skeleton, SubjectBadge } from '@/components/ui';
 import { useUiStore } from '@/store';
 import { usePageState } from '@/hooks/usePageState';
@@ -122,14 +122,16 @@ export default function QuizPage() {
     queryClient.invalidateQueries(['quizzes']);
   }, [queryClient]);
 
-  // Jika ada quiz aktif, tampilkan QuizSession
-  if (activeQuizId) {
-    return <QuizSession key={sessionKey} quizId={activeQuizId} onClose={closeSession} />;
-  }
-
   return (
-    <div className="flex-1 overflow-y-auto p-6 md:p-10">
-      <div className="w-full space-y-6">
+    <>
+      <AnimatePresence mode="wait" initial={false}>
+        {activeQuizId ? (
+          <motion.div key="session" {...fadeSlide} className="flex-1 flex flex-col min-w-0 overflow-hidden">
+            <QuizSession key={sessionKey} quizId={activeQuizId} onClose={closeSession} />
+          </motion.div>
+        ) : (
+          <motion.div key="list" {...fadeSlide} className="flex-1 overflow-y-auto p-6 md:p-10">
+            <div className="w-full space-y-6">
 
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -268,7 +270,12 @@ export default function QuizPage() {
                   {/* Footer — progress bar + timestamp */}
                   <div className="space-y-2">
                     <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
-                      <div className="h-full rounded-full bg-gradient-primary transition-all" style={{ width: `${qProgress}%` }} />
+                      <motion.div
+                        className="h-full rounded-full bg-gradient-primary"
+                        initial={{ width: 0 }}
+                        animate={{ width: `${qProgress}%` }}
+                        transition={{ duration: 0.4, ease: [0.32, 0.72, 0, 1] }}
+                      />
                     </div>
                     <div className="flex items-center justify-between text-[10px] text-text-muted">
                       {quiz.created_at ? (
@@ -293,7 +300,11 @@ export default function QuizPage() {
           )}
         </div>
 
-      </div>
+        </div>
+
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <GenerateQuizModal
         open={isGeneratorOpen}
@@ -307,6 +318,6 @@ export default function QuizPage() {
           setSessionKey(k => k + 1);
         }}
       />
-    </div>
+    </>
   );
 }

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Check, Loader2, Clock, Play, Trophy, Brain, CheckCircle, FileText, MessageSquare } from '@/icons';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Check, Loader2, Clock, Play, Trophy, Brain, CheckCircle, XCircle, ClipboardCheck, FileText, MessageSquare } from '@/icons';
 import { sessionsAPI } from '@/services/api';
 import MathMarkdown from '@/components/MathMarkdown';
 import { extractErrorMessage } from '@/utils/errors';
@@ -138,35 +138,45 @@ export default function InlinePlanPractice({ item, practiceState, onClose, onSub
         <div className="h-full bg-gradient-primary rounded-full transition-all duration-300" style={{ width: `${((idx + 1) / total) * 100}%` }} />
       </div>
 
-      <h4 className="text-sm font-medium text-text mb-4 leading-relaxed">
-        <MathMarkdown>{q.question}</MathMarkdown>
-      </h4>
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={idx}
+          initial={{ opacity: 0, x: 16 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -16 }}
+          transition={{ duration: 0.2, ease: [0.32, 0.72, 0, 1] }}
+        >
+          <h4 className="text-sm font-medium text-text mb-4 leading-relaxed">
+            <MathMarkdown>{q.question}</MathMarkdown>
+          </h4>
 
-      {isObjective ? (
-        <div className="space-y-2">
-          {optionsList.map((opt, i) => {
-            const key = (q.options ? Object.keys(q.options)[i] : null) || opt.split('.')[0].trim();
-            const isSelected = userAnswer === key;
-            return (
-              <button
-                key={i}
-                onClick={() => selectAnswer(key)}
-                className={`w-full text-left px-3 py-2.5 rounded-lg border text-sm transition-all ${isSelected ? 'bg-primary/10 border-primary text-primary-light font-medium' : 'bg-card border-border text-text hover:border-primary/50'}`}
-              >
-                <MathMarkdown>{opt}</MathMarkdown>
-              </button>
-            );
-          })}
-        </div>
-      ) : (
-        <Textarea
-          value={userAnswer}
-          onChange={(e) => selectAnswer(e.target.value)}
-          rows={3}
-          placeholder="Tulis jawaban Anda..."
-          className="w-full resize-y"
-        />
-      )}
+          {isObjective ? (
+            <div className="space-y-2">
+              {optionsList.map((opt, i) => {
+                const key = (q.options ? Object.keys(q.options)[i] : null) || opt.split('.')[0].trim();
+                const isSelected = userAnswer === key;
+                return (
+                  <button
+                    key={i}
+                    onClick={() => selectAnswer(key)}
+                    className={`w-full text-left px-3 py-2.5 rounded-lg border text-sm transition-all ${isSelected ? 'bg-primary/10 border-primary text-primary-light font-medium' : 'bg-card border-border text-text hover:border-primary/50'}`}
+                  >
+                    <MathMarkdown>{opt}</MathMarkdown>
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <Textarea
+              value={userAnswer}
+              onChange={(e) => selectAnswer(e.target.value)}
+              rows={3}
+              placeholder="Tulis jawaban Anda..."
+              className="w-full resize-y"
+            />
+          )}
+        </motion.div>
+      </AnimatePresence>
 
       <div className="flex justify-end mt-4">
         {isObjective && !userAnswer ? (
@@ -293,14 +303,24 @@ export function StudyPlanItem({
         </div>
       </div>
 
-      {isPracticeOpen && (
-        <InlinePlanPractice
-          item={item}
-          practiceState={practiceState}
-          onClose={onPracticeClose}
-          onSubmitted={onPracticeSubmitted}
-        />
-      )}
+      <AnimatePresence initial={false}>
+        {isPracticeOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
+            className="overflow-hidden"
+          >
+            <InlinePlanPractice
+              item={item}
+              practiceState={practiceState}
+              onClose={onPracticeClose}
+              onSubmitted={onPracticeSubmitted}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

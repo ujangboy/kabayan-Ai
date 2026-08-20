@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import {
   Trophy, CheckCircle, Check, Loader2, Calendar, BookOpen,
   AlertTriangle, TrendingUp, Save, MessageSquare,
@@ -8,6 +9,25 @@ import {
 import { examAPI, sessionsAPI } from '@/services/api';
 import { cn } from '@/utils';
 import { Chip } from './shared';
+
+// Count-up halus untuk skor (dihormati prefers-reduced-motion).
+function useCountUp(target, duration = 900) {
+  const reduce = useReducedMotion();
+  const [value, setValue] = useState(0);
+  useEffect(() => {
+    if (reduce) { setValue(target); return; }
+    let raf;
+    const start = performance.now();
+    const tick = (now) => {
+      const p = Math.min(1, (now - start) / duration);
+      setValue(Math.round(target * (1 - Math.pow(1 - p, 3))));
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [target, duration, reduce]);
+  return value;
+}
 
 export default function ResultView({ evalData, onReview, onFinish, sessionId, onOpenPlanTab, subjectName = '' }) {
   const { t } = useTranslation();
@@ -20,6 +40,7 @@ export default function ResultView({ evalData, onReview, onFinish, sessionId, on
   const [planPreview, setPlanPreview]   = useState(null);
   const [planSaving, setPlanSaving]     = useState(false);
   const [planSaveError, setPlanSaveError] = useState('');
+  const animatedScore = useCountUp(evalData?.score ?? 0);
 
   if (!evalData) return null;
 
@@ -89,7 +110,7 @@ export default function ResultView({ evalData, onReview, onFinish, sessionId, on
       <div className="card-base p-8 text-center">
         <Trophy size={48} className="mx-auto text-warning mb-4" />
         <h2 className="text-2xl font-bold text-text mb-1">{t('exam.result.doneTitle')}</h2>
-        <div className={cn('text-7xl font-black my-4', scoreColor)}>{score}</div>
+        <div className={cn('text-7xl font-black my-4', scoreColor)}>{animatedScore}</div>
         <div className="flex justify-center gap-2 mb-3">
           <Chip label={t('exam.result.gradeLabel', { grade })} color={score>=80?'success':score>=60?'warning':'danger'} />
           <Chip label={performance_level} color="purple" />
@@ -168,15 +189,30 @@ export default function ResultView({ evalData, onReview, onFinish, sessionId, on
       )}
 
       {/* Saved confirmation */}
-      {saved && (
-        <div className="flex items-center gap-2 p-3 rounded-xl bg-success/10 border border-success/20 text-success text-sm">
-          <CheckCircle size={15} /> {t('exam.result.savedMsg')}
-        </div>
-      )}
+      <AnimatePresence>
+        {saved && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2, ease: [0.32, 0.72, 0, 1] }}
+            className="flex items-center gap-2 p-3 rounded-xl bg-success/10 border border-success/20 text-success text-sm"
+          >
+            <CheckCircle size={15} /> {t('exam.result.savedMsg')}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Plan preview inline */}
-      {planPreview && (
-        <div className="card-base p-5 border border-primary/20">
+      <AnimatePresence>
+        {planPreview && (
+          <motion.div
+            initial={{ opacity: 0, y: 12, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -8, scale: 0.98 }}
+            transition={{ duration: 0.22, ease: [0.32, 0.72, 0, 1] }}
+            className="card-base p-5 border border-primary/20"
+          >
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-semibold text-text flex items-center gap-1.5">
               <Calendar size={14} /> {t('exam.result.planPreviewTitle')}
@@ -208,8 +244,9 @@ export default function ResultView({ evalData, onReview, onFinish, sessionId, on
                 : <><Save size={13} /> {t('exam.result.savePlan')}</>}
             </button>
           </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Action buttons */}
       <div className="flex gap-3 flex-wrap">

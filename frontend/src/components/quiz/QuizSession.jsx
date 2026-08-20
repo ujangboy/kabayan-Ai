@@ -1,15 +1,26 @@
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, PenLine, CheckCircle, XCircle, Trophy, Celebration, MenuBook, FitnessCenter } from '@/icons';
 import { quizAPI } from '@/services/api';
 import MathMarkdown from '@/components/MathMarkdown';
 import QuizTimer from '@/components/quiz/QuizTimer';
 import QuizProgressBar from '@/components/quiz/QuizProgressBar';
-import { cn } from '@/utils';
+import { cn, fadeSlide } from '@/utils';
 import { formatDuration } from './shared';
 import { usePageState } from '@/hooks/usePageState';
+
+// Transisi antar-view session (loading/error/soal/review/result) — crossfade halus.
+function ViewShell({ view, children }) {
+  return (
+    <AnimatePresence mode="wait" initial={false}>
+      <motion.div key={view} {...fadeSlide} className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        {children}
+      </motion.div>
+    </AnimatePresence>
+  );
+}
 
 export function QuizSession({ quizId, onClose }) {
   const { t } = useTranslation();
@@ -55,18 +66,22 @@ export function QuizSession({ quizId, onClose }) {
 
   if (isLoading) {
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <Loader2 size={32} className="animate-spin text-primary" />
-      </div>
+      <ViewShell view="loading">
+        <div className="flex-1 flex items-center justify-center">
+          <Loader2 size={32} className="animate-spin text-primary" />
+        </div>
+      </ViewShell>
     );
   }
 
   if (error || !quizData) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-        <p className="text-danger mb-4">Gagal memuat quiz: {error?.message || 'Unknown error'}</p>
-        <button onClick={onClose} className="btn-ghost border border-border">Kembali</button>
-      </div>
+      <ViewShell view="error">
+        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+          <p className="text-danger mb-4">Gagal memuat quiz: {error?.message || 'Unknown error'}</p>
+          <button onClick={onClose} className="btn-ghost border border-border">Kembali</button>
+        </div>
+      </ViewShell>
     );
   }
 
@@ -79,10 +94,12 @@ export function QuizSession({ quizId, onClose }) {
 
   if (total === 0) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-        <p className="text-text-muted mb-4">Quiz kosong atau soal belum tersedia.</p>
-        <button onClick={onClose} className="btn-ghost border border-border">Kembali</button>
-      </div>
+      <ViewShell view="empty">
+        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+          <p className="text-text-muted mb-4">Quiz kosong atau soal belum tersedia.</p>
+          <button onClick={onClose} className="btn-ghost border border-border">Kembali</button>
+        </div>
+      </ViewShell>
     );
   }
 
@@ -139,7 +156,8 @@ export function QuizSession({ quizId, onClose }) {
   // Review View
   if (showReview) {
     return (
-      <div className="flex-1 overflow-y-auto p-6 md:p-10">
+      <ViewShell view="review">
+        <div className="flex-1 overflow-y-auto p-6 md:p-10">
         <div className="w-full space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold text-text">Review Jawaban</h2>
@@ -202,7 +220,8 @@ export function QuizSession({ quizId, onClose }) {
             );
           })}
         </div>
-      </div>
+        </div>
+      </ViewShell>
     );
   }
 
@@ -216,7 +235,8 @@ export function QuizSession({ quizId, onClose }) {
           ? { Icon: MenuBook, text: 'Cukup baik. Review jawaban yang salah untuk memperkuat pemahaman, lalu coba lagi.' }
           : { Icon: FitnessCenter, text: 'Masih perlu banyak latihan. Pelajari kembali materi terkait, lalu ulangi quiz ini.' };
     return (
-      <div className="flex-1 flex items-center justify-center p-6">
+      <ViewShell view="result">
+        <div className="flex-1 flex items-center justify-center p-6">
         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="card-base text-center max-w-md w-full p-8">
           <Trophy size={48} className="mx-auto text-warning mb-4" />
           <h2 className="text-2xl font-bold text-text mb-2">Quiz Selesai!</h2>
@@ -248,71 +268,85 @@ export function QuizSession({ quizId, onClose }) {
             </button>
           </div>
         </motion.div>
-      </div>
+        </div>
+      </ViewShell>
     );
   }
 
   // Quiz Session View
   return (
-    <div className="flex-1 flex flex-col w-full p-6 md:p-10">
-      <div className="flex items-center justify-between gap-4 mb-6">
-        <h2 className="text-lg font-semibold text-text truncate">{quizData.title || 'Quiz'}</h2>
-        <QuizTimer totalSeconds={timerSeconds} onTimeUp={handleTimeUp} isActive={!isFinished} />
-      </div>
-
-      <QuizProgressBar current={currentIdx + 1} total={total} />
-
-      <div className="flex-1 mt-6">
-        <div className="flex items-center gap-2 mb-2">
-          {currentQ.qtype === 'essay' && (
-            <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded bg-warning/15 text-warning border border-warning/30">
-              <PenLine size={10} /> Essay
-            </span>
-          )}
+    <ViewShell view="question">
+      <div className="flex-1 flex flex-col w-full p-6 md:p-10">
+        <div className="flex items-center justify-between gap-4 mb-6">
+          <h2 className="text-lg font-semibold text-text truncate">{quizData.title || 'Quiz'}</h2>
+          <QuizTimer totalSeconds={timerSeconds} onTimeUp={handleTimeUp} isActive={!isFinished} />
         </div>
-        <h3 className="text-xl font-medium text-text mb-6 leading-relaxed">
-          <MathMarkdown>{currentQ.question}</MathMarkdown>
-        </h3>
-        {currentQ.qtype === 'essay' ? (
-          <textarea
-            value={answers[currentIdx] || ''}
-            onChange={(e) => handleEssayChange(e.target.value)}
-            rows={7}
-            placeholder="Tulis jawaban Anda di sini..."
-            className="w-full px-4 py-3 bg-card border border-border rounded-xl text-sm text-text focus:outline-none focus:border-primary transition-colors resize-y"
-          />
-        ) : (
-          <div className="space-y-3">
-            {(currentQ.options || []).map((opt, i) => {
-              const isSelected = answers[currentIdx] === opt;
-              return (
-                <button
-                  key={`${currentIdx}-${opt}`}
-                  onClick={() => handleSelectOption(opt)}
-                  className={`w-full text-left p-4 rounded-xl border transition-all ${
-                    isSelected
-                      ? 'bg-primary/10 border-primary text-primary'
-                      : 'bg-card border-border text-text hover:border-primary/50'
-                  }`}
-                >
-                  <MathMarkdown>{opt}</MathMarkdown>
-                </button>
-              );
-            })}
-          </div>
-        )}
-      </div>
 
-      <div className="flex justify-between mt-10">
-        <button onClick={onClose} className="btn-ghost text-danger">Keluar</button>
-        <button
-          onClick={handleNext}
-          disabled={!answers[currentIdx] && currentQ.qtype === 'mcq'}
-          className="btn-primary disabled:opacity-40"
-        >
-          {currentIdx === total - 1 ? 'Selesai' : 'Lanjut'}
-        </button>
+        <QuizProgressBar current={currentIdx + 1} total={total} />
+
+        <div className="flex-1 mt-6">
+          {/* Soal berganti — crossfade per soal, bukan pop */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentIdx}
+              initial={{ opacity: 0, x: 16 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -16 }}
+              transition={{ duration: 0.2, ease: [0.32, 0.72, 0, 1] }}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                {currentQ.qtype === 'essay' && (
+                  <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded bg-warning/15 text-warning border border-warning/30">
+                    <PenLine size={10} /> Essay
+                  </span>
+                )}
+              </div>
+              <h3 className="text-xl font-medium text-text mb-6 leading-relaxed">
+                <MathMarkdown>{currentQ.question}</MathMarkdown>
+              </h3>
+              {currentQ.qtype === 'essay' ? (
+                <textarea
+                  value={answers[currentIdx] || ''}
+                  onChange={(e) => handleEssayChange(e.target.value)}
+                  rows={7}
+                  placeholder="Tulis jawaban Anda di sini..."
+                  className="w-full px-4 py-3 bg-card border border-border rounded-xl text-sm text-text focus:outline-none focus:border-primary transition-colors resize-y"
+                />
+              ) : (
+                <div className="space-y-3">
+                  {(currentQ.options || []).map((opt, i) => {
+                    const isSelected = answers[currentIdx] === opt;
+                    return (
+                      <button
+                        key={`${currentIdx}-${opt}`}
+                        onClick={() => handleSelectOption(opt)}
+                        className={`w-full text-left p-4 rounded-xl border transition-all ${
+                          isSelected
+                            ? 'bg-primary/10 border-primary text-primary'
+                            : 'bg-card border-border text-text hover:border-primary/50'
+                        }`}
+                      >
+                        <MathMarkdown>{opt}</MathMarkdown>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        <div className="flex justify-between mt-10">
+          <button onClick={onClose} className="btn-ghost text-danger">Keluar</button>
+          <button
+            onClick={handleNext}
+            disabled={!answers[currentIdx] && currentQ.qtype === 'mcq'}
+            className="btn-primary disabled:opacity-40"
+          >
+            {currentIdx === total - 1 ? 'Selesai' : 'Lanjut'}
+          </button>
+        </div>
       </div>
-    </div>
+    </ViewShell>
   );
 }

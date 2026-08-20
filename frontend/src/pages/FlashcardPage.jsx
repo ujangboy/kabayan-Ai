@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { CreditCard, Plus, Zap, Brain } from '@/icons';
 import { flashcardAPI, subjectAPI } from '@/services/api';
@@ -9,6 +10,7 @@ import { useToast } from '@/components/Toast';
 import { extractErrorMessage } from '@/utils/errors';
 import { EmptyState, Select, Skeleton } from '@/components/ui';
 import { usePageState } from '@/hooks/usePageState';
+import { fadeSlide } from '@/utils';
 import BatchFlashcardCard from '@/components/flashcard/BatchFlashcardCard';
 import FlashcardSession from '@/components/flashcard/FlashcardSession';
 import GenerateAIModal from '@/components/flashcard/GenerateAIModal';
@@ -106,26 +108,28 @@ export default function FlashcardPage() {
     });
   };
 
-  // Jika deck aktif, tampilkan session view
-  if (activeBatchId !== null) {
-    const group = groups.find(g => String(g.batch_id) === String(activeBatchId));
-    const cards = group?.cards || [];
-    return (
-      <FlashcardSession
-        cards={cards}
-        subjectName={group?.subject?.name || t('flashcard.defaultName')}
-        onClose={() => {
-          setActiveBatchId(null);
-          clear();
-          queryClient.invalidateQueries(['flashcards']);
-        }}
-      />
-    );
-  }
-
   return (
-    <div className="flex-1 overflow-y-auto p-6 md:p-10">
-      <div className="w-full space-y-6">
+    <>
+      <AnimatePresence mode="wait" initial={false}>
+        {activeBatchId !== null ? (() => {
+          const group = groups.find(g => String(g.batch_id) === String(activeBatchId));
+          const cards = group?.cards || [];
+          return (
+            <motion.div key="session" {...fadeSlide} className="flex-1 flex flex-col min-w-0 overflow-hidden">
+              <FlashcardSession
+                cards={cards}
+                subjectName={group?.subject?.name || t('flashcard.defaultName')}
+                onClose={() => {
+                  setActiveBatchId(null);
+                  clear();
+                  queryClient.invalidateQueries(['flashcards']);
+                }}
+              />
+            </motion.div>
+          );
+        })() : (
+          <motion.div key="list" {...fadeSlide} className="flex-1 overflow-y-auto p-6 md:p-10">
+            <div className="w-full space-y-6">
 
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -241,7 +245,11 @@ export default function FlashcardPage() {
           )}
         </div>
 
-      </div>
+        </div>
+
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <GenerateAIModal
         open={isAIModalOpen}
@@ -268,6 +276,6 @@ export default function FlashcardPage() {
         group={groups.find(g => g.batch_id === historyBatchId)}
         onClose={() => setHistoryBatchId(null)}
       />
-    </div>
+    </>
   );
 }

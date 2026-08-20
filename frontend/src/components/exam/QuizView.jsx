@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Clock, Play, Pause, ChevronLeft, ChevronRight, Loader2, Check } from '@/icons';
 import { examAPI } from '@/services/api';
 import { cn } from '@/utils';
@@ -93,65 +94,78 @@ export default function QuizView({ sessionData, clockStart, onDone }) {
         </button>
       </div>
 
-      {/* Pause overlay */}
-      {paused && (
-        <div className="card-base p-16 text-center">
-          <Pause size={48} className="mx-auto mb-4 text-text-muted opacity-40" />
-          <h3 className="text-lg font-semibold text-text mb-2">{t('exam.quiz.pausedTitle')}</h3>
-          <button onClick={() => setPaused(false)} className="btn-primary mt-4">
-            <Play size={14} /> {t('exam.quiz.resume')}
-          </button>
-        </div>
-      )}
-
-      {/* Question card */}
-      {!paused && (
-        <div className="card-base p-6 space-y-5">
-          <div className="flex items-start gap-3">
-            <span className="shrink-0 w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold">
-              {idx+1}
-            </span>
-            <div className="flex-1">
-              <div className="flex gap-2 flex-wrap mb-3">
-                <Chip label={q.type}        size="xs" color="blue" />
-                <Chip label={q.bloom_level} size="xs" color="teal" />
-                <Chip label={q.difficulty}  size="xs"
-                  color={q.difficulty === 'sulit' ? 'danger' : q.difficulty === 'menengah' ? 'warning' : 'success'} />
+      {/* Pause overlay + Question card — crossfade pause/resume */}
+      <AnimatePresence mode="wait" initial={false}>
+        {paused ? (
+          <motion.div
+            key="paused"
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.98 }}
+            transition={{ duration: 0.18, ease: [0.32, 0.72, 0, 1] }}
+            className="card-base p-16 text-center"
+          >
+            <Pause size={48} className="mx-auto mb-4 text-text-muted opacity-40" />
+            <h3 className="text-lg font-semibold text-text mb-2">{t('exam.quiz.pausedTitle')}</h3>
+            <button onClick={() => setPaused(false)} className="btn-primary mt-4">
+              <Play size={14} /> {t('exam.quiz.resume')}
+            </button>
+          </motion.div>
+        ) : (
+          <motion.div
+            key={q.id}
+            initial={{ opacity: 0, x: 16 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -16 }}
+            transition={{ duration: 0.2, ease: [0.32, 0.72, 0, 1] }}
+            className="card-base p-6 space-y-5"
+          >
+            <div className="flex items-start gap-3">
+              <span className="shrink-0 w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold">
+                {idx+1}
+              </span>
+              <div className="flex-1">
+                <div className="flex gap-2 flex-wrap mb-3">
+                  <Chip label={q.type}        size="xs" color="blue" />
+                  <Chip label={q.bloom_level} size="xs" color="teal" />
+                  <Chip label={q.difficulty}  size="xs"
+                    color={q.difficulty === 'sulit' ? 'danger' : q.difficulty === 'menengah' ? 'warning' : 'success'} />
+                </div>
+                <MathMarkdown className="font-medium">{q.question}</MathMarkdown>
               </div>
-              <MathMarkdown className="font-medium">{q.question}</MathMarkdown>
             </div>
-          </div>
 
-          {/* Options — objective */}
-          {isObjectiveQ && (
-            <div className="space-y-2">
-              {(q.options_list || Object.entries(q.options || {}).map(([k,v]) => `${k}. ${v}`)).map((opt, i) => {
-                const key = Object.keys(q.options || {})[i] || opt;
-                const sel = userAnswer === key || userAnswer === opt;
-                return (
-                  <button key={i} onClick={() => selectAnswer(key)}
-                    className={cn('w-full text-left p-3.5 rounded-xl border text-sm transition-all',
-                      sel ? 'bg-primary/10 border-primary text-primary'
-                          : 'bg-card border-border text-text hover:border-primary/40')}>
-                    <MathMarkdown>{opt}</MathMarkdown>
-                  </button>
-                );
-              })}
-            </div>
-          )}
+            {/* Options — objective */}
+            {isObjectiveQ && (
+              <div className="space-y-2">
+                {(q.options_list || Object.entries(q.options || {}).map(([k,v]) => `${k}. ${v}`)).map((opt, i) => {
+                  const key = Object.keys(q.options || {})[i] || opt;
+                  const sel = userAnswer === key || userAnswer === opt;
+                  return (
+                    <button key={i} onClick={() => selectAnswer(key)}
+                      className={cn('w-full text-left p-3.5 rounded-xl border text-sm transition-all',
+                        sel ? 'bg-primary/10 border-primary text-primary'
+                            : 'bg-card border-border text-text hover:border-primary/40')}>
+                      <MathMarkdown>{opt}</MathMarkdown>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
 
-          {/* Text answer — subjective */}
-          {!isObjectiveQ && (
-            <textarea
-              rows={5}
-              value={userAnswer}
-              onChange={e => selectAnswer(e.target.value)}
-              placeholder={t('exam.quiz.answerPlaceholder', { type: q.type === 'calculation' ? 'perhitungan' : q.type === 'essay' ? 'esai' : 'kamu' })}
-              className="w-full px-4 py-3 bg-background border border-border rounded-xl text-sm text-text focus:outline-none focus:border-primary resize-none"
-            />
-          )}
-        </div>
-      )}
+            {/* Text answer — subjective */}
+            {!isObjectiveQ && (
+              <textarea
+                rows={5}
+                value={userAnswer}
+                onChange={e => selectAnswer(e.target.value)}
+                placeholder={t('exam.quiz.answerPlaceholder', { type: q.type === 'calculation' ? 'perhitungan' : q.type === 'essay' ? 'esai' : 'kamu' })}
+                className="w-full px-4 py-3 bg-background border border-border rounded-xl text-sm text-text focus:outline-none focus:border-primary resize-none"
+              />
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {error && <p className="text-danger text-sm">{error}</p>}
 

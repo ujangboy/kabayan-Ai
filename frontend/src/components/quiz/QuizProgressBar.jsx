@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { motion } from 'framer-motion';
 
 export default function QuizProgressBar({ current, total }) {
   const { t } = useTranslation();
@@ -13,9 +14,11 @@ export default function QuizProgressBar({ current, total }) {
         <span className="text-xs font-bold text-primary">{pct}%</span>
       </div>
       <div className="h-2.5 bg-background rounded-full overflow-hidden border border-border/50">
-        <div
-          className="h-full bg-primary rounded-full transition-all duration-300"
-          style={{ width: `${pct}%` }}
+        <motion.div
+          className="h-full bg-primary rounded-full"
+          initial={{ width: 0 }}
+          animate={{ width: `${pct}%` }}
+          transition={{ duration: 0.4, ease: [0.32, 0.72, 0, 1] }}
         />
       </div>
     </div>

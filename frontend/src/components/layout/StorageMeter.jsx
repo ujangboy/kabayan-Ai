@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { motion } from 'framer-motion';
 import { dataAPI } from '@/services/api';
 import { useTranslation } from 'react-i18next';
 import { HardDrive } from '@/icons';
@@ -21,9 +22,11 @@ export default function StorageMeter() {
         <span className="text-xs font-semibold">{t('settings.data.storage')}</span>
       </div>
       <div className="h-1.5 bg-card rounded-full overflow-hidden mb-1.5">
-        <div
-          className="h-full bg-gradient-primary rounded-full transition-all duration-500"
-          style={{ width: `${pct}%` }}
+        <motion.div
+          className="h-full bg-gradient-primary rounded-full"
+          initial={{ width: 0 }}
+          animate={{ width: `${pct}%` }}
+          transition={{ duration: 0.6, ease: [0.32, 0.72, 0, 1] }}
         />
       </div>
       <div className="flex justify-between text-[10px] text-text-muted">

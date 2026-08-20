@@ -28,12 +28,15 @@ export function MaterialFileCard({ material: m, index, showSubject, isRagActive,
 
   return (
     <motion.div
-      layout
+      layout={{ transition: { duration: 0.25 } }}
       initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      transition={{ delay: Math.min(index * 0.04, 0.4), duration: 0.25 }}
-      className="card-base card-hoverable group relative flex flex-col gap-3"
+      animate={{
+        opacity: 1,
+        y: 0,
+        transition: { delay: Math.min(index * 0.04, 0.4), duration: 0.25 },
+      }}
+      exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
+      className="card-base group relative flex flex-col gap-3 hover:shadow-glass-lg hover:border-purple-500/40 hover:bg-slate-800/70 transition-[box-shadow,border-color,background-color] duration-300"
     >
       {/* Top: icon + name + delete */}
       <div className="flex items-start gap-3">
@@ -104,7 +107,7 @@ export function MaterialFileCard({ material: m, index, showSubject, isRagActive,
       <div className="mt-auto pt-2 border-t border-border/50 flex items-center justify-between">
         <span className="text-[11px] text-text-muted">{t('materi.enableAsRagSource')}</span>
         <Tooltip label={m.status !== 'Ready' ? t('materi.notReady', { status: m.status }) : t('materi.enableAsRagSource')}>
-          <span className="inline-flex items-center">
+          <label className="inline-flex items-center">
             <input
               type="checkbox"
               checked={isRagActive}
@@ -121,7 +124,7 @@ export function MaterialFileCard({ material: m, index, showSubject, isRagActive,
                 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:w-3 after:h-3 after:rounded-full after:bg-white
                 after:transition-transform after:duration-200 peer-checked:after:translate-x-3"
             />
-          </span>
+          </label>
         </Tooltip>
       </div>
     </motion.div>

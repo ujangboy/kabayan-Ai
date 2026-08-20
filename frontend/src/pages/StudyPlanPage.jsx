@@ -2,13 +2,14 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Award, Target, FileText, CalendarCheck, Loader2 } from '@/icons';
 import { sessionsAPI } from '@/services/api';
 import MathMarkdown from '@/components/MathMarkdown';
 import { extractErrorMessage } from '@/utils/errors';
 import { useToast } from '@/components/Toast';
 import { usePageState } from '@/hooks/usePageState';
+import { fadeSlide } from '@/utils';
 import { Modal, Button, EmptyState } from '@/components/ui';
 import { StudyPlanItem } from '@/components/studyplan/StudyPlanItem';
 import { formatItemDate } from '@/components/studyplan/shared';
@@ -82,42 +83,50 @@ export default function StudyPlanPage() {
 
   if (!sessionId) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-        <EmptyState
-          icon={CalendarCheck}
-          title={t('studyplan.noSessionTitle', 'Belum ada rencana belajar')}
-          description={t('studyplan.noSessionDesc', 'Buat Ujian Simulasi terlebih dahulu untuk mendapatkan rencana belajar yang dipersonalisasi.')}
-          action={<button onClick={() => navigate('/exam-analyzer')} className="btn-primary">{t('nav.exam')}</button>}
-        />
-      </div>
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div key="nosession" {...fadeSlide} className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+          <EmptyState
+            icon={CalendarCheck}
+            title={t('studyplan.noSessionTitle', 'Belum ada rencana belajar')}
+            description={t('studyplan.noSessionDesc', 'Buat Ujian Simulasi terlebih dahulu untuk mendapatkan rencana belajar yang dipersonalisasi.')}
+            action={<button onClick={() => navigate('/exam-analyzer')} className="btn-primary">{t('nav.exam')}</button>}
+          />
+        </motion.div>
+      </AnimatePresence>
     );
   }
 
   if (isLoading) {
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <Loader2 size={32} className="animate-spin text-primary" />
-      </div>
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div key="loading" {...fadeSlide} className="flex-1 flex items-center justify-center">
+          <Loader2 size={32} className="animate-spin text-primary" />
+        </motion.div>
+      </AnimatePresence>
     );
   }
 
   if (error || !data) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-        <p className="text-danger mb-4">Gagal memuat rencana belajar: {extractErrorMessage(error)}</p>
-        <button onClick={() => navigate('/exam-analyzer')} className="btn-ghost border border-border">Kembali</button>
-      </div>
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div key="error" {...fadeSlide} className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+          <p className="text-danger mb-4">Gagal memuat rencana belajar: {extractErrorMessage(error)}</p>
+          <button onClick={() => navigate('/exam-analyzer')} className="btn-ghost border border-border">Kembali</button>
+        </motion.div>
+      </AnimatePresence>
     );
   }
 
   if (!plan) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-        <EmptyState
-          title={t('studyplan.noPlan', 'Belum ada rencana belajar untuk sesi ini.')}
-          action={<button onClick={() => navigate('/exam-analyzer')} className="btn-ghost border border-border">Kembali</button>}
-        />
-      </div>
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div key="noplan" {...fadeSlide} className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+          <EmptyState
+            title={t('studyplan.noPlan', 'Belum ada rencana belajar untuk sesi ini.')}
+            action={<button onClick={() => navigate('/exam-analyzer')} className="btn-ghost border border-border">Kembali</button>}
+          />
+        </motion.div>
+      </AnimatePresence>
     );
   }
 
@@ -176,8 +185,9 @@ export default function StudyPlanPage() {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto p-6 md:p-10">
-      <div className="w-full space-y-6">
+    <AnimatePresence mode="wait" initial={false}>
+      <motion.div key="plan" {...fadeSlide} className="flex-1 overflow-y-auto p-6 md:p-10">
+        <div className="w-full space-y-6">
         {/* Header */}
         <div className="flex items-center gap-3 flex-wrap">
           <button onClick={() => navigate('/exam-analyzer')} className="btn-ghost px-3 py-2 rounded-xl text-sm">
@@ -266,6 +276,7 @@ export default function StudyPlanPage() {
           <MathMarkdown>{summaryData || ''}</MathMarkdown>
         </div>
       </Modal>
-    </div>
+    </motion.div>
+    </AnimatePresence>
   );
 }

@@ -1,13 +1,17 @@
 import { useTranslation } from 'react-i18next';
+import { motion } from 'framer-motion';
 import { Folder } from '@/icons';
 import { SubjectBadge } from '@/components/ui';
 import { cn } from '@/utils';
 
-export function FolderCard({ active, icon: Icon, name, count, onClick, tone }) {
+export function FolderCard({ active, icon: Icon, name, count, onClick, tone, index = 0 }) {
   const { t } = useTranslation();
   return (
-    <button
+    <motion.button
       onClick={onClick}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: Math.min(index * 0.04, 0.3), duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
       className={cn(
         'shrink-0 w-44 text-left rounded-2xl border p-4 transition-all duration-200 group flex flex-col gap-3',
         'bg-slate-900/70 border-slate-800 hover:border-purple-500/50 hover:shadow-md',
@@ -27,6 +31,6 @@ export function FolderCard({ active, icon: Icon, name, count, onClick, tone }) {
       </div>
       <p className={cn('text-sm font-semibold truncate', active ? 'text-primary-light' : 'text-text')} title={name}>{name}</p>
       <p className="text-[10px] text-text-muted uppercase tracking-wide -mt-2">{t('materi.folderFiles', { count })}</p>
-    </button>
+    </motion.button>
   );
 }

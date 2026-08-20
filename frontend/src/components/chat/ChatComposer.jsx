@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Square, Notes, FileText, HelpCircle, Search, Brain, Sparkles } from '@/icons';
 import { Tooltip, Spinner } from '@/components/ui';
 import { cn } from '@/utils';
@@ -41,30 +42,38 @@ export default function ChatComposer({ onSend, isStreaming, onStop, onSaveNote, 
 
   return (
     <div className="shrink-0 border-t border-border px-4 py-3 bg-surface relative">
-      {showQuickPrompts && (
-        <div className="absolute bottom-full mb-2 left-4 right-4">
-          <div className="rounded-xl border border-white/10 bg-slate-900/95 backdrop-blur-md shadow-lg p-2 grid grid-cols-2 gap-2">
-            {QUICK_PROMPTS.map((q) => {
-              const Icon = q.icon;
-              return (
-                <button
-                  key={q.label}
-                  onClick={() => {
-                    onSend(q.prompt);
-                    setShowQuickPrompts(false);
-                  }}
-                  className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-text hover:bg-white/[0.06] transition-colors text-left"
-                >
-                  <span className="w-7 h-7 rounded-lg bg-primary/10 text-primary-light flex items-center justify-center shrink-0">
-                    <Icon size={15} />
-                  </span>
-                  <span>{q.label}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
+      <AnimatePresence>
+        {showQuickPrompts && (
+          <motion.div
+            initial={{ opacity: 0, y: 8, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.98 }}
+            transition={{ duration: 0.18, ease: [0.32, 0.72, 0, 1] }}
+            className="absolute bottom-full mb-2 left-4 right-4 origin-bottom"
+          >
+            <div className="rounded-xl border border-white/10 bg-slate-900/95 backdrop-blur-md shadow-lg p-2 grid grid-cols-2 gap-2">
+              {QUICK_PROMPTS.map((q) => {
+                const Icon = q.icon;
+                return (
+                  <button
+                    key={q.label}
+                    onClick={() => {
+                      onSend(q.prompt);
+                      setShowQuickPrompts(false);
+                    }}
+                    className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-text hover:bg-white/[0.06] transition-colors text-left"
+                  >
+                    <span className="w-7 h-7 rounded-lg bg-primary/10 text-primary-light flex items-center justify-center shrink-0">
+                      <Icon size={15} />
+                    </span>
+                    <span>{q.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <div className="flex items-end gap-2">
         <div className="flex-1 relative">
           <textarea

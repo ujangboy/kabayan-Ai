@@ -30,37 +30,42 @@ export default function DashboardView({ subjectId, subjects, analysis, onAnalysi
 
   if (!subjectId) {
     return (
-      <div className="card-base p-16 text-center">
-        <Brain size={56} className="mx-auto mb-4 text-primary opacity-40" />
-        <h3 className="text-lg font-semibold text-text mb-2">{t('exam.dashboard.title')}</h3>
-        <p className="text-text-muted text-sm max-w-md mx-auto">
-          {t('exam.dashboard.selectSubjectPrompt')}
-        </p>
-      </div>
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div key="noselect" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.22, ease: [0.32, 0.72, 0, 1] }} className="card-base p-16 text-center">
+          <Brain size={56} className="mx-auto mb-4 text-primary opacity-40" />
+          <h3 className="text-lg font-semibold text-text mb-2">{t('exam.dashboard.title')}</h3>
+          <p className="text-text-muted text-sm max-w-md mx-auto">
+            {t('exam.dashboard.selectSubjectPrompt')}
+          </p>
+        </motion.div>
+      </AnimatePresence>
     );
   }
 
   if (!analysis) {
     const subjectName = subjects.find(s => String(s.id) === String(subjectId))?.name || '';
     return (
-      <div className="card-base p-16 text-center">
-        <Brain size={56} className="mx-auto mb-4 text-primary opacity-60" />
-        <h3 className="text-lg font-semibold text-text mb-2">{t('exam.dashboard.analysisTitle', { subjectname: subjectName })}</h3>
-        <p className="text-text-muted text-sm max-w-md mx-auto mb-6">
-          {t('exam.dashboard.analysisDesc')}
-        </p>
-        {error && <p className="text-danger text-sm mb-4">{error}</p>}
-        <button onClick={runAnalysis} disabled={isAnalyzing} className="btn-primary mx-auto">
-          {isAnalyzing ? <><Loader2 size={15} className="animate-spin" /> {t('exam.dashboard.analyzing')}</> : <><Brain size={15} /> {t('exam.dashboard.startAnalysis')}</>}
-        </button>
-      </div>
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div key="noanalysis" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.22, ease: [0.32, 0.72, 0, 1] }} className="card-base p-16 text-center">
+          <Brain size={56} className="mx-auto mb-4 text-primary opacity-60" />
+          <h3 className="text-lg font-semibold text-text mb-2">{t('exam.dashboard.analysisTitle', { subjectname: subjectName })}</h3>
+          <p className="text-text-muted text-sm max-w-md mx-auto mb-6">
+            {t('exam.dashboard.analysisDesc')}
+          </p>
+          {error && <p className="text-danger text-sm mb-4">{error}</p>}
+          <button onClick={runAnalysis} disabled={isAnalyzing} className="btn-primary mx-auto">
+            {isAnalyzing ? <><Loader2 size={15} className="animate-spin" /> {t('exam.dashboard.analyzing')}</> : <><Brain size={15} /> {t('exam.dashboard.startAnalysis')}</>}
+          </button>
+        </motion.div>
+      </AnimatePresence>
     );
   }
 
   const { overview = {}, stats = {}, topic_priority = [], knowledge_map = [], weakness_indicators = [] } = analysis;
 
   return (
-    <div className="space-y-6">
+    <AnimatePresence mode="wait" initial={false}>
+      <motion.div key="dashboard" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }} className="space-y-6">
       {/* Overview Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
@@ -197,6 +202,7 @@ export default function DashboardView({ subjectId, subjects, analysis, onAnalysi
           <Zap size={13} /> {t('exam.dashboard.generateSimulation')}
         </button>
       </div>
-    </div>
+      </motion.div>
+    </AnimatePresence>
   );
 }

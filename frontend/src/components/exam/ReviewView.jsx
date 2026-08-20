@@ -109,26 +109,35 @@ export default function ReviewView({ sessionData, evalData }) {
                           </div>
                         )}
 
-                        {/* Pre-stored explanation (from question bank) */}
-                        {q.explanation && !expl?.text && (
-                          <div className="p-3 rounded-lg bg-background border border-border">
-                            <p className="text-xs font-semibold text-text-muted mb-1">Penjelasan</p>
-                            <MathMarkdown>{q.explanation}</MathMarkdown>
-                          </div>
-                        )}
+                        {/* Explanation: pre-stored / lazy AI / error — crossfade saat resolve */}
+                        <AnimatePresence mode="wait" initial={false}>
+                          <motion.div
+                            key={expl?.text ? 'ai' : expl?.error ? 'error' : q.explanation ? 'pre' : 'none'}
+                            initial={{ opacity: 0, y: 6 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -6 }}
+                            transition={{ duration: 0.2, ease: [0.32, 0.72, 0, 1] }}
+                          >
+                            {q.explanation && !expl?.text && (
+                              <div className="p-3 rounded-lg bg-background border border-border">
+                                <p className="text-xs font-semibold text-text-muted mb-1">Penjelasan</p>
+                                <MathMarkdown>{q.explanation}</MathMarkdown>
+                              </div>
+                            )}
 
-                        {/* Lazy AI explanation result */}
-                        {expl?.text && (
-                          <div className="p-3 rounded-lg bg-accent-teal/5 border border-accent-teal/20">
-                            <p className="text-xs font-semibold text-accent-teal mb-1 flex items-center gap-1">
-                              <Lightbulb size={11} /> Penjelasan AI
-                            </p>
-                            <MathMarkdown>{expl.text}</MathMarkdown>
-                          </div>
-                        )}
-                        {expl?.error && (
-                          <p className="text-xs text-danger">{expl.error}</p>
-                        )}
+                            {expl?.text && (
+                              <div className="p-3 rounded-lg bg-accent-teal/5 border border-accent-teal/20">
+                                <p className="text-xs font-semibold text-accent-teal mb-1 flex items-center gap-1">
+                                  <Lightbulb size={11} /> Penjelasan AI
+                                </p>
+                                <MathMarkdown>{expl.text}</MathMarkdown>
+                              </div>
+                            )}
+                            {expl?.error && (
+                              <p className="text-xs text-danger">{expl.error}</p>
+                            )}
+                          </motion.div>
+                        </AnimatePresence>
 
                         <div className="flex items-center gap-3 flex-wrap text-xs text-text-muted">
                           {q.material_reference && (

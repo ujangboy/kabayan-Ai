@@ -164,7 +164,12 @@ export default function SubjectsPage() {
                     {/* Footer — progress bar tipis + timestamp */}
                     <div className="space-y-2">
                       <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
-                        <div className="h-full rounded-full bg-gradient-primary transition-all" style={{ width: `${progress}%` }} />
+                        <motion.div
+                          className="h-full rounded-full bg-gradient-primary"
+                          initial={{ width: 0 }}
+                          animate={{ width: `${progress}%` }}
+                          transition={{ duration: 0.4, ease: [0.32, 0.72, 0, 1] }}
+                        />
                       </div>
                       <div className="flex items-center justify-between text-[10px] text-text-muted">
                         {s.created_at ? (
