@@ -13,6 +13,13 @@ export default {
         card: "#1A2332",
         "card-hover": "#212D40",
         border: "#263349",
+        glass: {
+          DEFAULT: "rgba(15, 23, 42, 0.6)",
+          card: "rgba(15, 23, 42, 0.65)",
+          panel: "rgba(30, 41, 59, 0.5)",
+          border: "rgba(255, 255, 255, 0.08)",
+          borderStrong: "rgba(255, 255, 255, 0.14)",
+        },
         primary: {
           DEFAULT: "#7C3AED",
           hover: "#8B5CF6",
@@ -57,10 +64,15 @@ export default {
         "btn-primary": "0 2px 8px rgba(124,58,237,0.35)",
         modal: "0 20px 40px rgba(0,0,0,0.5)",
         "card-hover": "0 4px 16px rgba(0,0,0,0.3), 0 0 0 1px rgba(139,92,246,0.15)",
+        glass: "0 8px 32px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.05)",
+        "glass-lg": "0 20px 50px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)",
+        "glow-primary": "0 0 24px rgba(124,58,237,0.25)",
       },
       backgroundImage: {
         "gradient-primary": "linear-gradient(135deg, #7C3AED 0%, #6366F1 100%)",
         "gradient-primary-soft": "linear-gradient(135deg, rgba(124,58,237,0.15) 0%, rgba(99,102,241,0.15) 100%)",
+        "gradient-app": "radial-gradient(ellipse 80% 60% at 0% 0%, rgba(124,58,237,0.12) 0%, transparent 60%), radial-gradient(ellipse 60% 50% at 100% 0%, rgba(41,168,223,0.08) 0%, transparent 55%), linear-gradient(160deg, #0B111B 0%, #0E1520 45%, #0B1423 100%)",
+        "gradient-hero": "linear-gradient(135deg, rgba(124,58,237,0.6) 0%, rgba(99,102,241,0.4) 100%)",
       },
       keyframes: {
         fadeIn: { from: { opacity: "0", transform: "translateY(8px)" }, to: { opacity: "1", transform: "translateY(0)" } },
