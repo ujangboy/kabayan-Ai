@@ -157,9 +157,10 @@ export default function MateriPage() {
               icon={Folder}
               name={t('materi.folderAll')}
               count={materials.length}
+              tone={0}
               onClick={() => setSubjectFilter('materi', '')}
             />
-            {sortedSubjects.map((s) => {
+            {sortedSubjects.map((s, i) => {
               const count = materials.filter(m => String(m.subject_id ?? m.subject?.id) === String(s.id)).length;
               return (
                 <FolderCard
@@ -168,6 +169,7 @@ export default function MateriPage() {
                   icon={Folder}
                   name={s.name}
                   count={count}
+                  tone={i + 1}
                   onClick={() => setSubjectFilter('materi', String(s.id))}
                 />
               );

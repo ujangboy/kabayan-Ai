@@ -13,6 +13,7 @@ import { cn, formatDate, formatTimeOnly } from '@/utils';
 import DetailModal from './DetailModal';
 import { Chip, ProgressBar, STATUS_META, getBadge, getGradeColor, Q_TYPE_LABEL } from './shared';
 import { Tooltip } from '@/components/ui/Tooltip';
+import { SubjectBadge } from '@/components/ui';
 import { useToast } from '@/components/Toast';
 
 // ─── Subject picker (shown when no subject selected) ──────────────────────────
@@ -58,10 +59,11 @@ function SubjectPicker({ subjects, onSelectSubject, onStartConfig, t }) {
          {t('exam.history.selectSubjectDesc')}
        </p>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {subjects.map(s => (
+        {subjects.map((s, i) => (
           <SubjectCard
             key={s.id}
             subject={s}
+            tone={i}
             onSelectSubject={onSelectSubject}
             onStartConfig={onStartConfig}
             onDelete={handleDelete}
@@ -73,7 +75,7 @@ function SubjectPicker({ subjects, onSelectSubject, onStartConfig, t }) {
   );
 }
 
-function SubjectCard({ subject, onSelectSubject, onStartConfig, onDelete, t }) {
+function SubjectCard({ subject, onSelectSubject, onStartConfig, onDelete, t, tone }) {
    const { data: materialData, isLoading } = useQuery({
      queryKey: ['materials', subject.id],
      queryFn: () => materiAPI.getAll(subject.id).then(r => r.data),
@@ -106,79 +108,97 @@ function SubjectCard({ subject, onSelectSubject, onStartConfig, onDelete, t }) {
    }
 
    const materialCount = subjectMaterials.length;
+   const progress = Math.min(100, subject.best_score ?? 0);
 
    return (
-     <div className="card-base p-5 flex flex-col gap-3 hover:border-primary/40 transition-colors">
+     <div className="bg-slate-900/70 border border-slate-800 hover:border-purple-500/50 rounded-2xl p-5 flex flex-col justify-between gap-4 transition-all shadow-md">
+       {/* Header — badge inisial + nama + aksi */}
        <div className="flex items-start gap-3">
-         <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
-           <BookOpen size={18} />
-         </div>
+         <SubjectBadge name={subject.name} tone={tone} />
          <div className="flex-1 min-w-0">
            <h3 className="font-semibold text-text truncate">{subject.name}</h3>
            <p className="text-xs text-text-muted">{materialCount} materi</p>
          </div>
-{onDelete && (
-            <Tooltip label={t('exam.history.deleteSubject')}>
-              <button
-                onClick={(e) => { e.stopPropagation(); onDelete(subject.id); }}
-                aria-label={t('exam.history.deleteSubject')}
-                className="p-1 text-text-muted hover:text-danger transition-colors shrink-0"
-              >
-                <Trash2 size={14} />
-              </button>
-            </Tooltip>
-          )}
+         {onDelete && (
+           <Tooltip label={t('exam.history.deleteSubject')}>
+             <button
+               onClick={(e) => { e.stopPropagation(); onDelete(subject.id); }}
+               aria-label={t('exam.history.deleteSubject')}
+               className="p-1 text-text-muted hover:text-danger transition-colors shrink-0"
+             >
+               <Trash2 size={14} />
+             </button>
+           </Tooltip>
+         )}
        </div>
 
-      {/* Ringkasan stats */}
-      <div className="grid grid-cols-3 gap-1.5">
-        <div className="rounded-lg bg-background/60 py-1.5 px-1 text-center">
-          <p className="text-sm font-bold text-text flex items-center justify-center gap-1"><Trophy size={11} className="text-warning" />{subject.best_score ?? '—'}</p>
-          <p className="text-[9px] text-text-muted uppercase tracking-wide">Skor</p>
-        </div>
-        <div className="rounded-lg bg-background/60 py-1.5 px-1 text-center">
-          <p className="text-sm font-bold text-text flex items-center justify-center gap-1"><HelpCircle size={11} className="text-accent-teal" />{subject.total_quizzes ?? 0}</p>
-          <p className="text-[9px] text-text-muted uppercase tracking-wide">Quiz</p>
-        </div>
-        <div className="rounded-lg bg-background/60 py-1.5 px-1 text-center">
-          <p className="text-sm font-bold text-text flex items-center justify-center gap-1"><CreditCard size={11} className="text-accent-purple" />{subject.total_flashcards ?? 0}</p>
-          <p className="text-[9px] text-text-muted uppercase tracking-wide">Flashcard</p>
-        </div>
-      </div>
+       {/* Body — grid mini metrik */}
+       <div className="grid grid-cols-4 gap-1.5">
+         <div className="rounded-lg bg-white/[0.03] border border-white/[0.06] py-2 px-1 text-center">
+           <Trophy size={12} className="mx-auto mb-0.5 text-warning" />
+           <p className="text-sm font-bold text-text leading-tight">{subject.best_score ?? '—'}</p>
+           <p className="text-[9px] text-text-muted uppercase tracking-wide">{t('exam.history.scoreLabel', 'Skor')}</p>
+         </div>
+         <div className="rounded-lg bg-white/[0.03] border border-white/[0.06] py-2 px-1 text-center">
+           <HelpCircle size={12} className="mx-auto mb-0.5 text-accent-teal" />
+           <p className="text-sm font-bold text-text leading-tight">{subject.total_quizzes ?? 0}</p>
+           <p className="text-[9px] text-text-muted uppercase tracking-wide">{t('exam.history.quizLabel', 'Quiz')}</p>
+         </div>
+         <div className="rounded-lg bg-white/[0.03] border border-white/[0.06] py-2 px-1 text-center">
+           <CreditCard size={12} className="mx-auto mb-0.5 text-accent-purple" />
+           <p className="text-sm font-bold text-text leading-tight">{subject.total_flashcards ?? 0}</p>
+           <p className="text-[9px] text-text-muted uppercase tracking-wide">{t('exam.history.cardLabel', 'Kartu')}</p>
+         </div>
+         <div className="rounded-lg bg-white/[0.03] border border-white/[0.06] py-2 px-1 text-center">
+           <FileText size={12} className="mx-auto mb-0.5 text-accent-blue" />
+           <p className="text-sm font-bold text-text leading-tight">{materialCount}</p>
+           <p className="text-[9px] text-text-muted uppercase tracking-wide">{t('exam.history.materialLabel', 'Materi')}</p>
+         </div>
+       </div>
 
-      {/* Daftar nama materi */}
-      {subjectMaterials.length > 0 && (
-        <div className="flex gap-1 flex-wrap">
-          {subjectMaterials.slice(0, 3).map((m, i) => (
-            <span key={i} className="inline-flex items-center gap-0.5 text-[10px] px-2 py-0.5 rounded bg-accent-blue/10 text-accent-blue border border-accent-blue/20 truncate max-w-[200px]">
-              <FileText size={8} className="shrink-0" />
-              {m.filename || `Materi #${m.id}`}
-            </span>
-          ))}
-          {subjectMaterials.length > 3 && (
-            <span className="text-[10px] text-text-muted self-center">+{subjectMaterials.length - 3} lagi</span>
-          )}
-        </div>
-      )}
+       {/* Daftar nama materi */}
+       {subjectMaterials.length > 0 && (
+         <div className="flex gap-1 flex-wrap">
+           {subjectMaterials.slice(0, 3).map((m, i) => (
+             <span key={i} className="inline-flex items-center gap-0.5 text-[10px] px-2 py-0.5 rounded bg-accent-blue/10 text-accent-blue border border-accent-blue/20 truncate max-w-[200px]">
+               <FileText size={8} className="shrink-0" />
+               {m.filename || `Materi #${m.id}`}
+             </span>
+           ))}
+           {subjectMaterials.length > 3 && (
+             <span className="text-[10px] text-text-muted self-center">+{subjectMaterials.length - 3} lagi</span>
+           )}
+         </div>
+       )}
 
-      {/* Tanggal + waktu dibuat */}
-      {subject.created_at && (
-        <div className="flex items-center gap-3 text-[10px] text-text-muted">
-          <span className="flex items-center gap-1"><Calendar size={9} />{formatDate(subject.created_at)}</span>
-          <span className="flex items-center gap-1"><Clock size={9} />{formatTimeOnly(subject.created_at)}</span>
-        </div>
-      )}
+       {/* Footer — progress tipis + timestamp */}
+       <div className="space-y-2">
+         <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+           <div className="h-full rounded-full bg-gradient-primary transition-all" style={{ width: `${progress}%` }} />
+         </div>
+         <div className="flex items-center justify-between text-[10px] text-text-muted">
+           <div className="flex items-center gap-3">
+             {subject.created_at && (
+               <>
+                 <span className="flex items-center gap-1"><Calendar size={9} />{formatDate(subject.created_at)}</span>
+                 <span className="flex items-center gap-1"><Clock size={9} />{formatTimeOnly(subject.created_at)}</span>
+               </>
+             )}
+           </div>
+           <span>{progress}%</span>
+         </div>
+       </div>
 
-      <div className="flex gap-2 mt-auto">
-        <button onClick={() => onSelectSubject(subject.id)} className="flex-1 px-3 py-2 rounded-lg border border-border bg-card text-text text-xs font-medium hover:border-primary/40 transition-colors">
+       <div className="flex gap-2 mt-auto">
+         <button onClick={() => onSelectSubject(subject.id)} className="flex-1 px-3 py-2 rounded-lg border border-white/10 bg-white/[0.03] text-text text-xs font-medium hover:border-primary/40 hover:bg-white/[0.06] transition-colors">
            <History size={12} className="inline mr-1 -mt-0.5" /> {t('exam.history.history')}
          </button>
          <button onClick={() => onStartConfig(subject.id)} className="flex-1 px-3 py-2 rounded-lg bg-primary text-white text-xs font-medium hover:opacity-90 transition-opacity">
            <Zap size={12} className="inline mr-1 -mt-0.5" /> {t('exam.history.simulation')}
          </button>
-      </div>
-    </div>
-  );
+       </div>
+     </div>
+   );
 }
 
 export default function HistoryView({ subjectId, subjects, onSelectSubject, onStartConfig, onRetry, onResume, detailId, setDetailId, pendingPlanTab, setPendingPlanTab }) {
