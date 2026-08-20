@@ -15,7 +15,22 @@ export default function StudyRecommendationCard({ route, subjectId }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const enterFocus = useFocusStore((s) => s.enterFocus);
-  if (!route?.recommendations) return null;
+  if (!route?.recommendations) {
+    return (
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="card-base p-5">
+        <div className="flex items-center gap-2 mb-3">
+          <Zap size={16} className="text-primary" />
+          <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('studyRoute.title')}</h2>
+        </div>
+        <div className="text-center py-6">
+          <Zap size={28} className="mx-auto mb-2 text-text-muted opacity-40" />
+          <p className="text-xs text-text-muted">
+            {t('studyRoute.noData', 'Belum ada rekomendasi belajar. Lengkapi diagnostik untuk mendapatkan rute yang disarankan.')}
+          </p>
+        </div>
+      </motion.div>
+    );
+  }
 
   const meta = STUDY_MODALITY_META(t);
   const primaryModality = route.primary?.modality;

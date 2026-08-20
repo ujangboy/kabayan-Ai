@@ -216,7 +216,11 @@ export default function SubjectDashboardPage() {
         <div className="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-5 items-start">
           {/* Left column — main workspace (70%) */}
           <div className="space-y-5 min-w-0">
-            <MasteryProfileCard profile={learningProfile} subject={subject} />
+            {isProfileError ? (
+              <QueryErrorCard title={t('studyProfile.title', 'Profil Belajar')} />
+            ) : (
+              <MasteryProfileCard profile={learningProfile} subject={subject} />
+            )}
             <TopicProgressCard topicProgress={topicProgress} />
 
             {isDiagnosticError ? (

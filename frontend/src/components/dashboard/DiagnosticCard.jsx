@@ -15,7 +15,22 @@ export default function DiagnosticCard({ diagnostic }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [expanded, setExpanded] = useState(false);
-  if (!diagnostic) return null;
+  if (!diagnostic) {
+    return (
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="card-base p-5">
+        <div className="flex items-center gap-2 mb-3">
+          <Stethoscope size={16} className="text-accent-teal" />
+          <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('studyDiagnostic.title')}</h2>
+        </div>
+        <div className="text-center py-6">
+          <Stethoscope size={28} className="mx-auto mb-2 text-text-muted opacity-40" />
+          <p className="text-xs text-text-muted">
+            {t('studyDiagnostic.noData', 'Belum ada data diagnostik. Kerjakan quiz atau latihan untuk mulai analisis.')}
+          </p>
+        </div>
+      </motion.div>
+    );
+  }
 
   const readiness = diagnostic.readiness || {};
   const overview = diagnostic.overview || {};

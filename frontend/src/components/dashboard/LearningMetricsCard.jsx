@@ -4,7 +4,22 @@ import { useTranslation } from 'react-i18next';
 
 export default function LearningMetricsCard({ metrics }) {
   const { t } = useTranslation();
-  if (!metrics) return null;
+  if (!metrics) {
+    return (
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="card-base p-5">
+        <div className="flex items-center gap-2 mb-3">
+          <BarChart3 size={16} className="text-accent-teal" />
+          <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('studyMetrics.title')}</h2>
+        </div>
+        <div className="text-center py-6">
+          <BarChart3 size={28} className="mx-auto mb-2 text-text-muted opacity-40" />
+          <p className="text-xs text-text-muted">
+            {t('studyMetrics.noData', 'Belum ada metrik belajar. Kartu flashcard dan sesi belajar akan tampil di sini.')}
+          </p>
+        </div>
+      </motion.div>
+    );
+  }
   const fsrs = metrics.fsrs_overview || {};
 
   const dueCards = fsrs.due_cards ?? 0;
