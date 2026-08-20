@@ -233,6 +233,14 @@ Semua di `src/components/ui/`:
 - **Badge** (`variant` primary/success/danger/warning/info/secondary).
 - **Tooltip** (Radix) — untuk tombol icon-only.
 - **Spinner / Skeleton** — loading state.
+- **Domain components** — komponen spesifik halaman hasil ekstraksi revamp berada di
+  `src/components/<domain>/` (mis. `chat/`, `flashcard/`, `exam/`, `layout/`). Tujuannya
+  menjaga `src/pages/*.jsx` di bawah ~350 baris. Semua komponen ini murni presentasional
+  dan **hanya memakai token/utilitas yang sudah ada** — tidak ada token warna/spacing/radius
+  baru yang diperkenalkan selama revamp. `IconRail` (`src/components/layout/IconRail.jsx`)
+  adalah nav rail kiri tunggal (item: Dashboard, Chat, Subjects, Materi, Notebook,
+  Flashcard, Quiz, Exam Analyzer, Study Plan, Settings) dengan indikator aktif
+  framer-motion (`layoutId="nav-active-indicator"`).
 
 ## 5. Layout & Spacing
 - Base unit 4px. Spacing token: xxs 4 / xs 8 / sm 12 / md 16 / lg 24 / xl 32.
