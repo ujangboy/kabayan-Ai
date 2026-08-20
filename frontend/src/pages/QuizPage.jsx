@@ -195,7 +195,7 @@ export default function QuizPage() {
                 animate={{ opacity: 1, y: 0 }}
                 className="card-base card-hoverable p-5 flex flex-col relative overflow-hidden"
               >
-                <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-primary" />
+                <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-purple-500/60 via-purple-500/20 to-transparent" />
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1 min-w-0">
                     {/* Nama materi / mata kuliah */}

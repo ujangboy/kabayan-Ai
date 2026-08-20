@@ -38,17 +38,17 @@ export default function ProgressCard({ progress }) {
         <div className="space-y-4">
           {/* Stats */}
           <div className="grid grid-cols-3 gap-3">
-            <div className="bg-background border border-border rounded-xl p-3 text-center">
+            <div className="bg-black/25 border border-white/[0.06] rounded-xl p-3 text-center">
               <p className="text-xl font-bold text-warning flex items-center justify-center gap-1">
                 <Flame size={16} className="shrink-0" />{streak.current_streak_days ?? 0}
               </p>
               <p className="text-[10px] text-text-secondary mt-0.5">{t('studyProgress.streakCurrent')}</p>
             </div>
-            <div className="bg-background border border-border rounded-xl p-3 text-center">
+            <div className="bg-black/25 border border-white/[0.06] rounded-xl p-3 text-center">
               <p className="text-xl font-bold text-text">{streak.longest_streak_days ?? 0}</p>
               <p className="text-[10px] text-text-secondary mt-0.5">{t('studyProgress.streakLongest')}</p>
             </div>
-            <div className="bg-background border border-border rounded-xl p-3 text-center">
+            <div className="bg-black/25 border border-white/[0.06] rounded-xl p-3 text-center">
               <p className="text-xl font-bold text-text">{streak.total_active_days ?? 0}</p>
               <p className="text-[10px] text-text-secondary mt-0.5">{t('studyProgress.activeDays')}</p>
             </div>
@@ -71,7 +71,7 @@ export default function ProgressCard({ progress }) {
           </div>
 
           {/* Mastery trend */}
-          <div className="bg-background border border-border/60 rounded-xl p-3">
+          <div className="bg-black/25 border border-white/[0.06] rounded-xl p-3">
             <div className="flex items-center justify-between mb-2">
               <p className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider flex items-center gap-1">
                 <Trophy size={11} /> {t('studyProgress.trendTitle')}
@@ -132,7 +132,7 @@ function TrendMiniChart({ series }) {
         ))}
       </svg>
       {hover != null && (
-        <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-card border border-border rounded-lg px-2 py-1 text-[10px] text-text shadow-lg whitespace-nowrap">
+        <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-slate-800/95 backdrop-blur-sm border border-white/10 rounded-lg px-2 py-1 text-[10px] text-text shadow-lg whitespace-nowrap">
           {t('studyProgress.trendTooltip', { session: series[hover].session, avg: series[hover].avg_accuracy, topics: series[hover].topics_measured })}
         </div>
       )}

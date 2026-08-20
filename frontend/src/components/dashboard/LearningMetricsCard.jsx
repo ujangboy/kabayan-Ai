@@ -19,15 +19,15 @@ export default function LearningMetricsCard({ metrics }) {
       </div>
 
       <div className="grid grid-cols-3 gap-3">
-        <div className="bg-background border border-border rounded-xl p-3 text-center">
+        <div className="bg-black/25 border border-white/[0.06] rounded-xl p-3 text-center">
           <p className="text-2xl font-bold text-text">{dueCards}</p>
           <p className="text-[10px] text-text-secondary mt-1">{t('studyMetrics.fsrsDue', 'Kartu Jatuh Tempo')}</p>
         </div>
-        <div className="bg-background border border-border rounded-xl p-3 text-center">
+        <div className="bg-black/25 border border-white/[0.06] rounded-xl p-3 text-center">
           <p className="text-2xl font-bold text-text">{newCards}</p>
           <p className="text-[10px] text-text-secondary mt-1">{t('studyMetrics.fsrsNew', 'Kartu Baru')}</p>
         </div>
-        <div className="bg-background border border-border rounded-xl p-3 text-center">
+        <div className="bg-black/25 border border-white/[0.06] rounded-xl p-3 text-center">
           <p className="text-2xl font-bold text-success">{retention}%</p>
           <p className="text-[10px] text-text-secondary mt-1">{t('studyMetrics.fsrsRetention', 'Retensi')}</p>
         </div>

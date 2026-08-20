@@ -85,7 +85,7 @@ export default function KnowledgeGraphCard({ graph }) {
                 const hasConcepts = childTopics.some(n => (n.concepts || []).length > 0);
 
                 return (
-                  <div key={bab.id} className="bg-background border border-border/60 rounded-xl p-3">
+                  <div key={bab.id} className="bg-black/25 border border-white/[0.06] rounded-xl p-3">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-xs font-semibold text-text">{bab.label}</span>
                       <div className="flex items-center gap-2">
@@ -127,7 +127,7 @@ export default function KnowledgeGraphCard({ graph }) {
               })}
 
               {ungrouped.length > 0 && (
-                <div className="bg-background border border-border/60 rounded-xl p-3">
+                <div className="bg-black/25 border border-white/[0.06] rounded-xl p-3">
                   <p className="text-xs font-semibold text-text mb-2">{t('studyGraph.ungrouped')}</p>
                   <div className="flex flex-wrap gap-1.5">
                     {ungrouped.map(n => {
@@ -145,7 +145,7 @@ export default function KnowledgeGraphCard({ graph }) {
               )}
 
               {dependencies.length > 0 && (
-                <div className="bg-background border border-border/60 rounded-xl p-3">
+                <div className="bg-black/25 border border-white/[0.06] rounded-xl p-3">
                   <p className="text-xs font-semibold text-text mb-2">{t('studyGraph.dependencies')}</p>
                   <div className="flex flex-wrap gap-1.5">
                     {dependencies.map((e, i) => (

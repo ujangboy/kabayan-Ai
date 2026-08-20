@@ -79,7 +79,7 @@ export default function TopBar() {
           <DropdownMenu.Content
             sideOffset={6}
             align="end"
-            className="z-50 w-44 rounded-lg border border-border bg-card p-1 shadow-modal"
+            className="z-50 w-44 rounded-lg border border-white/10 bg-slate-900/95 p-1 shadow-glass-lg backdrop-blur-md"
           >
             {LANGS.map((l) => (
               <DropdownMenu.Item

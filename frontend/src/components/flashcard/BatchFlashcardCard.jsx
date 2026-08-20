@@ -26,7 +26,7 @@ export default function BatchFlashcardCard({ group, onStart, onReview, onHistory
       animate={{ opacity: 1, y: 0 }}
       className="card-base card-hoverable p-5 flex flex-col relative overflow-hidden"
     >
-      <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-primary" />
+      <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-purple-500/60 via-purple-500/20 to-transparent" />
       <div className="flex items-start justify-between mb-2">
         <div className="flex-1 min-w-0">
           <div className="text-[10px] font-semibold text-accent-teal uppercase tracking-wider mb-1">
@@ -103,7 +103,7 @@ export default function BatchFlashcardCard({ group, onStart, onReview, onHistory
       )}
 
       {cards[0] && (
-        <div className="bg-background rounded-lg p-3 mb-4 border border-border text-xs text-text-secondary line-clamp-2">
+        <div className="bg-black/25 rounded-lg p-3 mb-4 border border-white/[0.06] text-xs text-text-secondary line-clamp-2">
           <MathMarkdown>{cards[0].question}</MathMarkdown>
         </div>
       )}

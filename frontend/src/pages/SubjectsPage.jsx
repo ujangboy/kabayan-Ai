@@ -113,7 +113,7 @@ export default function SubjectsPage() {
                   transition={{ delay: idx * 0.05 }}
                   className="card-base card-hoverable group flex flex-col relative overflow-hidden hover:border-primary/40"
                 >
-                  <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-primary" />
+                  <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-purple-500/60 via-purple-500/20 to-transparent" />
                   <div className="flex justify-between items-start mb-2 pl-2 pt-1">
                     <h3 className="font-semibold text-text text-lg">{s.name}</h3>
                     <Tooltip label={t('common.delete')}>

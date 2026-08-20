@@ -43,7 +43,7 @@ export default function ChatComposer({ onSend, isStreaming, onStop, onSaveNote, 
     <div className="shrink-0 border-t border-border px-4 py-3 bg-surface relative">
       {showQuickPrompts && (
         <div className="absolute bottom-full mb-2 left-4 right-4">
-          <div className="rounded-xl border border-border bg-surface shadow-lg p-2 grid grid-cols-2 gap-2">
+          <div className="rounded-xl border border-white/10 bg-slate-900/95 backdrop-blur-md shadow-lg p-2 grid grid-cols-2 gap-2">
             {QUICK_PROMPTS.map((q) => (
               <button
                 key={q.label}
@@ -69,13 +69,13 @@ export default function ChatComposer({ onSend, isStreaming, onStop, onSaveNote, 
             onKeyDown={handleKeyDown}
             rows={1}
             placeholder={tutorMode ? t('chat.tutorInputPlaceholder') : t('chat.inputPlaceholder')}
-            className="w-full resize-none rounded-xl border border-border bg-base px-4 py-3 pr-10 text-sm text-text placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/40 max-h-[200px]"
+            className="w-full resize-none rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 pr-10 text-sm text-text placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/40 max-h-[200px]"
           />
           <button
             onClick={() => setShowQuickPrompts((v) => !v)}
             className={cn(
-              'absolute right-2 bottom-2.5 p-1.5 rounded-lg text-text-muted hover:text-text hover:bg-base transition-colors',
-              showQuickPrompts && 'text-primary bg-base'
+              'absolute right-2 bottom-2.5 p-1.5 rounded-lg text-text-muted hover:text-text hover:bg-white/[0.06] transition-colors',
+              showQuickPrompts && 'text-primary bg-white/[0.06]'
             )}
             title={t('chat.quickPrompts')}
           >
@@ -86,7 +86,7 @@ export default function ChatComposer({ onSend, isStreaming, onStop, onSaveNote, 
           <button
             onClick={onSaveNote}
             disabled={isNoteSaving || isStreaming}
-            className="p-3 rounded-xl bg-base text-text-muted hover:text-text border border-border transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            className="p-3 rounded-xl bg-white/[0.03] text-text-muted hover:text-text border border-white/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {isNoteSaving ? <Spinner size={18} className="animate-spin" /> : <Notes size={18} />}
           </button>

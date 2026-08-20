@@ -32,12 +32,12 @@ export function Tooltip({ label, children, side = 'top', align = 'center', ...pr
           align={align}
           sideOffset={6}
           className={cn(
-            'z-[9999] px-2.5 py-1.5 rounded-lg text-xs font-medium text-text glass-light',
-            'border border-border shadow-xl select-none'
+            'z-[9999] px-2.5 py-1.5 rounded-lg text-xs font-medium text-text bg-slate-800/95 backdrop-blur-sm',
+            'border border-white/10 shadow-xl select-none'
           )}
         >
           {label}
-          <TooltipPrimitive.Arrow className="fill-card" />
+          <TooltipPrimitive.Arrow className="fill-slate-800" />
         </TooltipPrimitive.Content>
       </TooltipPrimitive.Portal>
     </TooltipPrimitive.Root>

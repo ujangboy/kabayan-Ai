@@ -24,7 +24,7 @@ export function NotebookSidebar({
   const { t } = useTranslation();
 
   return (
-    <div className="w-72 divider-gradient-r relative bg-gradient-to-b from-sidebar to-background flex flex-col shrink-0 hidden md:flex">
+    <div className="w-72 divider-gradient-r relative bg-gradient-to-b from-sidebar to-background backdrop-blur-md flex flex-col shrink-0 hidden md:flex">
       {/* Sidebar header */}
       <div className="px-4 pt-4 pb-3 flex items-center justify-between">
         <h2 className="text-sm font-semibold text-text">{t('notebook.notes')}</h2>
