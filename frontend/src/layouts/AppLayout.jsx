@@ -53,13 +53,24 @@ function PendingBanner({ t }) {
 }
 
 export default function AppLayout() {
-  const { searchOpen } = useAppStore();
+  const { searchOpen, setSidebarOpen } = useAppStore();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const isFocusMode = useFocusStore((s) => s.isFocusMode);
   const focusActivity = useFocusStore((s) => s.focusActivity);
   const exitFocus = useFocusStore((s) => s.exitFocus);
+
+  // Hanya tampilkan context sidebar pada route yang membutuhkannya.
+  // Chat & Notebook punya sidebar internal sendiri (hindari sidebar ganda).
+  const hasContextSidebar = ['/materi', '/subjects', '/flashcard'].some((p) =>
+    location.pathname.startsWith(p)
+  );
+
+  // Tutup drawer mobile saat pindah halaman (termasuk ke halaman tanpa sidebar).
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [location.pathname, setSidebarOpen]);
 
   // Sinkronkan bahasa dari backend saat aplikasi pertama dibuka.
   useEffect(() => {
@@ -104,7 +115,7 @@ export default function AppLayout() {
       <div className="flex h-screen overflow-hidden bg-background">
         <BackgroundProcessSync />
         <IconRail />
-        <ContextSidebar />
+        {hasContextSidebar && <ContextSidebar />}
         <main className="flex-1 overflow-hidden flex flex-col min-w-0">
           <TopBar />
           <div className="flex-1 overflow-hidden flex flex-col min-w-0">
