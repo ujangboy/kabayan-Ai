@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
+import { Icon } from '@/components/ui/Icon';
 
-export default function StatCard({ icon: Icon, label, value, color = 'text-text', suffix = '' }) {
+export default function StatCard({ icon, label, value, color = 'text-text', suffix = '' }) {
   const bgClass = color.replace('text-', 'bg-');
   return (
     <motion.div
@@ -9,7 +10,7 @@ export default function StatCard({ icon: Icon, label, value, color = 'text-text'
       className="card-base card-hoverable p-4 flex items-center gap-3"
     >
       <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${bgClass}/10`}>
-        <Icon size={16} className={color} />
+        <Icon name={icon} size={16} className={color} />
       </div>
       <div>
         <p className="text-xl font-bold bg-gradient-to-r from-text to-text-secondary bg-clip-text text-transparent">

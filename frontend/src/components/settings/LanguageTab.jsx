@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Check, Loader2 } from '@/icons';
+import { ICONS } from '@/lib/icons';
+import { Icon } from '@/components/ui';
+
 import { profileAPI } from '@/services/api';
 import { useToast } from '@/components/Toast';
 import { setAppLanguage } from '@/i18n';
@@ -66,7 +68,7 @@ export default function LanguageTab() {
               )}
             >
               <span className="text-sm font-medium text-text">{t(key)}</span>
-              {active && <Check size={16} className="text-primary" />}
+              {active && <Icon name={ICONS.status.check} size={16} className="text-primary" />}
             </button>
           );
         })}
@@ -74,7 +76,7 @@ export default function LanguageTab() {
 
       {mutation.isPending && (
         <div className="flex items-center gap-2 text-xs text-text-muted">
-          <Loader2 size={14} className="animate-spin" />
+          <Icon name={ICONS.status.loading} size={14} className="animate-spin" />
           {t('common.loading')}
         </div>
       )}

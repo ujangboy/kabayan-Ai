@@ -1,6 +1,8 @@
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { SentimentDissatisfied, SentimentSatisfied, Target } from '@/icons';
+import { ICONS } from '@/lib/icons';
+import { Icon } from '@/components/ui';
+
 import MathMarkdown from '@/components/MathMarkdown';
 
 export default function FlashcardReviewCard({
@@ -8,9 +10,9 @@ export default function FlashcardReviewCard({
 }) {
   const { t } = useTranslation();
   const SIMPLE_RATINGS = [
-    { value: 0, Icon: SentimentDissatisfied, label: t('flashcard.ratingLupa'),  cls: 'border-danger/50 text-danger hover:bg-danger/10 active:bg-danger/20' },
-    { value: 2, Icon: SentimentSatisfied, label: t('flashcard.ratingIngat'), cls: 'border-accent-blue/50 text-accent-blue hover:bg-accent-blue/10 active:bg-accent-blue/20' },
-    { value: 3, Icon: Target, label: t('flashcard.ratingHafal'), cls: 'border-success/50 text-success hover:bg-success/10 active:bg-success/20' },
+    { value: 0, Icon: ICONS.ui.sentimentBad, label: t('flashcard.ratingLupa'),  cls: 'border-danger/50 text-danger hover:bg-danger/10 active:bg-danger/20' },
+    { value: 2, Icon: ICONS.ui.sentimentGood, label: t('flashcard.ratingIngat'), cls: 'border-accent-blue/50 text-accent-blue hover:bg-accent-blue/10 active:bg-accent-blue/20' },
+    { value: 3, Icon: ICONS.learning.target, label: t('flashcard.ratingHafal'), cls: 'border-success/50 text-success hover:bg-success/10 active:bg-success/20' },
   ];
   const FEEDBACK_META = {
     0: { color: 'border-danger/30 bg-danger/5',       label: t('flashcard.feedbackLupa'),  msg: t('flashcard.feedbackLupaMsg') },
@@ -67,7 +69,7 @@ export default function FlashcardReviewCard({
                   disabled={isSaving}
                   className={`flex flex-col items-center gap-1.5 px-4 py-3 rounded-xl border text-sm font-semibold transition-all hover:scale-[1.03] active:scale-95 disabled:opacity-50 ${r.cls}`}
                 >
-                  <r.Icon size={26} className="mb-0.5" />
+                  <Icon name={r.Icon} size={26} className="mb-0.5" />
                   {r.label}
                 </button>
               ))}

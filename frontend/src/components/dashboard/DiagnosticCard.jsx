@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ICONS } from '@/lib/icons';
+import { Icon } from '@/components/ui';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Stethoscope, TrendingUp, TrendingDown, AlertTriangle, CheckCircle2, Clock, ChevronDown, ChevronUp } from '@/icons';
+
 import { useTranslation } from 'react-i18next';
 
 const READINESS_META = {
@@ -25,7 +27,6 @@ export default function DiagnosticCard({ diagnostic }) {
   const actionItems = diagnostic.action_items || [];
   const noDataTopics = diagnostic.no_data_topics || [];
   const rdMeta = READINESS_META[readiness.level] || READINESS_META.belum_ada_data;
-  const RdIcon = rdMeta.icon;
 
   return (
     <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="card-base p-5">
@@ -34,7 +35,7 @@ export default function DiagnosticCard({ diagnostic }) {
         className="w-full flex items-center justify-between"
       >
         <div className="flex items-center gap-2">
-          <Stethoscope size={16} className="text-accent-teal" />
+          <Icon name={ICONS.learning.stethoscope} size={16} className="text-accent-teal" />
           <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('studyDiagnostic.title')}</h2>
         </div>
         <div className="flex items-center gap-3">
@@ -42,10 +43,10 @@ export default function DiagnosticCard({ diagnostic }) {
             <span className="text-sm font-bold text-text">{readiness.avg_mastery}%</span>
           )}
           <span className={`badge text-[9px] ${rdMeta.cls}`}>
-            <RdIcon size={9} className="inline mr-1" />
+            <Icon name={rdMeta.icon} size={9} className="inline mr-1" />
             {readiness.label || t('studyDiagnostic.levelNoData')}
           </span>
-          {expanded ? <ChevronUp size={14} className="text-text-muted" /> : <ChevronDown size={14} className="text-text-muted" />}
+          {expanded ? <Icon name={ICONS.ui.chevronUp} size={14} className="text-text-muted" /> : <Icon name={ICONS.ui.chevronDown} size={14} className="text-text-muted" />}
         </div>
       </button>
 
@@ -101,8 +102,8 @@ export default function DiagnosticCard({ diagnostic }) {
                       <div key={d.topic} className="flex items-center justify-between gap-2 py-1.5">
                         <span className="text-[11px] text-text truncate">{d.topic}</span>
                         <div className="flex items-center gap-2 shrink-0">
-                          {d.trend_direction === 'turun' && <TrendingDown size={10} className="text-danger" />}
-                          {d.trend_direction === 'naik' && <TrendingUp size={10} className="text-success" />}
+                          {d.trend_direction === 'turun' && <Icon name={ICONS.learning.regress} size={10} className="text-danger" />}
+                          {d.trend_direction === 'naik' && <Icon name={ICONS.learning.progress} size={10} className="text-success" />}
                           <span className="text-[10px] font-semibold text-danger">{d.accuracy}%</span>
                         </div>
                       </div>
@@ -118,7 +119,7 @@ export default function DiagnosticCard({ diagnostic }) {
                   <div className="flex flex-wrap gap-1.5">
                     {strongTopics.slice(0, 5).map(d => (
                       <span key={d.topic} className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-success/10 border border-success/20 text-[9px] text-success">
-                        <CheckCircle2 size={8} />
+                        <Icon name={ICONS.status.success} size={8} />
                         {d.topic} · {d.accuracy}%
                       </span>
                     ))}
@@ -133,7 +134,7 @@ export default function DiagnosticCard({ diagnostic }) {
                   <div className="space-y-1.5">
                     {riskFlags.slice(0, 2).map((f, i) => (
                       <div key={i} className={`flex items-start gap-2 rounded-lg px-2.5 py-1.5 text-[10px] ${f.severity === 'tinggi' ? 'bg-danger/10 border border-danger/20 text-danger' : 'bg-warning/10 border border-warning/20 text-warning'}`}>
-                        <AlertTriangle size={10} className="shrink-0 mt-0.5" />
+                        <Icon name={ICONS.status.warning} size={10} className="shrink-0 mt-0.5" />
                         <span>{f.message}</span>
                       </div>
                     ))}

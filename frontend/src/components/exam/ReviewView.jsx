@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ICONS } from '@/lib/icons';
+import { Icon } from '@/components/ui';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BookOpen, CheckCircle, XCircle, ChevronDown, Loader2, Lightbulb, FileText, MessageSquare } from '@/icons';
+
 import { examAPI } from '@/services/api';
 import { cn } from '@/utils';
 import MathMarkdown from '@/components/MathMarkdown';
@@ -44,7 +46,7 @@ export default function ReviewView({ sessionData, evalData }) {
   return (
     <div className="space-y-5">
       <div className="card-base p-5">
-        <SectionHeader icon={BookOpen} title="Review Jawaban"
+        <SectionHeader icon={ICONS.learning.bookOpen} title="Review Jawaban"
           subtitle={`${questions.length} soal · Klik untuk melihat penjelasan`} />
 
         <div className="space-y-3">
@@ -66,8 +68,8 @@ export default function ReviewView({ sessionData, evalData }) {
                   <div className={cn('w-6 h-6 rounded-full flex items-center justify-center shrink-0',
                     isCorrect === true  ? 'bg-success'  :
                     isCorrect === false ? 'bg-danger'   : 'bg-border')}>
-                    {isCorrect === true  ? <CheckCircle size={14} className="text-white" /> :
-                     isCorrect === false ? <XCircle     size={14} className="text-white" /> :
+                    {isCorrect === true  ? <Icon name={ICONS.status.success} size={14} className="text-white" /> :
+                     isCorrect === false ? <Icon name={ICONS.status.error}     size={14} className="text-white" /> :
                                           <span className="text-[10px] font-bold text-text">?</span>}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -76,7 +78,7 @@ export default function ReviewView({ sessionData, evalData }) {
                       <MathMarkdown>{q.question}</MathMarkdown>
                     </div>
                   </div>
-                  <ChevronDown size={14} className={cn('text-text-muted shrink-0 transition-transform', isOpen && 'rotate-180')} />
+                  <Icon name={ICONS.ui.chevronDown} size={14} className={cn('text-text-muted shrink-0 transition-transform', isOpen && 'rotate-180')} />
                 </button>
 
                 <AnimatePresence>
@@ -128,7 +130,7 @@ export default function ReviewView({ sessionData, evalData }) {
                             {expl?.text && (
                               <div className="p-3 rounded-lg bg-accent-teal/5 border border-accent-teal/20">
                                 <p className="text-xs font-semibold text-accent-teal mb-1 flex items-center gap-1">
-                                  <Lightbulb size={11} /> Penjelasan AI
+                                  <Icon name={ICONS.learning.lightbulb} size={11} /> Penjelasan AI
                                 </p>
                                 <MathMarkdown>{expl.text}</MathMarkdown>
                               </div>
@@ -142,12 +144,12 @@ export default function ReviewView({ sessionData, evalData }) {
                         <div className="flex items-center gap-3 flex-wrap text-xs text-text-muted">
                           {q.material_reference && (
                             <span className="flex items-center gap-1">
-                              <FileText size={11} /> {q.material_reference}
+                              <Icon name={ICONS.files.document} size={11} /> {q.material_reference}
                             </span>
                           )}
                           {q.tips && (
                             <span className="flex items-center gap-1 text-primary">
-                              <Lightbulb size={11} /> {q.tips}
+                              <Icon name={ICONS.learning.lightbulb} size={11} /> {q.tips}
                             </span>
                           )}
                           {/* Jelaskan button — only if no explanation already shown */}
@@ -158,8 +160,8 @@ export default function ReviewView({ sessionData, evalData }) {
                               className="ml-auto flex items-center gap-1 px-2.5 py-1 rounded-lg bg-accent-teal/10 text-accent-teal border border-accent-teal/20 hover:bg-accent-teal/20 transition-colors disabled:opacity-50"
                             >
                               {expl?.loading
-                                ? <><Loader2 size={11} className="animate-spin" /> Memuat...</>
-                                : <><Lightbulb size={11} /> Jelaskan</>}
+                                ? <><Icon name={ICONS.status.loading} size={11} className="animate-spin" /> Memuat...</>
+                                : <><Icon name={ICONS.learning.lightbulb} size={11} /> Jelaskan</>}
                             </button>
                           )}
                           
@@ -178,7 +180,7 @@ export default function ReviewView({ sessionData, evalData }) {
                                 "bg-primary/10 text-primary border-primary/20 hover:bg-primary/20"
                               )}
                             >
-                              <MessageSquare size={11} /> Tanya Tutor
+                              <Icon name={ICONS.communication.chat} size={11} /> Tanya Tutor
                             </button>
                           )}
                         </div>

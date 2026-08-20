@@ -1,6 +1,7 @@
+import { Icon } from '@/components/ui';
+import { ICONS } from '@/lib/icons';
 import { cn } from '@/utils';
-import { Loader2 } from '@/icons';
 
 export function Spinner({ size = 16, className }) {
-  return <Loader2 size={size} className={cn('animate-spin', className)} aria-hidden="true" />;
+  return <Icon name={ICONS.status.loading} size={size} className={cn('animate-spin', className)} aria-hidden="true" />;
 }

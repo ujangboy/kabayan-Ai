@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Zap, Loader2 } from '@/icons';
+import { ICONS } from '@/lib/icons';
+
 import { quizAPI } from '@/services/api';
-import { Modal, Button, Select, Input } from '@/components/ui';
+import { Modal, Button, Select, Input , Icon } from '@/components/ui';
 import MaterialPicker from '@/components/MaterialPicker';
 import { usePendingOperation } from '@/hooks/usePendingOperation';
 
@@ -55,7 +56,7 @@ export function GenerateQuizModal({ open, onClose, subjects, onSuccess }) {
       open={open}
       onClose={onClose}
       size="sm"
-      title={<span className="flex items-center gap-2"><Zap size={18} className="text-primary" />{t('quiz.modalTitle')}</span>}
+      title={<span className="flex items-center gap-2"><Icon name={ICONS.ui.bolt} size={18} className="text-primary" />{t('quiz.modalTitle')}</span>}
       footer={
         <>
           <Button variant="ghost" onClick={onClose} disabled={isGenerating}>{t('common.cancel')}</Button>
@@ -148,7 +149,7 @@ export function GenerateQuizModal({ open, onClose, subjects, onSuccess }) {
         )}
         {isGenerating && (
           <div className="flex items-center gap-2 text-sm text-primary py-1">
-            <Loader2 size={16} className="animate-spin" />
+            <Icon name={ICONS.status.loading} size={16} className="animate-spin" />
             <span>{t('quiz.analyzing')}</span>
           </div>
         )}

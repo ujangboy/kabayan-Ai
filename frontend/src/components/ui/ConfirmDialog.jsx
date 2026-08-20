@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
-import { AlertTriangle } from '@/icons';
+import { Icon } from './Icon';
+import { ICONS } from '@/lib/icons';
 import { cn } from '@/utils';
 import { Modal } from './Modal';
 
@@ -20,7 +21,7 @@ export function ConfirmDialog({
       <div className="p-5 text-center">
         {danger && (
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-danger/10">
-            <AlertTriangle size={24} className="text-danger" />
+            <Icon name={ICONS.status.warning} size={24} className="text-danger" />
           </div>
         )}
         <h3 className="mb-2 text-lg font-bold text-text">{title}</h3>

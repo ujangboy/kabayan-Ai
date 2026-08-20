@@ -1,8 +1,10 @@
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { ICONS } from '@/lib/icons';
+import { Icon } from '@/components/ui';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import { Search, Globe, Bell, Check, PanelClose } from '@/icons';
+
 import { profileAPI } from '@/services/api';
 import { useAppStore } from '@/store';
 import { setAppLanguage, STORAGE_KEY } from '@/i18n';
@@ -49,7 +51,7 @@ export default function TopBar() {
         className="lg:hidden flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-text-secondary transition-colors hover:bg-card hover:text-text"
         title={t('common.menu')}
       >
-        <PanelClose size={20} />
+        <Icon name={ICONS.actions.menu} size={20} />
       </button>
 
       {/* Search */}
@@ -57,7 +59,7 @@ export default function TopBar() {
         onClick={() => setSearchOpen(true)}
         className="flex max-w-md flex-1 items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm text-text-muted transition-colors hover:border-primary/40"
       >
-        <Search size={15} />
+        <Icon name={ICONS.actions.search} size={15} />
         <span className="flex-1 text-left">{t('common.search')}</span>
         <kbd className="hidden sm:inline rounded border border-border bg-background px-1.5 py-0.5 text-[10px]">⌘K</kbd>
       </button>
@@ -71,7 +73,7 @@ export default function TopBar() {
             className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-card hover:text-text"
             title={t('settings.tabs.language')}
           >
-            <Globe size={16} />
+            <Icon name={ICONS.ui.globe} size={16} />
             <span className="hidden sm:inline text-xs font-semibold uppercase">{currentLang}</span>
           </button>
         </DropdownMenu.Trigger>
@@ -93,7 +95,7 @@ export default function TopBar() {
                 )}
               >
                 <span>{l.label}</span>
-                {currentLang === l.code && <Check size={14} />}
+                {currentLang === l.code && <Icon name={ICONS.status.check} size={14} />}
               </DropdownMenu.Item>
             ))}
           </DropdownMenu.Content>
@@ -106,7 +108,7 @@ export default function TopBar() {
         className="relative rounded-lg p-2 text-text-secondary transition-colors hover:bg-card hover:text-text"
         title={t('common.notifications')}
       >
-        <Bell size={18} />
+        <Icon name={ICONS.ui.bell} size={18} />
       </button>
 
       {/* Profile */}

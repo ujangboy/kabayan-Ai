@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { X } from '@/icons';
+import { ICONS } from '@/lib/icons';
+import { Icon } from '@/components/ui';
+
 
 // Focus Mode (PRD US5.2) — overlay fullscreen yang menyembunyikan sidebar/nav.
 // Tombol keluar sengaja disembunyikan (muncul saat mouse bergerak); Esc selalu berfungsi.
@@ -44,7 +46,7 @@ export default function FocusModeView({ activity, onExit, children }) {
             controlsVisible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
           }`}
         >
-          <X size={14} />
+          <Icon name={ICONS.actions.close} size={14} />
           {t('focusMode.exit')}
         </button>
       </div>

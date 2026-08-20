@@ -1,7 +1,9 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ICONS } from '@/lib/icons';
+import { Icon } from '@/components/ui';
 import { motion } from 'framer-motion';
-import { CalendarCheck, Clock, CheckCircle2, Focus, CreditCard, HelpCircle, Brain } from '@/icons';
+
 import { Tooltip } from '@/components/ui/Tooltip';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
@@ -9,9 +11,9 @@ import { studyAPI } from '@/services/api';
 import { useFocusStore } from '@/store';
 
 const PLAN_ITEM_META = (t) => ({
-  flashcard: { icon: CreditCard, label: t('studyPlan.fcFlashcard'),  cls: 'bg-accent-purple/10 text-accent-purple', to: '/flashcard' },
-  micro_quiz: { icon: HelpCircle, label: t('studyPlan.fcQuiz'),       cls: 'bg-accent-teal/10 text-accent-teal',      to: '/quiz' },
-  socratic:  { icon: Brain,      label: t('studyPlan.fcSocratic'),   cls: 'bg-primary/10 text-primary',              to: '/chat' },
+  flashcard: { icon: ICONS.nav.flashcard, label: t('studyPlan.fcFlashcard'),  cls: 'bg-accent-purple/10 text-accent-purple', to: '/flashcard' },
+  micro_quiz: { icon: ICONS.ui.help, label: t('studyPlan.fcQuiz'),       cls: 'bg-accent-teal/10 text-accent-teal',      to: '/quiz' },
+  socratic:  { icon: ICONS.learning.brain,      label: t('studyPlan.fcSocratic'),   cls: 'bg-primary/10 text-primary',              to: '/chat' },
 });
 
 export default function DailyPlanCard({ subjectId }) {
@@ -66,7 +68,7 @@ export default function DailyPlanCard({ subjectId }) {
   return (
     <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="card-base p-6">
       <div className="flex items-center gap-2 mb-1">
-        <CalendarCheck size={16} className="text-accent-blue" />
+        <Icon name={ICONS.learning.calendarCheck} size={16} className="text-accent-blue" />
         <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('studyPlan.title')}</h2>
       </div>
       <p className="text-xs text-text-muted mb-3">{t('studyPlan.subtitle')}</p>
@@ -114,8 +116,7 @@ export default function DailyPlanCard({ subjectId }) {
           )}
           {items.map((item, i) => {
             const m = meta[item.type] || meta.micro_quiz;
-            const Icon = m.icon;
-            const isDone = !!doneMap[doneKey(item)];
+                        const isDone = !!doneMap[doneKey(item)];
             return (
               <div key={i} className={`flex items-stretch gap-2 ${isDone ? 'opacity-60' : ''}`}>
                 <Tooltip label={t('studyPlan.markDone')}>
@@ -128,7 +129,7 @@ export default function DailyPlanCard({ subjectId }) {
                     }`}
                     aria-label={t('studyPlan.markDone')}
                   >
-                    <CheckCircle2 size={14} />
+                    <Icon name={ICONS.status.success} size={14} />
                   </button>
                 </Tooltip>
                 <button
@@ -138,7 +139,7 @@ export default function DailyPlanCard({ subjectId }) {
                   }`}
                 >
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${m.cls}`}>
-                    <Icon size={14} />
+                    <Icon name={m.icon} size={14} />
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className={`text-xs font-semibold text-text truncate ${isDone ? 'line-through' : ''}`}>
@@ -156,7 +157,7 @@ export default function DailyPlanCard({ subjectId }) {
                     className="w-10 shrink-0 flex items-center justify-center rounded-xl border border-border text-text-muted hover:text-primary hover:border-primary/40 transition-colors cursor-pointer"
                     aria-label={t('focusMode.start')}
                   >
-                    <Focus size={14} />
+                    <Icon name={ICONS.learning.focus} size={14} />
                   </button>
                 </Tooltip>
               </div>
@@ -164,7 +165,7 @@ export default function DailyPlanCard({ subjectId }) {
           })}
           {plan?.best_hour != null && (
             <p className="text-[10px] text-text-muted pt-1">
-              <Clock size={10} className="inline mr-1" />
+              <Icon name={ICONS.learning.clock} size={10} className="inline mr-1" />
               {t('studyPlan.bestHour', { hour: String(plan.best_hour).padStart(2, '0') })}
             </p>
           )}

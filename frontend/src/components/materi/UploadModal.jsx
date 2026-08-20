@@ -1,8 +1,9 @@
 import { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Upload } from '@/icons';
+import { ICONS } from '@/lib/icons';
+
 import { materiAPI } from '@/services/api';
-import { Modal, Button, Select, Input } from '@/components/ui';
+import { Modal, Button, Select, Input , Icon } from '@/components/ui';
 import { extractErrorMessage } from '@/utils/errors';
 
 export function UploadModal({ open, onClose, subjects, onSuccess }) {
@@ -70,7 +71,7 @@ export function UploadModal({ open, onClose, subjects, onSuccess }) {
             onClick={() => fileInputRef.current?.click()}
           >
             <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-primary/15">
-              <Upload size={24} className="text-primary-light" />
+              <Icon name={ICONS.actions.upload} size={24} className="text-primary-light" />
             </div>
             <p className="text-sm font-medium text-text">{file ? file.name : t('materi.uploadDropzone')}</p>
             <p className="mt-1 text-xs text-text-muted">{t('materi.uploadMaxSize')}</p>

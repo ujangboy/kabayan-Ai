@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ICONS } from '@/lib/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useChatStore, useUiStore } from '@/store';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileText, Upload, Plus, Video, Folder, LayoutTemplate } from '@/icons';
+
 import { materiAPI, subjectAPI } from '@/services/api';
 import { useToast } from '@/components/Toast';
-import { EmptyState, Skeleton } from '@/components/ui';
+import { EmptyState, Skeleton , Icon } from '@/components/ui';
 import { extractErrorMessage } from '@/utils/errors';
 import { usePendingOperation } from '@/hooks/usePendingOperation';
 import { FolderCard } from '@/components/materi/FolderCard';
@@ -131,14 +132,14 @@ export default function MateriPage() {
               onClick={() => setIsYoutubeModalOpen(true)}
               className="btn-ghost border border-border text-xs"
             >
-              <Video size={14} className="text-danger" />
+              <Icon name={ICONS.ui.video} size={14} className="text-danger" />
               {t('materi.importYoutube')}
             </button>
             <button
               onClick={() => setIsUploadModalOpen(true)}
               className="btn-primary text-xs"
             >
-              <Upload size={14} />
+              <Icon name={ICONS.actions.upload} size={14} />
               {t('materi.uploadMateri')}
             </button>
           </div>
@@ -147,14 +148,14 @@ export default function MateriPage() {
         {/* Subjects folder cards */}
         <div className="space-y-3">
           <div className="flex items-center gap-2">
-            <LayoutTemplate size={15} className="text-primary-light" />
+            <Icon name={ICONS.learning.grid} size={15} className="text-primary-light" />
             <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('nav.subjects')}</h2>
           </div>
           <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1">
             {/* All Materials folder */}
             <FolderCard
               active={!subjectFilter}
-              icon={Folder}
+              icon={ICONS.files.folder}
               name={t('materi.folderAll')}
               count={materials.length}
               tone={0}
@@ -167,7 +168,7 @@ export default function MateriPage() {
                 <FolderCard
                   key={s.id}
                   active={String(s.id) === subjectFilter}
-                  icon={Folder}
+                  icon={ICONS.files.folder}
                   name={s.name}
                   count={count}
                   tone={i + 1}
@@ -180,7 +181,7 @@ export default function MateriPage() {
               onClick={() => navigate('/subjects?new=1')}
               className="shrink-0 w-40 flex flex-col items-center justify-center gap-2 rounded-card border border-dashed border-border text-text-muted hover:text-primary-light hover:border-primary/40 transition-colors"
             >
-              <Plus size={20} />
+              <Icon name={ICONS.actions.addOutline} size={20} />
               <span className="text-xs font-medium">{t('subjects.addNew')}</span>
             </button>
           </div>
@@ -189,7 +190,7 @@ export default function MateriPage() {
         {/* Breadcrumb / current folder */}
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-2 text-sm">
-            <FileText size={15} className="text-primary-light" />
+            <Icon name={ICONS.files.document} size={15} className="text-primary-light" />
             <span className="text-text-secondary">{t('materi.filesTitle')}</span>
             <span className="text-text-muted">/</span>
             <span className="font-semibold text-text">{activeSubject ? activeSubject.name : t('materi.folderAll')}</span>
@@ -208,11 +209,11 @@ export default function MateriPage() {
           </div>
         ) : materials.length === 0 ? (
           <div className="card-base">
-            <EmptyState icon={Upload} title={t('materi.emptyState')} />
+            <EmptyState icon={ICONS.actions.upload} title={t('materi.emptyState')} />
           </div>
         ) : filteredMaterials.length === 0 ? (
           <div className="card-base">
-            <EmptyState icon={Folder} title={t('materi.fileManagerEmpty')} />
+            <EmptyState icon={ICONS.files.folder} title={t('materi.fileManagerEmpty')} />
           </div>
         ) : (
           <motion.div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">

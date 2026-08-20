@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ThumbsUp, ThumbsDown } from '@/icons';
-import { Tooltip } from '@/components/ui';
+import { ICONS } from '@/lib/icons';
+
+import { Tooltip , Icon } from '@/components/ui';
 import { cn } from '@/utils';
 
 export default function FeedbackButtons({ onFeedback }) {
@@ -27,7 +28,7 @@ export default function FeedbackButtons({ onFeedback }) {
             status === 'up' ? 'text-success' : 'text-text-muted hover:text-text'
           )}
         >
-          <ThumbsUp size={13} />
+          <Icon name={ICONS.ui.thumbsUp} size={13} />
         </button>
       </Tooltip>
       <Tooltip label={t('chat.dislike')}>
@@ -38,7 +39,7 @@ export default function FeedbackButtons({ onFeedback }) {
             status === 'down' ? 'text-danger' : 'text-text-muted hover:text-text'
           )}
         >
-          <ThumbsDown size={13} />
+          <Icon name={ICONS.ui.thumbsDown} size={13} />
         </button>
       </Tooltip>
     </div>

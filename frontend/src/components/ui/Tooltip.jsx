@@ -16,7 +16,7 @@ export function TooltipProvider({ children, delayDuration = 300 }) {
 /**
  * Penggunaan:
  *   <Tooltip label="Hapus">
- *     <button className="p-1.5 ..."><Trash2 size={16} /></button>
+ *     <button className="p-1.5 ..."><Icon name={ICONS.actions.delete} size={16} /></button>
  *   </Tooltip>
  */
 export function Tooltip({ label, children, side = 'top', align = 'center', ...props }) {

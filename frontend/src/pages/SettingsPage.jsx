@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ICONS } from '@/lib/icons';
+import { Icon } from '@/components/ui';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, Languages, Database, Cpu, Info } from '@/icons';
+
 import { cn } from '@/utils';
 import ProfileTab from '@/components/settings/ProfileTab';
 import LanguageTab from '@/components/settings/LanguageTab';
@@ -10,11 +12,11 @@ import AiLimitTab from '@/components/settings/AiLimitTab';
 import AboutTab from '@/components/settings/AboutTab';
 
 const TABS = [
-  { key: 'profile', icon: User },
-  { key: 'language', icon: Languages },
-  { key: 'data', icon: Database },
-  { key: 'aiLimit', icon: Cpu },
-  { key: 'about', icon: Info },
+  { key: 'profile', icon: ICONS.ui.user },
+  { key: 'language', icon: ICONS.ui.languages },
+  { key: 'data', icon: ICONS.ui.database },
+  { key: 'aiLimit', icon: ICONS.ui.cpu },
+  { key: 'about', icon: ICONS.status.info },
 ];
 
 export default function SettingsPage() {
@@ -38,7 +40,7 @@ export default function SettingsPage() {
         {/* Header */}
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center shrink-0 shadow-lg shadow-primary/25">
-            <User size={20} className="text-white" />
+            <Icon name={ICONS.ui.user} size={20} className="text-white" />
           </div>
           <div>
             <h1 className="text-2xl font-bold text-text">{t('settings.title')}</h1>
@@ -48,7 +50,7 @@ export default function SettingsPage() {
 
         {/* Tabs */}
         <div className="flex gap-1 flex-wrap divider-gradient-b relative pb-px">
-          {TABS.map(({ key, icon: Icon }) => (
+          {TABS.map(({ key, icon }) => (
             <button
               key={key}
               onClick={() => setActive(key)}
@@ -59,7 +61,7 @@ export default function SettingsPage() {
                   : 'text-text-secondary border-transparent hover:text-text hover:bg-card/50'
               )}
             >
-              <Icon size={15} />
+              <Icon name={icon} size={15} />
               {t(`settings.tabs.${key}`)}
             </button>
           ))}

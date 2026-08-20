@@ -1,10 +1,10 @@
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { Folder } from '@/icons';
+
 import { SubjectBadge } from '@/components/ui';
 import { cn } from '@/utils';
 
-export function FolderCard({ active, icon: Icon, name, count, onClick, tone, index = 0 }) {
+export function FolderCard({ active, name, count, onClick, tone, index = 0 }) {
   const { t } = useTranslation();
   return (
     <motion.button

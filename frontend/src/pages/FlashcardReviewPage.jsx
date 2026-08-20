@@ -1,9 +1,11 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ICONS } from '@/lib/icons';
+import { Icon } from '@/components/ui';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ChevronLeft, Loader2, Brain } from '@/icons';
+
 import { flashcardAPI } from '@/services/api';
 import { usePageState } from '@/hooks/usePageState';
 import { fadeSlide } from '@/utils';
@@ -167,7 +169,7 @@ export default function FlashcardReviewPage() {
     return (
       <AnimatePresence mode="wait" initial={false}>
         <motion.div key="loading" {...fadeSlide} className="flex-1 flex items-center justify-center">
-          <Loader2 size={32} className="animate-spin text-primary" />
+          <Icon name={ICONS.status.loading} size={32} className="animate-spin text-primary" />
         </motion.div>
       </AnimatePresence>
     );
@@ -230,10 +232,10 @@ export default function FlashcardReviewPage() {
       {/* Top bar */}
       <div className="flex items-center justify-between mb-4 shrink-0">
         <button onClick={() => navigate('/flashcard')} className="btn-ghost text-sm text-text-muted">
-          <ChevronLeft size={16} /> {t('common.back')}
+          <Icon name={ICONS.ui.chevronLeft} size={16} /> {t('common.back')}
         </button>
         <div className="flex items-center gap-2 text-sm text-text-secondary font-medium">
-          <Brain size={15} className="text-accent-purple" />
+          <Icon name={ICONS.learning.brain} size={15} className="text-accent-purple" />
           {t('flashcard.reviewDaily')}
         </div>
         <span className="px-3 py-1 bg-card rounded-full text-sm font-medium text-text-secondary border border-border">

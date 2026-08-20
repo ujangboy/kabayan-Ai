@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Search, FileText, MessageSquare, BookMarked, CreditCard, HelpCircle, Settings, CalendarCheck, X } from '@/icons';
+import { ICONS } from '@/lib/icons';
+import { Icon } from '@/components/ui';
+
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAppStore, useChatStore } from '@/store';
@@ -30,20 +32,20 @@ export default function CommandSearch() {
       id: 'nav',
       labelKey: 'commandSearch.quickNav',
       items: [
-        { id: 'chat', icon: MessageSquare, label: t('commandSearch.chatAI'), desc: t('commandSearch.chatDesc'), action: () => { const id = createChat(); navigate(`/chat?id=${id}`); } },
-        { id: 'materi', icon: FileText, label: t('commandSearch.materi'), desc: t('commandSearch.materiDesc'), action: () => navigate('/materi') },
-        { id: 'notebook', icon: BookMarked, label: t('commandSearch.notebook'), desc: t('commandSearch.notebookDesc'), action: () => navigate('/notebook') },
-        { id: 'flashcard', icon: CreditCard, label: t('commandSearch.flashcard'), desc: t('commandSearch.flashcardDesc'), action: () => navigate('/flashcard') },
-        { id: 'quiz', icon: HelpCircle, label: t('commandSearch.quiz'), desc: t('commandSearch.quizDesc'), action: () => navigate('/quiz') },
+        { id: 'chat', icon: ICONS.communication.chat, label: t('commandSearch.chatAI'), desc: t('commandSearch.chatDesc'), action: () => { const id = createChat(); navigate(`/chat?id=${id}`); } },
+        { id: 'materi', icon: ICONS.files.document, label: t('commandSearch.materi'), desc: t('commandSearch.materiDesc'), action: () => navigate('/materi') },
+        { id: 'notebook', icon: ICONS.learning.bookmarks, label: t('commandSearch.notebook'), desc: t('commandSearch.notebookDesc'), action: () => navigate('/notebook') },
+        { id: 'flashcard', icon: ICONS.nav.flashcard, label: t('commandSearch.flashcard'), desc: t('commandSearch.flashcardDesc'), action: () => navigate('/flashcard') },
+        { id: 'quiz', icon: ICONS.ui.help, label: t('commandSearch.quiz'), desc: t('commandSearch.quizDesc'), action: () => navigate('/quiz') },
       ],
     },
     {
       id: 'actions',
       labelKey: 'commandSearch.actions',
       items: [
-        { id: 'new-chat', icon: MessageSquare, label: t('commandSearch.actionNewChat'), desc: t('commandSearch.actionNewChatDesc'), action: () => { const id = createChat(); navigate(`/chat?id=${id}`); } },
-        { id: 'study-plan', icon: CalendarCheck, label: t('nav.studyPlan'), desc: t('commandSearch.actionStudyPlanDesc'), action: () => navigate('/study-plan') },
-        { id: 'settings', icon: Settings, label: t('nav.settings'), desc: t('commandSearch.actionSettingsDesc'), action: () => navigate('/settings') },
+        { id: 'new-chat', icon: ICONS.communication.chat, label: t('commandSearch.actionNewChat'), desc: t('commandSearch.actionNewChatDesc'), action: () => { const id = createChat(); navigate(`/chat?id=${id}`); } },
+        { id: 'study-plan', icon: ICONS.learning.calendarCheck, label: t('nav.studyPlan'), desc: t('commandSearch.actionStudyPlanDesc'), action: () => navigate('/study-plan') },
+        { id: 'settings', icon: ICONS.nav.settings, label: t('nav.settings'), desc: t('commandSearch.actionSettingsDesc'), action: () => navigate('/settings') },
       ],
     },
   ], [t, createChat, navigate]);
@@ -112,7 +114,7 @@ export default function CommandSearch() {
         <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-purple-500/60 via-purple-500/20 to-transparent" />
         {/* Search Input */}
         <div className="flex items-center gap-3 px-4 py-3 divider-gradient-b relative">
-          <Search size={16} className="text-text-secondary shrink-0" />
+          <Icon name={ICONS.actions.search} size={16} className="text-text-secondary shrink-0" />
           <input
             autoFocus
             value={query}
@@ -126,7 +128,7 @@ export default function CommandSearch() {
             className="flex-1 bg-transparent text-text text-sm placeholder:text-text-muted outline-none"
           />
           <button onClick={() => setSearchOpen(false)} className="text-text-muted hover:text-text transition-colors">
-            <X size={14} />
+            <Icon name={ICONS.actions.close} size={14} />
           </button>
         </div>
 

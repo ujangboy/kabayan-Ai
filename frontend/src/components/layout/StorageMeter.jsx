@@ -1,8 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
+import { ICONS } from '@/lib/icons';
+import { Icon } from '@/components/ui';
 import { dataAPI } from '@/services/api';
 import { useTranslation } from 'react-i18next';
-import { HardDrive } from '@/icons';
+
 
 export default function StorageMeter() {
   const { t } = useTranslation();
@@ -18,7 +20,7 @@ export default function StorageMeter() {
   return (
     <div className="px-3 py-3">
       <div className="flex items-center gap-2 mb-2 text-text-secondary">
-        <HardDrive size={14} className="text-primary-light" />
+        <Icon name={ICONS.ui.storage} size={14} className="text-primary-light" />
         <span className="text-xs font-semibold">{t('settings.data.storage')}</span>
       </div>
       <div className="h-1.5 bg-card rounded-full overflow-hidden mb-1.5">

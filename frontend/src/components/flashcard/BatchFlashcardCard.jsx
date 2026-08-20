@@ -1,8 +1,9 @@
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { CreditCard, Book, Trash2, Trophy, Sparkles, FileText, Calendar, Clock, Brain, Play } from '@/icons';
+import { ICONS } from '@/lib/icons';
+
 import MathMarkdown from '@/components/MathMarkdown';
-import { Tooltip, SubjectBadge } from '@/components/ui';
+import { Tooltip, SubjectBadge , Icon } from '@/components/ui';
 import { formatDate, formatTimeOnly } from '@/utils';
 
 export default function BatchFlashcardCard({ group, onStart, onReview, onHistory, onDeleteAll, tone }) {
@@ -42,7 +43,7 @@ export default function BatchFlashcardCard({ group, onStart, onReview, onHistory
             aria-label={t('flashcard.deleteAllCardsTitle')}
             className="p-1 text-text-muted hover:text-danger transition-colors shrink-0"
           >
-            <Trash2 size={14} />
+            <Icon name={ICONS.actions.delete} size={14} />
           </button>
         </Tooltip>
       </div>
@@ -50,22 +51,22 @@ export default function BatchFlashcardCard({ group, onStart, onReview, onHistory
       {/* Stats */}
       <div className="flex items-center gap-3 text-xs text-text-secondary flex-wrap">
         <span className="flex items-center gap-1">
-          <CreditCard size={12} />
+          <Icon name={ICONS.nav.flashcard} size={12} />
           {t('flashcard.cardCount', { count: cards.length })}
         </span>
         <span className="flex items-center gap-1">
-          <Book size={12} />
+          <Icon name={ICONS.learning.book} size={12} />
           {t('flashcard.flipRecall')}
         </span>
         {masteredCount > 0 && (
           <span className="flex items-center gap-1 text-success">
-            <Trophy size={11} />
+            <Icon name={ICONS.learning.trophy} size={11} />
             {t('flashcard.masteredCount', { count: masteredCount })}
           </span>
         )}
         {newCount > 0 && (
           <span className="flex items-center gap-1 text-accent-blue">
-            <Sparkles size={11} />
+            <Icon name={ICONS.learning.sparkles} size={11} />
             {t('flashcard.newCount', { count: newCount })}
           </span>
         )}
@@ -83,7 +84,7 @@ export default function BatchFlashcardCard({ group, onStart, onReview, onHistory
         <div className="flex gap-1 flex-wrap">
           {allMaterialNames.slice(0, 3).map((name, i) => (
             <span key={i} className="inline-flex items-center gap-0.5 text-[10px] px-2 py-0.5 rounded bg-accent-blue/10 text-accent-blue border border-accent-blue/20 truncate max-w-[220px]">
-              <FileText size={8} className="shrink-0" />{name}
+              <Icon name={ICONS.files.document} size={8} className="shrink-0" />{name}
             </span>
           ))}
           {allMaterialNames.length > 3 && (
@@ -106,8 +107,8 @@ export default function BatchFlashcardCard({ group, onStart, onReview, onHistory
         <div className="flex items-center justify-between text-[10px] text-text-muted">
           {createdAt ? (
             <div className="flex items-center gap-3">
-              <span className="flex items-center gap-1"><Calendar size={9} />{formatDate(createdAt)}</span>
-              <span className="flex items-center gap-1"><Clock size={9} />{formatTimeOnly(createdAt)}</span>
+              <span className="flex items-center gap-1"><Icon name={ICONS.learning.calendar} size={9} />{formatDate(createdAt)}</span>
+              <span className="flex items-center gap-1"><Icon name={ICONS.learning.clock} size={9} />{formatTimeOnly(createdAt)}</span>
             </div>
           ) : <span />}
           <span className="font-semibold">{progress}%</span>
@@ -120,14 +121,14 @@ export default function BatchFlashcardCard({ group, onStart, onReview, onHistory
             onClick={onReview}
             className="flex-1 justify-center text-xs px-3 py-2 rounded-lg border border-accent-purple/40 text-accent-purple font-semibold hover:bg-accent-purple/10 transition-colors flex items-center gap-1.5"
           >
-            <Brain size={12} /> {t('flashcard.review')}
+            <Icon name={ICONS.learning.brain} size={12} /> {t('flashcard.review')}
           </button>
         )}
         <button
           onClick={onStart}
           className={`${dueCount > 0 ? 'flex-[2]' : 'flex-1'} btn-primary justify-center text-xs px-3 py-2`}
         >
-          <Play size={12} /> {t('flashcard.startLearning')}
+          <Icon name={ICONS.media.play} size={12} /> {t('flashcard.startLearning')}
         </button>
       </div>
 
@@ -135,7 +136,7 @@ export default function BatchFlashcardCard({ group, onStart, onReview, onHistory
         onClick={onHistory}
         className="w-full flex items-center justify-center gap-1 text-[11px] text-text-muted hover:text-accent-teal transition-colors py-1"
       >
-        <Clock size={11} /> {t('flashcard.reviewHistory')}
+        <Icon name={ICONS.learning.clock} size={11} /> {t('flashcard.reviewHistory')}
       </button>
     </motion.div>
   );

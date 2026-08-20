@@ -269,10 +269,24 @@ Hindari shadow tebal di luar token (`shadow-modal` hanya untuk dialog).
   preferensi `prefers-reduced-motion`.
 
 ## 8. Icons
-- **Google Material Symbols** via `@material-symbols-svg/react`, diimpor dari
-  `@/icons` (nama seragam: `Activity`, `Search`, `Trash`, dst). Jangan pakai
-  library icon lain. Ukuran standar: `ICON_SIZES` (xs 12 / sm 14 / md 16 /
-  lg 18 / xl 20 / 2xl 24).
+- **Google Material Symbols** (style **Rounded**) via `@material-symbols-svg/react`.
+- Satu-satunya cara render: komponen `<Icon />` dari `@/components/ui` dengan
+  prop `name` (wajib). Nama glyph WAJIB diambil dari registry semantik
+  `ICONS` (`src/lib/icons.js`) — jangan hardcode string atau import package
+  langsung.
+- Registry `ICONS` mengelompokkan glyph per fungsi: `nav`, `actions`,
+  `status`, `empty`, `files`, `learning`, `ui`, `editor`, `media`,
+  `communication`.
+- Prop `<Icon />`: `name`, `size` (default 24; minimum 20px icon interaktif,
+  16px dekoratif kecil), `weight` (100–700, default 400), `fill` (0/1),
+  `grade`, `opticalSize`, `className`, `ariaLabel`, `ariaHidden` (default true).
+- Aksesibilitas: icon fungsional (tombol icon-only) wajib `ariaLabel`; icon
+  dekoratif dibiarkan `aria-hidden` default.
+- Peta glyph → komponen SVG di-generate ke `src/lib/iconMap.js`
+  (AUTO-GENERATED, jangan edit manual; regenerate via
+  `node scripts/generate-icon-map.mjs`). Nama Material Symbols 2024 tidak
+  memakai suffix lama (`expand_more` → `keyboard_arrow_down`, `help_outline`
+  → `help`, `star_border` → `star`, dst). Fallback global: `help`.
 
 ## 9. Do's and Don'ts
 ### Do

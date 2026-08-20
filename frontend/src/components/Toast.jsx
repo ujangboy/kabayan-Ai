@@ -15,16 +15,17 @@
 import { createContext, useContext, useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { CheckCircle, XCircle, AlertTriangle, Info, X } from '@/icons';
+import { Icon } from '@/components/ui/Icon';
+import { ICONS } from '@/lib/icons';
 
 // ─── Context ──────────────────────────────────────────────────────────────────
 const ToastContext = createContext(null);
 
-const ICONS = {
-  success: <CheckCircle  size={17} className="shrink-0 text-success" />,
-  error:   <XCircle      size={17} className="shrink-0 text-danger"  />,
-  warning: <AlertTriangle size={17} className="shrink-0 text-warning" />,
-  info:    <Info          size={17} className="shrink-0 text-primary-light" />,
+const TOAST_ICON_MAP = {
+  success: ICONS.status.success,
+  error:   ICONS.status.error,
+  warning: ICONS.status.warning,
+  info:    ICONS.status.info,
 };
 
 const GLOW = {
@@ -124,7 +125,9 @@ function ToastItem({ toast, onDismiss }) {
       className={`pointer-events-auto flex items-start gap-3 pl-3.5 pr-2.5 py-3 rounded-2xl
         glass ring-1 ${RING[toast.type] || RING.info} ${GLOW[toast.type] || GLOW.info} text-sm text-text`}
     >
-      <span className="mt-0.5">{ICONS[toast.type] || ICONS.info}</span>
+      <span className="mt-0.5">
+        <Icon name={TOAST_ICON_MAP[toast.type] || ICONS.status.info} size={17} className="shrink-0" />
+      </span>
       <p className="flex-1 leading-snug text-[13px]">{toast.message}</p>
       {toast.action && (
         <button
@@ -140,7 +143,7 @@ function ToastItem({ toast, onDismiss }) {
         className="shrink-0 p-1 rounded-lg text-text-muted hover:text-text hover:bg-card-hover transition-colors"
         aria-label={t('common.close')}
       >
-        <X size={13} />
+        <Icon name={ICONS.actions.close} size={13} />
       </button>
     </motion.div>
   );
@@ -187,8 +190,8 @@ function ConfirmDialog({ state, onClose }) {
                 : 'bg-gradient-primary text-white shadow-btn-primary'
             }`}>
               {state.danger
-                ? <AlertTriangle size={20} />
-                : <Info size={20} />}
+                ? <Icon name={ICONS.status.warning} size={20} />
+                : <Icon name={ICONS.status.info} size={20} />}
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="text-sm font-semibold text-text mb-1">

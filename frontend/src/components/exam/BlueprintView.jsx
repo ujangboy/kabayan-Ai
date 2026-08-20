@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ClipboardList, Loader2, Play, ChevronLeft } from '@/icons';
+import { ICONS } from '@/lib/icons';
+import { Icon } from '@/components/ui';
+
 import { examAPI } from '@/services/api';
 import { Chip, SectionHeader } from './shared';
 
@@ -43,7 +45,7 @@ export default function BlueprintView({ blueprint, onGenerate, onGenerating, onB
   if (isGenerating) {
     return (
       <div className="p-20 text-center">
-        <Loader2 size={48} className="animate-spin text-primary mx-auto mb-6" />
+        <Icon name={ICONS.status.loading} size={48} className="animate-spin text-primary mx-auto mb-6" />
         <h3 className="text-lg font-semibold text-text mb-2">{t('exam.blueprint.generatingTitle')}</h3>
         <p className="text-text-muted text-sm max-w-sm mx-auto mb-6">
           {t('exam.blueprint.generatingDesc', { strong: <strong className="text-text">1–3 menit</strong> })}
@@ -67,7 +69,7 @@ export default function BlueprintView({ blueprint, onGenerate, onGenerating, onB
   return (
     <div className="space-y-5 p-6">
       <div>
-        <SectionHeader icon={ClipboardList} title={blueprint?.title || t('exam.blueprint.title')}
+        <SectionHeader icon={ICONS.status.pending} title={blueprint?.title || t('exam.blueprint.title')}
           subtitle={t('exam.blueprint.subtitle', { count: items.length, total: totalW })} />
 
         <div className="overflow-x-auto">
@@ -127,10 +129,10 @@ export default function BlueprintView({ blueprint, onGenerate, onGenerating, onB
 
       <div className="flex gap-3 justify-between">
         <button onClick={onBack} className="btn-ghost text-sm border border-border">
-          <ChevronLeft size={14} /> {t('exam.blueprint.changeConfig')}
+          <Icon name={ICONS.ui.chevronLeft} size={14} /> {t('exam.blueprint.changeConfig')}
         </button>
         <button onClick={handleGenerate} className="btn-primary">
-          <Play size={14} /> {t('exam.blueprint.generateQuestions')}
+          <Icon name={ICONS.media.play} size={14} /> {t('exam.blueprint.generateQuestions')}
         </button>
       </div>
     </div>

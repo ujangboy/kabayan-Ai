@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ICONS } from '@/lib/icons';
+import { Icon } from '@/components/ui';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Clock, Play, Pause, ChevronLeft, ChevronRight, Loader2, Check } from '@/icons';
+
 import { examAPI } from '@/services/api';
 import { cn } from '@/utils';
 import MathMarkdown from '@/components/MathMarkdown';
@@ -84,13 +86,13 @@ export default function QuizView({ sessionData, clockStart, onDone }) {
         {timeLeft !== null && (
           <div className={cn('flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-mono font-bold border',
             timeLeft < 60 ? 'text-danger border-danger/30 bg-danger/10 animate-pulse' : 'text-text border-border bg-card')}>
-            <Clock size={13} />{formatTime(timeLeft)}
+            <Icon name={ICONS.learning.clock} size={13} />{formatTime(timeLeft)}
           </div>
         )}
 
         <button onClick={() => setPaused(p => !p)}
           className="p-2 rounded-lg border border-border bg-card text-text-secondary hover:text-text transition-colors">
-          {paused ? <Play size={14} /> : <Pause size={14} />}
+          {paused ? <Icon name={ICONS.media.play} size={14} /> : <Icon name={ICONS.media.pause} size={14} />}
         </button>
       </div>
 
@@ -105,10 +107,10 @@ export default function QuizView({ sessionData, clockStart, onDone }) {
             transition={{ duration: 0.18, ease: [0.32, 0.72, 0, 1] }}
             className="card-base p-16 text-center"
           >
-            <Pause size={48} className="mx-auto mb-4 text-text-muted opacity-40" />
+            <Icon name={ICONS.media.pause} size={48} className="mx-auto mb-4 text-text-muted opacity-40" />
             <h3 className="text-lg font-semibold text-text mb-2">{t('exam.quiz.pausedTitle')}</h3>
             <button onClick={() => setPaused(false)} className="btn-primary mt-4">
-              <Play size={14} /> {t('exam.quiz.resume')}
+              <Icon name={ICONS.media.play} size={14} /> {t('exam.quiz.resume')}
             </button>
           </motion.div>
         ) : (
@@ -174,7 +176,7 @@ export default function QuizView({ sessionData, clockStart, onDone }) {
         <div className="flex items-center justify-between">
           <button onClick={() => setIdx(p => Math.max(0, p-1))} disabled={idx === 0}
             className="btn-ghost text-sm border border-border disabled:opacity-30">
-            <ChevronLeft size={14} /> {t('exam.quiz.previous')}
+            <Icon name={ICONS.ui.chevronLeft} size={14} /> {t('exam.quiz.previous')}
           </button>
 
           <div className="flex gap-1">
@@ -191,11 +193,11 @@ export default function QuizView({ sessionData, clockStart, onDone }) {
 
           {idx < totalQ - 1 ? (
             <button onClick={() => setIdx(p => p+1)} className="btn-primary text-sm">
-              {t('exam.quiz.next')} <ChevronRight size={14} />
+              {t('exam.quiz.next')} <Icon name={ICONS.ui.chevronRight} size={14} />
             </button>
           ) : (
             <button onClick={handleSubmit} disabled={isSubmitting} className="btn-primary text-sm">
-              {isSubmitting ? <><Loader2 size={13} className="animate-spin" /> {t('exam.quiz.evaluating')}</> : <><Check size={13} /> {t('exam.quiz.submit')}</>}
+              {isSubmitting ? <><Icon name={ICONS.status.loading} size={13} className="animate-spin" /> {t('exam.quiz.evaluating')}</> : <><Icon name={ICONS.status.check} size={13} /> {t('exam.quiz.submit')}</>}
             </button>
           )}
         </div>

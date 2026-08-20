@@ -1,12 +1,13 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ICONS } from '@/lib/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { HelpCircle, Play, Zap, Trophy, Trash2, Clock, Calendar, FileText, Brain } from '@/icons';
+
 import { quizAPI, subjectAPI } from '@/services/api';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { formatDate, formatTimeOnly, fadeSlide } from '@/utils';
-import { Tooltip, EmptyState, Select, Skeleton, SubjectBadge } from '@/components/ui';
+import { Tooltip, EmptyState, Select, Skeleton, SubjectBadge , Icon } from '@/components/ui';
 import { useUiStore } from '@/store';
 import { usePageState } from '@/hooks/usePageState';
 import { useToast } from '@/components/Toast';
@@ -137,7 +138,7 @@ export default function QuizPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center shadow-btn-primary shrink-0">
-              <HelpCircle size={20} className="text-white" />
+              <Icon name={ICONS.ui.help} size={20} className="text-white" />
             </div>
             <div>
               <h1 className="text-2xl font-bold text-text">{t('quiz.title')}</h1>
@@ -155,7 +156,7 @@ export default function QuizPage() {
               ))}
             </Select>
             <button onClick={() => setIsGeneratorOpen(true)} className="btn-primary text-xs">
-              <Zap size={14} /> {t('quiz.generateButton')}
+              <Icon name={ICONS.ui.bolt} size={14} /> {t('quiz.generateButton')}
             </button>
             {allQuizzes.length > 0 && (
               <button onClick={handleClearAll} className="btn-ghost text-danger border border-danger/20 text-xs">
@@ -180,11 +181,11 @@ export default function QuizPage() {
           ) : quizzes.length === 0 ? (
             <div className="col-span-full card-base">
               <EmptyState
-                icon={HelpCircle}
+                icon={ICONS.ui.help}
                 title={selectedSubject ? t('quiz.emptyForSubject') : t('quiz.empty')}
                 action={
                   <button onClick={() => setIsGeneratorOpen(true)} className="btn-primary text-sm">
-                    <Zap size={14} /> {t('quiz.generateFirst')}
+                    <Icon name={ICONS.ui.bolt} size={14} /> {t('quiz.generateFirst')}
                   </button>
                 }
               />
@@ -193,10 +194,10 @@ export default function QuizPage() {
             quizzes.map((quiz, idx) => {
               const qProgress = Math.min(100, quiz.score ?? 0);
               const stats = [
-                { icon: HelpCircle, value: quiz.question_count || 0, label: t('quiz.questionCount', { count: 1 }), color: 'text-accent-teal' },
-                { icon: Trophy, value: quiz.score ?? '—', label: t('quiz.scoreLabel', 'Skor'), color: 'text-warning' },
-                { icon: Brain, value: quiz.attempt_count || 0, label: t('quiz.playedLabel', 'Dimainkan'), color: 'text-accent-purple' },
-                { icon: Clock, value: quiz.time_taken != null ? formatDuration(quiz.time_taken, t) : '—', label: t('quiz.timeLabel', 'Waktu'), color: 'text-accent-blue' },
+                { icon: ICONS.ui.help, value: quiz.question_count || 0, label: t('quiz.questionCount', { count: 1 }), color: 'text-accent-teal' },
+                { icon: ICONS.learning.trophy, value: quiz.score ?? '—', label: t('quiz.scoreLabel', 'Skor'), color: 'text-warning' },
+                { icon: ICONS.learning.brain, value: quiz.attempt_count || 0, label: t('quiz.playedLabel', 'Dimainkan'), color: 'text-accent-purple' },
+                { icon: ICONS.learning.clock, value: quiz.time_taken != null ? formatDuration(quiz.time_taken, t) : '—', label: t('quiz.timeLabel', 'Waktu'), color: 'text-accent-blue' },
               ];
               return (
                 <motion.div
@@ -237,16 +238,16 @@ export default function QuizPage() {
                         aria-label={t('common.delete')}
                         className="p-1 text-text-muted hover:text-danger transition-colors shrink-0"
                       >
-                        <Trash2 size={14} />
+                        <Icon name={ICONS.actions.delete} size={14} />
                       </button>
                     </Tooltip>
                   </div>
 
                   {/* Body — grid mini metrik */}
                   <div className="grid grid-cols-4 gap-1.5">
-                    {stats.map(({ icon: Icon, value, label, color }) => (
+                    {stats.map(({ icon, value, label, color }) => (
                       <div key={label} className="rounded-lg bg-white/[0.03] border border-white/[0.06] py-2 px-1 text-center">
-                        <Icon size={12} className={`mx-auto mb-0.5 ${color}`} />
+                        <Icon name={icon} size={12} className={`mx-auto mb-0.5 ${color}`} />
                         <p className="text-sm font-bold text-text leading-tight truncate">{value}</p>
                         <p className="text-[9px] text-text-muted uppercase tracking-wide truncate">{label}</p>
                       </div>
@@ -258,7 +259,7 @@ export default function QuizPage() {
                     <div className="flex gap-1 flex-wrap">
                       {(quiz.material_names || []).slice(0, 3).map((name, i) => (
                         <span key={i} className="inline-flex items-center gap-0.5 text-[10px] px-2 py-0.5 rounded bg-accent-blue/10 text-accent-blue border border-accent-blue/20 truncate max-w-[220px]">
-                          <FileText size={8} className="shrink-0" />{name}
+                          <Icon name={ICONS.files.document} size={8} className="shrink-0" />{name}
                         </span>
                       ))}
                       {(quiz.material_names || []).length > 3 && (
@@ -280,8 +281,8 @@ export default function QuizPage() {
                     <div className="flex items-center justify-between text-[10px] text-text-muted">
                       {quiz.created_at ? (
                         <div className="flex items-center gap-3">
-                          <span className="flex items-center gap-1"><Calendar size={9} />{formatDate(quiz.created_at)}</span>
-                          <span className="flex items-center gap-1"><Clock size={9} />{formatTimeOnly(quiz.created_at)}</span>
+                          <span className="flex items-center gap-1"><Icon name={ICONS.learning.calendar} size={9} />{formatDate(quiz.created_at)}</span>
+                          <span className="flex items-center gap-1"><Icon name={ICONS.learning.clock} size={9} />{formatTimeOnly(quiz.created_at)}</span>
                         </div>
                       ) : <span />}
                       <span className="font-semibold">{qProgress}%</span>
@@ -292,7 +293,7 @@ export default function QuizPage() {
                     onClick={() => handleStartQuiz(quiz.id)}
                     className="btn-primary w-full justify-center text-xs mt-auto"
                   >
-                    <Play size={12} /> {quiz.score != null ? t('quiz.playAgain') : t('quiz.start')}
+                    <Icon name={ICONS.media.play} size={12} /> {quiz.score != null ? t('quiz.playAgain') : t('quiz.start')}
                   </button>
                 </motion.div>
               );

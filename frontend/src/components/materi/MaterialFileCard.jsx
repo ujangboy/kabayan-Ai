@@ -1,8 +1,9 @@
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { Folder, Trash2, X } from '@/icons';
+import { ICONS } from '@/lib/icons';
+
 import FileTypeIcon, { FILE_COLOR_MAP } from '@/components/FileTypeIcon';
-import { Tooltip } from '@/components/ui';
+import { Tooltip , Icon } from '@/components/ui';
 import { formatDate } from '@/utils';
 
 const FILE_TINT = {
@@ -48,7 +49,7 @@ export function MaterialFileCard({ material: m, index, showSubject, isRagActive,
           <p className="text-[10px] text-text-muted uppercase tracking-wider mt-0.5">{m.material_type}</p>
           {showSubject && (m.subject?.name) && (
             <p className="text-[11px] text-text-secondary mt-1 truncate" title={m.subject.name}>
-              <Folder size={10} className="inline text-amber mr-1" />{m.subject.name}
+              <Icon name={ICONS.files.folder} size={10} className="inline text-amber mr-1" />{m.subject.name}
             </p>
           )}
         </div>
@@ -58,7 +59,7 @@ export function MaterialFileCard({ material: m, index, showSubject, isRagActive,
             aria-label={t('materi.deleteMateriTitle')}
             className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-text-secondary hover:text-danger hover:bg-danger/10 transition-all shrink-0"
           >
-            <Trash2 size={15} />
+            <Icon name={ICONS.actions.delete} size={15} />
           </button>
         </Tooltip>
       </div>
@@ -90,7 +91,7 @@ export function MaterialFileCard({ material: m, index, showSubject, isRagActive,
                   className="p-0.5 rounded text-text-muted hover:text-danger hover:bg-danger/10 transition-colors shrink-0"
                   aria-label={t('materi.cancelProcessing')}
                 >
-                  <X size={11} />
+                  <Icon name={ICONS.actions.close} size={11} />
                 </button>
               </Tooltip>
             </div>

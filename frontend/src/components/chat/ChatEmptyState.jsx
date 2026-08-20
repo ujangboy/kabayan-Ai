@@ -1,6 +1,8 @@
 import { useTranslation } from 'react-i18next';
-import { Bot } from '@/icons';
+
 import { cn } from '@/utils';
+import { ICONS } from '@/lib/icons';
+import { Icon } from '@/components/ui';
 
 export default function ChatEmptyState({ tutorMode }) {
   const { t } = useTranslation();
@@ -12,7 +14,7 @@ export default function ChatEmptyState({ tutorMode }) {
           tutorMode ? 'bg-primary' : 'bg-accent'
         )}
       >
-        <Bot size={28} />
+        <Icon name={ICONS.communication.bot} size={28} />
       </div>
       <h3 className="text-lg font-semibold text-text">{t('chat.greetingTitle', 'Halo! Saya Kabayan AI')}</h3>
       <p className="text-sm text-text-muted mt-1 max-w-md">{t('chat.greetingSubtitle', 'Tanyakan apa saja seputar materi kuliahmu — saya siap membantu menjelaskan, meringkas, dan berlatih soal.')}</p>

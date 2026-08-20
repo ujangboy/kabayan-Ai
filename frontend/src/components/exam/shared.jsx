@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
-import { Star } from '@/icons';
+import { Icon } from '@/components/ui/Icon';
+import { ICONS } from '@/lib/icons';
 import { cn } from '@/utils';
 
 // ─── View constants ─────────────────────────────────────────────────────────
@@ -54,7 +55,7 @@ export function StarRating({ stars = 3 }) {
   return (
     <span className="flex gap-0.5">
       {[1,2,3,4,5].map(i => (
-        <Star key={i} size={12}
+        <Icon key={i} name={ICONS.ui.star} size={12}
           className={i <= stars ? 'text-warning fill-warning' : 'text-border'}
         />
       ))}
@@ -80,12 +81,12 @@ export function Chip({ label, color = 'primary', size = 'sm' }) {
   );
 }
 
-export function SectionHeader({ icon: Icon, title, subtitle, action }) {
+export function SectionHeader({ icon, title, subtitle, action }) {
   return (
     <div className="flex items-start justify-between mb-4">
       <div className="flex items-center gap-2">
         <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-          <Icon size={15} className="text-primary" />
+          <Icon name={icon} size={15} className="text-primary" />
         </div>
         <div>
           <h2 className="font-semibold text-text text-sm">{title}</h2>

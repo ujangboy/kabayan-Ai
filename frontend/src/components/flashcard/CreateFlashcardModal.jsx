@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { CreditCard } from '@/icons';
+import { ICONS } from '@/lib/icons';
+
 import { extractErrorMessage } from '@/utils/errors';
-import { Select, Textarea, Modal, Button } from '@/components/ui';
+import { Select, Textarea, Modal, Button , Icon } from '@/components/ui';
 
 export default function CreateFlashcardModal({ open, subjects, onClose, onSuccess }) {
   const { t } = useTranslation();
@@ -39,7 +40,7 @@ export default function CreateFlashcardModal({ open, subjects, onClose, onSucces
       open={open}
       onClose={onClose}
       size="md"
-      title={<span className="flex items-center gap-2"><CreditCard size={18} className="text-primary" />{t('flashcard.manualModalTitle')}</span>}
+      title={<span className="flex items-center gap-2"><Icon name={ICONS.nav.flashcard} size={18} className="text-primary" />{t('flashcard.manualModalTitle')}</span>}
       footer={
         <>
           <Button variant="ghost" onClick={onClose} disabled={isSubmitting}>{t('common.cancel')}</Button>

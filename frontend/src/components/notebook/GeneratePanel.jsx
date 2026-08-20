@@ -1,9 +1,10 @@
 import { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ICONS } from '@/lib/icons';
 import { motion } from 'framer-motion';
-import { Sparkles, X, RefreshCw } from '@/icons';
+
 import { notesAPI } from '@/services/api';
-import { Select } from '@/components/ui';
+import { Select , Icon } from '@/components/ui';
 import MaterialPicker from '@/components/MaterialPicker';
 import { cn } from '@/utils';
 
@@ -97,14 +98,14 @@ export function GeneratePanel({ subjects, onClose, onNoteCreated }) {
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 divider-gradient-b relative shrink-0">
           <div className="flex items-center gap-2">
-            <Sparkles size={18} className="text-primary" />
+            <Icon name={ICONS.learning.sparkles} size={18} className="text-primary" />
             <h3 className="font-semibold text-text text-sm">{t('notebook.generateWithAi')}</h3>
           </div>
           <button
             onClick={onClose}
             className="p-1.5 rounded-lg text-text-muted hover:text-text hover:bg-card transition-colors"
           >
-            <X size={16} />
+            <Icon name={ICONS.actions.close} size={16} />
           </button>
         </div>
 
@@ -174,12 +175,12 @@ export function GeneratePanel({ subjects, onClose, onNoteCreated }) {
           >
             {isGenerating ? (
               <>
-                <RefreshCw size={14} className="animate-spin" />
+                <Icon name={ICONS.actions.refresh} size={14} className="animate-spin" />
                 {t('notebook.aiWriting')}
               </>
             ) : (
               <>
-                <Sparkles size={15} />
+                <Icon name={ICONS.learning.sparkles} size={15} />
                 {t('notebook.generateNote')}
               </>
             )}

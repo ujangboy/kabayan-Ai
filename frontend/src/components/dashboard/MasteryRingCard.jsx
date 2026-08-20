@@ -1,6 +1,8 @@
 import { motion } from 'framer-motion';
-import { Target, CalendarCheck } from '@/icons';
+
 import { useTranslation } from 'react-i18next';
+import { ICONS } from '@/lib/icons';
+import { Icon } from '@/components/ui';
 import { formatDate, cn } from '@/utils';
 
 export default function MasteryRingCard({ subject }) {
@@ -11,7 +13,7 @@ export default function MasteryRingCard({ subject }) {
   return (
     <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="card-base p-6">
       <div className="flex items-center gap-2 mb-5">
-        <Target size={16} className="text-warning" />
+        <Icon name={ICONS.learning.target} size={16} className="text-warning" />
         <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('subjectDashboard.masteryTitle')}</h2>
       </div>
       <div className="flex items-center gap-6 flex-wrap">
@@ -43,7 +45,7 @@ export default function MasteryRingCard({ subject }) {
                   : t('subjectDashboard.masteryFar')}
           </p>
           <div className="flex items-center gap-2">
-            <CalendarCheck size={14} className="text-text-muted" />
+            <Icon name={ICONS.learning.calendarCheck} size={14} className="text-text-muted" />
             <span className="text-xs text-text-muted">
               {subject?.last_activity_at
                 ? t('subjectDashboard.lastActivity', { date: formatDate(subject.last_activity_at) })

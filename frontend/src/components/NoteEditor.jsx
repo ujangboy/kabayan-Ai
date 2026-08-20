@@ -24,16 +24,11 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { createPortal } from 'react-dom';
 import { marked } from 'marked';
-import {
-  Bold, Italic, Underline as UnderlineIcon, Strikethrough,
-  AlignLeft, AlignCenter, AlignRight, AlignJustify,
-  List, ListOrdered, ListChecks,
-  Undo2, Redo2,
-  Edit3, Eye, Pi, X,
-} from '@/icons';
 import { Tooltip } from '@/components/ui/Tooltip';
 import { cn } from '@/utils';
 import MathMarkdown from '@/components/MathMarkdown';
+import { Icon } from '@/components/ui';
+import { ICONS } from '@/lib/icons';
 import { MathInline, MathBlock } from '@/extensions/math';
 import { FontSize, FONT_SIZE_OPTIONS } from '@/extensions/fontSize';
 
@@ -285,61 +280,61 @@ function Toolbar({ editor, onPreview, onInsertMath }) {
         title={t('noteEditor.readMode')}
         className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-primary/15 text-primary border border-primary/30 transition-colors shrink-0 mr-1 hover:bg-primary/25"
       >
-        <Eye size={12} /> {t('noteEditor.preview')}
+        <Icon name={ICONS.ui.eye} size={12} /> {t('noteEditor.preview')}
       </button>
 
       <Sep />
       <FontSizeDropdown editor={editor} />
       <Sep />
       <ToolBtn onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} title={t('noteEditor.undo')}>
-        <Undo2 size={14} />
+        <Icon name={ICONS.editor.undo} size={14} />
       </ToolBtn>
       <ToolBtn onClick={() => editor.chain().focus().redo().run()} disabled={!editor.can().redo()} title={t('noteEditor.redo')}>
-        <Redo2 size={14} />
+        <Icon name={ICONS.editor.redo} size={14} />
       </ToolBtn>
 
       <Sep />
       <ToolBtn onClick={() => editor.chain().focus().toggleBold().run()} active={ia('bold')} title={t('noteEditor.bold')}>
-        <Bold size={14} />
+        <Icon name={ICONS.editor.bold} size={14} />
       </ToolBtn>
       <ToolBtn onClick={() => editor.chain().focus().toggleItalic().run()} active={ia('italic')} title={t('noteEditor.italic')}>
-        <Italic size={14} />
+        <Icon name={ICONS.editor.italic} size={14} />
       </ToolBtn>
       <ToolBtn onClick={() => editor.chain().focus().toggleUnderline().run()} active={ia('underline')} title={t('noteEditor.underline')}>
-        <UnderlineIcon size={14} />
+        <Icon name={ICONS.editor.underline} size={14} />
       </ToolBtn>
       <ToolBtn onClick={() => editor.chain().focus().toggleStrike().run()} active={ia('strike')} title={t('noteEditor.strike')}>
-        <Strikethrough size={14} />
+        <Icon name={ICONS.editor.strikethrough} size={14} />
       </ToolBtn>
 
       <Sep />
       <ToolBtn onClick={() => editor.chain().focus().setTextAlign('left').run()} active={ia({ textAlign: 'left' })} title={t('noteEditor.alignLeft')}>
-        <AlignLeft size={14} />
+        <Icon name={ICONS.editor.alignLeft} size={14} />
       </ToolBtn>
       <ToolBtn onClick={() => editor.chain().focus().setTextAlign('center').run()} active={ia({ textAlign: 'center' })} title={t('noteEditor.alignCenter')}>
-        <AlignCenter size={14} />
+        <Icon name={ICONS.editor.alignCenter} size={14} />
       </ToolBtn>
       <ToolBtn onClick={() => editor.chain().focus().setTextAlign('right').run()} active={ia({ textAlign: 'right' })} title={t('noteEditor.alignRight')}>
-        <AlignRight size={14} />
+        <Icon name={ICONS.editor.alignRight} size={14} />
       </ToolBtn>
       <ToolBtn onClick={() => editor.chain().focus().setTextAlign('justify').run()} active={ia({ textAlign: 'justify' })} title={t('noteEditor.alignJustify')}>
-        <AlignJustify size={14} />
+        <Icon name={ICONS.editor.alignJustify} size={14} />
       </ToolBtn>
 
       <Sep />
       <ToolBtn onClick={() => editor.chain().focus().toggleBulletList().run()} active={ia('bulletList')} title={t('noteEditor.bulletList')}>
-        <List size={14} />
+        <Icon name={ICONS.editor.list} size={14} />
       </ToolBtn>
       <ToolBtn onClick={() => editor.chain().focus().toggleOrderedList().run()} active={ia('orderedList')} title={t('noteEditor.orderedList')}>
-        <ListOrdered size={14} />
+        <Icon name={ICONS.editor.listOrdered} size={14} />
       </ToolBtn>
       <ToolBtn onClick={() => editor.chain().focus().toggleTaskList().run()} active={ia('taskList')} title={t('noteEditor.todoList')}>
-        <ListChecks size={14} />
+        <Icon name={ICONS.editor.listChecks} size={14} />
       </ToolBtn>
 
       <Sep />
       <ToolBtn onClick={onInsertMath} title={t('noteEditor.insertMath')}>
-        <Pi size={14} />
+        <Icon name={ICONS.editor.pi} size={14} />
       </ToolBtn>
     </div>
   );
@@ -454,42 +449,42 @@ function FloatingToolbar({ editor, editorMode }) {
 
         {/* ── Text formatting ── */}
         <ToolBtn className="!w-6 !h-6" onClick={() => editor.chain().focus().toggleBold().run()} active={ia('bold')} title={t('noteEditor.bold')}>
-          <Bold size={12} />
+          <Icon name={ICONS.editor.bold} size={12} />
         </ToolBtn>
         <ToolBtn className="!w-6 !h-6" onClick={() => editor.chain().focus().toggleItalic().run()} active={ia('italic')} title={t('noteEditor.italic')}>
-          <Italic size={12} />
+          <Icon name={ICONS.editor.italic} size={12} />
         </ToolBtn>
         <ToolBtn className="!w-6 !h-6" onClick={() => editor.chain().focus().toggleUnderline().run()} active={ia('underline')} title={t('noteEditor.underline')}>
-          <UnderlineIcon size={12} />
+          <Icon name={ICONS.editor.underline} size={12} />
         </ToolBtn>
         <ToolBtn className="!w-6 !h-6" onClick={() => editor.chain().focus().toggleStrike().run()} active={ia('strike')} title={t('noteEditor.strike')}>
-          <Strikethrough size={12} />
+          <Icon name={ICONS.editor.strikethrough} size={12} />
         </ToolBtn>
 
         <div className="w-px h-5 bg-white/10 mx-1 shrink-0" />
 
         {/* ── Alignment ── */}
         <ToolBtn className="!w-6 !h-6" onClick={() => editor.chain().focus().setTextAlign('left').run()} active={ia({ textAlign: 'left' })} title={t('noteEditor.left')}>
-          <AlignLeft size={12} />
+          <Icon name={ICONS.editor.alignLeft} size={12} />
         </ToolBtn>
         <ToolBtn className="!w-6 !h-6" onClick={() => editor.chain().focus().setTextAlign('center').run()} active={ia({ textAlign: 'center' })} title={t('noteEditor.alignCenter')}>
-          <AlignCenter size={12} />
+          <Icon name={ICONS.editor.alignCenter} size={12} />
         </ToolBtn>
         <ToolBtn className="!w-6 !h-6" onClick={() => editor.chain().focus().setTextAlign('right').run()} active={ia({ textAlign: 'right' })} title={t('noteEditor.right')}>
-          <AlignRight size={12} />
+          <Icon name={ICONS.editor.alignRight} size={12} />
         </ToolBtn>
 
         <div className="w-px h-5 bg-white/10 mx-1 shrink-0" />
 
         {/* ── Lists ── */}
         <ToolBtn className="!w-6 !h-6" onClick={() => editor.chain().focus().toggleBulletList().run()} active={ia('bulletList')} title={t('noteEditor.bulletList')}>
-          <List size={12} />
+          <Icon name={ICONS.editor.list} size={12} />
         </ToolBtn>
         <ToolBtn className="!w-6 !h-6" onClick={() => editor.chain().focus().toggleOrderedList().run()} active={ia('orderedList')} title={t('noteEditor.numberedList')}>
-          <ListOrdered size={12} />
+          <Icon name={ICONS.editor.listOrdered} size={12} />
         </ToolBtn>
         <ToolBtn className="!w-6 !h-6" onClick={() => editor.chain().focus().toggleTaskList().run()} active={ia('taskList')} title={t('noteEditor.todoList')}>
-          <ListChecks size={12} />
+          <Icon name={ICONS.editor.listChecks} size={12} />
         </ToolBtn>
 
         <div className="w-px h-5 bg-white/10 mx-1 shrink-0" />
@@ -526,7 +521,7 @@ function FloatingToolbar({ editor, editorMode }) {
                 title={t('noteEditor.clearColor')}
                 className="w-5 h-5 rounded-full border-2 border-dashed border-white/20 flex items-center justify-center text-[8px] text-white/40 hover:border-white/50 hover:text-white/70 transition-all"
               >
-                <X size={9} />
+                <Icon name={ICONS.actions.close} size={9} />
               </button>
             </div>
           )}
@@ -664,7 +659,7 @@ export default function NoteEditor({ content, onSave, noteId, defaultMode = 'vie
         )}
         title={mode === 'view' ? t('noteEditor.editNote') : t('noteEditor.preview')}
       >
-        {mode === 'view' ? <Edit3 size={18} /> : <Eye size={18} />}
+        {mode === 'view' ? <Icon name={ICONS.actions.edit} size={18} /> : <Icon name={ICONS.ui.eye} size={18} />}
       </button>
     </div>
   );

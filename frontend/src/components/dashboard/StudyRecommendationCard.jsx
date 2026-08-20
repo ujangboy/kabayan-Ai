@@ -1,14 +1,16 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Zap, CreditCard, HelpCircle, Brain, Focus } from '@/icons';
+import { ICONS } from '@/lib/icons';
+import { Icon } from '@/components/ui';
+
 import { Tooltip } from '@/components/ui/Tooltip';
 import { useTranslation } from 'react-i18next';
 import { useFocusStore } from '@/store';
 
 const STUDY_MODALITY_META = (t) => ({
-  flashcard: { icon: CreditCard, label: t('studyRoute.flashcard'),  to: '/flashcard', cls: 'bg-accent-purple/10 text-accent-purple' },
-  micro_quiz: { icon: HelpCircle, label: t('studyRoute.microQuiz'), to: '/quiz',      cls: 'bg-accent-teal/10 text-accent-teal' },
-  socratic:  { icon: Brain,      label: t('studyRoute.socratic'),   to: '/chat',      cls: 'bg-primary/10 text-primary' },
+  flashcard: { icon: ICONS.nav.flashcard, label: t('studyRoute.flashcard'),  to: '/flashcard', cls: 'bg-accent-purple/10 text-accent-purple' },
+  micro_quiz: { icon: ICONS.ui.help, label: t('studyRoute.microQuiz'), to: '/quiz',      cls: 'bg-accent-teal/10 text-accent-teal' },
+  socratic:  { icon: ICONS.learning.brain,      label: t('studyRoute.socratic'),   to: '/chat',      cls: 'bg-primary/10 text-primary' },
 });
 
 export default function StudyRecommendationCard({ route, subjectId }) {
@@ -19,11 +21,11 @@ export default function StudyRecommendationCard({ route, subjectId }) {
     return (
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-2xl p-5">
         <div className="flex items-center gap-2 mb-3">
-          <Zap size={16} className="text-primary" />
+          <Icon name={ICONS.ui.bolt} size={16} className="text-primary" />
           <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('studyRoute.title')}</h2>
         </div>
         <div className="text-center py-6">
-          <Zap size={30} className="mx-auto mb-3 text-primary/40" />
+          <Icon name={ICONS.ui.bolt} size={30} className="mx-auto mb-3 text-primary/40" />
           <p className="text-xs font-semibold text-text mb-1">{t('studyRoute.emptyTitle', 'Rekomendasi belajar AI')}</p>
           <p className="text-[11px] text-text-muted max-w-[240px] mx-auto">
             {t('studyRoute.empty', 'Kerjakan quiz atau latihan dulu — AI akan menyusun rute belajar terbaik untukmu.')}
@@ -46,7 +48,7 @@ export default function StudyRecommendationCard({ route, subjectId }) {
   return (
     <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="card-base p-6">
       <div className="flex items-center gap-2 mb-4">
-        <Zap size={16} className="text-warning" />
+        <Icon name={ICONS.ui.bolt} size={16} className="text-warning" />
         <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('studyRoute.title')}</h2>
       </div>
       <p className="text-xs text-text-muted mb-3">{t('studyRoute.subtitle')}</p>
@@ -54,8 +56,7 @@ export default function StudyRecommendationCard({ route, subjectId }) {
         {route.recommendations.map((rec) => {
           const m = meta[rec.modality];
           if (!m) return null;
-          const Icon = m.icon;
-          const isPrimary = rec.modality === primaryModality;
+                    const isPrimary = rec.modality === primaryModality;
           return (
             <div key={rec.tier} className="flex items-stretch gap-2">
               <button
@@ -65,7 +66,7 @@ export default function StudyRecommendationCard({ route, subjectId }) {
                 }`}
               >
                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${m.cls}`}>
-                  <Icon size={14} />
+                  <Icon name={m.icon} size={14} />
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
@@ -82,7 +83,7 @@ export default function StudyRecommendationCard({ route, subjectId }) {
                   className="w-10 shrink-0 flex items-center justify-center rounded-xl border border-border text-text-muted hover:text-primary hover:border-primary/40 transition-colors cursor-pointer"
                   aria-label={t('focusMode.start')}
                 >
-                  <Focus size={14} />
+                  <Icon name={ICONS.learning.focus} size={14} />
                 </button>
               </Tooltip>
             </div>

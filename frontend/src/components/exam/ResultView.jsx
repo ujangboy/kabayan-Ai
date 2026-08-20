@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ICONS } from '@/lib/icons';
+import { Icon } from '@/components/ui';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
-import {
-  Trophy, CheckCircle, Check, Loader2, Calendar, BookOpen,
-  AlertTriangle, TrendingUp, Save, MessageSquare,
-} from '@/icons';
+
 import { examAPI, sessionsAPI } from '@/services/api';
 import { cn } from '@/utils';
 import { Chip } from './shared';
@@ -117,7 +116,7 @@ export default function ResultView({ evalData, onReview, onFinish, sessionId, on
     <div className="space-y-5">
       {/* Score hero */}
       <div className="card-base p-8 text-center">
-        <Trophy size={48} className="mx-auto text-warning mb-4" />
+        <Icon name={ICONS.learning.trophy} size={48} className="mx-auto text-warning mb-4" />
         <h2 className="text-2xl font-bold text-text mb-1">{t('exam.result.doneTitle')}</h2>
         <div className={cn('text-7xl font-black my-4', scoreColor)}>{animatedScore}</div>
         <div className="flex justify-center gap-2 mb-3">
@@ -147,7 +146,7 @@ export default function ResultView({ evalData, onReview, onFinish, sessionId, on
         {strong_topics.length > 0 && (
           <div className="card-base p-4">
             <p className="text-xs font-semibold text-success uppercase tracking-wider mb-3 flex items-center gap-1">
-              <TrendingUp size={12} /> {t('exam.result.strongTopics')}
+              <Icon name={ICONS.learning.progress} size={12} /> {t('exam.result.strongTopics')}
             </p>
             <div className="space-y-2">
               {strong_topics.map((topic, i) => (
@@ -162,7 +161,7 @@ export default function ResultView({ evalData, onReview, onFinish, sessionId, on
         {weak_topics.length > 0 && (
           <div className="card-base p-4">
             <p className="text-xs font-semibold text-danger uppercase tracking-wider mb-3 flex items-center gap-1">
-              <AlertTriangle size={12} /> {t('exam.result.weakTopics')}
+              <Icon name={ICONS.status.warning} size={12} /> {t('exam.result.weakTopics')}
             </p>
             <div className="space-y-2">
               {weak_topics.map((topic, i) => (
@@ -177,7 +176,7 @@ export default function ResultView({ evalData, onReview, onFinish, sessionId, on
                         onClick={() => navigate(`/chat?tutor=1&exam=${sessionId}&subject=${encodeURIComponent(subjectName)}&topic=${encodeURIComponent(topic.topic)}`)}
                         className="text-[11px] flex items-center gap-1.5 text-primary hover:text-primary-focus transition-colors mt-2"
                       >
-                        <MessageSquare size={11} /> {t('exam.result.askTutor')}
+                        <Icon name={ICONS.communication.chat} size={11} /> {t('exam.result.askTutor')}
                       </button>
                     )}
                   </div>
@@ -207,7 +206,7 @@ export default function ResultView({ evalData, onReview, onFinish, sessionId, on
             transition={{ duration: 0.2, ease: [0.32, 0.72, 0, 1] }}
             className="flex items-center gap-2 p-3 rounded-xl bg-success/10 border border-success/20 text-success text-sm"
           >
-            <CheckCircle size={15} /> {t('exam.result.savedMsg')}
+            <Icon name={ICONS.status.success} size={15} /> {t('exam.result.savedMsg')}
           </motion.div>
         )}
       </AnimatePresence>
@@ -224,7 +223,7 @@ export default function ResultView({ evalData, onReview, onFinish, sessionId, on
           >
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-semibold text-text flex items-center gap-1.5">
-              <Calendar size={14} /> {t('exam.result.planPreviewTitle')}
+              <Icon name={ICONS.learning.calendar} size={14} /> {t('exam.result.planPreviewTitle')}
             </h3>
             <button onClick={() => setPlanPreview(null)} className="text-xs text-text-muted hover:text-text">{t('common.close')}</button>
           </div>
@@ -248,9 +247,9 @@ export default function ResultView({ evalData, onReview, onFinish, sessionId, on
           <div className="flex gap-2 mt-3">
             <button onClick={handleSimpanRencana} disabled={planSaving || planSaved}
               className="btn-primary text-sm flex items-center gap-1.5">
-              {planSaving ? <><Loader2 size={13} className="animate-spin" /> {t('exam.result.saving')}</>
-                : planSaved ? <><Check size={13} /> {t('exam.result.saved')}</>
-                : <><Save size={13} /> {t('exam.result.savePlan')}</>}
+              {planSaving ? <><Icon name={ICONS.status.loading} size={13} className="animate-spin" /> {t('exam.result.saving')}</>
+                : planSaved ? <><Icon name={ICONS.status.check} size={13} /> {t('exam.result.saved')}</>
+                : <><Icon name={ICONS.actions.save} size={13} /> {t('exam.result.savePlan')}</>}
             </button>
           </div>
           </motion.div>
@@ -260,19 +259,19 @@ export default function ResultView({ evalData, onReview, onFinish, sessionId, on
       {/* Action buttons */}
       <div className="flex gap-3 flex-wrap">
         <button onClick={onReview} className="btn-ghost text-sm border border-border">
-          <BookOpen size={13} /> {t('exam.result.reviewAnswers')}
+          <Icon name={ICONS.learning.bookOpen} size={13} /> {t('exam.result.reviewAnswers')}
         </button>
         <button onClick={handleLihatRencana} disabled={loadingRec} className="btn-ghost text-sm border border-border">
-          {loadingRec ? <><Loader2 size={13} className="animate-spin" /> {t('common.loading')}</>
-            : planPreview ? <><Calendar size={13} /> {t('exam.result.closePlan')}</>
-            : <><Calendar size={13} /> {t('exam.result.viewPlan')}</>}
+          {loadingRec ? <><Icon name={ICONS.status.loading} size={13} className="animate-spin" /> {t('common.loading')}</>
+            : planPreview ? <><Icon name={ICONS.learning.calendar} size={13} /> {t('exam.result.closePlan')}</>
+            : <><Icon name={ICONS.learning.calendar} size={13} /> {t('exam.result.viewPlan')}</>}
         </button>
         <button onClick={handleSelesai} disabled={saving} className="btn-primary text-sm ml-auto">
           {saving
-            ? <><Loader2 size={13} className="animate-spin" /> {t('exam.result.saving')}</>
+            ? <><Icon name={ICONS.status.loading} size={13} className="animate-spin" /> {t('exam.result.saving')}</>
             : saved
-              ? <><Check size={13} /> {t('exam.result.goingHistory')}</>
-              : <><Check size={13} /> {t('exam.result.doneAndSave')}</>
+              ? <><Icon name={ICONS.status.check} size={13} /> {t('exam.result.goingHistory')}</>
+              : <><Icon name={ICONS.status.check} size={13} /> {t('exam.result.doneAndSave')}</>
           }
         </button>
       </div>

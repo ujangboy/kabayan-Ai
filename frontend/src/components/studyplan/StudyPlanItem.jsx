@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, Loader2, Clock, Play, Trophy, Brain, CheckCircle, XCircle, ClipboardCheck, FileText, MessageSquare } from '@/icons';
+import { ICONS } from '@/lib/icons';
+
 import { sessionsAPI } from '@/services/api';
 import MathMarkdown from '@/components/MathMarkdown';
 import { extractErrorMessage } from '@/utils/errors';
 import { useToast } from '@/components/Toast';
 import { usePageState } from '@/hooks/usePageState';
-import { Button, Textarea } from '@/components/ui';
+import { Button, Textarea , Icon } from '@/components/ui';
 import { TYPE_META, formatItemDate } from './shared';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -97,9 +98,9 @@ export default function InlinePlanPractice({ item, practiceState, onClose, onSub
                 {isCorrect === undefined ? (
                   <span className="text-text-muted">•</span>
                 ) : isCorrect ? (
-                  <CheckCircle size={12} className="text-success shrink-0" />
+                  <Icon name={ICONS.status.success} size={12} className="text-success shrink-0" />
                 ) : (
-                  <XCircle size={12} className="text-danger shrink-0" />
+                  <Icon name={ICONS.status.error} size={12} className="text-danger shrink-0" />
                 )}
                 <span className="text-text-muted">Soal {i + 1}</span>
                 <span className="text-text-secondary truncate flex-1">{question.topic}</span>
@@ -115,7 +116,7 @@ export default function InlinePlanPractice({ item, practiceState, onClose, onSub
             disabled={submitting}
             className="btn-primary text-sm flex items-center gap-1.5"
           >
-            {submitting ? <><Loader2 size={13} className="animate-spin" /> Menyimpan...</> : <><ClipboardCheck size={13} /> Simpan Hasil & Tandai Selesai</>}
+            {submitting ? <><Icon name={ICONS.status.loading} size={13} className="animate-spin" /> Menyimpan...</> : <><Icon name={ICONS.status.completed} size={13} /> Simpan Hasil & Tandai Selesai</>}
           </button>
         </div>
       </div>
@@ -225,7 +226,7 @@ export function StudyPlanItem({
           onClick={() => onToggle(item.id)}
           className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 mt-0.5 transition-all ${item.completed ? 'bg-success border-success text-white' : 'border-border hover:border-primary'}`}
         >
-          {item.completed && <Check size={11} />}
+          {item.completed && <Icon name={ICONS.status.check} size={11} />}
         </button>
 
         <div className="flex-1 min-w-0">
@@ -235,7 +236,7 @@ export function StudyPlanItem({
             <span className={`text-[10px] px-1.5 py-0.5 rounded border ${meta.cls}`}>{meta.label}</span>
             {item.duration_minutes && (
               <span className="text-[10px] text-text-muted flex items-center gap-0.5">
-                <Clock size={9} /> {item.duration_minutes}m
+                <Icon name={ICONS.learning.clock} size={9} /> {item.duration_minutes}m
               </span>
             )}
           </div>
@@ -247,13 +248,13 @@ export function StudyPlanItem({
             <div className="mt-2 flex items-center gap-3 text-[11px]">
               {latestResult.practice_type === 'quiz' ? (
                 <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-warning/10 border border-warning/20">
-                  <Trophy size={11} className="text-warning" />
+                  <Icon name={ICONS.learning.trophy} size={11} className="text-warning" />
                   <span className="font-bold text-warning">{latestResult.score}</span>
                   <span className="text-text-muted">latihan quiz terakhir {latestResult.created_at ? new Date(latestResult.created_at).toLocaleDateString('id-ID') : ''}</span>
                 </span>
               ) : (
                 <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-accent-purple/10 border border-accent-purple/20">
-                  <Brain size={11} className="text-accent-purple" />
+                  <Icon name={ICONS.learning.brain} size={11} className="text-accent-purple" />
                   <span className="text-accent-purple font-semibold">{latestResult.flashcard_reviewed} kartu</span>
                   <span className="text-text-muted">flashcard direview {latestResult.created_at ? new Date(latestResult.created_at).toLocaleDateString('id-ID') : ''}</span>
                 </span>
@@ -269,7 +270,7 @@ export function StudyPlanItem({
                 onClick={() => onOpenPractice(item)}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-primary text-white text-[11px] font-bold hover:brightness-110 transition-all disabled:opacity-40"
               >
-                <Play size={11} /> Latihan Quiz
+                <Icon name={ICONS.media.play} size={11} /> Latihan Quiz
               </button>
             )}
             {subjectId && (
@@ -283,11 +284,11 @@ export function StudyPlanItem({
                 }`}
               >
                 {generating ? (
-                  <><Loader2 size={11} className="animate-spin" /> Menyusun...</>
+                  <><Icon name={ICONS.status.loading} size={11} className="animate-spin" /> Menyusun...</>
                 ) : summary ? (
-                  <><CheckCircle size={11} /> Lihat Rangkuman</>
+                  <><Icon name={ICONS.status.success} size={11} /> Lihat Rangkuman</>
                 ) : (
-                  <><FileText size={11} /> Lihat Rangkuman</>
+                  <><Icon name={ICONS.files.document} size={11} /> Lihat Rangkuman</>
                 )}
               </button>
             )}
@@ -296,7 +297,7 @@ export function StudyPlanItem({
                 onClick={() => onAskTutor(item)}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-accent-blue/40 text-accent-blue text-[11px] font-semibold hover:bg-accent-blue/10 transition-colors"
               >
-                <MessageSquare size={11} /> Tanya Tutor
+                <Icon name={ICONS.communication.chat} size={11} /> Tanya Tutor
               </button>
             )}
           </div>

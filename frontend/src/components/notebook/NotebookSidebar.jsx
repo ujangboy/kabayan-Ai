@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
-import { Plus, Sparkles, X, Search, FileText } from '@/icons';
-import { Tooltip, Skeleton } from '@/components/ui';
+
+import { Tooltip, Skeleton , Icon } from '@/components/ui';
+import { ICONS } from '@/lib/icons';
 import { cn } from '@/utils';
 import { NoteCard } from '@/components/notebook/NoteCard';
 
@@ -35,7 +36,7 @@ export function NotebookSidebar({
               className="p-1.5 rounded-lg transition-all duration-150 text-primary hover:bg-primary/10"
               aria-label={t('notebook.generateWithAi')}
             >
-              <Sparkles size={15} />
+              <Icon name={ICONS.learning.sparkles} size={15} />
             </button>
           </Tooltip>
           <Tooltip label={t('notebook.newNoteTitle')}>
@@ -49,7 +50,7 @@ export function NotebookSidebar({
               )}
               aria-label={t('notebook.newNoteTitle')}
             >
-              <Plus size={16} />
+              <Icon name={ICONS.actions.addOutline} size={16} />
             </button>
           </Tooltip>
         </div>
@@ -58,7 +59,7 @@ export function NotebookSidebar({
       {/* Search bar */}
       <div className="px-3 pb-2">
         <div className="relative">
-          <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
+          <Icon name={ICONS.actions.search} size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
           <input
             type="text"
             value={noteSearch}
@@ -73,7 +74,7 @@ export function NotebookSidebar({
                 aria-label="Bersihkan pencarian"
                 className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted hover:text-text transition-colors"
               >
-                <X size={11} />
+                <Icon name={ICONS.actions.close} size={11} />
               </button>
             </Tooltip>
           )}
@@ -94,7 +95,7 @@ export function NotebookSidebar({
         ) : notes.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <div className="w-12 h-12 rounded-2xl bg-card border border-border flex items-center justify-center mb-3">
-              <FileText size={20} className="text-text-muted" />
+              <Icon name={ICONS.files.document} size={20} className="text-text-muted" />
             </div>
             <p className="text-xs text-text-muted">{t('notebook.noNotes')}</p>
             <button
@@ -106,7 +107,7 @@ export function NotebookSidebar({
           </div>
         ) : filteredNotes.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
-            <Search size={20} className="text-text-muted mb-2 opacity-50" />
+            <Icon name={ICONS.actions.search} size={20} className="text-text-muted mb-2 opacity-50" />
             <p className="text-xs text-text-muted">Tidak ada catatan yang cocok</p>
           </div>
         ) : (

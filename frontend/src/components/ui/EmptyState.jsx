@@ -1,11 +1,12 @@
 import { cn } from '@/utils';
+import { Icon } from './Icon';
 
-export function EmptyState({ icon: Icon, title, description, action, className }) {
+export function EmptyState({ icon, title, description, action, className }) {
   return (
     <div className={cn('flex flex-col items-center justify-center text-center px-6 py-12', className)}>
-      {Icon && (
+      {icon && (
         <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-primary/10 text-primary-light">
-          <Icon size={26} />
+          <Icon name={icon} size={26} />
         </div>
       )}
       <h3 className="text-base font-semibold text-text">{title}</h3>

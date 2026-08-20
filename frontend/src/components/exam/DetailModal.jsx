@@ -1,19 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ICONS } from '@/lib/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Loader2, BarChart2, BookOpen, Calendar, RotateCcw, CheckCircle, XCircle,
-  ChevronDown, Lightbulb, FileText, Check, Award, Clock, TrendingUp, Target,
-  AlertTriangle, AlertCircle, RefreshCw, ArrowRight, ExternalLink, PenLine, X,
-  TrendingDown, Minus,
-} from '@/icons';
+
 import { examAPI, sessionsAPI } from '@/services/api';
 import { cn } from '@/utils';
 import MathMarkdown from '@/components/MathMarkdown';
 import { Chip, ProgressBar, STATUS_META, getBadge, getGradeColor } from './shared';
-import { Tooltip, Modal } from '@/components/ui';
+import { Tooltip, Modal , Icon } from '@/components/ui';
 
 // ─── Detail Modal ─────────────────────────────────────────────────────────────
 export default function DetailModal({ open = false, historySessionId, onClose, onResume, pendingPlanTab, setPendingPlanTab }) {
@@ -52,7 +48,7 @@ export default function DetailModal({ open = false, historySessionId, onClose, o
      return (
        <ModalShell open={open} onClose={onClose}>
          <div className="flex-1 flex items-center justify-center p-20">
-           <Loader2 size={36} className="animate-spin text-primary" />
+           <Icon name={ICONS.status.loading} size={36} className="animate-spin text-primary" />
          </div>
        </ModalShell>
      );
@@ -84,15 +80,15 @@ export default function DetailModal({ open = false, historySessionId, onClose, o
 
         <div className="flex gap-1 mt-4">
           {[
-            { id:'overview', label:t('exam.detail.overview'),  icon: BarChart2 },
-            { id:'review',   label:t('exam.detail.review'),     icon: BookOpen  },
-            { id:'plan',     label:t('exam.detail.studyPlan'),   icon: Calendar  },
-            { id:'attempts', label:t('exam.detail.attempts'),    icon: RotateCcw },
-          ].map(({ id, label, icon: Icon }) => (
+            { id:'overview', label:t('exam.detail.overview'),  icon: ICONS.learning.barChart },
+            { id:'review',   label:t('exam.detail.review'),     icon: ICONS.learning.bookOpen },
+            { id:'plan',     label:t('exam.detail.studyPlan'),   icon: ICONS.learning.calendar },
+            { id:'attempts', label:t('exam.detail.attempts'),    icon: ICONS.actions.replay },
+          ].map(({ id, label, icon }) => (
             <button type="button" key={id} onClick={() => setTab(id)}
               className={cn('flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
                 tab === id ? 'bg-primary text-white' : 'bg-card text-text-secondary hover:text-text border border-border')}>
-              <Icon size={11} />{label}
+              <Icon name={icon} size={11} />{label}
             </button>
           ))}
         </div>
@@ -194,7 +190,7 @@ function OverviewTab({ data }) {
             })}
           </div>
           <p className="text-xs text-success mt-2 flex items-center gap-1">
-            <TrendingUp size={11} />
+            <Icon name={ICONS.learning.progress} size={11} />
             Peningkatan: +{(attempts[attempts.length-1].score||0) - (attempts[0].score||0)} poin
           </p>
         </div>
@@ -204,7 +200,7 @@ function OverviewTab({ data }) {
         {(data.strong_topics || []).length > 0 && (
           <div className="p-3 rounded-xl bg-success/5 border border-success/15">
              <p className="text-xs font-semibold text-success mb-2 flex items-center gap-1">
-               <TrendingUp size={11} /> {t('exam.detail.strongTopics')}
+               <Icon name={ICONS.learning.progress} size={11} /> {t('exam.detail.strongTopics')}
              </p>
             {(data.strong_topics || []).slice(0,5).map((topic,i) => (
               <div key={i} className="flex items-center justify-between py-1 border-b border-success/10 last:border-0">
@@ -217,7 +213,7 @@ function OverviewTab({ data }) {
         {(data.weak_topics || []).length > 0 && (
           <div className="p-3 rounded-xl bg-danger/5 border border-danger/15">
              <p className="text-xs font-semibold text-danger mb-2 flex items-center gap-1">
-               <AlertTriangle size={11} /> {t('exam.detail.weakTopics')}
+               <Icon name={ICONS.status.warning} size={11} /> {t('exam.detail.weakTopics')}
              </p>
             {(data.weak_topics || []).slice(0,5).map((topic,i) => (
               <div key={i} className="flex items-center justify-between py-1 border-b border-danger/10 last:border-0">
@@ -264,7 +260,7 @@ function ReviewTab({ attempt }) {
   return (
     <div className="space-y-3">
        <div className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border text-sm">
-         <CheckCircle size={14} className="text-success" />
+         <Icon name={ICONS.status.success} size={14} className="text-success" />
          <span className="text-text">{correct}/{total} {t('exam.detail.correct')}</span>
          <span className="text-text-muted">·</span>
          <span className="text-text-muted">{t('exam.detail.attemptLabel')} #{attempt.attempt_number}</span>
@@ -280,7 +276,7 @@ function ReviewTab({ attempt }) {
               className="w-full flex items-center gap-3 p-3 text-left hover:bg-background/40 transition-colors">
               <div className={cn('w-6 h-6 rounded-full flex items-center justify-center shrink-0',
                 r.is_correct ? 'bg-success' : 'bg-danger')}>
-                {r.is_correct ? <CheckCircle size={13} className="text-white" /> : <XCircle size={13} className="text-white" />}
+                {r.is_correct ? <Icon name={ICONS.status.success} size={13} className="text-white" /> : <Icon name={ICONS.status.error} size={13} className="text-white" />}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-[10px] text-text-muted mb-0.5">{r.topic} · {r.question_type} · {r.difficulty}</p>
@@ -288,7 +284,7 @@ function ReviewTab({ attempt }) {
                   <MathMarkdown>{r.question_text}</MathMarkdown>
                 </div>
               </div>
-              <ChevronDown size={13} className={cn('text-text-muted shrink-0 transition-transform', expandedIdx === i && 'rotate-180')} />
+              <Icon name={ICONS.ui.chevronDown} size={13} className={cn('text-text-muted shrink-0 transition-transform', expandedIdx === i && 'rotate-180')} />
             </button>
 
             <AnimatePresence>
@@ -323,7 +319,7 @@ function ReviewTab({ attempt }) {
                      {expl?.text && (
                        <div className="p-2 rounded-lg bg-accent-teal/5 border border-accent-teal/20 text-xs text-text">
                          <p className="font-semibold text-accent-teal mb-0.5 flex items-center gap-1">
-                           <Lightbulb size={10} /> {t('exam.detail.aiExplanation')}
+                           <Icon name={ICONS.learning.lightbulb} size={10} /> {t('exam.detail.aiExplanation')}
                         </p>
                         <MathMarkdown>{expl.text}</MathMarkdown>
                       </div>
@@ -331,8 +327,8 @@ function ReviewTab({ attempt }) {
                        {expl?.error && <p className="text-[10px] text-danger">{t('exam.detail.explanationError')}</p>}
 
                     <div className="flex items-center gap-3 text-[10px] text-text-muted flex-wrap">
-                      {r.material_ref && <span className="flex items-center gap-1"><FileText size={10}/>{r.material_ref}</span>}
-                      {r.tips && <span className="flex items-center gap-1 text-primary"><Lightbulb size={10}/>{r.tips}</span>}
+                      {r.material_ref && <span className="flex items-center gap-1"><Icon name={ICONS.files.document} size={10}/>{r.material_ref}</span>}
+                      {r.tips && <span className="flex items-center gap-1 text-primary"><Icon name={ICONS.learning.lightbulb} size={10}/>{r.tips}</span>}
                       {!r.ai_explanation && !expl?.text && (
                         <button
                           type="button"
@@ -341,8 +337,8 @@ function ReviewTab({ attempt }) {
                           className="ml-auto flex items-center gap-1 px-2 py-0.5 rounded-lg bg-accent-teal/10 text-accent-teal border border-accent-teal/20 hover:bg-accent-teal/20 transition-colors disabled:opacity-50"
                         >
                            {expl?.loading
-                             ? <><Loader2 size={10} className="animate-spin" /> {t('common.loading')}</>
-                             : <><Lightbulb size={10} /> {t('exam.detail.explainBtn')}</>}
+                             ? <><Icon name={ICONS.status.loading} size={10} className="animate-spin" /> {t('common.loading')}</>
+                             : <><Icon name={ICONS.learning.lightbulb} size={10} /> {t('exam.detail.explainBtn')}</>}
                         </button>
                       )}
                     </div>
@@ -447,8 +443,8 @@ function InlinePractice({ questions, topic, onComplete, onClose, onRetryTopic })
             return (
               <div key={qid} className="flex items-center gap-2 text-xs py-1">
                 {isCorrect
-                  ? <CheckCircle size={11} className="text-success shrink-0" />
-                  : <XCircle size={11} className="text-danger shrink-0" />}
+                  ? <Icon name={ICONS.status.success} size={11} className="text-success shrink-0" />
+                  : <Icon name={ICONS.status.error} size={11} className="text-danger shrink-0" />}
                  <span className="text-text-muted">{t('exam.detail.question')} {i + 1}</span>
                 <span className="text-text-secondary truncate flex-1">{question.topic}</span>
                  {!isCorrect && <span className="text-danger text-[10px]">{t('exam.detail.answer')}: {question.answer}</span>}
@@ -461,15 +457,15 @@ function InlinePractice({ questions, topic, onComplete, onClose, onRetryTopic })
         {weakTopics.length > 0 && (
           <div className="p-3 rounded-lg bg-warning/5 border border-warning/20 space-y-2">
              <p className="text-xs font-semibold text-text-secondary flex items-center gap-1">
-               <Target size={11} /> {t('exam.detail.learningRecommendation')}
+               <Icon name={ICONS.learning.target} size={11} /> {t('exam.detail.learningRecommendation')}
              </p>
             {weakTopics.map(([weakTopic, data]) => (
               <div key={weakTopic} className="text-xs text-text-secondary space-y-1">
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-text truncate">• "{weakTopic}" — {data.count} soal salah</p>
-                    {data.tips && <p className="ml-3 text-primary/80 flex items-center gap-1"><Lightbulb size={9} /> {data.tips}</p>}
-                    {data.material && <p className="ml-3 text-text-muted flex items-center gap-1"><BookOpen size={10} className="shrink-0" /> {data.material}</p>}
+                    {data.tips && <p className="ml-3 text-primary/80 flex items-center gap-1"><Icon name={ICONS.learning.lightbulb} size={9} /> {data.tips}</p>}
+                    {data.material && <p className="ml-3 text-text-muted flex items-center gap-1"><Icon name={ICONS.learning.bookOpen} size={10} className="shrink-0" /> {data.material}</p>}
                   </div>
                   {onRetryTopic && (
                     <button
@@ -487,8 +483,8 @@ function InlinePractice({ questions, topic, onComplete, onClose, onRetryTopic })
                       className="shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-lg bg-gradient-primary text-white text-[10px] font-bold hover:brightness-110 transition-all disabled:opacity-40"
                     >
                       {retryingTopic === weakTopic
-                        ? <><Loader2 size={9} className="animate-spin" /> Memuat...</>
-                        : <><RefreshCw size={9} /> Latih</>}
+                        ? <><Icon name={ICONS.status.loading} size={9} className="animate-spin" /> Memuat...</>
+                        : <><Icon name={ICONS.actions.refresh} size={9} /> Latih</>}
                     </button>
                   )}
                 </div>
@@ -501,7 +497,7 @@ function InlinePractice({ questions, topic, onComplete, onClose, onRetryTopic })
         <div className="flex gap-2 flex-wrap">
           {score >= 100 ? (
             <button onClick={() => onComplete && onComplete()} type="button" className="btn-primary text-xs px-4 py-1.5 flex items-center gap-1">
-              <Check size={12} /> Selesai
+              <Icon name={ICONS.status.check} size={12} /> Selesai
             </button>
           ) : (
             <button type="button" onClick={onClose} className="btn-ghost text-xs border border-border px-4 py-1.5">
@@ -525,8 +521,8 @@ function InlinePractice({ questions, topic, onComplete, onClose, onRetryTopic })
               className="btn-ghost text-xs border border-warning/40 text-warning px-4 py-1.5 flex items-center gap-1 disabled:opacity-40"
             >
               {retryingTopic === topic
-                ? <><Loader2 size={11} className="animate-spin" /> Memuat...</>
-                : <><RotateCcw size={11} /> Ulangi Topik Ini</>}
+                ? <><Icon name={ICONS.status.loading} size={11} className="animate-spin" /> Memuat...</>
+                : <><Icon name={ICONS.actions.replay} size={11} /> Ulangi Topik Ini</>}
             </button>
           )}
         </div>
@@ -546,8 +542,8 @@ function InlinePractice({ questions, topic, onComplete, onClose, onRetryTopic })
           {q.difficulty && <Chip label={q.difficulty} size="xs" color={q.difficulty === 'sulit' ? 'danger' : q.difficulty === 'menengah' ? 'warning' : 'success'} />}
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-[10px] text-success flex items-center gap-0.5"><CheckCircle size={10} />{correctCount}</span>
-          <span className="text-[10px] text-danger flex items-center gap-0.5"><XCircle size={10} />{wrongCount}</span>
+          <span className="text-[10px] text-success flex items-center gap-0.5"><Icon name={ICONS.status.success} size={10} />{correctCount}</span>
+          <span className="text-[10px] text-danger flex items-center gap-0.5"><Icon name={ICONS.status.error} size={10} />{wrongCount}</span>
           <button type="button" onClick={onClose} className="text-[10px] text-text-muted hover:text-text">Tutup</button>
         </div>
       </div>
@@ -608,21 +604,21 @@ function InlinePractice({ questions, topic, onComplete, onClose, onRetryTopic })
           <div className="space-y-1">
             {!results[String(q.id)] && (
               <p className="text-danger flex items-center gap-1.5">
-                <XCircle size={11} className="shrink-0" />
+                <Icon name={ICONS.status.error} size={11} className="shrink-0" />
                 <span>Jawaban kamu: <strong>{userAnswer}</strong>{q.options?.[userAnswer] ? `. ${q.options[userAnswer]}` : ''}</span>
               </p>
             )}
             <p className="text-success flex items-center gap-1.5">
-              <CheckCircle size={11} className="shrink-0" />
+              <Icon name={ICONS.status.success} size={11} className="shrink-0" />
               <span>Jawaban benar: <strong>{q.answer}</strong>{q.options?.[q.answer] ? `. ${q.options[q.answer]}` : ''}</span>
             </p>
           </div>
 
           {/* Explanation */}
           <div className="border-t border-border/50 pt-2">
-            <p className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider mb-1 flex items-center gap-1"><PenLine size={10} /> Penjelasan</p>
+            <p className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider mb-1 flex items-center gap-1"><Icon name={ICONS.actions.edit} size={10} /> Penjelasan</p>
             {fetchingExpl ? (
-              <p className="text-text-muted flex items-center gap-1"><Loader2 size={10} className="animate-spin" /> Memuat penjelasan...</p>
+              <p className="text-text-muted flex items-center gap-1"><Icon name={ICONS.status.loading} size={10} className="animate-spin" /> Memuat penjelasan...</p>
             ) : explanations[String(q.id)] ? (
               <p className="text-text-secondary leading-relaxed">{explanations[String(q.id)]}</p>
             ) : (
@@ -634,7 +630,7 @@ function InlinePractice({ questions, topic, onComplete, onClose, onRetryTopic })
           {q.tips && (
             <div className="border-t border-border/50 pt-2">
               <p className="text-primary/80 flex items-start gap-1.5">
-                <Lightbulb size={10} className="shrink-0 mt-0.5" />
+                <Icon name={ICONS.learning.lightbulb} size={10} className="shrink-0 mt-0.5" />
                 <span>{q.tips}</span>
               </p>
             </div>
@@ -646,7 +642,7 @@ function InlinePractice({ questions, topic, onComplete, onClose, onRetryTopic })
       {showExpl && (
         <button type="button" onClick={handleNext}
           className="btn-primary text-xs px-4 py-1.5 flex items-center gap-1">
-          {isLast ? <><Check size={12} /> Lihat Hasil</> : <><ArrowRight size={12} /> Soal Berikutnya</>}
+          {isLast ? <><Icon name={ICONS.status.check} size={12} /> Lihat Hasil</> : <><Icon name={ICONS.actions.forward} size={12} /> Soal Berikutnya</>}
         </button>
       )}
         </motion.div>
@@ -727,7 +723,7 @@ function StudyPlanTab({ plan, sessionId, onToggle, onPlanSaved,
     <div className="space-y-4">
       {/* Date picker + open full plan */}
       <div className="flex items-center gap-2 mb-2">
-        <Calendar size={14} className="text-primary" />
+        <Icon name={ICONS.learning.calendar} size={14} className="text-primary" />
         <span className="text-xs font-semibold text-text-secondary">Mulai Belajar:</span>
         <input
           type="date"
@@ -737,29 +733,29 @@ function StudyPlanTab({ plan, sessionId, onToggle, onPlanSaved,
           className="px-2 py-1 bg-card border border-border rounded-lg text-xs text-text
                      focus:outline-none focus:border-primary disabled:opacity-50"
         />
-        {dateSaving && <Loader2 size={12} className="animate-spin text-primary" />}
+        {dateSaving && <Icon name={ICONS.status.loading} size={12} className="animate-spin text-primary" />}
         <button
           onClick={() => navigate(`/study-plan?session_id=${sessionId}`)}
           className="ml-auto inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-primary/30 text-primary text-[11px] font-semibold hover:bg-primary/10 transition-colors"
         >
-          <ExternalLink size={11} /> Buka Halaman Penuh
+          <Icon name={ICONS.actions.externalLink} size={11} /> Buka Halaman Penuh
         </button>
       </div>
       {dateError && <p className="text-danger text-xs mb-2">{dateError}</p>}
 
       {practiceError && (
         <div className="flex items-start gap-2 p-3 rounded-xl bg-danger/5 border border-danger/20 text-xs text-danger">
-          <AlertCircle size={13} className="shrink-0 mt-0.5" />
+          <Icon name={ICONS.status.error} size={13} className="shrink-0 mt-0.5" />
           <span className="flex-1">{practiceError}</span>
           <Tooltip label={t('common.close')}>
-            <button type="button" onClick={() => setPracticeError('')} aria-label={t('common.close')} className="shrink-0 text-danger/60 hover:text-danger"><X size={12} /></button>
+            <button type="button" onClick={() => setPracticeError('')} aria-label={t('common.close')} className="shrink-0 text-danger/60 hover:text-danger"><Icon name={ICONS.actions.close} size={12} /></button>
           </Tooltip>
         </div>
       )}
 
       {plan.motivational_message && (
         <div className="p-3 rounded-xl bg-primary/5 border border-primary/15 flex items-start gap-2">
-          <Award size={14} className="text-primary mt-0.5 shrink-0" />
+          <Icon name={ICONS.learning.certificate} size={14} className="text-primary mt-0.5 shrink-0" />
           <p className="text-sm text-text">{plan.motivational_message}</p>
         </div>
       )}
@@ -769,7 +765,7 @@ function StudyPlanTab({ plan, sessionId, onToggle, onPlanSaved,
         <span>Progress Rencana Belajar</span>
         <span>
           {progressValue >= 100
-            ? <span className="flex items-center gap-1"><Award size={12} className="text-success" /> Rencana Selesai!</span>
+            ? <span className="flex items-center gap-1"><Icon name={ICONS.learning.certificate} size={12} className="text-success" /> Rencana Selesai!</span>
             : `${completedItems}/${totalItems} hari · ${progressValue}%`}
         </span>
       </div>
@@ -800,7 +796,7 @@ function StudyPlanTab({ plan, sessionId, onToggle, onPlanSaved,
                 <button type="button" onClick={() => onToggle(item.id)}
                   className={cn('w-5 h-5 rounded-md border flex items-center justify-center shrink-0 mt-0.5 transition-all',
                     item.completed ? 'bg-success border-success text-white' : 'border-border hover:border-primary')}>
-                  {item.completed && <Check size={11} />}
+                  {item.completed && <Icon name={ICONS.status.check} size={11} />}
                 </button>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
@@ -812,7 +808,7 @@ function StudyPlanTab({ plan, sessionId, onToggle, onPlanSaved,
                       color={typeColor[item.activity_type] || 'blue'} />
                     {item.duration_minutes && (
                       <span className="text-[10px] text-text-muted flex items-center gap-0.5">
-                        <Clock size={9} />{item.duration_minutes}m
+                        <Icon name={ICONS.learning.clock} size={9} />{item.duration_minutes}m
                       </span>
                     )}
                   </div>
@@ -823,7 +819,7 @@ function StudyPlanTab({ plan, sessionId, onToggle, onPlanSaved,
                   {item.resources && !inPractice && (
                     <div className="flex items-center gap-2 mt-0.5">
                       <p className="text-[10px] text-primary flex items-center gap-0.5">
-                        <Lightbulb size={9}/>{item.resources}
+                        <Icon name={ICONS.learning.lightbulb} size={9}/>{item.resources}
                       </p>
                       {item.resources.includes('soal latihan') && !item.completed && (
                         <button
@@ -848,8 +844,8 @@ function StudyPlanTab({ plan, sessionId, onToggle, onPlanSaved,
                           className="text-[10px] px-2 py-1 rounded bg-gradient-primary text-white font-bold
                                      hover:brightness-110 transition-all shrink-0 shadow-sm disabled:opacity-50 flex items-center gap-1">
                           {loadingItemId === item.id
-                            ? <><Loader2 size={9} className="animate-spin" /> Memuat...</>
-                            : <><ArrowRight size={9} /> Mulai Latihan</>}
+                            ? <><Icon name={ICONS.status.loading} size={9} className="animate-spin" /> Memuat...</>
+                            : <><Icon name={ICONS.actions.forward} size={9} /> Mulai Latihan</>}
                         </button>
                       )}
                     </div>
@@ -924,16 +920,16 @@ function AttemptsTab({ attempts }) {
                 {delta !== null && (
                   <span className={cn('text-xs font-semibold flex items-center gap-0.5',
                     delta > 0 ? 'text-success' : delta < 0 ? 'text-danger' : 'text-text-muted')}>
-                    {delta > 0 ? <TrendingUp size={10}/> : delta < 0 ? <TrendingDown size={10}/> : <Minus size={10}/>}
+                    {delta > 0 ? <Icon name={ICONS.learning.progress} size={10}/> : delta < 0 ? <Icon name={ICONS.learning.regress} size={10}/> : <Icon name={ICONS.ui.minus} size={10}/>}
                     {delta > 0 ? `+${delta}` : delta}
                   </span>
                 )}
               </div>
               <div className="flex gap-3 text-xs text-text-muted">
-                <span className="flex items-center gap-1"><CheckCircle size={10} className="text-success"/>{a.total_correct} benar</span>
-                <span className="flex items-center gap-1"><XCircle size={10} className="text-danger"/>{a.total_wrong} salah</span>
+                <span className="flex items-center gap-1"><Icon name={ICONS.status.success} size={10} className="text-success"/>{a.total_correct} benar</span>
+                <span className="flex items-center gap-1"><Icon name={ICONS.status.error} size={10} className="text-danger"/>{a.total_wrong} salah</span>
                 {a.duration_seconds && (
-                  <span className="flex items-center gap-1"><Clock size={10}/>
+                  <span className="flex items-center gap-1"><Icon name={ICONS.learning.clock} size={10}/>
                     {Math.floor(a.duration_seconds/60)}:{String(a.duration_seconds%60).padStart(2,'0')}
                   </span>
                 )}
@@ -989,13 +985,13 @@ function RetryButton({ historySessionId, sessionData, onClose, onResume }) {
         </select>
         <button type="button" onClick={handleRetry} disabled={loading} className="btn-primary text-sm flex items-center gap-1.5">
           {loading
-            ? <><Loader2 size={13} className="animate-spin"/> Menyiapkan...</>
-            : <><RotateCcw size={13}/> {isDifferentType ? 'Buat Baru' : 'Latihan Lagi'}</>}
+            ? <><Icon name={ICONS.status.loading} size={13} className="animate-spin"/> Menyiapkan...</>
+            : <><Icon name={ICONS.actions.replay} size={13}/> {isDifferentType ? 'Buat Baru' : 'Latihan Lagi'}</>}
         </button>
       </div>
       {isDifferentType && !error && (
         <p className="text-xs text-warning flex items-center gap-1">
-          <AlertCircle size={11}/> Jenis soal berbeda — akan membuat history baru
+          <Icon name={ICONS.status.error} size={11}/> Jenis soal berbeda — akan membuat history baru
         </p>
       )}
       {error && <p className="text-danger text-xs">{error}</p>}

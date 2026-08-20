@@ -1,16 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ICONS } from '@/lib/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Award, Target, FileText, CalendarCheck, Loader2 } from '@/icons';
+
 import { sessionsAPI } from '@/services/api';
 import MathMarkdown from '@/components/MathMarkdown';
 import { extractErrorMessage } from '@/utils/errors';
 import { useToast } from '@/components/Toast';
 import { usePageState } from '@/hooks/usePageState';
 import { fadeSlide } from '@/utils';
-import { Modal, Button, EmptyState, HelpTip } from '@/components/ui';
+import { Modal, Button, EmptyState, HelpTip , Icon } from '@/components/ui';
 import { StudyPlanItem } from '@/components/studyplan/StudyPlanItem';
 import { formatItemDate } from '@/components/studyplan/shared';
 
@@ -86,7 +87,7 @@ export default function StudyPlanPage() {
       <AnimatePresence mode="wait" initial={false}>
         <motion.div key="nosession" {...fadeSlide} className="flex-1 flex flex-col items-center justify-center p-6 text-center">
           <EmptyState
-            icon={CalendarCheck}
+            icon={ICONS.learning.calendarCheck}
             title={t('studyplan.noSessionTitle', 'Belum ada rencana belajar')}
             description={t('studyplan.noSessionDesc', 'Buat Ujian Simulasi terlebih dahulu untuk mendapatkan rencana belajar yang dipersonalisasi.')}
             action={<button onClick={() => navigate('/exam-analyzer')} className="btn-primary">{t('nav.exam')}</button>}
@@ -100,7 +101,7 @@ export default function StudyPlanPage() {
     return (
       <AnimatePresence mode="wait" initial={false}>
         <motion.div key="loading" {...fadeSlide} className="flex-1 flex items-center justify-center">
-          <Loader2 size={32} className="animate-spin text-primary" />
+          <Icon name={ICONS.status.loading} size={32} className="animate-spin text-primary" />
         </motion.div>
       </AnimatePresence>
     );
@@ -191,7 +192,7 @@ export default function StudyPlanPage() {
         {/* Header */}
         <div className="flex items-center gap-3 flex-wrap">
           <button onClick={() => navigate('/exam-analyzer')} className="btn-ghost px-3 py-2 rounded-xl text-sm">
-            <ArrowLeft size={16} /> Kembali
+            <Icon name={ICONS.actions.back} size={16} /> Kembali
           </button>
           <div className="flex-1 min-w-[200px]">
             <h1 className="text-2xl font-bold text-text flex items-center gap-2">
@@ -207,7 +208,7 @@ export default function StudyPlanPage() {
 
         {plan.motivational_message && (
           <div className="p-4 rounded-xl bg-primary/5 border border-primary/15 flex items-start gap-3">
-            <Award size={18} className="text-primary mt-0.5 shrink-0" />
+            <Icon name={ICONS.learning.certificate} size={18} className="text-primary mt-0.5 shrink-0" />
             <p className="text-sm text-text">{plan.motivational_message}</p>
           </div>
         )}
@@ -216,11 +217,11 @@ export default function StudyPlanPage() {
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="card-base p-5">
           <div className="flex justify-between text-xs text-text-muted mb-2">
             <span className="flex items-center gap-1.5">
-              <Target size={12} className="text-primary" />
+              <Icon name={ICONS.learning.target} size={12} className="text-primary" />
               Progress Rencana Belajar
             </span>
             <span className="font-semibold text-text-secondary">
-              {progress >= 100 ? <span className="flex items-center gap-1"><Award size={12} className="text-success" /> Rencana Selesai!</span> : `${completedItems}/${totalItems} hari · ${progress}%`}
+              {progress >= 100 ? <span className="flex items-center gap-1"><Icon name={ICONS.learning.certificate} size={12} className="text-success" /> Rencana Selesai!</span> : `${completedItems}/${totalItems} hari · ${progress}%`}
             </span>
           </div>
           <div className="h-3 bg-background rounded-full overflow-hidden border border-border/50">
@@ -272,7 +273,7 @@ export default function StudyPlanPage() {
         open={summaryModalOpen}
         onClose={() => setSummaryModalOpen(false)}
         size="lg"
-        title={<span className="flex items-center gap-2"><FileText size={16} className="text-accent-blue" />Rangkuman: {summaryTopic}</span>}
+        title={<span className="flex items-center gap-2"><Icon name={ICONS.files.document} size={16} className="text-accent-blue" />Rangkuman: {summaryTopic}</span>}
         footer={<Button onClick={() => setSummaryModalOpen(false)}>Tutup</Button>}
       >
         <div className="prose prose-sm prose-invert max-w-none leading-relaxed text-text-secondary">

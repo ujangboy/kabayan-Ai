@@ -1,10 +1,11 @@
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
-import { Brain } from '@/icons';
+import { ICONS } from '@/lib/icons';
+
 import { flashcardAPI } from '@/services/api';
 import MathMarkdown from '@/components/MathMarkdown';
 import { formatDate, formatDateTime, formatTimeOnly } from '@/utils';
-import { Modal, Button } from '@/components/ui';
+import { Modal, Button , Icon } from '@/components/ui';
 
 export default function ReviewHistoryModal({ open, group, onClose }) {
   const { t } = useTranslation();
@@ -33,7 +34,7 @@ export default function ReviewHistoryModal({ open, group, onClose }) {
       open={open}
       onClose={onClose}
       size="lg"
-      title={<span className="flex items-center gap-2"><Brain size={18} className="text-accent-purple" />{t('flashcard.reviewHistoryTitle', { subjectName: subject?.name || t('flashcard.defaultName') })}</span>}
+      title={<span className="flex items-center gap-2"><Icon name={ICONS.learning.brain} size={18} className="text-accent-purple" />{t('flashcard.reviewHistoryTitle', { subjectName: subject?.name || t('flashcard.defaultName') })}</span>}
       footer={<Button variant="ghost" onClick={onClose}>{t('common.close')}</Button>}
       bodyClassName="space-y-3"
     >

@@ -5,7 +5,8 @@ import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { subjectAPI, flashcardAPI } from '@/services/api';
 import { useAppStore } from '@/store';
-import { Plus, Folder, FileText, CreditCard, Upload } from '@/icons';
+import { Icon } from '@/components/ui/Icon';
+import { ICONS } from '@/lib/icons';
 import StorageMeter from './StorageMeter';
 
 export default function ContextSidebar() {
@@ -64,11 +65,11 @@ export default function ContextSidebar() {
   );
 }
 
-function SidebarHeader({ icon: Icon, title, action }) {
+function SidebarHeader({ icon, title, action }) {
   return (
     <div className="flex items-center justify-between px-4 py-4 shrink-0">
       <div className="flex items-center gap-2">
-        <Icon size={16} className="text-primary-light" />
+        <Icon name={icon} size={16} className="text-primary-light" />
         <h2 className="text-sm font-semibold text-text">{title}</h2>
       </div>
       {action}
@@ -88,7 +89,7 @@ function MateriSidebar() {
   return (
     <aside className="flex h-full flex-col w-60 bg-surface/80 backdrop-blur-md divider-gradient-r relative shrink-0">
       <SidebarHeader
-        icon={FileText}
+        icon={ICONS.files.document}
         title={t('nav.materi')}
         action={
           <button
@@ -96,7 +97,7 @@ function MateriSidebar() {
             className="p-1.5 rounded-xl text-primary-light hover:bg-white/[0.06] transition-colors"
             title={t('materi.upload')}
           >
-            <Upload size={16} />
+            <Icon name={ICONS.actions.upload} size={16} />
           </button>
         }
       />
@@ -110,7 +111,7 @@ function MateriSidebar() {
               onClick={() => navigate(`/materi?subject_id=${s.id}`)}
               className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left text-text-secondary hover:bg-white/[0.06] hover:text-text transition-colors text-sm"
             >
-              <Folder size={15} className="text-warning shrink-0" />
+              <Icon name={ICONS.files.folder} size={15} className="text-warning shrink-0" />
               <span className="truncate">{s.name}</span>
             </button>
           ))
@@ -133,7 +134,7 @@ function SubjectsSidebar() {
   return (
     <aside className="flex h-full flex-col w-60 bg-surface/80 backdrop-blur-md divider-gradient-r relative shrink-0">
       <SidebarHeader
-        icon={Folder}
+        icon={ICONS.files.folder}
         title={t('nav.subjects')}
         action={
           <button
@@ -141,7 +142,7 @@ function SubjectsSidebar() {
             className="p-1.5 rounded-xl text-primary-light hover:bg-white/[0.06] transition-colors"
             title={t('subjects.new')}
           >
-            <Plus size={16} />
+            <Icon name={ICONS.actions.addOutline} size={16} />
           </button>
         }
       />
@@ -152,7 +153,7 @@ function SubjectsSidebar() {
             onClick={() => navigate(`/subjects/${s.id}`)}
             className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left text-text-secondary hover:bg-white/[0.06] hover:text-text transition-colors text-sm"
           >
-            <Folder size={15} className="text-warning shrink-0" />
+            <Icon name={ICONS.files.folder} size={15} className="text-warning shrink-0" />
             <span className="truncate">{s.name}</span>
           </button>
         ))}
@@ -185,7 +186,7 @@ function FlashcardSidebar() {
 
   return (
     <aside className="flex h-full flex-col w-60 bg-surface/80 backdrop-blur-md divider-gradient-r relative shrink-0">
-      <SidebarHeader icon={CreditCard} title={t('nav.flashcard')} />
+      <SidebarHeader icon={ICONS.nav.flashcard} title={t('nav.flashcard')} />
       <div className="flex-1 overflow-y-auto sidebar-scroll px-3 space-y-1">
         {decks.map((d) => (
           <button
@@ -193,7 +194,7 @@ function FlashcardSidebar() {
             onClick={() => navigate(`/flashcard?deck_id=${d.batch_id}`)}
             className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left text-text-secondary hover:bg-white/[0.06] hover:text-text transition-colors text-sm"
           >
-            <CreditCard size={15} className="text-primary-light shrink-0" />
+            <Icon name={ICONS.nav.flashcard} size={15} className="text-primary-light shrink-0" />
             <span className="truncate">{d.subject?.name || t('flashcard.defaultName')}</span>
           </button>
         ))}

@@ -1,14 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ICONS } from '@/lib/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { CreditCard, Plus, Zap, Brain } from '@/icons';
+
 import { flashcardAPI, subjectAPI } from '@/services/api';
 import { useUiStore } from '@/store';
 import { useToast } from '@/components/Toast';
 import { extractErrorMessage } from '@/utils/errors';
-import { EmptyState, Select, Skeleton } from '@/components/ui';
+import { EmptyState, Select, Skeleton , Icon } from '@/components/ui';
 import { usePageState } from '@/hooks/usePageState';
 import { fadeSlide } from '@/utils';
 import BatchFlashcardCard from '@/components/flashcard/BatchFlashcardCard';
@@ -135,7 +136,7 @@ export default function FlashcardPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center shadow-btn-primary shrink-0">
-              <CreditCard size={20} className="text-white" />
+              <Icon name={ICONS.nav.flashcard} size={20} className="text-white" />
             </div>
             <div>
               <h1 className="text-2xl font-bold text-text">{t('flashcard.pageTitle')}</h1>
@@ -152,16 +153,16 @@ export default function FlashcardPage() {
                   onClick={() => navigate('/flashcard/review')}
                   className="btn-ghost border border-accent-purple/40 text-accent-purple text-xs"
                 >
-                  <Brain size={14} />
+                  <Icon name={ICONS.learning.brain} size={14} />
                   {totalDue > 0 ? t('flashcard.reviewCount', { count: totalDue }) : t('flashcard.reviewSrs')}
                 </button>
               );
             })()}
             <button onClick={() => setIsAIModalOpen(true)} className="btn-primary text-xs">
-              <Zap size={14} /> {t('flashcard.generateAi')}
+              <Icon name={ICONS.ui.bolt} size={14} /> {t('flashcard.generateAi')}
             </button>
             <button onClick={() => setIsManualModalOpen(true)} className="btn-ghost border border-border text-xs">
-              <Plus size={14} /> {t('flashcard.manual')}
+              <Icon name={ICONS.actions.addOutline} size={14} /> {t('flashcard.manual')}
             </button>
             {allFlashcards.length > 0 && (
               <button onClick={handleClearAll} className="btn-ghost text-danger border border-danger/20 text-xs">
@@ -204,11 +205,11 @@ export default function FlashcardPage() {
           ) : groups.length === 0 ? (
             <div className="col-span-full card-base">
               <EmptyState
-                icon={CreditCard}
+                icon={ICONS.nav.flashcard}
                 title={t('flashcard.emptyState')}
                 action={
                   <button onClick={() => setIsAIModalOpen(true)} className="btn-primary text-sm">
-                    <Zap size={14} /> {t('flashcard.generateAi')}
+                    <Icon name={ICONS.ui.bolt} size={14} /> {t('flashcard.generateAi')}
                   </button>
                 }
               />

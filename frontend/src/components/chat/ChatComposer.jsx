@@ -1,15 +1,16 @@
 import { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ICONS } from '@/lib/icons';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Square, Notes, FileText, HelpCircle, Search, Brain, Sparkles } from '@/icons';
-import { Tooltip, Spinner } from '@/components/ui';
+
+import { Tooltip, Spinner , Icon } from '@/components/ui';
 import { cn } from '@/utils';
 
 const QUICK_PROMPTS = [
-  { icon: FileText, label: 'Ringkas materi', prompt: 'Tolong ringkas materi ini dengan poin-poin penting.' },
-  { icon: HelpCircle, label: 'Buat soal', prompt: 'Buatkan 3 soal latihan beserta pembahasannya.' },
-  { icon: Search, label: 'Jelaskan konsep', prompt: 'Jelaskan konsep ini seperti sedang mengajarkan pemula.' },
-  { icon: Brain, label: 'Quiz cepat', prompt: 'Berikan kuis cepat 5 pertanyaan untuk menguji pemahaman saya.' },
+  { icon: ICONS.files.document, label: 'Ringkas materi', prompt: 'Tolong ringkas materi ini dengan poin-poin penting.' },
+  { icon: ICONS.ui.help, label: 'Buat soal', prompt: 'Buatkan 3 soal latihan beserta pembahasannya.' },
+  { icon: ICONS.actions.search, label: 'Jelaskan konsep', prompt: 'Jelaskan konsep ini seperti sedang mengajarkan pemula.' },
+  { icon: ICONS.learning.brain, label: 'Quiz cepat', prompt: 'Berikan kuis cepat 5 pertanyaan untuk menguji pemahaman saya.' },
 ];
 
 export default function ChatComposer({ onSend, isStreaming, onStop, onSaveNote, isNoteSaving, tutorMode }) {
@@ -53,7 +54,6 @@ export default function ChatComposer({ onSend, isStreaming, onStop, onSaveNote, 
           >
             <div className="rounded-xl border border-white/10 bg-slate-900/95 backdrop-blur-md shadow-lg p-2 grid grid-cols-2 gap-2">
               {QUICK_PROMPTS.map((q) => {
-                const Icon = q.icon;
                 return (
                   <button
                     key={q.label}
@@ -64,7 +64,7 @@ export default function ChatComposer({ onSend, isStreaming, onStop, onSaveNote, 
                     className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-text hover:bg-white/[0.06] transition-colors text-left"
                   >
                     <span className="w-7 h-7 rounded-lg bg-primary/10 text-primary-light flex items-center justify-center shrink-0">
-                      <Icon size={15} />
+                      <Icon name={q.icon} size={15} />
                     </span>
                     <span>{q.label}</span>
                   </button>
@@ -93,7 +93,7 @@ export default function ChatComposer({ onSend, isStreaming, onStop, onSaveNote, 
             )}
             title={t('chat.quickPrompts', 'Aksi cepat')}
           >
-            <Sparkles size={17} />
+            <Icon name={ICONS.learning.sparkles} size={17} />
           </button>
         </div>
         <Tooltip label={t('chat.saveNote')}>
@@ -102,12 +102,12 @@ export default function ChatComposer({ onSend, isStreaming, onStop, onSaveNote, 
             disabled={isNoteSaving || isStreaming}
             className="p-3 rounded-xl bg-white/[0.03] text-text-muted hover:text-text border border-white/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            {isNoteSaving ? <Spinner size={18} className="animate-spin" /> : <Notes size={18} />}
+            {isNoteSaving ? <Spinner size={18} className="animate-spin" /> : <Icon name={ICONS.files.notes} size={18} />}
           </button>
         </Tooltip>
         {isStreaming ? (
           <button onClick={onStop} className="p-3 rounded-xl bg-danger text-white transition-colors">
-            <Square size={18} />
+            <Icon name={ICONS.ui.square} size={18} />
           </button>
         ) : (
           <button
@@ -115,7 +115,7 @@ export default function ChatComposer({ onSend, isStreaming, onStop, onSaveNote, 
             disabled={!input.trim()}
             className="p-3 rounded-xl bg-primary text-primary-foreground transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            <Send size={18} />
+            <Icon name={ICONS.actions.send} size={18} />
           </button>
         )}
       </div>

@@ -5,8 +5,9 @@
  * Penggunaan:
  *   <HelpTip label={t('help.exam')} />
  */
-import { HelpCircle } from '@/icons';
 import { Tooltip } from './Tooltip';
+import { Icon } from './Icon';
+import { ICONS } from '@/lib/icons';
 import { cn } from '@/utils';
 
 export function HelpTip({ label, className, size = 15, align = 'center' }) {
@@ -21,7 +22,7 @@ export function HelpTip({ label, className, size = 15, align = 'center' }) {
           className
         )}
       >
-        <HelpCircle size={size} />
+        <Icon name={ICONS.ui.help} size={size} />
       </button>
     </Tooltip>
   );

@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ClipboardList, Loader2, Brain } from '@/icons';
+import { ICONS } from '@/lib/icons';
+import { Icon } from '@/components/ui';
+
 import { examAPI } from '@/services/api';
 import { cn } from '@/utils';
 import MaterialPicker from '@/components/MaterialPicker';
@@ -79,7 +81,7 @@ export default function ConfigView({ subjectId, analysis, onDone }) {
 
   return (
     <div className="p-6 space-y-6">
-      <SectionHeader icon={ClipboardList} title={t('exam.config.title')}
+      <SectionHeader icon={ICONS.status.pending} title={t('exam.config.title')}
         subtitle={t('exam.config.subtitle')} />
 
       <OptionGroup label={t('exam.config.examTypeLabel')} options={EXAM_TYPES} field="exam_type" />
@@ -119,8 +121,8 @@ export default function ConfigView({ subjectId, analysis, onDone }) {
       <div className="flex justify-end pt-2">
         <button onClick={handleSubmit} disabled={isLoading || selectedMaterialIds.length === 0} className="btn-primary">
           {isLoading
-            ? <><Loader2 size={14} className="animate-spin" /> {t('exam.config.creatingBlueprint')}</>
-            : <><Brain size={14} /> {t('exam.config.generateBlueprint')}</>}
+            ? <><Icon name={ICONS.status.loading} size={14} className="animate-spin" /> {t('exam.config.creatingBlueprint')}</>
+            : <><Icon name={ICONS.learning.brain} size={14} /> {t('exam.config.generateBlueprint')}</>}
         </button>
       </div>
     </div>

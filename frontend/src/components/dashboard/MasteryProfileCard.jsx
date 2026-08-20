@@ -1,6 +1,8 @@
 import { motion } from 'framer-motion';
-import { User } from '@/icons';
+
 import { useTranslation } from 'react-i18next';
+import { ICONS } from '@/lib/icons';
+import { Icon } from '@/components/ui';
 
 export default function MasteryProfileCard({ profile, subject }) {
   const { t } = useTranslation();
@@ -15,7 +17,7 @@ export default function MasteryProfileCard({ profile, subject }) {
     <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="card-base p-5">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <User size={16} className="text-accent-purple" />
+          <Icon name={ICONS.ui.user} size={16} className="text-accent-purple" />
           <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('subjectDashboard.learningTitle')}</h2>
         </div>
         {!hasData && (

@@ -1,10 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import {
-  BookOpen, FileText, MessageSquare, BookMarked, CreditCard,
-  HelpCircle, Brain, LayoutTemplate, Database as DatabaseIcon, HardDrive,
-  Trash2, Loader2, RotateCcw, Trash as TrashIcon, XCircle, Download, Archive,
-} from '@/icons';
+import { ICONS } from '@/lib/icons';
+import { Icon } from '@/components/ui';
+
 import { dataAPI, materiAPI, trashAPI } from '@/services/api';
 import { useToast } from '@/components/Toast';
 import { formatDate } from '@/utils';
@@ -169,16 +167,16 @@ export default function DataTab() {
   const materials = materialData?.materials || [];
 
   const CATEGORIES = [
-    { key: 'subjects', label: t('settings.data.subjects'), icon: BookOpen },
-    { key: 'materials', label: t('settings.data.materials'), icon: FileText },
-    { key: 'chats', label: t('settings.data.chats'), icon: MessageSquare },
-    { key: 'messages', label: t('settings.data.messages'), icon: MessageSquare },
-    { key: 'notes', label: t('settings.data.notes'), icon: BookMarked },
-    { key: 'flashcards', label: t('settings.data.flashcards'), icon: CreditCard },
-    { key: 'quizzes', label: t('settings.data.quizzes'), icon: HelpCircle },
-    { key: 'examSessions', label: t('settings.data.examSessions'), icon: Brain },
-    { key: 'examBlueprints', label: t('settings.data.examBlueprints'), icon: LayoutTemplate },
-    { key: 'questionBank', label: t('settings.data.questionBank'), icon: DatabaseIcon },
+    { key: 'subjects', label: t('settings.data.subjects'), icon: ICONS.nav.notebook },
+    { key: 'materials', label: t('settings.data.materials'), icon: ICONS.files.document },
+    { key: 'chats', label: t('settings.data.chats'), icon: ICONS.communication.chat },
+    { key: 'messages', label: t('settings.data.messages'), icon: ICONS.communication.chat },
+    { key: 'notes', label: t('settings.data.notes'), icon: ICONS.learning.bookmarks },
+    { key: 'flashcards', label: t('settings.data.flashcards'), icon: ICONS.nav.flashcard },
+    { key: 'quizzes', label: t('settings.data.quizzes'), icon: ICONS.ui.help },
+    { key: 'examSessions', label: t('settings.data.examSessions'), icon: ICONS.nav.exam },
+    { key: 'examBlueprints', label: t('settings.data.examBlueprints'), icon: ICONS.learning.grid },
+    { key: 'questionBank', label: t('settings.data.questionBank'), icon: ICONS.ui.database },
   ];
 
   const STORAGE_ROWS = [
@@ -197,9 +195,9 @@ export default function DataTab() {
     <div className="space-y-6">
       {/* Count cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-        {CATEGORIES.map(({ key, label, icon: Icon }) => (
+        {CATEGORIES.map(({ key, label, icon }) => (
           <div key={key} className="card-base p-4 flex flex-col gap-1">
-            <Icon size={16} className="text-primary" />
+            <Icon name={icon} size={16} className="text-primary" />
             <span className="text-xl font-bold text-text">{stats[mapKey[key]] ?? 0}</span>
             <span className="text-xs text-text-secondary">{label}</span>
           </div>
@@ -273,9 +271,9 @@ export default function DataTab() {
                           className="p-1.5 rounded-lg text-text-muted hover:text-danger hover:bg-danger/10 transition-colors"
                         >
                           {deleteMutation.isPending && deleteMutation.variables === m.id ? (
-                            <Loader2 size={14} className="animate-spin" />
+                            <Icon name={ICONS.status.loading} size={14} className="animate-spin" />
                           ) : (
-                            <Trash2 size={14} />
+                            <Icon name={ICONS.actions.delete} size={14} />
                           )}
                         </button>
                       </Tooltip>
@@ -291,7 +289,7 @@ export default function DataTab() {
       {/* Backup / Export */}
       <div className="card-base p-5">
         <h3 className="text-sm font-semibold text-text mb-1 flex items-center gap-2">
-          <Archive size={15} className="text-primary" />
+          <Icon name={ICONS.ui.archive} size={15} className="text-primary" />
           {t('settings.data.backupTitle')}
         </h3>
         <p className="text-xs text-text-muted mb-4">{t('settings.data.backupDesc')}</p>
@@ -302,9 +300,9 @@ export default function DataTab() {
           className="btn-primary px-4 py-2 rounded-xl text-sm flex items-center gap-2"
         >
           {backupMutation.isPending ? (
-            <Loader2 size={15} className="animate-spin" />
+            <Icon name={ICONS.status.loading} size={15} className="animate-spin" />
           ) : (
-            <Download size={15} />
+            <Icon name={ICONS.actions.download} size={15} />
           )}
           {backupMutation.isPending ? t('settings.data.backupCreating') : t('settings.data.backupCreate')}
         </button>
@@ -333,7 +331,7 @@ export default function DataTab() {
                       aria-label={t('settings.data.backupDownload')}
                       className="p-1.5 rounded-lg text-text-muted hover:text-primary hover:bg-primary/10 transition-colors shrink-0"
                     >
-                      <Download size={13} />
+                      <Icon name={ICONS.actions.download} size={13} />
                     </button>
                   </Tooltip>
                 </div>
@@ -347,7 +345,7 @@ export default function DataTab() {
       <div className="card-base p-5">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-semibold text-text flex items-center gap-2">
-            <TrashIcon size={15} className="text-danger" />
+            <Icon name={ICONS.actions.delete} size={15} className="text-danger" />
             {t('settings.data.trash')} ({trashData?.items?.length || 0})
           </h3>
           {(trashData?.items?.length || 0) > 0 && (
@@ -356,7 +354,7 @@ export default function DataTab() {
               disabled={emptyTrashMutation.isPending}
               className="text-xs text-text-muted hover:text-danger transition-colors"
             >
-              {emptyTrashMutation.isPending ? <Loader2 size={13} className="animate-spin inline" /> : t('settings.data.trashEmpty')}
+              {emptyTrashMutation.isPending ? <Icon name={ICONS.status.loading} size={13} className="animate-spin inline" /> : t('settings.data.trashEmpty')}
             </button>
           )}
         </div>
@@ -399,7 +397,7 @@ export default function DataTab() {
                           aria-label={t('settings.data.trashRestore')}
                           className="p-1.5 rounded-lg text-text-muted hover:text-success hover:bg-success/10 transition-colors mr-1"
                         >
-                          <RotateCcw size={14} />
+                          <Icon name={ICONS.actions.replay} size={14} />
                         </button>
                       </Tooltip>
                       <Tooltip label={t('settings.data.trashDeleteForever')}>
@@ -409,7 +407,7 @@ export default function DataTab() {
                           aria-label={t('settings.data.trashDeleteForever')}
                           className="p-1.5 rounded-lg text-text-muted hover:text-danger hover:bg-danger/10 transition-colors"
                         >
-                          <XCircle size={14} />
+                          <Icon name={ICONS.status.error} size={14} />
                         </button>
                       </Tooltip>
                     </td>
@@ -424,7 +422,7 @@ export default function DataTab() {
       {/* Storage */}
       <div className="card-base p-5">
         <h3 className="text-sm font-semibold text-text mb-3 flex items-center gap-2">
-          <HardDrive size={15} className="text-primary" />
+          <Icon name={ICONS.ui.storage} size={15} className="text-primary" />
           {t('settings.data.storage')}
         </h3>
         <div className="space-y-2">

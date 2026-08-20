@@ -1,8 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ICONS } from '@/lib/icons';
+import { Icon } from '@/components/ui';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, PenLine, CheckCircle, XCircle, Trophy, Celebration, MenuBook, FitnessCenter } from '@/icons';
+
 import { quizAPI } from '@/services/api';
 import MathMarkdown from '@/components/MathMarkdown';
 import QuizTimer from '@/components/quiz/QuizTimer';
@@ -77,7 +79,7 @@ export function QuizSession({ quizId, onClose }) {
     return (
       <ViewShell view="loading">
         <div className="flex-1 flex items-center justify-center">
-          <Loader2 size={32} className="animate-spin text-primary" />
+          <Icon name={ICONS.status.loading} size={32} className="animate-spin text-primary" />
         </div>
       </ViewShell>
     );
@@ -181,7 +183,7 @@ export function QuizSession({ quizId, onClose }) {
               <div key={idx} className={cn('card-base p-5 border-l-4', isEssay ? 'border-warning' : isCorrect ? 'border-success' : 'border-danger')}>
                 <div className="flex items-start gap-3 mb-3">
                   <div className={cn('flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center', isEssay ? 'bg-warning' : isCorrect ? 'bg-success' : 'bg-danger')}>
-                    {isEssay ? <PenLine size={14} className="text-white" /> : isCorrect ? <CheckCircle size={16} className="text-white" /> : <XCircle size={16} className="text-white" />}
+                    {isEssay ? <Icon name={ICONS.actions.edit} size={14} className="text-white" /> : isCorrect ? <Icon name={ICONS.status.success} size={16} className="text-white" /> : <Icon name={ICONS.status.error} size={16} className="text-white" />}
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
@@ -239,15 +241,15 @@ export function QuizSession({ quizId, onClose }) {
     const { correct, wrong } = computeScore();
     const recommendation =
       score >= 70
-        ? { Icon: Celebration, text: 'Bagus! Penguasaan materi sudah baik. Lanjut ke topik berikutnya atau coba soal yang lebih sulit.' }
+        ? { Icon: ICONS.learning.celebration, text: 'Bagus! Penguasaan materi sudah baik. Lanjut ke topik berikutnya atau coba soal yang lebih sulit.' }
         : score >= 50
-          ? { Icon: MenuBook, text: 'Cukup baik. Review jawaban yang salah untuk memperkuat pemahaman, lalu coba lagi.' }
-          : { Icon: FitnessCenter, text: 'Masih perlu banyak latihan. Pelajari kembali materi terkait, lalu ulangi quiz ini.' };
+          ? { Icon: ICONS.nav.subjects, text: 'Cukup baik. Review jawaban yang salah untuk memperkuat pemahaman, lalu coba lagi.' }
+          : { Icon: ICONS.learning.practice, text: 'Masih perlu banyak latihan. Pelajari kembali materi terkait, lalu ulangi quiz ini.' };
     return (
       <ViewShell view="result">
         <div className="flex-1 flex items-center justify-center p-6">
         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="card-base text-center max-w-md w-full p-8">
-          <Trophy size={48} className="mx-auto text-warning mb-4" />
+          <Icon name={ICONS.learning.trophy} size={48} className="mx-auto text-warning mb-4" />
           <h2 className="text-2xl font-bold text-text mb-2">Quiz Selesai!</h2>
           <div className="text-6xl font-bold text-primary my-4">{score}</div>
           <p className="text-xs text-text-muted mb-4">
@@ -265,7 +267,7 @@ export function QuizSession({ quizId, onClose }) {
             </div>
           </div>
           <div className="p-3 bg-background rounded-xl border border-border mb-6 text-sm text-text-secondary">
-            <recommendation.Icon size={16} className="mr-1.5 inline-block text-primary" />
+            <Icon name={recommendation.Icon} size={16} className="mr-1.5 inline-block text-primary" />
             {recommendation.text}
           </div>
           <div className="flex gap-2">
@@ -306,7 +308,7 @@ export function QuizSession({ quizId, onClose }) {
               <div className="flex items-center gap-2 mb-2">
                 {currentQ.qtype === 'essay' && (
                   <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded bg-warning/15 text-warning border border-warning/30">
-                    <PenLine size={10} /> Essay
+                    <Icon name={ICONS.actions.edit} size={10} /> Essay
                   </span>
                 )}
               </div>

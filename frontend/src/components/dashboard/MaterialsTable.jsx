@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Eye, Trash2, Search, Plus, HelpCircle } from '@/icons';
+import { ICONS } from '@/lib/icons';
+
 import { useTranslation } from 'react-i18next';
 import { materiAPI } from '@/services/api';
 import { useQueryClient } from '@tanstack/react-query';
@@ -8,7 +9,7 @@ import { extractErrorMessage } from '@/utils/errors';
 import { formatDate } from '@/utils';
 import FileTypeIcon from '@/components/FileTypeIcon';
 import { useToast } from '@/components/Toast';
-import { Tooltip, ConfirmDialog } from '@/components/ui';
+import { Tooltip, ConfirmDialog , Icon } from '@/components/ui';
 
 export default function MaterialsTable({ materials, subjectId }) {
   const { t } = useTranslation();
@@ -45,14 +46,14 @@ export default function MaterialsTable({ materials, subjectId }) {
         {/* Header — title + search + add */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 divider-gradient-b relative">
           <div className="flex items-center gap-2">
-            <FileText size={14} className="text-text-secondary" />
+            <Icon name={ICONS.files.document} size={14} className="text-text-secondary" />
             <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">
               {t('subjectDashboard.materialsTitle', { count: allMaterials.length })}
             </h2>
           </div>
           <div className="flex items-center gap-2">
             <div className="relative">
-              <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-text-muted" />
+              <Icon name={ICONS.actions.search} size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-text-muted" />
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
@@ -64,7 +65,7 @@ export default function MaterialsTable({ materials, subjectId }) {
               onClick={() => navigate(`/materi?subject_id=${subjectId}`)}
               className="btn-primary px-3 py-1.5 rounded-lg text-xs"
             >
-              <Plus size={12} /> {t('subjectDashboard.addMaterial', 'Tambah')}
+              <Icon name={ICONS.actions.addOutline} size={12} /> {t('subjectDashboard.addMaterial', 'Tambah')}
             </button>
           </div>
         </div>
@@ -116,7 +117,7 @@ export default function MaterialsTable({ materials, subjectId }) {
                           aria-label={t('subjectDashboard.viewMaterial', 'Lihat')}
                           className="p-1.5 rounded-lg text-text-muted hover:text-accent-blue hover:bg-accent-blue/10 transition-colors"
                         >
-                          <Eye size={13} />
+                          <Icon name={ICONS.ui.eye} size={13} />
                         </button>
                       </Tooltip>
                       <Tooltip label={t('subjectDashboard.quizMaterial', 'Quiz dari materi ini')}>
@@ -125,7 +126,7 @@ export default function MaterialsTable({ materials, subjectId }) {
                           aria-label={t('subjectDashboard.quizMaterial', 'Quiz dari materi ini')}
                           className="p-1.5 rounded-lg text-text-muted hover:text-accent-teal hover:bg-accent-teal/10 transition-colors"
                         >
-                          <HelpCircle size={13} />
+                          <Icon name={ICONS.ui.help} size={13} />
                         </button>
                       </Tooltip>
                       <Tooltip label={t('subjectDashboard.deleteMaterial', 'Hapus')}>
@@ -134,7 +135,7 @@ export default function MaterialsTable({ materials, subjectId }) {
                           aria-label={t('subjectDashboard.deleteMaterial', 'Hapus')}
                           className="p-1.5 rounded-lg text-text-muted hover:text-danger hover:bg-danger/10 transition-colors"
                         >
-                          <Trash2 size={13} />
+                          <Icon name={ICONS.actions.delete} size={13} />
                         </button>
                       </Tooltip>
                     </div>

@@ -1,6 +1,7 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import { AnimatePresence, motion } from 'framer-motion';
-import { X } from '@/icons';
+import { Icon } from './Icon';
+import { ICONS } from '@/lib/icons';
 import { cn } from '@/utils';
 
 const SIZES = {
@@ -82,7 +83,7 @@ export function Modal({
                           aria-label="Tutup"
                           className="text-text-muted hover:text-text transition-colors rounded-btn p-1 hover:bg-white/[0.06] shrink-0"
                         >
-                          <X size={18} />
+                          <Icon name={ICONS.actions.close} size={18} />
                         </button>
                       </Dialog.Close>
                     )}
@@ -97,7 +98,7 @@ export function Modal({
                           aria-label="Tutup"
                           className="absolute right-3 top-3 z-10 text-text-muted hover:text-text transition-colors rounded-btn p-1 hover:bg-white/[0.06]"
                         >
-                          <X size={18} />
+                          <Icon name={ICONS.actions.close} size={18} />
                         </button>
                       </Dialog.Close>
                     )}

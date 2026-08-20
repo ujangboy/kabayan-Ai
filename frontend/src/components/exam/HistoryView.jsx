@@ -1,19 +1,16 @@
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ICONS } from '@/lib/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  BookOpen, History, Zap, Search, X, ChevronRight, Trash2,
-  RotateCcw, Clock, Calendar, Star, Award, BarChart2, FileText, Loader2,
-  Trophy, HelpCircle, CreditCard,
-} from '@/icons';
+
 import { materiAPI, sessionsAPI, subjectAPI } from '@/services/api';
 import { cn, formatDate, formatTimeOnly } from '@/utils';
 import DetailModal from './DetailModal';
 import { Chip, ProgressBar, STATUS_META, getBadge, getGradeColor, Q_TYPE_LABEL } from './shared';
 import { Tooltip } from '@/components/ui/Tooltip';
-import { SubjectBadge } from '@/components/ui';
+import { SubjectBadge , Icon } from '@/components/ui';
 import { useToast } from '@/components/Toast';
 
 // ─── Subject picker (shown when no subject selected) ──────────────────────────
@@ -40,13 +37,13 @@ function SubjectPicker({ subjects, onSelectSubject, onStartConfig, t }) {
    if (!subjects.length) {
      return (
        <div className="card-base p-16 text-center">
-         <BookOpen size={48} className="mx-auto mb-4 text-primary opacity-40" />
+         <Icon name={ICONS.learning.bookOpen} size={48} className="mx-auto mb-4 text-primary opacity-40" />
          <h3 className="text-lg font-semibold text-text mb-2">{t('exam.history.noSubjects')}</h3>
          <p className="text-text-muted text-sm max-w-md mx-auto mb-5">
            {t('exam.history.noSubjectsDesc')}
          </p>
          <button onClick={() => navigate('/materi')} className="btn-primary text-sm">
-           <BookOpen size={14} /> {t('exam.history.addSubject')}
+           <Icon name={ICONS.learning.bookOpen} size={14} /> {t('exam.history.addSubject')}
          </button>
        </div>
      );
@@ -88,7 +85,7 @@ function SubjectCard({ subject, onSelectSubject, onStartConfig, onDelete, t, ton
        <div className="card-base p-5 flex flex-col gap-3">
          <div className="flex items-start gap-3">
            <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
-             <BookOpen size={18} />
+             <Icon name={ICONS.learning.bookOpen} size={18} />
            </div>
            <div className="flex-1 min-w-0">
              <h3 className="font-semibold text-text truncate">{subject.name}</h3>
@@ -97,10 +94,10 @@ function SubjectCard({ subject, onSelectSubject, onStartConfig, onDelete, t, ton
          </div>
          <div className="flex gap-2 mt-auto">
            <button disabled className="flex-1 px-3 py-2 rounded-lg border border-border bg-card text-text text-xs font-medium opacity-50">
-             <History size={12} className="inline mr-1 -mt-0.5" /> {t('exam.history.history')}
+             <Icon name={ICONS.learning.history} size={12} className="inline mr-1 -mt-0.5" /> {t('exam.history.history')}
            </button>
            <button disabled className="flex-1 px-3 py-2 rounded-lg bg-primary text-white text-xs font-medium opacity-50">
-             <Zap size={12} className="inline mr-1 -mt-0.5" /> {t('exam.history.simulation')}
+             <Icon name={ICONS.ui.bolt} size={12} className="inline mr-1 -mt-0.5" /> {t('exam.history.simulation')}
            </button>
          </div>
        </div>
@@ -126,7 +123,7 @@ function SubjectCard({ subject, onSelectSubject, onStartConfig, onDelete, t, ton
                aria-label={t('exam.history.deleteSubject')}
                className="p-1 text-text-muted hover:text-danger transition-colors shrink-0"
              >
-               <Trash2 size={14} />
+               <Icon name={ICONS.actions.delete} size={14} />
              </button>
            </Tooltip>
          )}
@@ -135,22 +132,22 @@ function SubjectCard({ subject, onSelectSubject, onStartConfig, onDelete, t, ton
        {/* Body — grid mini metrik */}
        <div className="grid grid-cols-4 gap-1.5">
          <div className="rounded-lg bg-white/[0.03] border border-white/[0.06] py-2 px-1 text-center">
-           <Trophy size={12} className="mx-auto mb-0.5 text-warning" />
+           <Icon name={ICONS.learning.trophy} size={12} className="mx-auto mb-0.5 text-warning" />
            <p className="text-sm font-bold text-text leading-tight">{subject.best_score ?? '—'}</p>
            <p className="text-[9px] text-text-muted uppercase tracking-wide">{t('exam.history.scoreLabel', 'Skor')}</p>
          </div>
          <div className="rounded-lg bg-white/[0.03] border border-white/[0.06] py-2 px-1 text-center">
-           <HelpCircle size={12} className="mx-auto mb-0.5 text-accent-teal" />
+           <Icon name={ICONS.ui.help} size={12} className="mx-auto mb-0.5 text-accent-teal" />
            <p className="text-sm font-bold text-text leading-tight">{subject.total_quizzes ?? 0}</p>
            <p className="text-[9px] text-text-muted uppercase tracking-wide">{t('exam.history.quizLabel', 'Quiz')}</p>
          </div>
          <div className="rounded-lg bg-white/[0.03] border border-white/[0.06] py-2 px-1 text-center">
-           <CreditCard size={12} className="mx-auto mb-0.5 text-accent-purple" />
+           <Icon name={ICONS.nav.flashcard} size={12} className="mx-auto mb-0.5 text-accent-purple" />
            <p className="text-sm font-bold text-text leading-tight">{subject.total_flashcards ?? 0}</p>
            <p className="text-[9px] text-text-muted uppercase tracking-wide">{t('exam.history.cardLabel', 'Kartu')}</p>
          </div>
          <div className="rounded-lg bg-white/[0.03] border border-white/[0.06] py-2 px-1 text-center">
-           <FileText size={12} className="mx-auto mb-0.5 text-accent-blue" />
+           <Icon name={ICONS.files.document} size={12} className="mx-auto mb-0.5 text-accent-blue" />
            <p className="text-sm font-bold text-text leading-tight">{materialCount}</p>
            <p className="text-[9px] text-text-muted uppercase tracking-wide">{t('exam.history.materialLabel', 'Materi')}</p>
          </div>
@@ -161,7 +158,7 @@ function SubjectCard({ subject, onSelectSubject, onStartConfig, onDelete, t, ton
          <div className="flex gap-1 flex-wrap">
            {subjectMaterials.slice(0, 3).map((m, i) => (
              <span key={i} className="inline-flex items-center gap-0.5 text-[10px] px-2 py-0.5 rounded bg-accent-blue/10 text-accent-blue border border-accent-blue/20 truncate max-w-[200px]">
-               <FileText size={8} className="shrink-0" />
+               <Icon name={ICONS.files.document} size={8} className="shrink-0" />
                {m.filename || `Materi #${m.id}`}
              </span>
            ))}
@@ -180,8 +177,8 @@ function SubjectCard({ subject, onSelectSubject, onStartConfig, onDelete, t, ton
            <div className="flex items-center gap-3">
              {subject.created_at && (
                <>
-                 <span className="flex items-center gap-1"><Calendar size={9} />{formatDate(subject.created_at)}</span>
-                 <span className="flex items-center gap-1"><Clock size={9} />{formatTimeOnly(subject.created_at)}</span>
+                 <span className="flex items-center gap-1"><Icon name={ICONS.learning.calendar} size={9} />{formatDate(subject.created_at)}</span>
+                 <span className="flex items-center gap-1"><Icon name={ICONS.learning.clock} size={9} />{formatTimeOnly(subject.created_at)}</span>
                </>
              )}
            </div>
@@ -191,10 +188,10 @@ function SubjectCard({ subject, onSelectSubject, onStartConfig, onDelete, t, ton
 
        <div className="flex gap-2 mt-auto">
          <button onClick={() => onSelectSubject(subject.id)} className="flex-1 px-3 py-2 rounded-lg border border-white/10 bg-white/[0.03] text-text text-xs font-medium hover:border-primary/40 hover:bg-white/[0.06] transition-colors">
-           <History size={12} className="inline mr-1 -mt-0.5" /> {t('exam.history.history')}
+           <Icon name={ICONS.learning.history} size={12} className="inline mr-1 -mt-0.5" /> {t('exam.history.history')}
          </button>
          <button onClick={() => onStartConfig(subject.id)} className="flex-1 px-3 py-2 rounded-lg bg-primary text-white text-xs font-medium hover:opacity-90 transition-opacity">
-           <Zap size={12} className="inline mr-1 -mt-0.5" /> {t('exam.history.simulation')}
+           <Icon name={ICONS.ui.bolt} size={12} className="inline mr-1 -mt-0.5" /> {t('exam.history.simulation')}
          </button>
        </div>
      </div>
@@ -261,13 +258,13 @@ export default function HistoryView({ subjectId, subjects, onSelectSubject, onSt
    };
 
   if (isLoading) {
-    return <div className="card-base p-10 text-center"><Loader2 size={28} className="animate-spin text-primary mx-auto" /></div>;
+    return <div className="card-base p-10 text-center"><Icon name={ICONS.status.loading} size={28} className="animate-spin text-primary mx-auto" /></div>;
   }
 
    if (sessions.length === 0) {
      return (
        <div className="card-base p-16 text-center">
-         <BarChart2 size={48} className="mx-auto mb-4 text-text-muted opacity-40" />
+         <Icon name={ICONS.learning.barChart} size={48} className="mx-auto mb-4 text-text-muted opacity-40" />
          <p className="text-text-muted text-sm mb-2">
            {t('exam.history.noHistory')}
          </p>
@@ -275,7 +272,7 @@ export default function HistoryView({ subjectId, subjects, onSelectSubject, onSt
            {t('exam.history.noHistoryDesc')}
          </p>
          <button onClick={() => onStartConfig(subjectId)} className="btn-primary text-sm">
-           <Zap size={14} /> {t('exam.history.createSimulation')}
+           <Icon name={ICONS.ui.bolt} size={14} /> {t('exam.history.createSimulation')}
          </button>
        </div>
      );
@@ -287,7 +284,7 @@ export default function HistoryView({ subjectId, subjects, onSelectSubject, onSt
       <div className="card-base p-4 space-y-3">
         <div className="flex gap-2">
           <div className="relative flex-1">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
+            <Icon name={ICONS.actions.search} size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
             <input
               value={search} onChange={e => setSearch(e.target.value)}
                placeholder={t('exam.history.searchPlaceholder')}
@@ -297,7 +294,7 @@ export default function HistoryView({ subjectId, subjects, onSelectSubject, onSt
           {search && (
             <Tooltip label="Hapus pencarian">
               <button onClick={() => setSearch('')} aria-label="Hapus pencarian" className="p-2 rounded-lg border border-border bg-card text-text-muted hover:text-text">
-                <X size={14} />
+                <Icon name={ICONS.actions.close} size={14} />
               </button>
             </Tooltip>
           )}
@@ -334,14 +331,14 @@ export default function HistoryView({ subjectId, subjects, onSelectSubject, onSt
       {sessions.length > 0 && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
-            { label:'Total Simulasi', value: sessions.length,                              icon: History,   color:'text-primary' },
-            { label:'Mastered',       value: sessions.filter(s=>s.status==='mastered').length, icon: Award,  color:'text-success' },
-            { label:'Rata-rata Nilai',value: Math.round(sessions.reduce((a,s)=>a+(s.best_score||0),0)/sessions.length)||0, icon: BarChart2, color:'text-warning' },
-            { label:'Total Attempt',  value: sessions.reduce((a,s)=>a+(s.attempt_count||0),0), icon: RotateCcw, color:'text-accent-blue' },
-          ].map(({ label, value, icon: Icon, color }) => (
+            { label:'Total Simulasi', value: sessions.length,                              icon: ICONS.learning.history,   color:'text-primary' },
+            { label:'Mastered',       value: sessions.filter(s=>s.status==='mastered').length, icon: ICONS.learning.certificate,  color:'text-success' },
+            { label:'Rata-rata Nilai',value: Math.round(sessions.reduce((a,s)=>a+(s.best_score||0),0)/sessions.length)||0, icon: ICONS.learning.barChart, color:'text-warning' },
+            { label:'Total Attempt',  value: sessions.reduce((a,s)=>a+(s.attempt_count||0),0), icon: ICONS.actions.replay, color:'text-accent-blue' },
+          ].map(({ label, value, icon, color }) => (
             <div key={label} className="card-base p-4 flex items-center gap-3">
               <div className={cn('w-9 h-9 rounded-xl bg-card border border-border flex items-center justify-center shrink-0', color)}>
-                <Icon size={15} />
+                <Icon name={icon} size={15} />
               </div>
               <div>
                 <p className="text-xl font-bold text-text">{value}</p>
@@ -355,7 +352,7 @@ export default function HistoryView({ subjectId, subjects, onSelectSubject, onSt
       {/* Card grid */}
       {filtered.length === 0 ? (
         <div className="card-base p-20 text-center">
-          <History size={56} className="mx-auto mb-4 text-text-muted opacity-30" />
+          <Icon name={ICONS.learning.history} size={56} className="mx-auto mb-4 text-text-muted opacity-30" />
            <h3 className="text-lg font-semibold text-text mb-2">
              {sessions.length === 0 ? t('exam.history.noHistoryTitle') : t('exam.history.notFound')}
            </h3>
@@ -415,7 +412,7 @@ function HistoryCard({ session: s, onDetail, onDelete, onRetry, t }) {
                <Chip label={t('exam.history.mixed')} size="xs" color="teal" />
              )}
             <Chip label={meta.label} size="xs" color={meta.color} />
-            {s.status === 'mastered' && <Star size={11} className="text-warning fill-warning" />}
+            {s.status === 'mastered' && <Icon name={ICONS.ui.star} size={11} className="text-warning fill-warning" />}
           </div>
           <h3 className="font-bold text-text text-sm leading-snug line-clamp-2">{s.title}</h3>
           <p className="text-xs text-text-muted mt-0.5">{s.subject_name}</p>
@@ -424,7 +421,7 @@ function HistoryCard({ session: s, onDetail, onDelete, onRetry, t }) {
             <div className="flex gap-1 flex-wrap mt-1.5">
               {(s.material_names || []).slice(0, 2).map((name, i) => (
                 <span key={i} className="inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded bg-accent-blue/10 text-accent-blue border border-accent-blue/20 truncate max-w-[120px]">
-                  <FileText size={8} className="shrink-0" />{name}
+                  <Icon name={ICONS.files.document} size={8} className="shrink-0" />{name}
                 </span>
               ))}
               {(s.material_names || []).length > 2 && (
@@ -461,8 +458,8 @@ function HistoryCard({ session: s, onDetail, onDelete, onRetry, t }) {
       )}
 
       <div className="text-xs text-text-muted flex items-center gap-3 mb-4">
-        <span className="flex items-center gap-1"><RotateCcw size={10} /> {s.attempt_count || 0} {t('exam.history.attempt')}</span>
-        <span className="flex items-center gap-1"><Clock size={10} />
+        <span className="flex items-center gap-1"><Icon name={ICONS.actions.replay} size={10} /> {s.attempt_count || 0} {t('exam.history.attempt')}</span>
+        <span className="flex items-center gap-1"><Icon name={ICONS.learning.clock} size={10} />
           {s.created_at ? new Date(s.created_at).toLocaleDateString('id-ID') : '--'}
           {s.created_at && (
             <span className="text-text-muted/70">
@@ -472,7 +469,7 @@ function HistoryCard({ session: s, onDetail, onDelete, onRetry, t }) {
         </span>
         {s.has_study_plan && (
           <span className="flex items-center gap-1 text-primary">
-            <Calendar size={10} /> {s.study_plan_progress || 0}% plan
+            <Icon name={ICONS.learning.calendar} size={10} /> {s.study_plan_progress || 0}% plan
           </span>
         )}
         {s.has_study_plan && s.study_plan_start_date && (() => {
@@ -483,7 +480,7 @@ function HistoryCard({ session: s, onDetail, onDelete, onRetry, t }) {
           const fmt = (d) => `${d.getDate()} ${MONTHS_ID[d.getMonth()]}`;
           return (
             <span className="text-[10px] text-text-muted flex items-center gap-1">
-              <Calendar size={9}/> {fmt(start)} – {fmt(end)}
+              <Icon name={ICONS.learning.calendar} size={9}/> {fmt(start)} – {fmt(end)}
             </span>
           );
         })()}
@@ -492,14 +489,14 @@ function HistoryCard({ session: s, onDetail, onDelete, onRetry, t }) {
       <div className="mt-auto flex gap-2">
         <button onClick={onDetail}
           className="btn-primary text-xs flex-1 justify-center">
-           <ChevronRight size={12} /> {t('exam.history.detail')}
+           <Icon name={ICONS.ui.chevronRight} size={12} /> {t('exam.history.detail')}
         </button>
         {onRetry && (
           <Tooltip label={t('exam.history.retry') || 'Latihan Lagi'}>
             <button onClick={onRetry}
               aria-label={t('exam.history.retry') || 'Latihan Lagi'}
               className="p-2 rounded-lg border border-border bg-card text-text-secondary hover:text-primary hover:border-primary/30 transition-colors">
-              <RotateCcw size={13} />
+              <Icon name={ICONS.actions.replay} size={13} />
             </button>
           </Tooltip>
         )}
@@ -507,7 +504,7 @@ function HistoryCard({ session: s, onDetail, onDelete, onRetry, t }) {
           <button onClick={onDelete}
             aria-label={t('common.delete')}
             className="p-2 rounded-lg border border-border bg-card text-text-muted hover:text-danger hover:border-danger/30 transition-colors">
-            <Trash2 size={13} />
+            <Icon name={ICONS.actions.delete} size={13} />
           </button>
         </Tooltip>
       </div>

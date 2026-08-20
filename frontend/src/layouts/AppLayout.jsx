@@ -1,5 +1,7 @@
 import { useEffect } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { ICONS } from '@/lib/icons';
+import { Icon } from '@/components/ui';
 import { motion, AnimatePresence, MotionConfig } from 'framer-motion';
 import IconRail from '@/components/layout/IconRail';
 import ContextSidebar from '@/components/layout/ContextSidebar';
@@ -10,7 +12,7 @@ import BackgroundProcessSync from '@/components/BackgroundProcessSync';
 import FocusModeView from '@/components/FocusModeView';
 import { useAppStore, useFocusStore } from '@/store';
 import { useTranslation } from 'react-i18next';
-import { RefreshCw } from '@/icons';
+
 import { profileAPI } from '@/services/api';
 import { setAppLanguage, STORAGE_KEY } from '@/i18n';
 
@@ -45,7 +47,7 @@ function PendingBanner({ t }) {
       transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
       className="flex items-center gap-2 px-4 py-2 bg-warning/10 border-b border-warning/25 text-warning text-xs"
     >
-      <RefreshCw size={12} className="animate-spin" />
+      <Icon name={ICONS.actions.refresh} size={12} className="animate-spin" />
       <span>
         {ops.length === 1 ? getOpLabel(ops[0], t) : t('appLayout.opRunningMultiple', { count: ops.length })}
       </span>

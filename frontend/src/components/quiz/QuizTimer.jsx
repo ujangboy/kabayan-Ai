@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Timer } from '@/icons';
+import { ICONS } from '@/lib/icons';
+import { Icon } from '@/components/ui';
+
 
 function formatTime(seconds) {
   const m = Math.floor(seconds / 60);
@@ -41,7 +43,7 @@ export default function QuizTimer({ totalSeconds, onTimeUp, isActive = true }) {
       }`}
       title={t('quizTimer.remainingTime')}
     >
-      <Timer size={13} />
+      <Icon name={ICONS.learning.timer} size={13} />
       {formatTime(Math.max(0, remaining))}
     </span>
   );

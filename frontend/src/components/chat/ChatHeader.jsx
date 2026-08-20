@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { X, Check } from '@/icons';
-import { Tooltip } from '@/components/ui';
+import { ICONS } from '@/lib/icons';
+
+import { Tooltip , Icon } from '@/components/ui';
 import { useChatStore } from '@/store';
 import { subjectAPI } from '@/services/api';
 
@@ -41,7 +42,7 @@ export default function ChatHeader({ chat, isCurrentChatStreaming }) {
             >
               <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
               {t('chat.tutorBadge')}
-              <X size={12} />
+              <Icon name={ICONS.actions.close} size={12} />
             </button>
           </Tooltip>
         )}
@@ -51,7 +52,7 @@ export default function ChatHeader({ chat, isCurrentChatStreaming }) {
               onClick={clearSelectedDocs}
               className="px-2.5 py-1.5 rounded-full bg-base text-text-muted text-xs font-medium hover:text-text transition-colors"
             >
-              {selectedDocs.length} doc{selectedDocs.length > 1 ? 's' : ''} <Check size={11} className="inline text-success" />
+              {selectedDocs.length} doc{selectedDocs.length > 1 ? 's' : ''} <Icon name={ICONS.status.check} size={11} className="inline text-success" />
             </button>
           </Tooltip>
         )}

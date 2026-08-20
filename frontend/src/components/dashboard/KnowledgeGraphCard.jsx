@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Network, ArrowRight, Sparkles, ChevronDown, ChevronUp } from '@/icons';
+import { ICONS } from '@/lib/icons';
+import { Icon } from '@/components/ui';
+
 import { useTranslation } from 'react-i18next';
 
 export default function KnowledgeGraphCard({ graph }) {
@@ -43,7 +45,7 @@ export default function KnowledgeGraphCard({ graph }) {
         className="w-full flex items-center justify-between"
       >
         <div className="flex items-center gap-2">
-          <Network size={16} className="text-accent-blue" />
+          <Icon name={ICONS.learning.network} size={16} className="text-accent-blue" />
           <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('studyGraph.title')}</h2>
         </div>
         <div className="flex items-center gap-3">
@@ -53,7 +55,7 @@ export default function KnowledgeGraphCard({ graph }) {
             <span>{topicCount} {t('studyGraph.topicsShort', 'topik')}</span>
             {weakCount > 0 && <span className="text-danger">· {weakCount} lemah</span>}
           </div>
-          {expanded ? <ChevronUp size={14} className="text-text-muted" /> : <ChevronDown size={14} className="text-text-muted" />}
+          {expanded ? <Icon name={ICONS.ui.chevronUp} size={14} className="text-text-muted" /> : <Icon name={ICONS.ui.chevronDown} size={14} className="text-text-muted" />}
         </div>
       </button>
 
@@ -94,7 +96,7 @@ export default function KnowledgeGraphCard({ graph }) {
                           <span key={n.id} className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg border border-border bg-card text-[10px]">
                             <span className="font-medium text-text">{n.label}</span>
                             {n.mastery != null && <span className="text-text-muted">{n.mastery}%</span>}
-                            {n.in_latest_blueprint && <Sparkles size={10} className="text-warning" />}
+                            {n.in_latest_blueprint && <Icon name={ICONS.learning.sparkles} size={10} className="text-warning" />}
                             {sb && <span className={`badge text-[9px] ${sb.cls}`}>{sb.label}</span>}
                           </span>
                         );
@@ -140,7 +142,7 @@ export default function KnowledgeGraphCard({ graph }) {
                   <div className="flex flex-wrap gap-1.5">
                     {dependencies.map((e, i) => (
                       <span key={i} className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-card border border-border text-[10px] text-text-secondary">
-                        {e.source} <ArrowRight size={10} className="text-text-muted" /> {e.target}
+                        {e.source} <Icon name={ICONS.actions.forward} size={10} className="text-text-muted" /> {e.target}
                         <span className="text-text-muted">×{e.weight}</span>
                       </span>
                     ))}

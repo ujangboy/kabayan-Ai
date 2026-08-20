@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { ICONS } from '@/lib/icons';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { Plus, Trash2, FileText, HelpCircle, CreditCard, Trophy, Calendar, Clock, BookOpen } from '@/icons';
+
 import { subjectAPI } from '@/services/api';
 import { formatDate, formatTimeOnly } from '@/utils';
-import { Tooltip, Modal, Button, Input, Textarea, Select, EmptyState, Skeleton, SubjectBadge } from '@/components/ui';
+import { Tooltip, Modal, Button, Input, Textarea, Select, EmptyState, Skeleton, SubjectBadge , Icon } from '@/components/ui';
 import { useToast } from '@/components/Toast';
 
 export default function SubjectsPage() {
@@ -74,7 +75,7 @@ export default function SubjectsPage() {
               onClick={() => setIsModalOpen(true)}
               className="btn-primary text-xs"
             >
-              <Plus size={14} />
+              <Icon name={ICONS.actions.addOutline} size={14} />
               {t('subjects.addNew')}
             </button>
           </div>
@@ -93,7 +94,7 @@ export default function SubjectsPage() {
           ) : subjects.length === 0 ? (
             <div className="col-span-full card-base">
               <EmptyState
-                icon={BookOpen}
+                icon={ICONS.learning.bookOpen}
                 title={t('subjects.empty')}
                 action={
                   <button onClick={() => setIsModalOpen(true)} className="btn-primary text-sm">{t('subjects.createNow')}</button>
@@ -108,10 +109,10 @@ export default function SubjectsPage() {
             filteredSubjects.map((s, idx) => {
               const progress = Math.min(100, s.best_score ?? 0);
               const meta = [
-                { icon: Trophy,     value: s.best_score ?? '—', label: t('subjects.statScore'),      color: 'text-warning' },
-                { icon: HelpCircle, value: s.total_quizzes ?? 0,  label: t('subjects.statQuizzes'),    color: 'text-accent-teal' },
-                { icon: CreditCard, value: s.total_flashcards ?? 0, label: t('subjects.statFlashcards'), color: 'text-accent-purple' },
-                { icon: FileText,   value: s.total_materials ?? 0, label: t('subjects.statMaterials'),  color: 'text-accent-blue' },
+                { icon: ICONS.learning.trophy,     value: s.best_score ?? '—', label: t('subjects.statScore'),      color: 'text-warning' },
+                { icon: ICONS.ui.help, value: s.total_quizzes ?? 0,  label: t('subjects.statQuizzes'),    color: 'text-accent-teal' },
+                { icon: ICONS.nav.flashcard, value: s.total_flashcards ?? 0, label: t('subjects.statFlashcards'), color: 'text-accent-purple' },
+                { icon: ICONS.files.document,   value: s.total_materials ?? 0, label: t('subjects.statMaterials'),  color: 'text-accent-blue' },
               ];
               return (
                 <Link key={s.id} to={`/subjects/${s.id}`} className="group block">
@@ -140,7 +141,7 @@ export default function SubjectsPage() {
                           aria-label={t('common.delete')}
                           className="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-text-muted hover:text-danger"
                         >
-                          <Trash2 size={14} />
+                          <Icon name={ICONS.actions.delete} size={14} />
                         </button>
                       </Tooltip>
                     </div>
@@ -152,9 +153,9 @@ export default function SubjectsPage() {
 
                     {/* Body — grid mini metrik */}
                     <div className="grid grid-cols-4 gap-1.5">
-                      {meta.map(({ icon: Icon, value, label, color }) => (
+                      {meta.map(({ icon, value, label, color }) => (
                         <div key={label} className="rounded-lg bg-white/[0.03] border border-white/[0.06] py-2 px-1 text-center">
-                          <Icon size={12} className={`mx-auto mb-0.5 ${color}`} />
+                          <Icon name={icon} size={12} className={`mx-auto mb-0.5 ${color}`} />
                           <p className="text-sm font-bold text-text leading-tight">{value}</p>
                           <p className="text-[9px] text-text-muted uppercase tracking-wide">{label}</p>
                         </div>
@@ -174,8 +175,8 @@ export default function SubjectsPage() {
                       <div className="flex items-center justify-between text-[10px] text-text-muted">
                         {s.created_at ? (
                           <div className="flex items-center gap-3">
-                            <span className="flex items-center gap-1"><Calendar size={9} />{formatDate(s.created_at)}</span>
-                            <span className="flex items-center gap-1"><Clock size={9} />{formatTimeOnly(s.created_at)}</span>
+                            <span className="flex items-center gap-1"><Icon name={ICONS.learning.calendar} size={9} />{formatDate(s.created_at)}</span>
+                            <span className="flex items-center gap-1"><Icon name={ICONS.learning.clock} size={9} />{formatTimeOnly(s.created_at)}</span>
                           </div>
                         ) : <span />}
                         <span className="font-semibold">{progress}%</span>

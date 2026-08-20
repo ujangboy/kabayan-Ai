@@ -1,12 +1,13 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ICONS } from '@/lib/icons';
 import { useQueryClient } from '@tanstack/react-query';
 import { useMutation } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, Save, Pin, MoreHorizontal } from '@/icons';
+
 import { notesAPI } from '@/services/api';
 import NoteEditor from '@/components/NoteEditor';
-import { Tooltip } from '@/components/ui';
+import { Tooltip , Icon } from '@/components/ui';
 import { formatDate, formatDateTime } from '@/utils';
 import { cn } from '@/utils';
 
@@ -60,13 +61,13 @@ export function NoteView({ note, onBack, onSave, onPin, onDelete }) {
             onClick={onBack}
             className="p-1.5 rounded-lg text-text-muted hover:text-text hover:bg-card transition-colors md:hidden"
           >
-            <ChevronLeft size={18} />
+            <Icon name={ICONS.ui.chevronLeft} size={18} />
           </button>
           <button
             onClick={onBack}
             className="hidden md:flex items-center gap-1 text-xs text-text-muted hover:text-text transition-colors px-2 py-1 rounded-lg hover:bg-card"
           >
-            <ChevronLeft size={14} />
+            <Icon name={ICONS.ui.chevronLeft} size={14} />
             <span>{t('common.back')}</span>
           </button>
         </div>
@@ -79,7 +80,7 @@ export function NoteView({ note, onBack, onSave, onPin, onDelete }) {
             saveStatus === 'saved' && 'text-success/70',
           )}>
             {saveStatus === 'saving' && <><span className="animate-pulse">●</span> {t('notebook.saving')}</>}
-            {saveStatus === 'saved' && <><Save size={10} /> {t('notebook.saved')}</>}
+            {saveStatus === 'saved' && <><Icon name={ICONS.actions.save} size={10} /> {t('notebook.saved')}</>}
           </span>
 
           <Tooltip label={note.is_pinned ? t('notebook.unpin') : t('notebook.pin')}>
@@ -91,7 +92,7 @@ export function NoteView({ note, onBack, onSave, onPin, onDelete }) {
                 note.is_pinned ? 'text-primary' : 'text-text-muted hover:text-primary'
               )}
             >
-              <Pin size={15} />
+              <Icon name={ICONS.actions.pin} size={15} />
             </button>
           </Tooltip>
 
@@ -102,7 +103,7 @@ export function NoteView({ note, onBack, onSave, onPin, onDelete }) {
                 aria-label="Opsi lainnya"
                 className="p-1.5 rounded-lg text-text-muted hover:text-text hover:bg-card transition-colors"
               >
-                <MoreHorizontal size={15} />
+                <Icon name={ICONS.actions.more} size={15} />
               </button>
             </Tooltip>
             <AnimatePresence>

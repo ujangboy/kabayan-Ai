@@ -10,3 +10,4 @@ export { Skeleton } from './Skeleton';
 export { EmptyState } from './EmptyState';
 export { Tooltip, TooltipProvider } from './Tooltip';
 export { HelpTip } from './HelpTip';
+export { default as Icon } from './Icon';

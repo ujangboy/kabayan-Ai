@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { BookOpen, ChevronDown, ChevronUp } from '@/icons';
+import { ICONS } from '@/lib/icons';
+import { Icon } from '@/components/ui';
+
 import { useTranslation } from 'react-i18next';
 
 const TOPIC_STATUS_META = (t) => ({
@@ -22,7 +24,7 @@ export default function TopicProgressCard({ topicProgress }) {
     <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="card-base p-5">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <BookOpen size={16} className="text-success" />
+          <Icon name={ICONS.learning.bookOpen} size={16} className="text-success" />
           <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('subjectDashboard.topicProgressTitle')}</h2>
         </div>
         <div className="flex items-center gap-3">
@@ -32,7 +34,7 @@ export default function TopicProgressCard({ topicProgress }) {
               className="text-[10px] text-primary hover:text-primary/80 flex items-center gap-1 transition-colors"
             >
               {showAll ? t('common.showLess', 'Sedikit') : t('common.showAll', 'Semua topik')}
-              {showAll ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+              {showAll ? <Icon name={ICONS.ui.chevronUp} size={12} /> : <Icon name={ICONS.ui.chevronDown} size={12} />}
             </button>
           )}
         </div>

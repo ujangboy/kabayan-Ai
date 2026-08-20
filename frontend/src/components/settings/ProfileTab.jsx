@@ -1,7 +1,9 @@
 import { useRef, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { ICONS } from '@/lib/icons';
+import { Icon } from '@/components/ui';
 import { useTranslation } from 'react-i18next';
-import { Loader2, Camera, Trash2 } from '@/icons';
+
 import { profileAPI } from '@/services/api';
 import { useToast } from '@/components/Toast';
 
@@ -84,7 +86,7 @@ export default function ProfileTab() {
           />
           {photoMutation.isPending && (
             <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-              <Loader2 size={20} className="animate-spin text-white" />
+              <Icon name={ICONS.status.loading} size={20} className="animate-spin text-white" />
             </div>
           )}
         </div>
@@ -95,7 +97,7 @@ export default function ProfileTab() {
               disabled={photoMutation.isPending}
               className="btn-ghost text-xs border border-border"
             >
-              <Camera size={14} />
+              <Icon name={ICONS.ui.camera} size={14} />
               {photoPath && photoPath !== DEFAULT_AVATAR
                 ? t('settings.profile.changePhoto')
                 : t('settings.profile.uploadPhoto')}
@@ -106,7 +108,7 @@ export default function ProfileTab() {
                 disabled={photoMutation.isPending}
                 className="btn-ghost text-xs text-danger border border-danger/20"
               >
-                <Trash2 size={14} />
+                <Icon name={ICONS.actions.delete} size={14} />
                 {t('settings.profile.removePhoto')}
               </button>
             )}
@@ -143,7 +145,7 @@ export default function ProfileTab() {
           disabled={saveMutation.isPending}
           className="btn-primary text-xs"
         >
-          {saveMutation.isPending && <Loader2 size={14} className="animate-spin" />}
+          {saveMutation.isPending && <Icon name={ICONS.status.loading} size={14} className="animate-spin" />}
           {t('common.save')}
         </button>
       </div>

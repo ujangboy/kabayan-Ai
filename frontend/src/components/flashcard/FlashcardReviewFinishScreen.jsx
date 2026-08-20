@@ -1,6 +1,8 @@
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { Trophy, RotateCcw } from '@/icons';
+import { ICONS } from '@/lib/icons';
+import { Icon } from '@/components/ui';
+
 
 export default function FlashcardReviewFinishScreen({ results, onRestart, onDone }) {
   const { t } = useTranslation();
@@ -15,7 +17,7 @@ export default function FlashcardReviewFinishScreen({ results, onRestart, onDone
   return (
     <div className="flex-1 flex items-center justify-center p-6">
       <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="card-base text-center max-w-sm w-full p-8">
-        <Trophy size={48} className="mx-auto text-warning mb-4" />
+        <Icon name={ICONS.learning.trophy} size={48} className="mx-auto text-warning mb-4" />
         <h2 className="text-xl font-bold text-text mb-1">{t('flashcard.reviewComplete')}</h2>
         <p className="text-text-secondary text-sm mb-4">{t('flashcard.cardsReviewed', { count: results.length })}</p>
         <div className="text-5xl font-bold text-primary mb-2">{pct}%</div>
@@ -29,7 +31,7 @@ export default function FlashcardReviewFinishScreen({ results, onRestart, onDone
         </div>
         <div className="flex gap-2">
           <button onClick={onRestart} className="btn-primary flex-1 justify-center text-sm">
-            <RotateCcw size={14} /> {t('flashcard.repeat')}
+            <Icon name={ICONS.actions.replay} size={14} /> {t('flashcard.repeat')}
           </button>
           <button onClick={onDone} className="btn-ghost flex-1 justify-center text-sm border border-border">
             {t('flashcard.done')}

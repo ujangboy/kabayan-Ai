@@ -1,6 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Coins, MessageSquare, Activity, ThumbsUp, ThumbsDown } from '@/icons';
+import { ICONS } from '@/lib/icons';
+import { Icon } from '@/components/ui';
+
 import { dataAPI, tutorAPI } from '@/services/api';
 
 function formatNumber(n) {
@@ -35,27 +37,27 @@ export default function AiLimitTab() {
     <div className="space-y-5 max-w-5xl">
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         <div className="card-base p-4 flex flex-col gap-1">
-          <Coins size={16} className="text-primary" />
+          <Icon name={ICONS.ui.wallet} size={16} className="text-primary" />
           <span className="text-xl font-bold text-text">{formatNumber(u.total_tokens)}</span>
           <span className="text-xs text-text-secondary">{t('settings.aiLimit.totalTokensAll')}</span>
         </div>
         <div className="card-base p-4 flex flex-col gap-1">
-          <Activity size={16} className="text-primary" />
+          <Icon name={ICONS.status.activity} size={16} className="text-primary" />
           <span className="text-xl font-bold text-text">{formatNumber(u.total_calls)}</span>
           <span className="text-xs text-text-secondary">{t('settings.aiLimit.totalCalls')}</span>
         </div>
         <div className="card-base p-4 flex flex-col gap-1">
-          <MessageSquare size={16} className="text-primary" />
+          <Icon name={ICONS.communication.chat} size={16} className="text-primary" />
           <span className="text-xl font-bold text-text">{formatNumber(s.total_messages)}</span>
           <span className="text-xs text-text-secondary">{t('settings.aiLimit.totalMessages')}</span>
         </div>
         <div className="card-base p-4 flex flex-col gap-1">
-          <ThumbsUp size={16} className="text-primary" />
+          <Icon name={ICONS.ui.thumbsUp} size={16} className="text-primary" />
           <span className="text-xl font-bold text-text">{formatNumber(s.helpful_count)}</span>
           <span className="text-xs text-text-secondary">{t('settings.aiLimit.helpfulCount')}</span>
         </div>
         <div className="card-base p-4 flex flex-col gap-1">
-          <ThumbsDown size={16} className="text-primary" />
+          <Icon name={ICONS.ui.thumbsDown} size={16} className="text-primary" />
           <span className="text-xl font-bold text-text">{formatNumber(s.not_helpful_count)}</span>
           <span className="text-xs text-text-secondary">{t('settings.aiLimit.notHelpfulCount')}</span>
         </div>

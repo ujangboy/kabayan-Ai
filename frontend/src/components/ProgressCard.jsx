@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { Flame, TrendingUp, TrendingDown, Minus, CalendarDays, Trophy } from '@/icons';
 import { cn } from '@/utils';
+import { Icon } from '@/components/ui/Icon';
+import { ICONS } from '@/lib/icons';
 
 const DIRECTION_META = (t) => ({
-  naik:   { cls: 'badge-success', icon: TrendingUp,   label: t('studyProgress.trendUp') },
-  turun:  { cls: 'badge-danger',  icon: TrendingDown, label: t('studyProgress.trendDown') },
-  stabil: { cls: 'badge-warning', icon: Minus,        label: t('studyProgress.trendStable') },
+  naik:   { cls: 'badge-success', icon: ICONS.learning.progress, label: t('studyProgress.trendUp') },
+  turun:  { cls: 'badge-danger',  icon: ICONS.learning.regress,  label: t('studyProgress.trendDown') },
+  stabil: { cls: 'badge-warning', icon: ICONS.ui.minus,          label: t('studyProgress.trendStable') },
 });
 
 export default function ProgressCard({ progress }) {
@@ -16,11 +17,11 @@ export default function ProgressCard({ progress }) {
     return (
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-2xl p-5">
         <div className="flex items-center gap-2 mb-3">
-          <Flame size={16} className="text-warning" />
+          <Icon name={ICONS.learning.streak} size={16} className="text-warning" />
           <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('studyProgress.title')}</h2>
         </div>
         <div className="text-center py-6">
-          <Flame size={30} className="mx-auto mb-3 text-warning/40" />
+          <Icon name={ICONS.learning.streak} size={30} className="mx-auto mb-3 text-warning/40" />
           <p className="text-xs font-semibold text-text mb-1">{t('studyProgress.emptyTitle', 'Mulai bangun streak belajarmu')}</p>
           <p className="text-[11px] text-text-muted max-w-[240px] mx-auto">
             {t('studyProgress.empty', 'Kerjakan quiz, flashcard, atau simulasi ujian untuk mengisi data konsistensi.')}
@@ -40,14 +41,14 @@ export default function ProgressCard({ progress }) {
   return (
     <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="card-base p-6">
       <div className="flex items-center gap-2 mb-1">
-        <Flame size={16} className="text-warning" />
+        <Icon name={ICONS.learning.streak} size={16} className="text-warning" />
         <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('studyProgress.title')}</h2>
       </div>
       <p className="text-xs text-text-muted mb-4">{t('studyProgress.subtitle')}</p>
 
       {!hasActivity ? (
         <div className="text-center py-6 text-text-muted text-sm border border-dashed border-border rounded-xl">
-          <CalendarDays size={20} className="mx-auto mb-2 opacity-60" />
+          <Icon name={ICONS.learning.calendar} size={20} className="mx-auto mb-2 opacity-60" />
           {t('studyProgress.empty')}
         </div>
       ) : (
@@ -56,7 +57,7 @@ export default function ProgressCard({ progress }) {
           <div className="grid grid-cols-3 gap-3">
             <div className="bg-black/25 border border-white/[0.06] rounded-xl p-3 text-center">
               <p className="text-xl font-bold text-warning flex items-center justify-center gap-1">
-                <Flame size={16} className="shrink-0" />{streak.current_streak_days ?? 0}
+                <Icon name={ICONS.learning.streak} size={16} className="shrink-0" />{streak.current_streak_days ?? 0}
               </p>
               <p className="text-[10px] text-text-secondary mt-0.5">{t('studyProgress.streakCurrent')}</p>
             </div>
@@ -90,11 +91,11 @@ export default function ProgressCard({ progress }) {
           <div className="bg-black/25 border border-white/[0.06] rounded-xl p-3">
             <div className="flex items-center justify-between mb-2">
               <p className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider flex items-center gap-1">
-                <Trophy size={11} /> {t('studyProgress.trendTitle')}
+                <Icon name={ICONS.learning.trophy} size={11} /> {t('studyProgress.trendTitle')}
               </p>
               {trend.direction && dirMeta && (
                 <span className={`badge text-[9px] ${dirMeta.cls}`}>
-                  <dirMeta.icon size={9} className="inline mr-0.5" />{dirMeta.label}
+                  <Icon name={dirMeta.icon} size={9} className="inline mr-0.5" />{dirMeta.label}
                 </span>
               )}
             </div>

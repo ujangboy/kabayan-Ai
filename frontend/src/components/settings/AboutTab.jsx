@@ -1,6 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Bot } from '@/icons';
+import { ICONS } from '@/lib/icons';
+import { Icon } from '@/components/ui';
+
 import { infoAPI } from '@/services/api';
 
 export default function AboutTab() {
@@ -21,7 +23,7 @@ export default function AboutTab() {
     <div className="card-base p-6 max-w-xl space-y-5">
       <div className="flex items-center gap-3">
         <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center">
-          <Bot size={24} className="text-white" />
+          <Icon name={ICONS.communication.bot} size={24} className="text-white" />
         </div>
         <div>
           <h2 className="text-lg font-semibold text-text">{info.app_name || t('settings.about.appName')}</h2>

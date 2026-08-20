@@ -1,6 +1,8 @@
 import { useTranslation } from 'react-i18next';
-import { BookOpen } from '@/icons';
+
 import MathMarkdown from '@/components/MathMarkdown';
+import { ICONS } from '@/lib/icons';
+import { Icon } from '@/components/ui';
 import CopyButton from './CopyButton';
 import FeedbackButtons from './FeedbackButtons';
 import TypingIndicator from './TypingIndicator';
@@ -35,7 +37,7 @@ export default function MessageBubble({ message, isLast, tutorMode, onFeedback }
         <div className="flex-1 min-w-0">
           {message.note_saved && (
             <div className="mb-1 inline-flex items-center gap-1 text-[11px] font-medium text-warning">
-              <BookOpen size={12} /> {t('chat.noteSavedBadge')}
+              <Icon name={ICONS.learning.bookOpen} size={12} /> {t('chat.noteSavedBadge')}
             </div>
           )}
           <div className="rounded-2xl rounded-tl-sm bg-base border border-border px-4 py-2.5 text-sm leading-relaxed">

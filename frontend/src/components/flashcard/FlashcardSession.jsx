@@ -1,12 +1,13 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ICONS } from '@/lib/icons';
 import { useQueryClient, useMutation } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trash2, ChevronLeft, ChevronRight } from '@/icons';
+
 import { flashcardAPI } from '@/services/api';
 import { useToast } from '@/components/Toast';
 import { usePageState } from '@/hooks/usePageState';
-import { Tooltip } from '@/components/ui';
+import { Tooltip , Icon } from '@/components/ui';
 import FlashcardCard from './FlashcardCard';
 import FlashcardFinishScreen from './FlashcardFinishScreen';
 
@@ -227,7 +228,7 @@ export default function FlashcardSession({ cards, subjectName, onClose }) {
       {/* Top bar */}
       <div className="flex items-center justify-between mb-6 shrink-0">
         <button onClick={onClose} className="btn-ghost text-sm text-text-muted">
-          <ChevronLeft size={16} /> {t('common.back')}
+          <Icon name={ICONS.ui.chevronLeft} size={16} /> {t('common.back')}
         </button>
         <div className="text-sm text-text-secondary font-medium">{subjectName}</div>
         <span className="px-3 py-1 bg-card rounded-full text-sm font-medium text-text-secondary border border-border">
@@ -329,7 +330,7 @@ export default function FlashcardSession({ cards, subjectName, onClose }) {
           disabled={currentIndex === 0}
           className="btn-ghost disabled:opacity-30 disabled:cursor-not-allowed text-sm"
         >
-          <ChevronLeft size={16} /> {t('flashcard.prev')}
+          <Icon name={ICONS.ui.chevronLeft} size={16} /> {t('flashcard.prev')}
         </button>
         <Tooltip label={t('flashcard.deleteCardTitle')}>
           <button
@@ -337,14 +338,14 @@ export default function FlashcardSession({ cards, subjectName, onClose }) {
             aria-label={t('flashcard.deleteCardTitle')}
             className="p-2 text-text-muted hover:text-danger transition-colors"
           >
-            <Trash2 size={15} />
+            <Icon name={ICONS.actions.delete} size={15} />
           </button>
         </Tooltip>
         <button
           onClick={goNext}
           className="btn-ghost text-sm"
         >
-          {t('flashcard.skip')} <ChevronRight size={16} />
+          {t('flashcard.skip')} <Icon name={ICONS.ui.chevronRight} size={16} />
         </button>
       </div>
     </div>

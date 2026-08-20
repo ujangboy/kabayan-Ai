@@ -1,6 +1,8 @@
 import { motion } from 'framer-motion';
-import { BarChart3 } from '@/icons';
+
 import { useTranslation } from 'react-i18next';
+import { ICONS } from '@/lib/icons';
+import { Icon } from '@/components/ui';
 
 export default function LearningMetricsCard({ metrics }) {
   const { t } = useTranslation();
@@ -14,7 +16,7 @@ export default function LearningMetricsCard({ metrics }) {
   return (
     <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="card-base p-5">
       <div className="flex items-center gap-2 mb-4">
-        <BarChart3 size={16} className="text-accent-teal" />
+        <Icon name={ICONS.learning.barChart} size={16} className="text-accent-teal" />
         <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('studyMetrics.title')}</h2>
       </div>
 

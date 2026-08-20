@@ -1,15 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import {
-  MessageSquare, FileText, CreditCard, HelpCircle,
-  BookMarked, Zap, TrendingUp, Clock, Trophy, Database,
-  WavingHand, School,
-} from '@/icons';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useChatStore } from '@/store';
 import { formatDate } from '@/utils';
-import { EmptyState, Skeleton, HelpTip } from '@/components/ui';
+import { EmptyState, Skeleton, HelpTip, Icon } from '@/components/ui';
+import { ICONS } from '@/lib/icons';
 import FileTypeIcon from '@/components/FileTypeIcon';
 import api from '@/services/api';
 
@@ -21,10 +17,10 @@ const formatBytes = (bytes) => {
 };
 
 const QUICK_ACTIONS = (t) => [
-  { icon: MessageSquare, label: t('dashboard.quickChat'),       desc: t('dashboard.quickChatDesc'),     to: '/chat',      color: 'bg-gradient-primary text-white',       shadow: 'shadow-btn-primary' },
-  { icon: FileText,      label: t('dashboard.quickUpload'),     desc: t('dashboard.quickUploadDesc'),    to: '/materi',    color: 'bg-accent-blue/15 text-accent-blue',   shadow: '' },
-  { icon: CreditCard,    label: t('dashboard.quickFlashcard'),  desc: t('dashboard.quickFlashcardDesc'),  to: '/flashcard', color: 'bg-accent-purple/15 text-accent-purple', shadow: '' },
-  { icon: HelpCircle,    label: t('dashboard.quickQuiz'),       desc: t('dashboard.quickQuizDesc'),        to: '/quiz',      color: 'bg-accent-teal/15 text-accent-teal',   shadow: '' },
+  { icon: ICONS.communication.chat, label: t('dashboard.quickChat'),       desc: t('dashboard.quickChatDesc'),     to: '/chat',      color: 'bg-gradient-primary text-white',       shadow: 'shadow-btn-primary' },
+  { icon: ICONS.files.document,      label: t('dashboard.quickUpload'),     desc: t('dashboard.quickUploadDesc'),    to: '/materi',    color: 'bg-accent-blue/15 text-accent-blue',   shadow: '' },
+  { icon: ICONS.nav.flashcard,    label: t('dashboard.quickFlashcard'),  desc: t('dashboard.quickFlashcardDesc'),  to: '/flashcard', color: 'bg-accent-purple/15 text-accent-purple', shadow: '' },
+  { icon: ICONS.ui.help,    label: t('dashboard.quickQuiz'),       desc: t('dashboard.quickQuizDesc'),        to: '/quiz',      color: 'bg-accent-teal/15 text-accent-teal',   shadow: '' },
 ];
 
 const STAT_TONES = {
@@ -44,12 +40,12 @@ const item = {
   show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.32, 0.72, 0, 1] } },
 };
 
-function StatCard({ icon: Icon, label, value, tone, loading }) {
+function StatCard({ icon, label, value, tone, loading }) {
   return (
     <motion.div className="card-base card-hoverable relative overflow-hidden flex items-center gap-4 p-4">
       <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-primary opacity-70" />
       <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${STAT_TONES[tone]}`}>
-        <Icon size={18} />
+        <Icon name={icon} size={18} />
       </div>
       <div>
         <div className="text-2xl font-bold bg-gradient-to-r from-text to-text-secondary bg-clip-text text-transparent">
@@ -109,7 +105,7 @@ export default function DashboardPage() {
         >
           <div className="flex items-center gap-3 mb-1.5">
             <div className="w-12 h-12 rounded-2xl bg-gradient-primary flex items-center justify-center shadow-btn-primary">
-              <WavingHand size={24} className="text-white" />
+              <Icon name={ICONS.learning.wavingHand} size={24} className="text-white" />
             </div>
             <div>
               <h1 className="text-3xl font-bold text-text bg-gradient-to-r from-primary-light to-accent-blue bg-clip-text text-transparent">
@@ -131,11 +127,11 @@ export default function DashboardPage() {
           animate="show"
         >
           <motion.div variants={item} className="flex items-center gap-2 mb-4">
-            <Zap size={16} className="text-warning" />
+            <Icon name={ICONS.ui.bolt} size={16} className="text-warning" />
             <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('dashboard.sectionQuickActions')}</h2>
           </motion.div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {QUICK_ACTIONS(t).map(({ icon: Icon, label, desc, to, color, shadow }) => (
+            {QUICK_ACTIONS(t).map(({ icon, label, desc, to, color, shadow }) => (
               <motion.button
                 key={to}
                 variants={item}
@@ -144,7 +140,7 @@ export default function DashboardPage() {
                 className="card-base card-hoverable flex flex-col items-start gap-3 p-4 text-left hover:border-primary/30 transition-all duration-300 cursor-pointer"
               >
                 <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${color} ${shadow}`}>
-                  <Icon size={17} />
+                  <Icon name={icon} size={17} />
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-text">{label}</p>
@@ -162,19 +158,19 @@ export default function DashboardPage() {
           animate="show"
         >
           <motion.div variants={item} className="flex items-center gap-2 mb-4">
-            <TrendingUp size={16} className="text-success" />
+            <Icon name={ICONS.learning.progress} size={16} className="text-success" />
             <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('dashboard.sectionStats')}</h2>
           </motion.div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <StatCard icon={FileText}   label={t('dashboard.statMaterials')}    value={stats.materials}  tone="blue"   loading={isLoading} />
-            <StatCard icon={BookMarked} label={t('dashboard.statNotes')}       value={stats.notes}      tone="green"  loading={isLoading} />
-            <StatCard icon={CreditCard} label={t('dashboard.statFlashcards')}  value={stats.flashcards} tone="purple" loading={isLoading} />
-            <StatCard icon={HelpCircle} label={t('dashboard.statQuizzes')}     value={stats.quizzes}    tone="teal"   loading={isLoading} />
+            <StatCard icon={ICONS.files.document}   label={t('dashboard.statMaterials')}    value={stats.materials}  tone="blue"   loading={isLoading} />
+            <StatCard icon={ICONS.learning.bookmarks} label={t('dashboard.statNotes')}       value={stats.notes}      tone="green"  loading={isLoading} />
+            <StatCard icon={ICONS.nav.flashcard} label={t('dashboard.statFlashcards')}  value={stats.flashcards} tone="purple" loading={isLoading} />
+            <StatCard icon={ICONS.ui.help} label={t('dashboard.statQuizzes')}     value={stats.quizzes}    tone="teal"   loading={isLoading} />
           </div>
           {/* D6: badge observability storage */}
           {data?.storage && (
             <div className="mt-4 flex items-center gap-2 text-xs text-text-secondary px-1">
-              <Database size={14} className="text-accent-blue" />
+              <Icon name={ICONS.ui.database} size={14} className="text-accent-blue" />
               <span>{t('dashboard.storageLabel')}: <span className="text-text font-medium">{formatBytes(data.storage.total)}</span></span>
               <span className="opacity-50">·</span>
               <span>{t('dashboard.storageUploads', { size: formatBytes(data.storage.uploads) })}</span>
@@ -195,7 +191,7 @@ export default function DashboardPage() {
           <motion.div variants={item}>
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <Clock size={14} className="text-text-secondary" />
+                <Icon name={ICONS.learning.clock} size={14} className="text-text-secondary" />
                 <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('dashboard.sectionRecentMaterials')}</h2>
               </div>
               <button onClick={() => navigate('/materi')} className="text-xs text-primary-light hover:text-primary transition-colors">
@@ -240,7 +236,7 @@ export default function DashboardPage() {
           <motion.div variants={item}>
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <Trophy size={14} className="text-text-secondary" />
+                <Icon name={ICONS.learning.trophy} size={14} className="text-text-secondary" />
                 <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('dashboard.sectionRecentQuizzes')}</h2>
               </div>
               <button onClick={() => navigate('/quiz')} className="text-xs text-primary-light hover:text-primary transition-colors">
@@ -293,7 +289,7 @@ export default function DashboardPage() {
               className="card-base"
             >
               <EmptyState
-                icon={School}
+                icon={ICONS.learning.school}
                 title={t('dashboard.welcomeTitle')}
                 description={t('dashboard.welcomeText')}
                 action={

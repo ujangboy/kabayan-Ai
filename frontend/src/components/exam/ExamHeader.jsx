@@ -1,7 +1,8 @@
 import { useTranslation } from 'react-i18next';
-import { Brain, ChevronLeft, Zap } from '@/icons';
+
 import { VIEW } from '@/components/exam/shared';
-import { Tooltip, Select, HelpTip } from '@/components/ui';
+import { ICONS } from '@/lib/icons';
+import { Tooltip, Select, HelpTip , Icon } from '@/components/ui';
 
 export default function ExamHeader({ view, subjectId, subjects, canCreate, onBack, onSubjectChange, onCreate }) {
   const { t } = useTranslation();
@@ -11,19 +12,19 @@ export default function ExamHeader({ view, subjectId, subjects, canCreate, onBac
         {view !== VIEW.DASHBOARD && subjectId && (
           <Tooltip label={t('common.back')}>
             <button onClick={onBack} aria-label={t('common.back')} className="p-1.5 rounded-lg hover:bg-card text-text-secondary transition-colors">
-              <ChevronLeft size={18} />
+              <Icon name={ICONS.ui.chevronLeft} size={18} />
             </button>
           </Tooltip>
         )}
         <div>
           <h1 className="text-2xl font-bold text-text flex items-center gap-2">
-            <Brain size={22} className="text-primary" />
+            <Icon name={ICONS.learning.brain} size={22} className="text-primary" />
             {t('exam.title')}
             <span
               className="badge badge-success text-[10px]"
               title={t('exam.adaptiveBadgeHint')}
             >
-              <Zap size={9} className="inline mr-0.5" />
+              <Icon name={ICONS.ui.bolt} size={9} className="inline mr-0.5" />
               {t('exam.adaptiveBadge')}
             </span>
             <HelpTip label={t('help.exam')} />
@@ -45,7 +46,7 @@ export default function ExamHeader({ view, subjectId, subjects, canCreate, onBac
             disabled={!subjectId}
             className="btn-primary text-xs disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            <Zap size={13} /> {t('exam.createSimulation')}
+            <Icon name={ICONS.ui.bolt} size={13} /> {t('exam.createSimulation')}
           </button>
         )}
       </div>

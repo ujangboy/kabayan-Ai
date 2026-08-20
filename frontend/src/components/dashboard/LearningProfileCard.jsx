@@ -1,6 +1,8 @@
 import { motion } from 'framer-motion';
-import { Brain, Sparkles } from '@/icons';
+
 import { useTranslation } from 'react-i18next';
+import { ICONS } from '@/lib/icons';
+import { Icon } from '@/components/ui';
 
 export default function LearningProfileCard({ profile }) {
   const { t } = useTranslation();
@@ -12,14 +14,14 @@ export default function LearningProfileCard({ profile }) {
   return (
     <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="card-base p-6">
       <div className="flex items-center gap-2 mb-1">
-        <Brain size={16} className="text-accent-purple" />
+        <Icon name={ICONS.learning.brain} size={16} className="text-accent-purple" />
         <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('subjectDashboard.learningTitle')}</h2>
       </div>
       <p className="text-xs text-text-muted mb-4">{t('subjectDashboard.learningSubtitle')}</p>
 
       {!hasData ? (
         <div className="text-center py-6 text-text-muted text-sm border border-dashed border-border rounded-xl">
-          <Sparkles size={20} className="mx-auto mb-2 opacity-60" />
+          <Icon name={ICONS.learning.sparkles} size={20} className="mx-auto mb-2 opacity-60" />
           {t('subjectDashboard.learningEmpty')}
         </div>
       ) : (
@@ -91,7 +93,7 @@ export default function LearningProfileCard({ profile }) {
           </div>
 
           <p className="text-[11px] text-text-muted bg-black/25 border border-white/[0.06] rounded-lg p-2.5 leading-relaxed">
-            <Sparkles size={11} className="inline mr-1 text-accent-purple" />
+            <Icon name={ICONS.learning.sparkles} size={11} className="inline mr-1 text-accent-purple" />
             {t('subjectDashboard.learningAdaptiveNote')}
             <span className="block mt-1 opacity-80">{t('subjectDashboard.learningThreshold', { n: profile?.confidence_threshold ?? 2 })}</span>
           </p>

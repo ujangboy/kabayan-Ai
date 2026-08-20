@@ -2,21 +2,9 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useUiStore, useAppStore } from '@/store';
-import { Tooltip } from '@/components/ui';
-import {
-  LayoutDashboard, MessageSquare, BookOpen, FileText,
-  BookMarked, CreditCard, HelpCircle, Brain, Settings, Bot,
-} from '@/icons';
+import { Tooltip, Icon } from '@/components/ui';
+import { ICONS } from '@/lib/icons';
 import { cn } from '@/utils';
-
-function SearchGlyph() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="11" cy="11" r="8" />
-      <path d="m21 21-4.3-4.3" />
-    </svg>
-  );
-}
 
 export default function IconRail() {
   const { t } = useTranslation();
@@ -25,14 +13,14 @@ export default function IconRail() {
   const location = useLocation();
 
   const NAV = [
-    { to: '/dashboard', icon: LayoutDashboard, label: t('nav.dashboard') },
-    { to: '/chat', icon: MessageSquare, label: t('nav.chat') },
-    { to: lastSubjectId ? `/subjects/${lastSubjectId}` : '/subjects', icon: BookOpen, label: t('nav.subjects') },
-    { to: '/materi', icon: FileText, label: t('nav.materi') },
-    { to: '/notebook', icon: BookMarked, label: t('nav.notebook') },
-    { to: '/flashcard', icon: CreditCard, label: t('nav.flashcard') },
-    { to: '/quiz', icon: HelpCircle, label: t('nav.quiz') },
-    { to: '/exam-analyzer', icon: Brain, label: t('nav.exam') },
+    { to: '/dashboard', icon: ICONS.nav.dashboard, label: t('nav.dashboard') },
+    { to: '/chat', icon: ICONS.nav.chat, label: t('nav.chat') },
+    { to: lastSubjectId ? `/subjects/${lastSubjectId}` : '/subjects', icon: ICONS.nav.subjects, label: t('nav.subjects') },
+    { to: '/materi', icon: ICONS.nav.materials, label: t('nav.materi') },
+    { to: '/notebook', icon: ICONS.nav.notebook, label: t('nav.notebook') },
+    { to: '/flashcard', icon: ICONS.nav.flashcard, label: t('nav.flashcard') },
+    { to: '/quiz', icon: ICONS.nav.quiz, label: t('nav.quiz') },
+    { to: '/exam-analyzer', icon: ICONS.nav.exam, label: t('nav.exam') },
   ];
 
   const isActive = (to) => {
@@ -48,16 +36,17 @@ export default function IconRail() {
       {/* Logo */}
       <div className="relative mb-3 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-primary shadow-btn-primary">
         <span className="absolute inset-0 rounded-xl bg-gradient-primary opacity-50 blur-md" />
-        <Bot size={20} className="relative text-white" />
+        <Icon name={ICONS.communication.bot} size={20} className="relative text-white" />
       </div>
 
       {/* Search trigger */}
       <Tooltip label={t('common.search')} side="right">
         <button
           onClick={() => setSearchOpen(true)}
+          aria-label={t('common.search')}
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-text-secondary transition-all duration-200 hover:bg-card hover:text-text"
         >
-          <SearchGlyph />
+          <Icon name={ICONS.actions.search} size={20} />
         </button>
       </Tooltip>
 
@@ -65,11 +54,11 @@ export default function IconRail() {
 
       {/* Nav items */}
       <nav className="flex w-full flex-1 min-h-0 flex-col items-center gap-1 overflow-y-auto">
-        {NAV.map(({ to, icon: Icon, label, action }) => {
+        {NAV.map(({ to, icon, label }) => {
           const active = isActive(to);
           return (
             <Tooltip key={to} label={label} side="right">
-              <NavLink to={to} onClick={action} className={railItem}>
+              <NavLink to={to} className={railItem} aria-label={label}>
                 {active && (
                   <motion.span
                     layoutId="nav-active-indicator"
@@ -83,7 +72,7 @@ export default function IconRail() {
                     active ? 'bg-primary/15 text-primary-light' : 'text-text-secondary group-hover:bg-card group-hover:text-text'
                   )}
                 >
-                  <Icon size={20} />
+                  <Icon name={icon} size={20} />
                 </span>
               </NavLink>
             </Tooltip>
@@ -95,7 +84,7 @@ export default function IconRail() {
 
       {/* Settings */}
       <Tooltip label={t('nav.settings')} side="right">
-        <NavLink to="/settings" className={railItem}>
+        <NavLink to="/settings" className={railItem} aria-label={t('nav.settings')}>
           {location.pathname.startsWith('/settings') && (
             <motion.span
               layoutId="nav-active-indicator"
@@ -109,7 +98,7 @@ export default function IconRail() {
               location.pathname.startsWith('/settings') ? 'bg-primary/15 text-primary-light' : 'text-text-secondary group-hover:bg-card group-hover:text-text'
             )}
           >
-            <Settings size={20} />
+            <Icon name={ICONS.nav.settings} size={20} />
           </span>
         </NavLink>
       </Tooltip>

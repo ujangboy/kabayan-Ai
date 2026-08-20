@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
-import { Pin, Trash2 } from '@/icons';
-import { Tooltip } from '@/components/ui';
+
+import { Tooltip , Icon } from '@/components/ui';
+import { ICONS } from '@/lib/icons';
 import { formatDate } from '@/utils';
 import { cn } from '@/utils';
 
@@ -28,7 +29,7 @@ export function NoteCard({ note, isSelected, onSelect, onPin, onDelete }) {
         className="w-full text-left px-3 py-2.5"
       >
         <div className="flex items-center gap-1.5 mb-0.5">
-          {note.is_pinned && <Pin size={9} className="text-primary shrink-0" />}
+          {note.is_pinned && <Icon name={ICONS.actions.pin} size={9} className="text-primary shrink-0" />}
           <span className={cn(
             'text-sm font-medium truncate',
             isSelected ? 'text-primary-light' : 'text-text'
@@ -57,7 +58,7 @@ export function NoteCard({ note, isSelected, onSelect, onPin, onDelete }) {
               note.is_pinned ? 'text-primary' : 'text-text-muted hover:text-primary'
             )}
           >
-            <Pin size={11} />
+            <Icon name={ICONS.actions.pin} size={11} />
           </button>
         </Tooltip>
         <Tooltip label={t('common.delete')}>
@@ -66,7 +67,7 @@ export function NoteCard({ note, isSelected, onSelect, onPin, onDelete }) {
             aria-label={t('common.delete')}
             className="p-1 rounded-md text-text-muted hover:text-danger transition-colors"
           >
-            <Trash2 size={11} />
+            <Icon name={ICONS.actions.delete} size={11} />
           </button>
         </Tooltip>
       </div>

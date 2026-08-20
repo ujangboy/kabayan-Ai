@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ICONS } from '@/lib/icons';
 import { useNavigate } from 'react-router-dom';
-import { Search, Trash2, Pin, Edit3, Bot } from '@/icons';
-import { Tooltip, EmptyState } from '@/components/ui';
+
+import { Tooltip, EmptyState , Icon } from '@/components/ui';
 import { useToast } from '@/components/Toast';
 import { useChatStore } from '@/store';
 import { cn } from '@/utils';
@@ -122,7 +123,7 @@ export default function ChatSidebar() {
                 onClick={handleNewChat}
                 className="p-1.5 rounded-md hover:bg-base text-text-muted hover:text-text transition-colors"
               >
-                <Bot size={16} />
+                <Icon name={ICONS.communication.bot} size={16} />
               </button>
             </Tooltip>
             <Tooltip label={t('chat.deleteAll')}>
@@ -131,13 +132,13 @@ export default function ChatSidebar() {
                 disabled={chats.length === 0}
                 className="p-1.5 rounded-md hover:bg-base text-text-muted hover:text-danger transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                <Trash2 size={16} />
+                <Icon name={ICONS.actions.delete} size={16} />
               </button>
             </Tooltip>
           </div>
         </div>
         <div className="relative">
-          <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-text-muted" />
+          <Icon name={ICONS.actions.search} size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-text-muted" />
           <input
             value={chatSearch}
             onChange={(e) => setChatSearch(e.target.value)}
@@ -183,7 +184,7 @@ export default function ChatSidebar() {
                     ) : (
                       <div className="flex items-center gap-1.5">
                         <span className="truncate text-sm text-text">{c.title || t('chat.untitled')}</span>
-                        {c.pinned && <Pin size={12} className="text-warning shrink-0" />}
+                        {c.pinned && <Icon name={ICONS.actions.pin} size={12} className="text-warning shrink-0" />}
                       </div>
                     )}
                   </div>
@@ -197,7 +198,7 @@ export default function ChatSidebar() {
                           }}
                           className="p-1 rounded hover:bg-base text-text-muted hover:text-text"
                         >
-                          <Edit3 size={13} />
+                          <Icon name={ICONS.actions.editNote} size={13} />
                         </button>
                       </Tooltip>
                       <Tooltip label={t('chat.pin')}>
@@ -208,7 +209,7 @@ export default function ChatSidebar() {
                           }}
                           className="p-1 rounded hover:bg-base text-text-muted hover:text-text"
                         >
-                          <Pin size={13} />
+                          <Icon name={ICONS.actions.pin} size={13} />
                         </button>
                       </Tooltip>
                       <Tooltip label={t('chat.delete')}>
@@ -219,7 +220,7 @@ export default function ChatSidebar() {
                           }}
                           className="p-1 rounded hover:bg-base text-text-muted hover:text-danger"
                         >
-                          <Trash2 size={13} />
+                          <Icon name={ICONS.actions.delete} size={13} />
                         </button>
                       </Tooltip>
                     </div>

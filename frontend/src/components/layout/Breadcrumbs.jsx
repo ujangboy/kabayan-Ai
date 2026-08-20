@@ -1,9 +1,11 @@
 import { Fragment } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { ICONS } from '@/lib/icons';
+import { Icon } from '@/components/ui';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
-import { LayoutDashboard, ChevronRight } from '@/icons';
+
 import { cn } from '@/utils';
 
 // Crumb = { to, label, current }
@@ -83,12 +85,12 @@ export default function Breadcrumbs() {
         className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-text-muted transition-colors hover:bg-card hover:text-text"
         title={t('nav.dashboard')}
       >
-        <LayoutDashboard size={13} />
+        <Icon name={ICONS.nav.dashboard} size={13} />
       </Link>
 
       {crumbs.map((crumb, i) => (
         <Fragment key={crumb.to + i}>
-          <ChevronRight size={12} className="shrink-0 text-text-muted/50" />
+          <Icon name={ICONS.ui.chevronRight} size={12} className="shrink-0 text-text-muted/50" />
           <Link
             to={crumb.to}
             aria-current={crumb.current ? 'page' : undefined}
