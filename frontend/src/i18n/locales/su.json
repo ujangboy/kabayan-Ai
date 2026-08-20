@@ -28,7 +28,22 @@
     "noResults": "Teu aya hasil kapanggih.",
     "navHint": "↑↓ navigasi",
     "openHint": "↵ buka",
-    "closeHint": "Esc tutup"
+    "closeHint": "Esc tutup",
+    "actions": "Aksi Gancang",
+    "chatAI": "Chat AI",
+    "chatDesc": "Tanya AI tutor",
+    "materi": "Materi",
+    "materiDesc": "Dokumén pangajaran",
+    "notebook": "Notebook",
+    "notebookDesc": "Catetan diajar",
+    "flashcard": "Flashcard",
+    "flashcardDesc": "Kartu hafalan",
+    "quiz": "Quiz",
+    "quizDesc": "Latihan soal",
+    "actionNewChat": "Chat Anyar",
+    "actionNewChatDesc": "Ngamimitian paguneman anyar",
+    "actionStudyPlanDesc": "Tingali rencana diajar",
+    "actionSettingsDesc": "Buka setelan aplikasi"
   },
   "materialPicker": {
     "sourceLabel": "Pilih Materi Sumber",
@@ -98,7 +113,8 @@
     "all": "Kabéh",
     "empty": "Can aya data",
     "yes": "Enya",
-    "no": "Henteu"
+    "no": "Henteu",
+    "undo": "Batalkeun"
   },
   "dashboard": {
     "greetingMorning": "Wilujeng énjing",
@@ -195,7 +211,9 @@
     "send": "Kirim",
     "tutorModeNote": "Mode Tutor — waleran disaluyukeun sareng tingkat diajar anjeun.",
     "disclaimerNote": "AI tiasa ngadamel kasalahan. Pariksa inpormasi anu penting.",
-    "empty": "Acan aya obrolan"
+    "empty": "Acan aya obrolan",
+    "chatDeleted": "Chat dihapus",
+    "deletedAllChats": "Sadaya chat dihapus"
   },
   "materi": {
     "pageTitle": "Materi Diajar",
@@ -896,5 +914,15 @@
   },
   "sidebar": {
     "contextHint": "Pilih menu di beulah kenca pikeun ngamimitian diajar"
+  },
+  "breadcrumb": {
+    "label": "Breadcrumb",
+    "loading": "Ngamuat...",
+    "flashcardReview": "Review"
+  },
+  "help": {
+    "dashboard": "Mimitian ti dieu: tanya AI tutor, unggah materi, atanapi ngamimitian quiz tina aksi gancang.",
+    "exam": "Simulasi ujian adaptif dumasar blueprint. Pilih mata kuliah, setel konfigurasi, teras jawab soal pikeun meunang prediksi skor.",
+    "studyPlan": "Rencana diajar sapopoé dumasar hasil simulasi ujian anjeun. Tandaan item anu réngsé pikeun ngalacak progres."
   }
 }

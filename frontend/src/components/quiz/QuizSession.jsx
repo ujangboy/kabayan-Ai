@@ -10,6 +10,7 @@ import QuizProgressBar from '@/components/quiz/QuizProgressBar';
 import { cn, fadeSlide } from '@/utils';
 import { formatDuration } from './shared';
 import { usePageState } from '@/hooks/usePageState';
+import { fireConfetti } from '@/utils/confetti';
 
 // Transisi antar-view session (loading/error/soal/review/result) — crossfade halus.
 function ViewShell({ view, children }) {
@@ -33,6 +34,14 @@ export function QuizSession({ quizId, onClose }) {
   const [timeTaken, setTimeTaken] = useState(0);
   const startTimeRef = useRef(Date.now());
   const isFinishingRef = useRef(false);
+  // Perayaan saat quiz selesai dengan nilai bagus (sekali saja per sesi).
+  const celebratedRef = useRef(false);
+  useEffect(() => {
+    if (isFinished && score >= 70 && !celebratedRef.current) {
+      celebratedRef.current = true;
+      fireConfetti({ count: 130, origin: { x: 0.5, y: 0.35 } });
+    }
+  }, [isFinished, score]);
 
   // Restore session state on mount
   useEffect(() => {

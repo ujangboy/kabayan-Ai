@@ -35,7 +35,22 @@
     "noResults": "No results found.",
     "navHint": "↑↓ navigate",
     "openHint": "↵ open",
-    "closeHint": "Esc close"
+    "closeHint": "Esc close",
+    "actions": "Quick Actions",
+    "chatAI": "AI Chat",
+    "chatDesc": "Ask the AI tutor",
+    "materi": "Materials",
+    "materiDesc": "Lesson documents",
+    "notebook": "Notebook",
+    "notebookDesc": "Study notes",
+    "flashcard": "Flashcards",
+    "flashcardDesc": "Memory cards",
+    "quiz": "Quiz",
+    "quizDesc": "Practice questions",
+    "actionNewChat": "New Chat",
+    "actionNewChatDesc": "Start a new conversation",
+    "actionStudyPlanDesc": "View study plan",
+    "actionSettingsDesc": "Open app settings"
   },
   "materialPicker": {
     "sourceLabel": "Select Source Materials",
@@ -105,7 +120,8 @@
     "all": "All",
     "empty": "No data yet",
     "yes": "Yes",
-    "no": "No"
+    "no": "No",
+    "undo": "Undo"
   },
   "dashboard": {
     "greetingMorning": "Good morning",
@@ -202,7 +218,9 @@
     "send": "Send",
     "tutorModeNote": "Tutor Mode — answers tailored to your learning level.",
     "disclaimerNote": "AI can make mistakes. Verify important information.",
-    "empty": "No conversations yet"
+    "empty": "No conversations yet",
+    "chatDeleted": "Chat deleted",
+    "deletedAllChats": "All chats deleted"
   },
   "materi": {
     "pageTitle": "Study Materials",
@@ -907,5 +925,15 @@
   },
   "sidebar": {
     "contextHint": "Pick a menu on the left to start learning"
+  },
+  "breadcrumb": {
+    "label": "Breadcrumb",
+    "loading": "Loading...",
+    "flashcardReview": "Review"
+  },
+  "help": {
+    "dashboard": "Start here: ask the AI tutor, upload materials, or start a quiz from the quick actions.",
+    "exam": "Adaptive exam simulation based on blueprint. Pick a subject, configure, then answer questions to get a score prediction.",
+    "studyPlan": "Daily study plan built from your exam results. Check off completed items to track progress."
   }
 }

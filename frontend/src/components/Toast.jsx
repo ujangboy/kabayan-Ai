@@ -51,9 +51,11 @@ export function ToastProvider({ children }) {
     setToasts(prev => prev.filter(t => t.id !== id));
   }, []);
 
-  const show = useCallback((message, type = 'info', duration = 4000) => {
+  const show = useCallback((message, type = 'info', duration = 4000, action = null) => {
     const id = ++counterRef.current;
-    setToasts(prev => [...prev.slice(-3), { id, message, type }]); // max 4 visible
+    // Toast dengan aksi (mis. Undo) perlu waktu lebih lama agar bisa diklik.
+    if (action && duration === 4000) duration = 7000;
+    setToasts(prev => [...prev.slice(-3), { id, message, type, action }]); // max 4 visible
     if (duration > 0) {
       setTimeout(() => dismiss(id), duration);
     }
@@ -108,6 +110,10 @@ function ToastContainer({ toasts, onDismiss }) {
 // ─── Single toast ─────────────────────────────────────────────────────────────
 function ToastItem({ toast, onDismiss }) {
   const { t } = useTranslation();
+  const handleAction = () => {
+    toast.action?.onClick?.();
+    onDismiss(toast.id);
+  };
   return (
     <motion.div
       layout
@@ -120,6 +126,15 @@ function ToastItem({ toast, onDismiss }) {
     >
       <span className="mt-0.5">{ICONS[toast.type] || ICONS.info}</span>
       <p className="flex-1 leading-snug text-[13px]">{toast.message}</p>
+      {toast.action && (
+        <button
+          onClick={handleAction}
+          className="shrink-0 px-2.5 py-1 rounded-lg text-[12px] font-semibold text-primary-light
+            bg-primary/10 hover:bg-primary/20 transition-colors"
+        >
+          {toast.action.label}
+        </button>
+      )}
       <button
         onClick={() => onDismiss(toast.id)}
         className="shrink-0 p-1 rounded-lg text-text-muted hover:text-text hover:bg-card-hover transition-colors"

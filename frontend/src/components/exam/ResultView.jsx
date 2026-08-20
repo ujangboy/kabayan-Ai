@@ -9,6 +9,7 @@ import {
 import { examAPI, sessionsAPI } from '@/services/api';
 import { cn } from '@/utils';
 import { Chip } from './shared';
+import { fireConfetti } from '@/utils/confetti';
 
 // Count-up halus untuk skor (dihormati prefers-reduced-motion).
 function useCountUp(target, duration = 900) {
@@ -41,6 +42,14 @@ export default function ResultView({ evalData, onReview, onFinish, sessionId, on
   const [planSaving, setPlanSaving]     = useState(false);
   const [planSaveError, setPlanSaveError] = useState('');
   const animatedScore = useCountUp(evalData?.score ?? 0);
+
+  // Perayaan saat hasil ujian muncul dengan performa baik.
+  useEffect(() => {
+    if (evalData && (evalData.score ?? 0) >= 60) {
+      fireConfetti({ count: 140, origin: { x: 0.5, y: 0.3 }, spread: 120 });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (!evalData) return null;
 

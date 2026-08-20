@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Brain, ChevronLeft, Zap } from '@/icons';
 import { VIEW } from '@/components/exam/shared';
-import { Tooltip, Select } from '@/components/ui';
+import { Tooltip, Select, HelpTip } from '@/components/ui';
 
 export default function ExamHeader({ view, subjectId, subjects, canCreate, onBack, onSubjectChange, onCreate }) {
   const { t } = useTranslation();
@@ -26,6 +26,7 @@ export default function ExamHeader({ view, subjectId, subjects, canCreate, onBac
               <Zap size={9} className="inline mr-0.5" />
               {t('exam.adaptiveBadge')}
             </span>
+            <HelpTip label={t('help.exam')} />
           </h1>
           <p className="text-text-secondary text-sm mt-0.5">
             {t('exam.subtitle')}

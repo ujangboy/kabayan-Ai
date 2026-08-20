@@ -20,6 +20,8 @@ export default function ChatSidebar() {
     togglePinChat,
     deleteChat,
     deleteAllChats,
+    restoreChat,
+    restoreAllChats,
   } = useChatStore();
 
   const [chatSearch, setChatSearch] = useState('');
@@ -73,6 +75,7 @@ export default function ChatSidebar() {
     navigate('/chat');
   };
   const handleDeleteAll = () => {
+    const savedChats = chats;
     toast.confirm({
       title: t('chat.deleteAll'),
       message: t('chat.confirmDeleteAllChats'),
@@ -81,12 +84,20 @@ export default function ChatSidebar() {
       onConfirm: async () => {
         await deleteAllChats();
         navigate('/chat');
+        toast.success(t('chat.deletedAllChats'), undefined, {
+          label: t('common.undo'),
+          onClick: () => restoreAllChats(savedChats),
+        });
       },
     });
   };
   const handleDeleteChat = async (c) => {
     await deleteChat(c.id);
     if (currentChatId === c.id) navigate('/chat');
+    toast.success(t('chat.chatDeleted'), undefined, {
+      label: t('common.undo'),
+      onClick: () => restoreChat(c),
+    });
   };
   const handleRename = (c) => {
     setEditingChatId(c.id);

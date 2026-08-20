@@ -10,7 +10,7 @@ import { extractErrorMessage } from '@/utils/errors';
 import { useToast } from '@/components/Toast';
 import { usePageState } from '@/hooks/usePageState';
 import { fadeSlide } from '@/utils';
-import { Modal, Button, EmptyState } from '@/components/ui';
+import { Modal, Button, EmptyState, HelpTip } from '@/components/ui';
 import { StudyPlanItem } from '@/components/studyplan/StudyPlanItem';
 import { formatItemDate } from '@/components/studyplan/shared';
 
@@ -194,7 +194,10 @@ export default function StudyPlanPage() {
             <ArrowLeft size={16} /> Kembali
           </button>
           <div className="flex-1 min-w-[200px]">
-            <h1 className="text-2xl font-bold text-text">{plan.title || 'Rencana Belajar'}</h1>
+            <h1 className="text-2xl font-bold text-text flex items-center gap-2">
+              {plan.title || 'Rencana Belajar'}
+              <HelpTip label={t('help.studyPlan')} />
+            </h1>
             <p className="text-text-secondary text-sm mt-0.5">
               {data.subject_name || 'Mata Kuliah'}
               {plan.start_date ? ` • mulai ${formatItemDate(plan.start_date, 0)}` : ''}

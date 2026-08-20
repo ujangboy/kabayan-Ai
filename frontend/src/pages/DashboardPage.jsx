@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useChatStore } from '@/store';
 import { formatDate } from '@/utils';
-import { EmptyState, Skeleton } from '@/components/ui';
+import { EmptyState, Skeleton, HelpTip } from '@/components/ui';
 import FileTypeIcon from '@/components/FileTypeIcon';
 import api from '@/services/api';
 
@@ -118,6 +118,7 @@ export default function DashboardPage() {
               <p className="text-text-secondary text-sm">
                 {t('dashboard.tagline')}
                 {stats.subjects > 0 && ` ${t('dashboard.activeSubjects', { count: stats.subjects })}`}
+                <HelpTip label={t('help.dashboard')} className="ml-1.5 -mt-0.5 align-middle" />
               </p>
             </div>
           </div>

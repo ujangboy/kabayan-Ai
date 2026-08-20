@@ -4,6 +4,7 @@ import { motion, AnimatePresence, MotionConfig } from 'framer-motion';
 import IconRail from '@/components/layout/IconRail';
 import ContextSidebar from '@/components/layout/ContextSidebar';
 import TopBar from '@/components/layout/TopBar';
+import Breadcrumbs from '@/components/layout/Breadcrumbs';
 import CommandSearch from '@/components/search/CommandSearch';
 import BackgroundProcessSync from '@/components/BackgroundProcessSync';
 import FocusModeView from '@/components/FocusModeView';
@@ -118,6 +119,7 @@ export default function AppLayout() {
         {hasContextSidebar && <ContextSidebar />}
         <main className="flex-1 overflow-hidden flex flex-col min-w-0">
           <TopBar />
+          <Breadcrumbs />
           <div className="flex-1 overflow-hidden flex flex-col min-w-0">
             <PendingBanner t={t} />
             <AnimatePresence mode="wait">

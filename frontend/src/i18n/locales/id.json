@@ -35,7 +35,22 @@
     "noResults": "Tidak ada hasil ditemukan.",
     "navHint": "↑↓ navigasi",
     "openHint": "↵ buka",
-    "closeHint": "Esc tutup"
+    "closeHint": "Esc tutup",
+    "actions": "Aksi Cepat",
+    "chatAI": "Chat AI",
+    "chatDesc": "Tanya AI tutor",
+    "materi": "Materi",
+    "materiDesc": "Dokumen pelajaran",
+    "notebook": "Notebook",
+    "notebookDesc": "Catatan belajar",
+    "flashcard": "Flashcard",
+    "flashcardDesc": "Kartu hafalan",
+    "quiz": "Quiz",
+    "quizDesc": "Latihan soal",
+    "actionNewChat": "Chat Baru",
+    "actionNewChatDesc": "Mulai percakapan baru",
+    "actionStudyPlanDesc": "Lihat rencana belajar",
+    "actionSettingsDesc": "Buka pengaturan aplikasi"
   },
   "materialPicker": {
     "sourceLabel": "Pilih Materi Sumber",
@@ -105,7 +120,8 @@
     "all": "Semua",
     "empty": "Belum ada data",
     "yes": "Ya",
-    "no": "Tidak"
+    "no": "Tidak",
+    "undo": "Undo"
   },
   "dashboard": {
     "greetingMorning": "Selamat pagi",
@@ -202,7 +218,9 @@
     "send": "Kirim",
     "tutorModeNote": "Mode Tutor — jawaban disesuaikan dengan level belajarmu.",
     "disclaimerNote": "AI dapat membuat kesalahan. Verifikasi informasi penting.",
-    "empty": "Belum ada percakapan"
+    "empty": "Belum ada percakapan",
+    "chatDeleted": "Chat dihapus",
+    "deletedAllChats": "Semua chat dihapus"
   },
   "materi": {
     "pageTitle": "Materi Belajar",
@@ -907,5 +925,15 @@
   },
   "sidebar": {
     "contextHint": "Pilih menu di sebelah kiri untuk mulai belajar"
+  },
+  "breadcrumb": {
+    "label": "Breadcrumb",
+    "loading": "Memuat...",
+    "flashcardReview": "Review"
+  },
+  "help": {
+    "dashboard": "Mulai dari sini: buat Chat AI untuk bertanya, upload materi, atau mulai quiz dari kartu aksi cepat.",
+    "exam": "Simulasi ujian adaptif berdasarkan blueprint. Pilih mata kuliah, atur konfigurasi, lalu kerjakan soal untuk mendapatkan prediksi skor.",
+    "studyPlan": "Rencana belajar harian yang disusun dari hasil simulasi ujianmu. Tandai item yang selesai untuk melacak progres."
   }
 }

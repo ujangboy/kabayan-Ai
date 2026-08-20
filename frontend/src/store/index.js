@@ -24,7 +24,20 @@ export const useChatStore = create(
         return { chats, currentChatId };
       }),
 
+      // Undo hapus: kembalikan chat ke posisi semula (pinned tetap dipertahankan).
+      restoreChat: (chat) => set((s) => {
+        if (!chat || s.chats.some((c) => c.id === chat.id)) return {};
+        return { chats: [chat, ...s.chats] };
+      }),
+
       deleteAllChats: () => set({ chats: [], currentChatId: null }),
+
+      // Undo hapus semua: kembalikan daftar chat yang tersimpan sebelumnya.
+      restoreAllChats: (chats) => set((s) => {
+        if (!Array.isArray(chats) || chats.length === 0) return {};
+        const existing = new Set(s.chats.map((c) => c.id));
+        return { chats: [...chats.filter((c) => !existing.has(c.id)), ...s.chats] };
+      }),
 
       togglePinChat: (id) => set((s) => ({
         chats: s.chats.map((c) =>
@@ -143,32 +156,42 @@ export const useUiStore = create(
 
 export { useFocusStore } from './focusStore';
 
-export const useAppStore = create((set) => ({
-  sidebarOpen: true,
-  searchOpen: false,
-  pendingOperations: new Set(),
-  addPendingOperation: (id) => set((s) => {
-    if (id == null) return {};
-    const key = String(id);
-    if (s.pendingOperations.has(key)) return {};
-    const next = new Set(s.pendingOperations);
-    next.add(key);
-    return { pendingOperations: next };
-  }),
-  removePendingOperation: (idOrPredicate) => set((s) => {
-    if (idOrPredicate == null) return {};
-    const predicate = typeof idOrPredicate === 'function'
-      ? idOrPredicate
-      : (op) => op === String(idOrPredicate);
-    let removed = false;
-    const next = new Set(s.pendingOperations);
-    for (const op of s.pendingOperations) {
-      if (predicate(op)) { next.delete(op); removed = true; }
+export const useAppStore = create(
+  persist(
+    (set) => ({
+      sidebarOpen: true,
+      searchOpen: false,
+      pendingOperations: new Set(),
+      addPendingOperation: (id) => set((s) => {
+        if (id == null) return {};
+        const key = String(id);
+        if (s.pendingOperations.has(key)) return {};
+        const next = new Set(s.pendingOperations);
+        next.add(key);
+        return { pendingOperations: next };
+      }),
+      removePendingOperation: (idOrPredicate) => set((s) => {
+        if (idOrPredicate == null) return {};
+        const predicate = typeof idOrPredicate === 'function'
+          ? idOrPredicate
+          : (op) => op === String(idOrPredicate);
+        let removed = false;
+        const next = new Set(s.pendingOperations);
+        for (const op of s.pendingOperations) {
+          if (predicate(op)) { next.delete(op); removed = true; }
+        }
+        return removed ? { pendingOperations: next } : {};
+      }),
+      clearPendingOperations: () => set({ pendingOperations: new Set() }),
+      toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
+      setSidebarOpen: (v) => set({ sidebarOpen: v }),
+      setSearchOpen: (v) => set({ searchOpen: v }),
+    }),
+    {
+      name: 'kabayan-app-store',
+      // Persist hanya preferensi navigasi — state operasional (pending ops, modal)
+      // tidak boleh disimpan karena Set/timing-sensitive.
+      partialize: (state) => ({ sidebarOpen: state.sidebarOpen }),
     }
-    return removed ? { pendingOperations: next } : {};
-  }),
-  clearPendingOperations: () => set({ pendingOperations: new Set() }),
-  toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
-  setSidebarOpen: (v) => set({ sidebarOpen: v }),
-  setSearchOpen: (v) => set({ searchOpen: v }),
-}));
+  )
+);
