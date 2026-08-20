@@ -50,7 +50,6 @@ export function Modal({
               />
             </Dialog.Overlay>
             <Dialog.Content
-              asChild
               forceMount
               aria-describedby={undefined}
               className="fixed inset-0 z-50 flex items-center justify-center p-4"
