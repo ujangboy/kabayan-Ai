@@ -7,7 +7,7 @@ import { flashcardAPI, subjectAPI } from '@/services/api';
 import { useUiStore } from '@/store';
 import { useToast } from '@/components/Toast';
 import { extractErrorMessage } from '@/utils/errors';
-import { EmptyState, Select } from '@/components/ui';
+import { EmptyState, Select, Skeleton } from '@/components/ui';
 import { usePageState } from '@/hooks/usePageState';
 import BatchFlashcardCard from '@/components/flashcard/BatchFlashcardCard';
 import FlashcardSession from '@/components/flashcard/FlashcardSession';
@@ -183,7 +183,15 @@ export default function FlashcardPage() {
         {/* Group Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {isLoading ? (
-            <div className="col-span-full text-center py-10 text-text-muted">{t('flashcard.loading')}</div>
+            <>
+              {[0, 1, 2, 3, 4, 5].map(i => (
+                <div key={i} className="card-base p-4 space-y-3">
+                  <Skeleton className="h-5 w-2/3" />
+                  <Skeleton className="h-3 w-1/2" />
+                  <Skeleton className="h-3 w-1/3" />
+                </div>
+              ))}
+            </>
           ) : groups.length === 0 ? (
             <div className="col-span-full card-base">
               <EmptyState

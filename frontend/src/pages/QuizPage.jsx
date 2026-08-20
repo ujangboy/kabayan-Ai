@@ -6,7 +6,7 @@ import { HelpCircle, Play, Zap, Trophy, Trash2, Clock, Calendar, FileText } from
 import { quizAPI, subjectAPI } from '@/services/api';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { formatDate, formatTimeOnly } from '@/utils';
-import { Tooltip, EmptyState, Select } from '@/components/ui';
+import { Tooltip, EmptyState, Select, Skeleton } from '@/components/ui';
 import { useUiStore } from '@/store';
 import { usePageState } from '@/hooks/usePageState';
 import { useToast } from '@/components/Toast';
@@ -166,7 +166,15 @@ export default function QuizPage() {
         {/* Quiz List */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {isLoading ? (
-            <div className="col-span-full text-center py-10 text-text-muted">{t('quiz.loading')}</div>
+            <>
+              {[0, 1, 2, 3, 4, 5].map(i => (
+                <div key={i} className="card-base p-4 space-y-3">
+                  <Skeleton className="h-5 w-2/3" />
+                  <Skeleton className="h-3 w-1/2" />
+                  <Skeleton className="h-3 w-1/3" />
+                </div>
+              ))}
+            </>
           ) : quizzes.length === 0 ? (
             <div className="col-span-full card-base">
               <EmptyState

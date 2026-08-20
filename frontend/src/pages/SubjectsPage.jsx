@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import { Plus, Trash2, FileText, HelpCircle, CreditCard, Trophy, Calendar, Clock, BookOpen } from '@/icons';
 import { subjectAPI } from '@/services/api';
 import { formatDate, formatTimeOnly } from '@/utils';
-import { Tooltip, Modal, Button, Input, Textarea, Select, EmptyState } from '@/components/ui';
+import { Tooltip, Modal, Button, Input, Textarea, Select, EmptyState, Skeleton } from '@/components/ui';
 import { useToast } from '@/components/Toast';
 
 export default function SubjectsPage() {
@@ -82,7 +82,14 @@ export default function SubjectsPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {isLoading ? (
-            <p className="text-text-muted text-sm">{t('common.loading')}</p>
+            <>
+              {[0, 1, 2, 3, 4, 5].map(i => (
+                <div key={i} className="card-base p-4 space-y-3">
+                  <Skeleton className="h-6 w-2/3" />
+                  <Skeleton className="h-3 w-1/2" />
+                </div>
+              ))}
+            </>
           ) : subjects.length === 0 ? (
             <div className="col-span-full card-base">
               <EmptyState
