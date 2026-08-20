@@ -9,6 +9,7 @@ import { formatDate, fadeSlide } from '@/utils';
 import { Tooltip, ConfirmDialog, Skeleton, Icon } from '@/components/ui';
 import { ICONS } from '@/lib/icons';
 import ProgressCard from '@/components/ProgressCard';
+import BackButton from '@/components/layout/BackButton';
 import { useToast } from '@/components/Toast';
 import { extractErrorMessage } from '@/utils/errors';
 
@@ -138,9 +139,7 @@ export default function SubjectDashboardPage() {
           className="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-2xl p-5"
         >
           <div className="flex items-center gap-3 flex-wrap">
-            <button onClick={() => navigate('/subjects')} className="btn-ghost px-3 py-2 rounded-xl text-sm">
-              <Icon name={ICONS.actions.back} size={16} /> {t('common.back')}
-            </button>
+            <BackButton />
             <div className="flex-1 min-w-[200px]">
               <div className="flex items-center gap-2.5">
                 <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center shrink-0 shadow-lg shadow-primary/25">

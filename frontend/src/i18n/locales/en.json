@@ -953,5 +953,8 @@
     "goDashboard": "Go to Dashboard",
     "goChat": "Go to Chat AI",
     "quickNav": "Quick nav 1-9 (main pages)"
+  },
+  "backButton": {
+    "to": "Back to {{page}}"
   }
 }

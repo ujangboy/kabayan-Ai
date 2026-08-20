@@ -14,7 +14,7 @@ afterEach(cleanup);
 
 beforeEach(() => {
   localStorage.clear();
-  useAppStore.setState({ searchOpen: false });
+  useAppStore.setState({ searchOpen: false, shortcutsOpen: false });
 });
 
 function renderWith() {

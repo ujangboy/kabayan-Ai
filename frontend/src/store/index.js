@@ -161,6 +161,7 @@ export const useAppStore = create(
     (set) => ({
       sidebarOpen: true,
       searchOpen: false,
+      shortcutsOpen: false,
       pendingOperations: new Set(),
       addPendingOperation: (id) => set((s) => {
         if (id == null) return {};
@@ -186,6 +187,7 @@ export const useAppStore = create(
       toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
       setSidebarOpen: (v) => set({ sidebarOpen: v }),
       setSearchOpen: (v) => set({ searchOpen: v }),
+      setShortcutsOpen: (v) => set({ shortcutsOpen: v }),
     }),
     {
       name: 'kabayan-app-store',

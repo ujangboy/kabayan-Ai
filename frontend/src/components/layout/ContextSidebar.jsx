@@ -1,18 +1,48 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { subjectAPI, flashcardAPI } from '@/services/api';
 import { useAppStore } from '@/store';
+import { useSwipeGesture } from '@/hooks/useSwipeGesture';
 import { Icon } from '@/components/ui/Icon';
 import { ICONS } from '@/lib/icons';
 import StorageMeter from './StorageMeter';
+
+// Breakpoint Tailwind `lg` — di bawah ini drawer mobile berlaku.
+const MOBILE_QUERY = '(max-width: 1023px)';
 
 export default function ContextSidebar() {
   const location = useLocation();
   const sidebarOpen = useAppStore((s) => s.sidebarOpen);
   const setSidebarOpen = useAppStore((s) => s.setSidebarOpen);
+
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return false;
+    return window.matchMedia(MOBILE_QUERY).matches;
+  });
+
+  useEffect(() => {
+    if (!window.matchMedia) return undefined;
+    const mq = window.matchMedia(MOBILE_QUERY);
+    const onChange = (e) => setIsMobile(e.matches);
+    mq.addEventListener?.('change', onChange);
+    return () => mq.removeEventListener?.('change', onChange);
+  }, []);
+
+  // Swipe kanan dari tepi kiri layar → buka drawer (hanya mobile).
+  // Listener dipasang ke `window` (lihat opsi `window: true`), ref tidak dipakai.
+  useSwipeGesture({
+    window: true,
+    onSwipeRight: () => setSidebarOpen(true),
+    enabled: isMobile,
+  });
+  // Swipe kiri di dalam drawer → tutup drawer.
+  const { ref: drawerRef } = useSwipeGesture({
+    onSwipeLeft: () => setSidebarOpen(false),
+    enabled: sidebarOpen && isMobile,
+  });
 
   const path = location.pathname;
 
@@ -51,11 +81,12 @@ export default function ContextSidebar() {
           />,
           <motion.div
             key="sidebar-drawer"
+            ref={drawerRef}
             initial={{ x: -264 }}
             animate={{ x: 0 }}
             exit={{ x: -264 }}
             transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
-            className="fixed inset-y-0 left-14 z-40 w-60 lg:hidden"
+            className="fixed inset-y-0 left-14 z-40 w-60 lg:hidden touch-pan-y"
           >
             {content}
           </motion.div>,

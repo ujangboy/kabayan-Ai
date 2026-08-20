@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Modal } from '@/components/ui';
@@ -32,7 +32,8 @@ export default function KeyboardShortcuts() {
   const navigate = useNavigate();
   const createChat = useChatStore((s) => s.createChat);
   const setSearchOpen = useAppStore((s) => s.setSearchOpen);
-  const [open, setOpen] = useState(false);
+  const shortcutsOpen = useAppStore((s) => s.shortcutsOpen);
+  const setShortcutsOpen = useAppStore((s) => s.setShortcutsOpen);
   const gKeyRef = useRef(false);
 
   useEffect(() => {
@@ -47,7 +48,7 @@ export default function KeyboardShortcuts() {
       // `?` — buka/tutup modal pintasan (di luar field teks).
       if (e.key === '?' && !combo && !e.altKey && !isTyping(e)) {
         e.preventDefault();
-        setOpen((o) => !o);
+        setShortcutsOpen(!shortcutsOpen);
         return;
       }
 
@@ -101,7 +102,7 @@ export default function KeyboardShortcuts() {
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [navigate, createChat, setSearchOpen]);
+  }, [navigate, createChat, setSearchOpen, shortcutsOpen, setShortcutsOpen]);
 
   const groups = [
     {
@@ -126,8 +127,8 @@ export default function KeyboardShortcuts() {
 
   return (
     <Modal
-      open={open}
-      onClose={() => setOpen(false)}
+      open={shortcutsOpen}
+      onClose={() => setShortcutsOpen(false)}
       size="lg"
       title={t('shortcuts.title')}
       description={t('shortcuts.subtitle')}

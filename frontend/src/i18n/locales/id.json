@@ -953,5 +953,8 @@
     "goDashboard": "Ke Dashboard",
     "goChat": "Ke Chat AI",
     "quickNav": "Navigasi cepat 1-9 (halaman utama)"
+  },
+  "backButton": {
+    "to": "Kembali ke {{page}}"
   }
 }

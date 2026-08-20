@@ -942,5 +942,8 @@
     "goDashboard": "Ka Dashboard",
     "goChat": "Ka Chat AI",
     "quickNav": "Navigasi gancang 1-9 (halaman utama)"
+  },
+  "backButton": {
+    "to": "Balik ka {{page}}"
   }
 }

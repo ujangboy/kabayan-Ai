@@ -8,6 +8,7 @@ import ContextSidebar from '@/components/layout/ContextSidebar';
 import TopBar from '@/components/layout/TopBar';
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
 import CommandSearch from '@/components/search/CommandSearch';
+import KeyboardShortcuts from '@/components/KeyboardShortcuts';
 import BackgroundProcessSync from '@/components/BackgroundProcessSync';
 import FocusModeView from '@/components/FocusModeView';
 import { useAppStore, useFocusStore } from '@/store';
@@ -139,6 +140,7 @@ export default function AppLayout() {
           </div>
         </main>
         <AnimatePresence>{searchOpen && <CommandSearch />}</AnimatePresence>
+        <KeyboardShortcuts />
       </div>
     </MotionConfig>
   );

@@ -8,6 +8,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { flashcardAPI } from '@/services/api';
 import { usePageState } from '@/hooks/usePageState';
+import { useBackNavigation } from '@/hooks/useBackNavigation';
+import BackButton from '@/components/layout/BackButton';
 import { fadeSlide } from '@/utils';
 import FlashcardReviewCard from '@/components/flashcard/FlashcardReviewCard';
 import FlashcardReviewFinishScreen from '@/components/flashcard/FlashcardReviewFinishScreen';
@@ -18,6 +20,7 @@ const AUTO_ADVANCE_MS = 1200;
 export default function FlashcardReviewPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { back } = useBackNavigation();
   const [searchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const subjectId = searchParams.get('subject_id') ? Number(searchParams.get('subject_id')) : undefined;
@@ -161,7 +164,7 @@ export default function FlashcardReviewPage() {
     clearSession();
     queryClient.invalidateQueries(['flashcards']);
     queryClient.invalidateQueries(['flashcard-due']);
-    navigate('/flashcard');
+    back();
   };
 
   // ─── Loading ───
@@ -181,7 +184,7 @@ export default function FlashcardReviewPage() {
       <AnimatePresence mode="wait" initial={false}>
         <motion.div key="error" {...fadeSlide} className="flex-1 flex flex-col items-center justify-center p-6 text-center">
           <p className="text-danger mb-4">{t('flashcard.loadError', { message: error?.message || 'Unknown error' })}</p>
-          <button onClick={() => navigate('/flashcard')} className="btn-ghost border border-border">{t('common.back')}</button>
+          <BackButton />
         </motion.div>
       </AnimatePresence>
     );
@@ -231,9 +234,7 @@ export default function FlashcardReviewPage() {
 
       {/* Top bar */}
       <div className="flex items-center justify-between mb-4 shrink-0">
-        <button onClick={() => navigate('/flashcard')} className="btn-ghost text-sm text-text-muted">
-          <Icon name={ICONS.ui.chevronLeft} size={16} /> {t('common.back')}
-        </button>
+        <BackButton className="text-sm text-text-muted" />
         <div className="flex items-center gap-2 text-sm text-text-secondary font-medium">
           <Icon name={ICONS.learning.brain} size={15} className="text-accent-purple" />
           {t('flashcard.reviewDaily')}

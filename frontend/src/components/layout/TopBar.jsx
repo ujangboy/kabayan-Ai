@@ -20,6 +20,7 @@ export default function TopBar() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const setSearchOpen = useAppStore((s) => s.setSearchOpen);
+  const setShortcutsOpen = useAppStore((s) => s.setShortcutsOpen);
   const toggleSidebar = useAppStore((s) => s.toggleSidebar);
   const queryClient = useQueryClient();
 
@@ -101,6 +102,16 @@ export default function TopBar() {
           </DropdownMenu.Content>
         </DropdownMenu.Portal>
       </DropdownMenu.Root>
+
+      {/* Keyboard shortcuts */}
+      <button
+        onClick={() => setShortcutsOpen(true)}
+        className="relative rounded-lg p-2 text-text-secondary transition-colors hover:bg-card hover:text-text"
+        title={t('shortcuts.title')}
+        aria-label={t('shortcuts.title')}
+      >
+        <Icon name={ICONS.ui.help} size={18} />
+      </button>
 
       {/* Notifications (visual only — bell has no backend feed) */}
       <button
