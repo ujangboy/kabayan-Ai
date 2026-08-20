@@ -133,3 +133,27 @@ export function ProgressBar({ value = 0, color = 'primary' }) {
     </div>
   );
 }
+
+// Rekonstruksi blueprint_items dari questions_json sesi yang ada,
+// supaya tombol "Latihan Lagi" bisa memicu modal blueprint tanpa endpoint baru.
+export function deriveBlueprintItems(questions = []) {
+  const map = new Map();
+  questions.forEach((q) => {
+    const topic = q.topic || 'Umum';
+    if (!map.has(topic)) {
+      map.set(topic, { topic, question_count: 0, question_types: new Set(), bloom_level: q.bloom_level || '', difficulty: q.difficulty || '', weight_percent: 0 });
+    }
+    const e = map.get(topic);
+    e.question_count += 1;
+    if (q.question_type) e.question_types.add(q.question_type);
+  });
+  const total = questions.length || 1;
+  return [...map.values()].map((e) => ({
+    topic: e.topic,
+    question_count: e.question_count,
+    question_types: [...e.question_types],
+    bloom_level: e.bloom_level,
+    difficulty: e.difficulty,
+    weight_percent: Math.round((e.question_count / total) * 100),
+  }));
+}

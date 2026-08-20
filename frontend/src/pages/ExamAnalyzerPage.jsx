@@ -2,14 +2,13 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Brain, ChevronLeft, Zap } from '@/icons';
 import { subjectAPI, sessionsAPI } from '@/services/api';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useUiStore } from '@/store';
 import { cn } from '@/utils';
 import { usePageState } from '@/hooks/usePageState';
-import { VIEW } from '@/components/exam/shared';
-import { Tooltip, Select, Modal } from '@/components/ui';
+import { VIEW, deriveBlueprintItems } from '@/components/exam/shared';
+import { Modal } from '@/components/ui';
 import { useToast } from '@/components/Toast';
 import DashboardView from '@/components/exam/DashboardView';
 import ConfigView from '@/components/exam/ConfigView';
@@ -18,33 +17,10 @@ import QuizView from '@/components/exam/QuizView';
 import ResultView from '@/components/exam/ResultView';
 import ReviewView from '@/components/exam/ReviewView';
 import HistoryView from '@/components/exam/HistoryView';
+import ExamHeader from '@/components/exam/ExamHeader';
 
 const PAGE_KEY = 'exam-analyzer';
 const GENERATE_TIMEOUT_MS = 10 * 60 * 1000;
-
-// Rekonstruksi blueprint_items dari questions_json sesi yang ada,
-// supaya tombol "Latihan Lagi" bisa memicu modal blueprint tanpa endpoint baru.
-function deriveBlueprintItems(questions = []) {
-  const map = new Map();
-  questions.forEach((q) => {
-    const topic = q.topic || 'Umum';
-    if (!map.has(topic)) {
-      map.set(topic, { topic, question_count: 0, question_types: new Set(), bloom_level: q.bloom_level || '', difficulty: q.difficulty || '', weight_percent: 0 });
-    }
-    const e = map.get(topic);
-    e.question_count += 1;
-    if (q.question_type) e.question_types.add(q.question_type);
-  });
-  const total = questions.length || 1;
-  return [...map.values()].map((e) => ({
-    topic: e.topic,
-    question_count: e.question_count,
-    question_types: [...e.question_types],
-    bloom_level: e.bloom_level,
-    difficulty: e.difficulty,
-    weight_percent: Math.round((e.question_count / total) * 100),
-  }));
-}
 
 // ─── Main Page ───────────────────────────────────────────────────────────────
 export default function ExamAnalyzerPage() {
@@ -203,6 +179,33 @@ export default function ExamAnalyzerPage() {
   // Progress generate ditangani di dalam BlueprintView (modal), tidak ganti view.
   const handleGenerating = () => {};
 
+  // Tombol kembali/exit: konfirmasi bila sedang generate/quiz, reset state bila perlu.
+  const handleExit = () => {
+    const confirmExit = () => new Promise((resolve) => {
+      toast.confirm({
+        title: t('exam.confirmExit'),
+        message: t('exam.confirmExit'),
+        danger: true,
+        confirmLabel: t('common.confirm'),
+        onConfirm: resolve,
+      });
+    });
+    const doExit = async () => {
+      if (view === VIEW.GENERATING) { await confirmExit(); clearAll(); go(VIEW.HISTORY); return; }
+      if (view === VIEW.QUIZ) { await confirmExit(); clearAll(); go(VIEW.HISTORY); return; }
+      if (view === VIEW.HISTORY || view === VIEW.RESULT) {
+        setSubjectId('');
+        setAnalysis(null); setBlueprint(null); setSessionData(null); setEvalData(null);
+        setDetailId(null); setGenerating(null); setQuizClockStart(null); setRecommend(null); clear();
+        return;
+      }
+      const back = { [VIEW.REVIEW]: VIEW.RESULT }[view] || null;
+      if (back === null) { go(VIEW.HISTORY); return; }
+      go(back);
+    };
+    doExit();
+  };
+
   // "Latihan Lagi" dari kartu riwayat → modal blueprint (reuse blueprint_id sesi).
   const handleRetry = async (session) => {
     if (!session.blueprint_id) {
@@ -225,91 +228,15 @@ export default function ExamAnalyzerPage() {
     <div className="flex-1 overflow-y-auto p-6 md:p-10">
       <div className="max-w-5xl mx-auto space-y-6">
 
-        {/* ── Page Header ── */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            {view !== VIEW.DASHBOARD && subjectId && (
-              <Tooltip label={t('common.back')}>
-                <button onClick={() => {
-                  const confirmExit = () => new Promise((resolve) => {
-                    toast.confirm({
-                      title: t('exam.confirmExit'),
-                      message: t('exam.confirmExit'),
-                      danger: true,
-                      confirmLabel: t('common.confirm'),
-                      onConfirm: resolve,
-                    });
-                  });
-                  const doExit = async () => {
-                    if (view === VIEW.GENERATING) {
-                      await confirmExit();
-                      clearAll(); go(VIEW.HISTORY); return;
-                    }
-                    if (view === VIEW.QUIZ) {
-                      await confirmExit();
-                      clearAll(); go(VIEW.HISTORY); return;
-                    }
-                    if (view === VIEW.HISTORY) {
-                      setSubjectId('');
-                      setAnalysis(null); setBlueprint(null); setSessionData(null); setEvalData(null);
-                      setDetailId(null); setGenerating(null); setQuizClockStart(null); setRecommend(null); clear();
-                      return;
-                    }
-                    if (view === VIEW.RESULT) {
-                      setSubjectId('');
-                      setAnalysis(null); setBlueprint(null); setSessionData(null); setEvalData(null);
-                      setDetailId(null); setGenerating(null); setQuizClockStart(null); setRecommend(null); clear();
-                      return;
-                    }
-                    const back = {
-                      [VIEW.REVIEW]:     VIEW.RESULT,
-                    }[view] || null;
-                    if (back === null) { go(VIEW.HISTORY); return; }
-                    go(back);
-                  };
-                  doExit();
-                }} aria-label={t('common.back')} className="p-1.5 rounded-lg hover:bg-card text-text-secondary transition-colors">
-                  <ChevronLeft size={18} />
-                </button>
-              </Tooltip>
-            )}
-            <div>
-              <h1 className="text-2xl font-bold text-text flex items-center gap-2">
-                <Brain size={22} className="text-primary" />
-                {t('exam.title')}
-                <span
-                  className="badge badge-success text-[10px]"
-                  title={t('exam.adaptiveBadgeHint')}
-                >
-                  <Zap size={9} className="inline mr-0.5" />
-                  {t('exam.adaptiveBadge')}
-                </span>
-              </h1>
-              <p className="text-text-secondary text-sm mt-0.5">
-                {t('exam.subtitle')}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Select
-              value={subjectId}
-              onChange={e => { setSubjectId(e.target.value); setAnalysis(null); setBlueprint(null); setSessionData(null); setEvalData(null); setRecommend(null); go(VIEW.HISTORY); }}
-            >
-              <option value="">{t('exam.selectSubjectPlaceholder')}</option>
-              {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-            </Select>
-            {(view === VIEW.DASHBOARD || view === VIEW.HISTORY) && (
-              <button
-                onClick={() => { if (!subjectId) return; openConfig(); }}
-                disabled={!subjectId}
-                className="btn-primary text-xs disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                <Zap size={13} /> {t('exam.createSimulation')}
-              </button>
-            )}
-          </div>
-        </div>
+        <ExamHeader
+          view={view}
+          subjectId={subjectId}
+          subjects={subjects}
+          canCreate={view === VIEW.DASHBOARD || view === VIEW.HISTORY}
+          onBack={handleExit}
+          onSubjectChange={(e) => { setSubjectId(e.target.value); setAnalysis(null); setBlueprint(null); setSessionData(null); setEvalData(null); setRecommend(null); go(VIEW.HISTORY); }}
+          onCreate={() => { if (!subjectId) return; openConfig(); }}
+        />
 
         {/* ── Tab Riwayat / Analisis ── */}
         {showTabs && (
