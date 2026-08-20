@@ -5,12 +5,12 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft, FileText, CreditCard, HelpCircle, Pencil, Trash2,
-  TrendingUp, Trophy, Zap,
+  TrendingUp, Trophy, Zap, Sparkles,
 } from '@/icons';
 import { subjectAPI, examAPI, studyAPI } from '@/services/api';
 import { useUiStore } from '@/store';
 import { formatDate } from '@/utils';
-import { Tooltip, ConfirmDialog, Skeleton } from '@/components/ui';
+import { Tooltip, ConfirmDialog, Skeleton, EmptyState } from '@/components/ui';
 import ProgressCard from '@/components/ProgressCard';
 import { useToast } from '@/components/Toast';
 import { extractErrorMessage } from '@/utils/errors';
@@ -124,6 +124,14 @@ export default function SubjectDashboardPage() {
   const recentActivity = data?.recent_activity || [];
   const materials = subject?.materials || [];
 
+  const hasProfile = !!learningProfile?.has_data;
+  const hasTopics = topicProgress.length > 0;
+  const hasDiagnostic = !!diagnostic;
+  const hasScores = scoreHistory.filter(d => d && d.score != null).length >= 2;
+  const hasGraph = !!(knowledgeGraph && (knowledgeGraph.nodes || []).length > 0);
+  const leftEmpty = !isProfileError && !isDiagnosticError && !isGraphError &&
+    !hasProfile && !hasTopics && !hasDiagnostic && !hasScores && !hasGraph;
+
   if (isLoading) {
     return (
       <div className="flex-1 overflow-y-auto p-6 md:p-10">
@@ -218,30 +226,43 @@ export default function SubjectDashboardPage() {
           <div className="space-y-5 min-w-0">
             {isProfileError ? (
               <QueryErrorCard title={t('studyProfile.title', 'Profil Belajar')} />
-            ) : (
+            ) : hasProfile && (
               <MasteryProfileCard profile={learningProfile} subject={subject} />
             )}
-            <TopicProgressCard topicProgress={topicProgress} />
+
+            {hasTopics && <TopicProgressCard topicProgress={topicProgress} />}
 
             {isDiagnosticError ? (
               <QueryErrorCard title={t('studyDiagnostic.title')} />
-            ) : (
+            ) : hasDiagnostic && (
               <DiagnosticCard diagnostic={diagnostic} />
             )}
 
             {/* Score history chart */}
-            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="card-base p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <TrendingUp size={16} className="text-primary" />
-                <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('subjectDashboard.scoreHistoryTitle')}</h2>
-              </div>
-              <ScoreChart history={scoreHistory} />
-            </motion.div>
+            {hasScores && (
+              <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="card-base p-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <TrendingUp size={16} className="text-primary" />
+                  <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('subjectDashboard.scoreHistoryTitle')}</h2>
+                </div>
+                <ScoreChart history={scoreHistory} />
+              </motion.div>
+            )}
 
             {isGraphError ? (
               <QueryErrorCard title={t('studyGraph.title')} />
-            ) : (
+            ) : hasGraph && (
               <KnowledgeGraphCard graph={knowledgeGraph} />
+            )}
+
+            {leftEmpty && (
+              <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="card-base">
+                <EmptyState
+                  icon={Sparkles}
+                  title={t('subjectDashboard.leftEmptyTitle', 'Belum ada data belajar')}
+                  description={t('subjectDashboard.leftEmptyDesc', 'Kerjakan quiz, flashcard, atau upload materi untuk mengisi dashboard ini.')}
+                />
+              </motion.div>
             )}
           </div>
 
@@ -251,19 +272,19 @@ export default function SubjectDashboardPage() {
 
             {isRouteError ? (
               <QueryErrorCard title={t('studyRoute.title')} />
-            ) : (
+            ) : studyRoute?.recommendations && (
               <StudyRecommendationCard route={studyRoute} subjectId={subjectId} />
             )}
 
             {isMetricsError ? (
               <QueryErrorCard title={t('studyMetrics.title')} />
-            ) : (
+            ) : studyMetrics && (
               <LearningMetricsCard metrics={studyMetrics} />
             )}
 
             {isProgressError ? (
               <QueryErrorCard title={t('subjectDashboard.progressTitle', 'Konsistensi')} />
-            ) : (
+            ) : studyProgress && (
               <ProgressCard progress={studyProgress} />
             )}
 

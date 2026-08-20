@@ -6,35 +6,10 @@ import { useTranslation } from 'react-i18next';
 export default function KnowledgeGraphCard({ graph }) {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
-  if (!graph) {
-    return (
-      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="card-base p-5">
-        <div className="flex items-center gap-2 mb-3">
-          <Network size={16} className="text-accent-blue" />
-          <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('studyGraph.title')}</h2>
-        </div>
-        <div className="text-center py-6">
-          <Network size={28} className="mx-auto mb-2 text-text-muted opacity-40" />
-          <p className="text-xs text-text-muted">
-            {t('studyGraph.empty', 'Belum ada grafik pengetahuan. Materi dan topik yang dipelajari akan tampil di sini.')}
-          </p>
-        </div>
-      </motion.div>
-    );
-  }
+  if (!graph) return null;
   const nodes = graph.nodes || [];
   const edges = graph.edges || [];
-  if (nodes.length === 0) {
-    return (
-      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="card-base p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <Network size={16} className="text-accent-blue" />
-          <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('studyGraph.title')}</h2>
-        </div>
-        <p className="text-xs text-text-muted">{t('studyGraph.empty')}</p>
-      </motion.div>
-    );
-  }
+  if (nodes.length === 0) return null;
 
   const babs = nodes.filter(n => n.type === 'bab');
 
