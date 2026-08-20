@@ -121,7 +121,8 @@
     "empty": "No data yet",
     "yes": "Yes",
     "no": "No",
-    "undo": "Undo"
+    "undo": "Undo",
+    "notifications": "Notifications"
   },
   "dashboard": {
     "greetingMorning": "Good morning",
@@ -820,7 +821,10 @@
       "appName": "Kabayan AI",
       "version": "Version",
       "description": "An AI-powered study space: materials, chat, flashcards, quiz, and exam simulator."
-    }
+    },
+    "quickSettings": "Quick Settings",
+    "notifications": "Notifications",
+    "fullSettings": "Full Settings"
   },
   "studyRoute": {
     "title": "Study Recommendation",

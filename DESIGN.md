@@ -310,7 +310,36 @@ Hindari shadow tebal di luar token (`shadow-modal` hanya untuk dialog).
 - Touch target tombol ≥40px tinggi.
 - Nav rail tetap 56px (w-14) di semua breakpoint; sidebar kanan bisa collapse.
 
-## 11. Agent Prompt Guide
+## 11. Navigation & Wayfinding (PRD-01)
+### Breadcrumb
+- Komponen: `src/components/layout/Breadcrumbs.jsx` (auto-detect route, bukan props).
+- Hierarki: akar Dashboard → seksi (`nav.*`) → entitas deep (`subjects/:id`, `flashcard/review`).
+- `maxItems` default 4; bila lebih, segmen tengah dikolaps jadi "…" (non-link, `breadcrumb.more`).
+- Crumb terakhir = halaman aktif: `span` non-link + `aria-current="page"`, font-medium.
+- Icon crumb opsional 13px `text-primary-light`; separator `chevron_right` `text-text-muted/50`.
+- Sembunyi di layar <640px (`hidden sm:flex`).
+### Back Navigation
+- Hook: `src/hooks/useBackNavigation.js` — `resolveBackDestination()` adalah satu-satunya sumber
+  logika tujuan back; prioritas: `?from=` param → `document.referrer` (same-origin) → route induk → fallback `/dashboard`.
+- Komponen: `src/components/layout/BackButton.jsx` — icon `arrow_back`, label dinamis
+  `backButton.to` ("Kembali ke {{page}}"), sembunyi otomatis bila tujuan = fallback
+  (kecuali `label` kustom di-override). Posisi: kiri atas header halaman.
+- Jangan pakai `window.history.back()`; selalu lewat hook/komponen ini.
+### Keyboard Shortcuts
+- Modal: `src/components/KeyboardShortcuts.jsx` (Radix `Modal`, grid 2 kolom).
+- `?` toggle; ⌘K / ⌘/ buka command search; ⌘N chat baru; `G` lalu `D`/`C` navigasi cepat;
+  `1-9` quick nav (dashboard, chat, subjects, materi, notebook, flashcard, quiz, exam, study-plan).
+- Shortcut nonaktif saat fokus di input/textarea/contenteditable (kecuali kombinasi ⌘/Ctrl).
+### Mobile Drawer (ContextSidebar)
+- `useSwipeGesture`: swipe kanan dari tepi kiri layar (<24px, `window` listener, mobile saja)
+  buka drawer; swipe kiri di dalam drawer tutup.
+- Threshold jarak 50px DAN kecepatan ≥500px/s; gerakan dominan vertikal diabaikan
+  (`touch-action: pan-y` agar scroll tetap mulus).
+### Settings
+- Quick settings (bahasa + notifikasi + link pengaturan lengkap) di TopBar;
+  full settings tetap di IconRail bawah (nav.settings).
+
+## 12. Agent Prompt Guide
 Warna cepat: violet `#7C3AED`, canvas `#0E1520`, card `#1A2332`, border `#263349`,
 text `#EDF1F7`. Komponen: `import { Button, Card, Modal, Input, Badge } from '@/components/ui'`.
 Prompt contoh: "Buat kartu pakai `<Card hoverable>` dengan `<Button variant=primary>`,

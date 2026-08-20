@@ -121,7 +121,8 @@
     "empty": "Belum ada data",
     "yes": "Ya",
     "no": "Tidak",
-    "undo": "Undo"
+    "undo": "Undo",
+    "notifications": "Notifikasi"
   },
   "dashboard": {
     "greetingMorning": "Selamat pagi",
@@ -820,7 +821,10 @@
       "appName": "Kabayan AI",
       "version": "Versi",
       "description": "Ruang belajar cerdas berbasis AI: materi, chat, flashcard, quiz, dan simulasi ujian."
-    }
+    },
+    "quickSettings": "Pengaturan Cepat",
+    "notifications": "Notifikasi",
+    "fullSettings": "Pengaturan Lengkap"
   },
   "studyRoute": {
     "title": "Rekomendasi Belajar",

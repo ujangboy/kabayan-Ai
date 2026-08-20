@@ -57,7 +57,7 @@ function PendingBanner({ t }) {
 }
 
 export default function AppLayout() {
-  const { searchOpen, setSidebarOpen } = useAppStore();
+  const { searchOpen, setSidebarOpen, setLastRoute } = useAppStore();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
@@ -75,6 +75,11 @@ export default function AppLayout() {
   useEffect(() => {
     setSidebarOpen(false);
   }, [location.pathname, setSidebarOpen]);
+
+  // Catat halaman terakhir dikunjungi (persisted, tanpa auto-redirect).
+  useEffect(() => {
+    setLastRoute(location.pathname);
+  }, [location.pathname, setLastRoute]);
 
   // Sinkronkan bahasa dari backend saat aplikasi pertama dibuka.
   useEffect(() => {

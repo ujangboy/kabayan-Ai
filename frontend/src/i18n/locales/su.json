@@ -114,7 +114,8 @@
     "empty": "Can aya data",
     "yes": "Enya",
     "no": "Henteu",
-    "undo": "Batalkeun"
+    "undo": "Batalkeun",
+    "notifications": "Notifikasi"
   },
   "dashboard": {
     "greetingMorning": "Wilujeng énjing",
@@ -809,7 +810,10 @@
       "appName": "Kabayan AI",
       "version": "Vérsi",
       "description": "Rohang diajar pinter dumasar AI: materi, chat, flashcard, kuis, sareng simulasi ujian."
-    }
+    },
+    "quickSettings": "Pangaturan Gancang",
+    "notifications": "Notifikasi",
+    "fullSettings": "Pangaturan Lengkap"
   },
   "studyRoute": {
     "title": "Rekomendasi Diajar",

@@ -162,6 +162,7 @@ export const useAppStore = create(
       sidebarOpen: true,
       searchOpen: false,
       shortcutsOpen: false,
+      lastRoute: null,
       pendingOperations: new Set(),
       addPendingOperation: (id) => set((s) => {
         if (id == null) return {};
@@ -188,12 +189,16 @@ export const useAppStore = create(
       setSidebarOpen: (v) => set({ sidebarOpen: v }),
       setSearchOpen: (v) => set({ searchOpen: v }),
       setShortcutsOpen: (v) => set({ shortcutsOpen: v }),
+      setLastRoute: (route) => set({ lastRoute: route }),
     }),
     {
       name: 'kabayan-app-store',
       // Persist hanya preferensi navigasi — state operasional (pending ops, modal)
       // tidak boleh disimpan karena Set/timing-sensitive.
-      partialize: (state) => ({ sidebarOpen: state.sidebarOpen }),
+      partialize: (state) => ({
+        sidebarOpen: state.sidebarOpen,
+        lastRoute: state.lastRoute,
+      }),
     }
   )
 );

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ICONS } from '@/lib/icons';
@@ -43,6 +44,7 @@ export default function TopBar() {
   };
 
   const initial = (profile?.name || profile?.username || 'U').charAt(0).toUpperCase();
+  const [notifOn, setNotifOn] = useState(true);
 
   return (
     <header className="divider-gradient-b relative z-10 flex h-14 shrink-0 items-center gap-3 bg-surface/80 px-4 backdrop-blur-md">
@@ -67,23 +69,26 @@ export default function TopBar() {
 
       <div className="flex-1" />
 
-      {/* Language switcher */}
+      {/* Quick settings (Option B PRD-01): bahasa + notifikasi + link settings penuh */}
       <DropdownMenu.Root>
         <DropdownMenu.Trigger asChild>
           <button
             className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-card hover:text-text"
-            title={t('settings.tabs.language')}
+            title={t('settings.quickSettings')}
+            aria-label={t('settings.quickSettings')}
           >
-            <Icon name={ICONS.ui.globe} size={16} />
-            <span className="hidden sm:inline text-xs font-semibold uppercase">{currentLang}</span>
+            <Icon name={ICONS.nav.settings} size={18} />
           </button>
         </DropdownMenu.Trigger>
         <DropdownMenu.Portal>
           <DropdownMenu.Content
             sideOffset={6}
             align="end"
-            className="z-50 w-44 rounded-lg border border-white/10 bg-slate-900/95 p-1 shadow-glass-lg backdrop-blur-md"
+            className="z-50 w-52 rounded-lg border border-white/10 bg-slate-900/95 p-1 shadow-glass-lg backdrop-blur-md"
           >
+            <p className="px-3 py-1.5 text-xs font-medium uppercase tracking-wider text-text-muted">
+              {t('settings.tabs.language')}
+            </p>
             {LANGS.map((l) => (
               <DropdownMenu.Item
                 key={l.code}
@@ -99,6 +104,32 @@ export default function TopBar() {
                 {currentLang === l.code && <Icon name={ICONS.status.check} size={14} />}
               </DropdownMenu.Item>
             ))}
+
+            <DropdownMenu.Separator className="my-1 h-px bg-border" />
+
+            <p className="px-3 py-1.5 text-xs font-medium uppercase tracking-wider text-text-muted">
+              {t('common.notifications')}
+            </p>
+            <DropdownMenu.Item
+              onSelect={(e) => {
+                e.preventDefault();
+                setNotifOn((v) => !v);
+              }}
+              className="flex cursor-pointer items-center justify-between rounded-md px-3 py-2 text-sm outline-none transition-colors text-text-secondary hover:bg-background"
+            >
+              <span>{t('settings.notifications')}</span>
+              <Icon name={notifOn ? ICONS.status.check : ICONS.actions.close} size={14} />
+            </DropdownMenu.Item>
+
+            <DropdownMenu.Separator className="my-1 h-px bg-border" />
+
+            <DropdownMenu.Item
+              onSelect={() => navigate('/settings')}
+              className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm outline-none transition-colors text-text-secondary hover:bg-background"
+            >
+              <Icon name={ICONS.nav.settings} size={15} />
+              {t('settings.fullSettings')}
+            </DropdownMenu.Item>
           </DropdownMenu.Content>
         </DropdownMenu.Portal>
       </DropdownMenu.Root>
