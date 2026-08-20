@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { X } from '@/icons';
+import { X, Check } from '@/icons';
 import { Tooltip } from '@/components/ui';
 import { useChatStore } from '@/store';
 import { subjectAPI } from '@/services/api';
@@ -51,7 +51,7 @@ export default function ChatHeader({ chat, isCurrentChatStreaming }) {
               onClick={clearSelectedDocs}
               className="px-2.5 py-1.5 rounded-full bg-base text-text-muted text-xs font-medium hover:text-text transition-colors"
             >
-              {selectedDocs.length} doc{selectedDocs.length > 1 ? 's' : ''} ✓
+              {selectedDocs.length} doc{selectedDocs.length > 1 ? 's' : ''} <Check size={11} className="inline text-success" />
             </button>
           </Tooltip>
         )}

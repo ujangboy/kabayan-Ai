@@ -14,6 +14,25 @@
   :root {
     --scrollbar-width: 6px;
     --scrollbar-color: rgba(255, 255, 255, 0.1);
+    color-scheme: dark;
+  }
+
+  /* Native dropdown (option) — dark theme agar teks terbaca.
+     Tanpa ini browser memakai warna default putih saat list terbuka. */
+  select option {
+    background-color: #0B111B;
+    color: #E2E8F0;
+  }
+  select option:hover,
+  select option:checked {
+    background-color: rgba(124, 58, 237, 0.25);
+    color: #FFFFFF;
+  }
+
+  input,
+  select,
+  textarea {
+    color-scheme: dark;
   }
 
   html {

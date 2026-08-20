@@ -7,6 +7,7 @@ import {
   Loader2, BarChart2, BookOpen, Calendar, RotateCcw, CheckCircle, XCircle,
   ChevronDown, Lightbulb, FileText, Check, Award, Clock, TrendingUp, Target,
   AlertTriangle, AlertCircle, RefreshCw, ArrowRight, ExternalLink, PenLine, X,
+  TrendingDown, Minus,
 } from '@/icons';
 import { examAPI, sessionsAPI } from '@/services/api';
 import { cn } from '@/utils';
@@ -533,8 +534,8 @@ function InlinePractice({ questions, topic, onComplete, onClose, onRetryTopic })
           {q.difficulty && <Chip label={q.difficulty} size="xs" color={q.difficulty === 'sulit' ? 'danger' : q.difficulty === 'menengah' ? 'warning' : 'success'} />}
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-[10px] text-success">{correctCount}✓</span>
-          <span className="text-[10px] text-danger">{wrongCount}✗</span>
+          <span className="text-[10px] text-success flex items-center gap-0.5"><CheckCircle size={10} />{correctCount}</span>
+          <span className="text-[10px] text-danger flex items-center gap-0.5"><XCircle size={10} />{wrongCount}</span>
           <button type="button" onClick={onClose} className="text-[10px] text-text-muted hover:text-text">Tutup</button>
         </div>
       </div>
@@ -825,7 +826,7 @@ function StudyPlanTab({ plan, sessionId, onToggle, onPlanSaved,
                                      hover:brightness-110 transition-all shrink-0 shadow-sm disabled:opacity-50 flex items-center gap-1">
                           {loadingItemId === item.id
                             ? <><Loader2 size={9} className="animate-spin" /> Memuat...</>
-                            : 'Mulai Latihan →'}
+                            : <><ArrowRight size={9} /> Mulai Latihan</>}
                         </button>
                       )}
                     </div>
@@ -900,7 +901,7 @@ function AttemptsTab({ attempts }) {
                 {delta !== null && (
                   <span className={cn('text-xs font-semibold flex items-center gap-0.5',
                     delta > 0 ? 'text-success' : delta < 0 ? 'text-danger' : 'text-text-muted')}>
-                    {delta > 0 ? <TrendingUp size={10}/> : delta < 0 ? '↓' : '='}
+                    {delta > 0 ? <TrendingUp size={10}/> : delta < 0 ? <TrendingDown size={10}/> : <Minus size={10}/>}
                     {delta > 0 ? `+${delta}` : delta}
                   </span>
                 )}

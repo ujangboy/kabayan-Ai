@@ -14,9 +14,9 @@ export default function ChatEmptyState({ tutorMode }) {
       >
         <Bot size={28} />
       </div>
-      <h3 className="text-lg font-semibold text-text">{t('chat.greetingTitle')}</h3>
-      <p className="text-sm text-text-muted mt-1 max-w-md">{t('chat.greetingSubtitle')}</p>
-      <p className="text-xs text-text-muted mt-4">{t('chat.greetingHint')}</p>
+      <h3 className="text-lg font-semibold text-text">{t('chat.greetingTitle', 'Halo! Saya Kabayan AI')}</h3>
+      <p className="text-sm text-text-muted mt-1 max-w-md">{t('chat.greetingSubtitle', 'Tanyakan apa saja seputar materi kuliahmu — saya siap membantu menjelaskan, meringkas, dan berlatih soal.')}</p>
+      <p className="text-xs text-text-muted mt-4">{t('chat.greetingHint', 'Mulai dengan mengetik pertanyaan di bawah atau pilih aksi cepat lewat ikon kilat.')}</p>
     </div>
   );
 }
