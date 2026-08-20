@@ -2,11 +2,11 @@ import { useState, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { HelpCircle, Play, Zap, Trophy, Trash2, Clock, Calendar, FileText } from '@/icons';
+import { HelpCircle, Play, Zap, Trophy, Trash2, Clock, Calendar, FileText, Brain } from '@/icons';
 import { quizAPI, subjectAPI } from '@/services/api';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { formatDate, formatTimeOnly } from '@/utils';
-import { Tooltip, EmptyState, Select, Skeleton } from '@/components/ui';
+import { Tooltip, EmptyState, Select, Skeleton, SubjectBadge } from '@/components/ui';
 import { useUiStore } from '@/store';
 import { usePageState } from '@/hooks/usePageState';
 import { useToast } from '@/components/Toast';
@@ -188,105 +188,108 @@ export default function QuizPage() {
               />
             </div>
           ) : (
-            quizzes.map((quiz) => (
-              <motion.div
-                key={quiz.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="card-base card-hoverable p-5 flex flex-col relative overflow-hidden"
-              >
-                <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-purple-500/60 via-purple-500/20 to-transparent" />
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1 min-w-0">
-                    {/* Nama materi / mata kuliah */}
-                    <div className="flex items-center gap-1 mb-1">
-                      <span className="text-[10px] font-semibold text-accent-blue uppercase tracking-wider truncate">
-                        {quiz.subject?.name || t('quiz.genericSubject')}
-                      </span>
-                      {quiz.question_type && (
-                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-card border border-border text-text-secondary shrink-0">
-                          {QTYPE_LABEL[quiz.question_type] ? t(QTYPE_LABEL[quiz.question_type]) : quiz.question_type}
+            quizzes.map((quiz, idx) => {
+              const qProgress = Math.min(100, quiz.score ?? 0);
+              const stats = [
+                { icon: HelpCircle, value: quiz.question_count || 0, label: t('quiz.questionCount', { count: 1 }), color: 'text-accent-teal' },
+                { icon: Trophy, value: quiz.score ?? '—', label: t('quiz.scoreLabel', 'Skor'), color: 'text-warning' },
+                { icon: Brain, value: quiz.attempt_count || 0, label: t('quiz.playedLabel', 'Dimainkan'), color: 'text-accent-purple' },
+                { icon: Clock, value: quiz.time_taken != null ? formatDuration(quiz.time_taken, t) : '—', label: t('quiz.timeLabel', 'Waktu'), color: 'text-accent-blue' },
+              ];
+              return (
+                <motion.div
+                  key={quiz.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.05 }}
+                  className="bg-slate-900/70 border border-slate-800 hover:border-purple-500/50 rounded-2xl p-5 flex flex-col justify-between gap-3 transition-all shadow-md"
+                >
+                  {/* Header — badge + title + badges + aksi */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-start gap-3 min-w-0">
+                      <SubjectBadge name={quiz.subject?.name || quiz.title} tone={idx} size="sm" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[10px] font-semibold text-accent-blue uppercase tracking-wider truncate">
+                          {quiz.subject?.name || t('quiz.genericSubject')}
+                        </p>
+                        <h3 className="font-semibold text-text text-sm line-clamp-2">
+                          {quiz.title || `Quiz #${quiz.id}`}
+                        </h3>
+                        <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                          {quiz.question_type && (
+                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-white/[0.04] border border-white/[0.08] text-text-secondary shrink-0">
+                              {QTYPE_LABEL[quiz.question_type] ? t(QTYPE_LABEL[quiz.question_type]) : quiz.question_type}
+                            </span>
+                          )}
+                          {quiz.difficulty && DIFFICULTY_BADGE[quiz.difficulty] && (
+                            <span className={`text-[9px] px-1.5 py-0.5 rounded border shrink-0 font-medium ${DIFFICULTY_BADGE[quiz.difficulty].cls}`}>
+                              {t(DIFFICULTY_BADGE[quiz.difficulty].label)}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <Tooltip label={t('common.delete')}>
+                      <button
+                        onClick={() => handleDelete(quiz.id)}
+                        aria-label={t('common.delete')}
+                        className="p-1 text-text-muted hover:text-danger transition-colors shrink-0"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </Tooltip>
+                  </div>
+
+                  {/* Body — grid mini metrik */}
+                  <div className="grid grid-cols-4 gap-1.5">
+                    {stats.map(({ icon: Icon, value, label, color }) => (
+                      <div key={label} className="rounded-lg bg-white/[0.03] border border-white/[0.06] py-2 px-1 text-center">
+                        <Icon size={12} className={`mx-auto mb-0.5 ${color}`} />
+                        <p className="text-sm font-bold text-text leading-tight truncate">{value}</p>
+                        <p className="text-[9px] text-text-muted uppercase tracking-wide truncate">{label}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Nama materi yang digunakan */}
+                  {(quiz.material_names || []).length > 0 && (
+                    <div className="flex gap-1 flex-wrap">
+                      {(quiz.material_names || []).slice(0, 3).map((name, i) => (
+                        <span key={i} className="inline-flex items-center gap-0.5 text-[10px] px-2 py-0.5 rounded bg-accent-blue/10 text-accent-blue border border-accent-blue/20 truncate max-w-[220px]">
+                          <FileText size={8} className="shrink-0" />{name}
                         </span>
-                      )}
-                      {quiz.difficulty && DIFFICULTY_BADGE[quiz.difficulty] && (
-                        <span className={`text-[9px] px-1.5 py-0.5 rounded border shrink-0 font-medium ${DIFFICULTY_BADGE[quiz.difficulty].cls}`}>
-                          {t(DIFFICULTY_BADGE[quiz.difficulty].label)}
-                        </span>
+                      ))}
+                      {(quiz.material_names || []).length > 3 && (
+                        <span className="text-[10px] text-text-muted">{t('quiz.moreMaterials', { count: quiz.material_names.length - 3 })}</span>
                       )}
                     </div>
-                    <h3 className="font-semibold text-text text-sm line-clamp-2">
-                      {quiz.title || `Quiz #${quiz.id}`}
-                    </h3>
-                  </div>
-                  <Tooltip label={t('common.delete')}>
-                    <button
-                      onClick={() => handleDelete(quiz.id)}
-                      aria-label={t('common.delete')}
-                      className="p-1 text-text-muted hover:text-danger transition-colors shrink-0 ml-2"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </Tooltip>
-                </div>
-
-                <div className="flex items-center gap-3 mb-2 text-xs text-text-secondary flex-wrap">
-                  <span className="flex items-center gap-1">
-                    <HelpCircle size={12} />
-                    {t('quiz.questionCount', { count: quiz.question_count || 0 })}
-                  </span>
-                  {quiz.score !== null && quiz.score !== undefined && (
-                    <span className="flex items-center gap-1 text-warning">
-                      <Trophy size={12} />
-                      {quiz.score}
-                    </span>
                   )}
-                  {(quiz.attempt_count || 0) > 0 && (
-                    <span className="text-[10px] text-text-muted">{t('quiz.playedCount', { count: quiz.attempt_count })}</span>
-                  )}
-                  {quiz.time_taken != null && (
-                    <span className="flex items-center gap-1 text-[10px] text-text-muted">
-                      <Clock size={9} />
-                      {formatDuration(quiz.time_taken, t)}
-                    </span>
-                  )}
-                </div>
 
-                {/* Nama materi yang digunakan */}
-                {(quiz.material_names || []).length > 0 && (
-                  <div className="flex gap-1 flex-wrap mb-2">
-                    {(quiz.material_names || []).slice(0, 3).map((name, i) => (
-                      <span key={i} className="inline-flex items-center gap-0.5 text-[10px] px-2 py-0.5 rounded bg-accent-blue/10 text-accent-blue border border-accent-blue/20 truncate max-w-[220px]">
-                        <FileText size={8} className="shrink-0" />{name}
-                      </span>
-                    ))}
-                    {(quiz.material_names || []).length > 3 && (
-                      <span className="text-[10px] text-text-muted">{t('quiz.moreMaterials', { count: quiz.material_names.length - 3 })}</span>
-                    )}
+                  {/* Footer — progress bar + timestamp */}
+                  <div className="space-y-2">
+                    <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+                      <div className="h-full rounded-full bg-gradient-primary transition-all" style={{ width: `${qProgress}%` }} />
+                    </div>
+                    <div className="flex items-center justify-between text-[10px] text-text-muted">
+                      {quiz.created_at ? (
+                        <div className="flex items-center gap-3">
+                          <span className="flex items-center gap-1"><Calendar size={9} />{formatDate(quiz.created_at)}</span>
+                          <span className="flex items-center gap-1"><Clock size={9} />{formatTimeOnly(quiz.created_at)}</span>
+                        </div>
+                      ) : <span />}
+                      <span className="font-semibold">{qProgress}%</span>
+                    </div>
                   </div>
-                )}
 
-                {/* Tanggal + waktu dibuat */}
-                {quiz.created_at && (
-                  <div className="flex items-center gap-3 mb-3 text-[10px] text-text-muted">
-                    <span className="flex items-center gap-1">
-                      <Calendar size={9} />
-                      {formatDate(quiz.created_at)}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Clock size={9} />
-                      {formatTimeOnly(quiz.created_at)}
-                    </span>
-                  </div>
-                )}
-
-                <button
-                  onClick={() => handleStartQuiz(quiz.id)}
-                  className="btn-primary w-full justify-center text-xs mt-auto"
-                >
-                  <Play size={12} /> {quiz.score != null ? t('quiz.playAgain') : t('quiz.start')}
-                </button>
-              </motion.div>
-            ))
+                  <button
+                    onClick={() => handleStartQuiz(quiz.id)}
+                    className="btn-primary w-full justify-center text-xs mt-auto"
+                  >
+                    <Play size={12} /> {quiz.score != null ? t('quiz.playAgain') : t('quiz.start')}
+                  </button>
+                </motion.div>
+              );
+            })
           )}
         </div>
 
