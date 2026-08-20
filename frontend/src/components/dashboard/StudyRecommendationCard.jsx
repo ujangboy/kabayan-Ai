@@ -15,7 +15,23 @@ export default function StudyRecommendationCard({ route, subjectId }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const enterFocus = useFocusStore((s) => s.enterFocus);
-  if (!route?.recommendations) return null;
+  if (!route?.recommendations) {
+    return (
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-2xl p-5">
+        <div className="flex items-center gap-2 mb-3">
+          <Zap size={16} className="text-primary" />
+          <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('studyRoute.title')}</h2>
+        </div>
+        <div className="text-center py-6">
+          <Zap size={30} className="mx-auto mb-3 text-primary/40" />
+          <p className="text-xs font-semibold text-text mb-1">{t('studyRoute.emptyTitle', 'Rekomendasi belajar AI')}</p>
+          <p className="text-[11px] text-text-muted max-w-[240px] mx-auto">
+            {t('studyRoute.empty', 'Kerjakan quiz atau latihan dulu — AI akan menyusun rute belajar terbaik untukmu.')}
+          </p>
+        </div>
+      </motion.div>
+    );
+  }
 
   const meta = STUDY_MODALITY_META(t);
   const primaryModality = route.primary?.modality;

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Eye, Trash2 } from '@/icons';
+import { FileText, Eye, Trash2, Search, Plus, HelpCircle } from '@/icons';
 import { useTranslation } from 'react-i18next';
 import { materiAPI } from '@/services/api';
 import { useQueryClient } from '@tanstack/react-query';
@@ -15,6 +15,7 @@ export default function MaterialsTable({ materials, subjectId }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const [query, setQuery] = useState('');
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -33,15 +34,41 @@ export default function MaterialsTable({ materials, subjectId }) {
     }
   };
 
+  const allMaterials = materials || [];
+  const filtered = query.trim()
+    ? allMaterials.filter((m) => (m.filename || '').toLowerCase().includes(query.trim().toLowerCase()))
+    : allMaterials;
+
   return (
     <>
-      <div className="card-base overflow-x-auto p-0">
-        <div className="flex items-center gap-2 px-4 py-3 divider-gradient-b relative">
-          <FileText size={14} className="text-text-secondary" />
-          <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">
-            {t('subjectDashboard.materialsTitle', { count: materials?.length ?? 0 })}
-          </h2>
+      <div className="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-2xl overflow-x-auto">
+        {/* Header — title + search + add */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 divider-gradient-b relative">
+          <div className="flex items-center gap-2">
+            <FileText size={14} className="text-text-secondary" />
+            <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">
+              {t('subjectDashboard.materialsTitle', { count: allMaterials.length })}
+            </h2>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-text-muted" />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder={t('subjectDashboard.searchMaterials', 'Cari materi...')}
+                className="w-40 sm:w-48 bg-white/[0.03] border border-white/[0.08] rounded-lg pl-7 pr-2 py-1.5 text-xs text-text placeholder:text-text-muted focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all"
+              />
+            </div>
+            <button
+              onClick={() => navigate(`/materi?subject_id=${subjectId}`)}
+              className="btn-primary px-3 py-1.5 rounded-lg text-xs"
+            >
+              <Plus size={12} /> {t('subjectDashboard.addMaterial', 'Tambah')}
+            </button>
+          </div>
         </div>
+
         <table className="w-full text-sm">
           <thead>
             <tr className="tr-divider text-[10px] text-text-muted uppercase tracking-wider">
@@ -54,18 +81,24 @@ export default function MaterialsTable({ materials, subjectId }) {
             </tr>
           </thead>
           <tbody>
-            {(!materials || materials.length === 0) ? (
+            {filtered.length === 0 ? (
               <tr>
-                <td colSpan={6} className="text-center py-10 text-text-muted">{t('subjectDashboard.materialsEmpty')}</td>
+                <td colSpan={6} className="text-center py-10">
+                  <p className="text-sm text-text-muted">
+                    {allMaterials.length === 0
+                      ? t('subjectDashboard.materialsEmpty')
+                      : t('subjectDashboard.materialsNoMatch', 'Tidak ada materi yang cocok')}
+                  </p>
+                </td>
               </tr>
             ) : (
-              materials.map((m, idx) => (
+              filtered.map((m, idx) => (
                 <tr key={m.id} className="tr-divider last:border-0 hover:bg-background/50 transition-colors">
                   <td className="px-4 py-3 text-text-muted text-xs w-8">{idx + 1}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       <FileTypeIcon type={(m.filename || '').split('.').pop()?.toUpperCase() || m.material_type} className="text-lg text-text-muted" />
-                      <span className="text-text font-medium truncate max-w-[300px]" title={m.filename}>{m.filename}</span>
+                      <span className="text-text font-medium truncate max-w-[220px]" title={m.filename}>{m.filename}</span>
                     </div>
                   </td>
                   <td className="px-4 py-3 text-text-secondary text-xs">{(m.filename || '').split('.').pop()?.toUpperCase() || m.material_type}</td>
@@ -84,6 +117,15 @@ export default function MaterialsTable({ materials, subjectId }) {
                           className="p-1.5 rounded-lg text-text-muted hover:text-accent-blue hover:bg-accent-blue/10 transition-colors"
                         >
                           <Eye size={13} />
+                        </button>
+                      </Tooltip>
+                      <Tooltip label={t('subjectDashboard.quizMaterial', 'Quiz dari materi ini')}>
+                        <button
+                          onClick={() => navigate(`/quiz?subject_id=${subjectId}`)}
+                          aria-label={t('subjectDashboard.quizMaterial', 'Quiz dari materi ini')}
+                          className="p-1.5 rounded-lg text-text-muted hover:text-accent-teal hover:bg-accent-teal/10 transition-colors"
+                        >
+                          <HelpCircle size={13} />
                         </button>
                       </Tooltip>
                       <Tooltip label={t('subjectDashboard.deleteMaterial', 'Hapus')}>

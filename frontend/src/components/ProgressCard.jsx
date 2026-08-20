@@ -12,7 +12,23 @@ const DIRECTION_META = (t) => ({
 
 export default function ProgressCard({ progress }) {
   const { t } = useTranslation();
-  if (!progress) return null;
+  if (!progress) {
+    return (
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-2xl p-5">
+        <div className="flex items-center gap-2 mb-3">
+          <Flame size={16} className="text-warning" />
+          <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('studyProgress.title')}</h2>
+        </div>
+        <div className="text-center py-6">
+          <Flame size={30} className="mx-auto mb-3 text-warning/40" />
+          <p className="text-xs font-semibold text-text mb-1">{t('studyProgress.emptyTitle', 'Mulai bangun streak belajarmu')}</p>
+          <p className="text-[11px] text-text-muted max-w-[240px] mx-auto">
+            {t('studyProgress.empty', 'Kerjakan quiz, flashcard, atau simulasi ujian untuk mengisi data konsistensi.')}
+          </p>
+        </div>
+      </motion.div>
+    );
+  }
 
   const streak = progress.streak || {};
   const trend = progress.mastery_trend || {};
