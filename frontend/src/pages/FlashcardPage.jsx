@@ -214,10 +214,11 @@ export default function FlashcardPage() {
               <EmptyState title={t('flashcard.noDeckForSubject')} />
             </div>
           ) : (
-            filteredGroups.map((group) => (
+            filteredGroups.map((group, idx) => (
               <BatchFlashcardCard
                 key={group.batch_id}
                 group={group}
+                tone={idx}
                 onStart={() => setActiveBatchId(group.batch_id)}
                 onReview={() => navigate(`/flashcard/review?subject_id=${group.subject.id}`)}
                 onHistory={() => setHistoryBatchId(group.batch_id)}

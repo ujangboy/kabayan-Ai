@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import { Plus, Trash2, FileText, HelpCircle, CreditCard, Trophy, Calendar, Clock, BookOpen } from '@/icons';
 import { subjectAPI } from '@/services/api';
 import { formatDate, formatTimeOnly } from '@/utils';
-import { Tooltip, Modal, Button, Input, Textarea, Select, EmptyState, Skeleton } from '@/components/ui';
+import { Tooltip, Modal, Button, Input, Textarea, Select, EmptyState, Skeleton, SubjectBadge } from '@/components/ui';
 import { useToast } from '@/components/Toast';
 
 export default function SubjectsPage() {
@@ -105,64 +105,81 @@ export default function SubjectsPage() {
               <EmptyState title={t('subjects.noMatch')} />
             </div>
           ) : (
-            filteredSubjects.map((s, idx) => (
-              <Link key={s.id} to={`/subjects/${s.id}`} className="group block">
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.05 }}
-                  className="card-base card-hoverable group flex flex-col relative overflow-hidden hover:border-primary/40"
-                >
-                  <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-purple-500/60 via-purple-500/20 to-transparent" />
-                  <div className="flex justify-between items-start mb-2 pl-2 pt-1">
-                    <h3 className="font-semibold text-text text-lg">{s.name}</h3>
-                    <Tooltip label={t('common.delete')}>
-                      <button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          handleDelete(s.id);
-                        }}
-                        aria-label={t('common.delete')}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-text-muted hover:text-danger"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </Tooltip>
-                  </div>
-                  <div className="space-y-1 text-sm text-text-secondary pl-2 mb-3 flex-1">
-                    {s.semester && <p><span className="text-text-muted text-xs">{t('subjects.semesterLabel')}:</span> {s.semester}</p>}
-                    {s.lecturer && <p><span className="text-text-muted text-xs">{t('subjects.lecturerLabel')}:</span> {s.lecturer}</p>}
-                    {s.description && <p className="text-xs line-clamp-2 mt-2 italic">"{s.description}"</p>}
-                  </div>
-                  {/* Tanggal + waktu dibuat */}
-                  {s.created_at && (
-                    <div className="flex items-center gap-3 pl-2 mb-3 text-[10px] text-text-muted">
-                      <span className="flex items-center gap-1"><Calendar size={9} />{formatDate(s.created_at)}</span>
-                      <span className="flex items-center gap-1"><Clock size={9} />{formatTimeOnly(s.created_at)}</span>
+            filteredSubjects.map((s, idx) => {
+              const progress = Math.min(100, s.best_score ?? 0);
+              const meta = [
+                { icon: Trophy,     value: s.best_score ?? '—', label: t('subjects.statScore'),      color: 'text-warning' },
+                { icon: HelpCircle, value: s.total_quizzes ?? 0,  label: t('subjects.statQuizzes'),    color: 'text-accent-teal' },
+                { icon: CreditCard, value: s.total_flashcards ?? 0, label: t('subjects.statFlashcards'), color: 'text-accent-purple' },
+                { icon: FileText,   value: s.total_materials ?? 0, label: t('subjects.statMaterials'),  color: 'text-accent-blue' },
+              ];
+              return (
+                <Link key={s.id} to={`/subjects/${s.id}`} className="group block">
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.05 }}
+                    className="bg-slate-900/70 border border-slate-800 hover:border-purple-500/50 rounded-2xl p-5 flex flex-col justify-between gap-4 transition-all shadow-md group h-full"
+                  >
+                    {/* Header — badge inisial + nama + aksi */}
+                    <div className="flex items-start gap-3">
+                      <SubjectBadge name={s.name} tone={idx} />
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-text truncate">{s.name}</h3>
+                        <p className="text-xs text-text-muted truncate">
+                          {[s.semester && `${t('subjects.semesterLabel')} ${s.semester}`, s.lecturer].filter(Boolean).join(' • ')}
+                        </p>
+                      </div>
+                      <Tooltip label={t('common.delete')}>
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleDelete(s.id);
+                          }}
+                          aria-label={t('common.delete')}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-text-muted hover:text-danger"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </Tooltip>
                     </div>
-                  )}
-                  <div className="grid grid-cols-4 gap-1 px-2 pb-3 text-center">
-                    <div className="rounded-lg bg-background/60 py-1.5 px-1">
-                      <p className="text-sm font-bold text-text flex items-center justify-center gap-1"><Trophy size={11} className="text-warning" />{s.best_score ?? '—'}</p>
-                      <p className="text-[9px] text-text-muted uppercase tracking-wide">{t('subjects.statScore')}</p>
+
+                    {/* Deskripsi */}
+                    {s.description && (
+                      <p className="text-xs text-text-secondary line-clamp-2 italic">"{s.description}"</p>
+                    )}
+
+                    {/* Body — grid mini metrik */}
+                    <div className="grid grid-cols-4 gap-1.5">
+                      {meta.map(({ icon: Icon, value, label, color }) => (
+                        <div key={label} className="rounded-lg bg-white/[0.03] border border-white/[0.06] py-2 px-1 text-center">
+                          <Icon size={12} className={`mx-auto mb-0.5 ${color}`} />
+                          <p className="text-sm font-bold text-text leading-tight">{value}</p>
+                          <p className="text-[9px] text-text-muted uppercase tracking-wide">{label}</p>
+                        </div>
+                      ))}
                     </div>
-                    <div className="rounded-lg bg-background/60 py-1.5 px-1">
-                      <p className="text-sm font-bold text-text flex items-center justify-center gap-1"><HelpCircle size={11} className="text-accent-teal" />{s.total_quizzes ?? 0}</p>
-                      <p className="text-[9px] text-text-muted uppercase tracking-wide">{t('subjects.statQuizzes')}</p>
+
+                    {/* Footer — progress bar tipis + timestamp */}
+                    <div className="space-y-2">
+                      <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+                        <div className="h-full rounded-full bg-gradient-primary transition-all" style={{ width: `${progress}%` }} />
+                      </div>
+                      <div className="flex items-center justify-between text-[10px] text-text-muted">
+                        {s.created_at ? (
+                          <div className="flex items-center gap-3">
+                            <span className="flex items-center gap-1"><Calendar size={9} />{formatDate(s.created_at)}</span>
+                            <span className="flex items-center gap-1"><Clock size={9} />{formatTimeOnly(s.created_at)}</span>
+                          </div>
+                        ) : <span />}
+                        <span className="font-semibold">{progress}%</span>
+                      </div>
                     </div>
-                    <div className="rounded-lg bg-background/60 py-1.5 px-1">
-                      <p className="text-sm font-bold text-text flex items-center justify-center gap-1"><CreditCard size={11} className="text-accent-purple" />{s.total_flashcards ?? 0}</p>
-                      <p className="text-[9px] text-text-muted uppercase tracking-wide">{t('subjects.statFlashcards')}</p>
-                    </div>
-                    <div className="rounded-lg bg-background/60 py-1.5 px-1">
-                      <p className="text-sm font-bold text-text flex items-center justify-center gap-1"><FileText size={11} className="text-accent-blue" />{s.total_materials ?? 0}</p>
-                      <p className="text-[9px] text-text-muted uppercase tracking-wide">{t('subjects.statMaterials')}</p>
-                    </div>
-                  </div>
-                </motion.div>
-              </Link>
-            ))
+                  </motion.div>
+                </Link>
+              );
+            })
           )}
         </div>
 
