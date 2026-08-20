@@ -213,9 +213,9 @@ export default function SubjectDashboardPage() {
           <StatCard icon={TrendingUp} label={t('subjectDashboard.statAvgScore')}     value={subject.avg_score}        color="text-success" suffix={subject.avg_score != null ? '/100' : ''} />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-          {/* Left column */}
-          <div className="space-y-5">
+        <div className="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-5 items-start">
+          {/* Left column — main workspace (70%) */}
+          <div className="space-y-5 min-w-0">
             <MasteryProfileCard profile={learningProfile} subject={subject} />
             <TopicProgressCard topicProgress={topicProgress} />
 
@@ -241,8 +241,8 @@ export default function SubjectDashboardPage() {
             )}
           </div>
 
-          {/* Right column */}
-          <div className="space-y-5">
+          {/* Right column — side metrics (30%) */}
+          <div className="space-y-5 min-w-0">
             <DailyPlanCard subjectId={subjectId} />
 
             {isRouteError ? (

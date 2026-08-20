@@ -46,7 +46,7 @@ export function Modal({
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
+                className="fixed inset-0 z-50 bg-black/70 backdrop-blur-md"
               />
             </Dialog.Overlay>
             <Dialog.Content
@@ -61,13 +61,13 @@ export function Modal({
                 exit={{ opacity: 0, scale: 0.96, y: 8 }}
                 transition={{ duration: 0.22, ease: [0.32, 0.72, 0, 1] }}
                 className={cn(
-                  'bg-card w-full rounded-dialog border border-border shadow-modal overflow-hidden max-h-[90vh] flex flex-col',
+                  'glass-elevated w-full overflow-hidden max-h-[90vh] flex flex-col',
                   SIZES[size],
                   contentClassName
                 )}
               >
                 {title ? (
-                  <div className="divider-gradient-b relative flex items-center justify-between gap-3 bg-background/40 px-4 py-3 shrink-0">
+                  <div className="divider-gradient-b relative flex items-center justify-between gap-3 bg-white/[0.03] px-4 py-3 shrink-0">
                     <div className="min-w-0">
                       <Dialog.Title className="font-semibold text-text truncate">{title}</Dialog.Title>
                       {description && (
@@ -81,7 +81,7 @@ export function Modal({
                         <button
                           type="button"
                           aria-label="Tutup"
-                          className="text-text-muted hover:text-text transition-colors rounded-btn p-1 hover:bg-card shrink-0"
+                          className="text-text-muted hover:text-text transition-colors rounded-btn p-1 hover:bg-white/[0.06] shrink-0"
                         >
                           <X size={18} />
                         </button>
@@ -96,7 +96,7 @@ export function Modal({
                         <button
                           type="button"
                           aria-label="Tutup"
-                          className="absolute right-3 top-3 z-10 text-text-muted hover:text-text transition-colors rounded-btn p-1 hover:bg-card"
+                          className="absolute right-3 top-3 z-10 text-text-muted hover:text-text transition-colors rounded-btn p-1 hover:bg-white/[0.06]"
                         >
                           <X size={18} />
                         </button>
@@ -108,7 +108,7 @@ export function Modal({
                 <div className={cn('flex-1 overflow-y-auto', bodyClassName)}>{children}</div>
 
                 {footer && (
-                  <div className="relative flex items-center justify-end gap-2 border-t border-border bg-background/40 px-4 py-3 shrink-0">
+                  <div className="relative flex items-center justify-end gap-2 border-t border-white/10 bg-white/[0.03] px-4 py-3 shrink-0">
                     {footer}
                   </div>
                 )}

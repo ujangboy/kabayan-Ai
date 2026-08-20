@@ -26,12 +26,12 @@ export function ConfirmDialog({
         <h3 className="mb-2 text-lg font-bold text-text">{title}</h3>
         <p className="text-sm text-text-secondary">{message}</p>
       </div>
-      <div className="flex border-t border-border">
+      <div className="flex border-t border-white/10">
         <button
           type="button"
           onClick={onClose}
           disabled={loading}
-          className="flex-1 px-4 py-3 text-sm font-medium text-text-secondary transition-colors hover:bg-background disabled:opacity-50"
+          className="flex-1 px-4 py-3 text-sm font-medium text-text-secondary transition-colors hover:bg-white/[0.06] disabled:opacity-50"
         >
           {cancelLabel || t('common.cancel', 'Batal')}
         </button>
@@ -40,7 +40,7 @@ export function ConfirmDialog({
           onClick={onConfirm}
           disabled={loading}
           className={cn(
-            'flex-1 border-l border-border px-4 py-3 text-sm font-medium transition-colors disabled:opacity-50',
+            'flex-1 border-l border-white/10 px-4 py-3 text-sm font-medium transition-colors disabled:opacity-50',
             danger
               ? 'bg-danger/5 text-danger hover:bg-danger/10'
               : 'bg-primary/5 text-primary hover:bg-primary/10'
