@@ -54,3 +54,6 @@ htmlcov/
 # Frontend build output (sudah ada di frontend/.gitignore tapi jaga-jaga)
 frontend/dist/
 frontend/node_modules/
+
+# Vite cache (dibuat di root saat dev server berjalan)
+.vite/
