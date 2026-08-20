@@ -127,7 +127,7 @@ export default function SubjectDashboardPage() {
   if (isLoading) {
     return (
       <div className="flex-1 overflow-y-auto p-6 md:p-10">
-        <div className="max-w-5xl mx-auto card-base p-8 space-y-4">
+        <div className="w-full card-base p-8 space-y-4">
           {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-5 w-full" />)}
         </div>
       </div>
@@ -137,7 +137,7 @@ export default function SubjectDashboardPage() {
   if (error || !subject) {
     return (
       <div className="flex-1 overflow-y-auto p-6 md:p-10">
-        <div className="max-w-5xl mx-auto card-base p-8 text-center text-text-muted">{t('subjectDashboard.notFound')}</div>
+        <div className="w-full card-base p-8 text-center text-text-muted">{t('subjectDashboard.notFound')}</div>
       </div>
     );
   }
@@ -146,7 +146,7 @@ export default function SubjectDashboardPage() {
 
   return (
     <div className="flex-1 overflow-y-auto p-6 md:p-10">
-      <div className="max-w-5xl mx-auto space-y-6">
+      <div className="w-full space-y-6">
 
         {/* Header */}
         <div className="flex items-center gap-3 flex-wrap">

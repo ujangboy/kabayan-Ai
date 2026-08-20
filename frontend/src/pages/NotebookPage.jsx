@@ -1,7 +1,8 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence } from 'framer-motion';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { notesAPI, subjectAPI } from '@/services/api';
 import { useToast } from '@/components/Toast';
 import { extractTitle, nextPlaceholderTitle } from '@/components/notebook/shared';
@@ -14,6 +15,8 @@ export default function NotebookPage() {
   const { t } = useTranslation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [selectedNote, setSelectedNote] = useState(null);
   const [isCreating, setIsCreating] = useState(false);
   const [showGeneratePanel, setShowGeneratePanel] = useState(false);
@@ -36,6 +39,17 @@ export default function NotebookPage() {
 
   const rawNotes = notesData?.notes || [];
   const subjects = subjectData?.subjects || [];
+
+  // Buka note dari URL (klik item di ContextSidebar) — re-run saat param berubah
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const nid = params.get('note_id');
+    if (!nid) return;
+    if (isLoading) return;
+    const n = (notesData?.notes || []).find((x) => String(x.id) === nid);
+    if (n) setSelectedNote(n);
+    navigate('/notebook', { replace: true });
+  }, [location.search, isLoading, navigate]);
 
   const notes = [...rawNotes].sort((a, b) => {
     if (!!a.is_pinned !== !!b.is_pinned) return a.is_pinned ? -1 : 1;

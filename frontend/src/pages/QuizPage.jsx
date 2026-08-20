@@ -36,7 +36,7 @@ export default function QuizPage() {
   const [activeQuizId, setActiveQuizId] = useState(null);
   const [sessionKey, setSessionKey] = useState(0);
 
-  // Restore active quiz + read subject_id from URL
+  // Restore active quiz + read subject_id from URL (re-run saat pindah param via sidebar)
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const sid = params.get('subject_id');
@@ -47,7 +47,7 @@ export default function QuizPage() {
       if (saved.sessionKey) setSessionKey(saved.sessionKey);
     }
     if (location.search) navigate('/quiz', { replace: true });
-  }, []);
+  }, [location.search]);
 
   const { data: quizData, isLoading } = useQuery({
     queryKey: ['quizzes'],
@@ -129,7 +129,7 @@ export default function QuizPage() {
 
   return (
     <div className="flex-1 overflow-y-auto p-6 md:p-10">
-      <div className="max-w-5xl mx-auto space-y-6">
+      <div className="w-full space-y-6">
 
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">

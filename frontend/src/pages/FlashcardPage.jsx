@@ -31,15 +31,20 @@ export default function FlashcardPage() {
   const subjectFilter = useUiStore((s) => s.subjectFilterFlashcard);
   const setSubjectFilter = useUiStore((s) => s.setSubjectFilter);
 
-  // Restore active session + read subject_id from URL
+  // Restore active session + read subject_id / deck_id from URL (re-run saat pindah param via sidebar)
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const sid = params.get('subject_id');
     if (sid) setSubjectFilter('flashcard', sid);
-    const saved = restore();
-    if (saved?.activeBatchId) setActiveBatchId(saved.activeBatchId);
+    const did = params.get('deck_id');
+    if (did) {
+      setActiveBatchId(did);
+    } else {
+      const saved = restore();
+      if (saved?.activeBatchId) setActiveBatchId(saved.activeBatchId);
+    }
     if (location.search) navigate('/flashcard', { replace: true });
-  }, []);
+  }, [location.search]);
 
   const { data: flashcardData, isLoading } = useQuery({
     queryKey: ['flashcards'],
@@ -57,7 +62,7 @@ export default function FlashcardPage() {
   // Group flashcards by batch_id — setiap generate = deck terpisah
   const batchGroups = {};
   for (const f of allFlashcards) {
-    const bid = f.batch_id || `legacy-${f.subject?.id ?? 0}`;
+    const bid = String(f.batch_id || `legacy-${f.subject?.id ?? 0}`);
     if (!batchGroups[bid]) {
       batchGroups[bid] = {
         batch_id: bid,
@@ -103,7 +108,7 @@ export default function FlashcardPage() {
 
   // Jika deck aktif, tampilkan session view
   if (activeBatchId !== null) {
-    const group = groups.find(g => g.batch_id === activeBatchId);
+    const group = groups.find(g => String(g.batch_id) === String(activeBatchId));
     const cards = group?.cards || [];
     return (
       <FlashcardSession
@@ -120,7 +125,7 @@ export default function FlashcardPage() {
 
   return (
     <div className="flex-1 overflow-y-auto p-6 md:p-10">
-      <div className="max-w-5xl mx-auto space-y-6">
+      <div className="w-full space-y-6">
 
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">

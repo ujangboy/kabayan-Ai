@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useMutation } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trash2, ChevronLeft, ChevronRight } from '@/icons';
 import { flashcardAPI } from '@/services/api';
@@ -223,7 +223,7 @@ export default function FlashcardSession({ cards, subjectName, onClose }) {
   }
 
   return (
-    <div className="flex-1 flex flex-col max-w-3xl mx-auto w-full p-6 md:p-10">
+    <div className="flex-1 flex flex-col w-full p-6 md:p-10">
       {/* Top bar */}
       <div className="flex items-center justify-between mb-6 shrink-0">
         <button onClick={onClose} className="btn-ghost text-sm text-text-muted">

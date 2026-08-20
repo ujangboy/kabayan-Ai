@@ -32,7 +32,7 @@ export default function AiLimitTab() {
   const features = u.features || [];
 
   return (
-    <div className="space-y-5 max-w-3xl">
+    <div className="space-y-5 max-w-5xl">
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         <div className="card-base p-4 flex flex-col gap-1">
           <Coins size={16} className="text-primary" />

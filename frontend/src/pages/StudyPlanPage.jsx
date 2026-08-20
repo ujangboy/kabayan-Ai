@@ -177,7 +177,7 @@ export default function StudyPlanPage() {
 
   return (
     <div className="flex-1 overflow-y-auto p-6 md:p-10">
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="w-full space-y-6">
         {/* Header */}
         <div className="flex items-center gap-3 flex-wrap">
           <button onClick={() => navigate('/exam-analyzer')} className="btn-ghost px-3 py-2 rounded-xl text-sm">

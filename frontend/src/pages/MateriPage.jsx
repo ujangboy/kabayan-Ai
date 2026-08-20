@@ -27,13 +27,14 @@ export default function MateriPage() {
   const subjectFilter = useUiStore((s) => s.subjectFilterMateri);
   const setSubjectFilter = useUiStore((s) => s.setSubjectFilter);
 
-  // Read subject_id from URL
+  // Read subject_id / upload from URL (re-run saat pindah param via sidebar)
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const sid = params.get('subject_id');
     if (sid) setSubjectFilter('materi', sid);
+    if (params.get('upload') === '1') setIsUploadModalOpen(true);
     if (location.search) navigate('/materi', { replace: true });
-  }, []);
+  }, [location.search]);
 
   const { data: materiData, isLoading } = useQuery({
     queryKey: ['materials'],
@@ -112,7 +113,7 @@ export default function MateriPage() {
 
   return (
     <div className="flex-1 overflow-y-auto p-6 md:p-10">
-      <div className="max-w-6xl mx-auto space-y-6">
+      <div className="w-full space-y-6">
 
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">

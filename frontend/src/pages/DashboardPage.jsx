@@ -52,9 +52,9 @@ function StatCard({ icon: Icon, label, value, tone, loading }) {
         <Icon size={18} />
       </div>
       <div>
-        <p className="text-2xl font-bold bg-gradient-to-r from-text to-text-secondary bg-clip-text text-transparent">
+        <div className="text-2xl font-bold bg-gradient-to-r from-text to-text-secondary bg-clip-text text-transparent">
             {loading ? <Skeleton className="inline-block h-6 w-8" /> : (value ?? 0)}
-        </p>
+        </div>
         <p className="text-xs text-text-secondary">{label}</p>
       </div>
     </motion.div>
@@ -99,7 +99,7 @@ export default function DashboardPage() {
 
   return (
     <div className="flex-1 overflow-y-auto">
-      <div className="max-w-5xl mx-auto px-6 py-10 space-y-10">
+      <div className="w-full px-6 md:px-10 py-6 md:py-8 space-y-10">
 
         {/* Greeting */}
         <motion.div

@@ -140,7 +140,7 @@ export function QuizSession({ quizId, onClose }) {
   if (showReview) {
     return (
       <div className="flex-1 overflow-y-auto p-6 md:p-10">
-        <div className="max-w-4xl mx-auto space-y-6">
+        <div className="w-full space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold text-text">Review Jawaban</h2>
             <button onClick={onClose} className="btn-ghost text-sm">{t('common.close', 'Tutup')}</button>
@@ -254,7 +254,7 @@ export function QuizSession({ quizId, onClose }) {
 
   // Quiz Session View
   return (
-    <div className="flex-1 flex flex-col max-w-3xl mx-auto w-full p-6 md:p-10">
+    <div className="flex-1 flex flex-col w-full p-6 md:p-10">
       <div className="flex items-center justify-between gap-4 mb-6">
         <h2 className="text-lg font-semibold text-text truncate">{quizData.title || 'Quiz'}</h2>
         <QuizTimer totalSeconds={timerSeconds} onTimeUp={handleTimeUp} isActive={!isFinished} />

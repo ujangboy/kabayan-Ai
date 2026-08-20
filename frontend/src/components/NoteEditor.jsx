@@ -628,7 +628,7 @@ export default function NoteEditor({ content, onSave, noteId, defaultMode = 'vie
       {mode === 'view' && (
         <div className="flex-1 overflow-y-auto">
           <div
-            className="max-w-3xl mx-auto px-10 py-8 cursor-text min-h-full"
+            className="w-full px-8 md:px-12 py-8 cursor-text min-h-full"
             onDoubleClick={handleToggle}
             title={t('noteEditor.doubleClickToEdit')}
           >
@@ -642,7 +642,7 @@ export default function NoteEditor({ content, onSave, noteId, defaultMode = 'vie
         <>
           <Toolbar editor={editor} onPreview={handleToggle} onInsertMath={handleInsertMath} />
           <div className="flex-1 overflow-y-auto">
-            <div className="max-w-3xl mx-auto px-10 py-8">
+            <div className="w-full px-8 md:px-12 py-8">
               <EditorContent editor={editor} />
             </div>
           </div>

@@ -208,7 +208,7 @@ export default function FlashcardReviewPage() {
   }
 
   return (
-    <div className="flex-1 flex flex-col max-w-3xl mx-auto w-full p-6 md:p-10">
+    <div className="flex-1 flex flex-col w-full p-6 md:p-10">
 
       {/* Top bar */}
       <div className="flex items-center justify-between mb-4 shrink-0">

@@ -209,7 +209,7 @@ export default function ExamAnalyzerPage() {
   // "Latihan Lagi" dari kartu riwayat → modal blueprint (reuse blueprint_id sesi).
   const handleRetry = async (session) => {
     if (!session.blueprint_id) {
-      toast({ title: t('exam.history.retryNoBlueprint') || 'Konfigurasi tidak tersedia', message: t('exam.history.retryNoBlueprintDesc') || 'Buat simulasi baru untuk memulai.' });
+      toast.info(t('exam.history.retryNoBlueprintDesc') || 'Buat simulasi baru untuk memulai.');
       openConfig(session.subject_id || subjectId);
       return;
     }
@@ -226,7 +226,7 @@ export default function ExamAnalyzerPage() {
 
   return (
     <div className="flex-1 overflow-y-auto p-6 md:p-10">
-      <div className="max-w-5xl mx-auto space-y-6">
+      <div className="w-full space-y-6">
 
         <ExamHeader
           view={view}
