@@ -929,11 +929,29 @@
   "breadcrumb": {
     "label": "Breadcrumb",
     "loading": "Memuat...",
-    "flashcardReview": "Review"
+    "flashcardReview": "Review",
+    "more": "Lihat halaman tersembunyi"
   },
   "help": {
     "dashboard": "Mulai dari sini: buat Chat AI untuk bertanya, upload materi, atau mulai quiz dari kartu aksi cepat.",
     "exam": "Simulasi ujian adaptif berdasarkan blueprint. Pilih mata kuliah, atur konfigurasi, lalu kerjakan soal untuk mendapatkan prediksi skor.",
     "studyPlan": "Rencana belajar harian yang disusun dari hasil simulasi ujianmu. Tandai item yang selesai untuk melacak progres."
+  },
+  "shortcuts": {
+    "title": "Pintasan Keyboard",
+    "subtitle": "Tekan ? kapan saja untuk membuka daftar pintasan ini.",
+    "groups": {
+      "navigation": "Navigasi",
+      "actions": "Aksi",
+      "pageSpecific": "Khusus Halaman"
+    },
+    "showShortcuts": "Tampilkan pintasan",
+    "commandSearch": "Buka pencarian perintah",
+    "newChat": "Buat chat baru",
+    "focusSearch": "Fokus ke pencarian",
+    "closeModal": "Tutup modal / drawer",
+    "goDashboard": "Ke Dashboard",
+    "goChat": "Ke Chat AI",
+    "quickNav": "Navigasi cepat 1-9 (halaman utama)"
   }
 }

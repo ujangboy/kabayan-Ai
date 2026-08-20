@@ -918,11 +918,29 @@
   "breadcrumb": {
     "label": "Breadcrumb",
     "loading": "Ngamuat...",
-    "flashcardReview": "Review"
+    "flashcardReview": "Review",
+    "more": "Témbongkeun halaman anu disumputkeun"
   },
   "help": {
     "dashboard": "Mimitian ti dieu: tanya AI tutor, unggah materi, atanapi ngamimitian quiz tina aksi gancang.",
     "exam": "Simulasi ujian adaptif dumasar blueprint. Pilih mata kuliah, setel konfigurasi, teras jawab soal pikeun meunang prediksi skor.",
     "studyPlan": "Rencana diajar sapopoé dumasar hasil simulasi ujian anjeun. Tandaan item anu réngsé pikeun ngalacak progres."
+  },
+  "shortcuts": {
+    "title": "Pintasan Keyboard",
+    "subtitle": "Pencet ? iraha waé pikeun muka daptar pintasan ieu.",
+    "groups": {
+      "navigation": "Navigasi",
+      "actions": "Aksi",
+      "pageSpecific": "Khusus Halaman"
+    },
+    "showShortcuts": "Témbongkeun pintasan",
+    "commandSearch": "Buka pamilarian paréntah",
+    "newChat": "Jieun chat anyar",
+    "focusSearch": "Fokus ka pamilarian",
+    "closeModal": "Tutup modal / drawer",
+    "goDashboard": "Ka Dashboard",
+    "goChat": "Ka Chat AI",
+    "quickNav": "Navigasi gancang 1-9 (halaman utama)"
   }
 }

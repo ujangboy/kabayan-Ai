@@ -929,11 +929,29 @@
   "breadcrumb": {
     "label": "Breadcrumb",
     "loading": "Loading...",
-    "flashcardReview": "Review"
+    "flashcardReview": "Review",
+    "more": "Show hidden pages"
   },
   "help": {
     "dashboard": "Start here: ask the AI tutor, upload materials, or start a quiz from the quick actions.",
     "exam": "Adaptive exam simulation based on blueprint. Pick a subject, configure, then answer questions to get a score prediction.",
     "studyPlan": "Daily study plan built from your exam results. Check off completed items to track progress."
+  },
+  "shortcuts": {
+    "title": "Keyboard Shortcuts",
+    "subtitle": "Press ? anywhere to open this list of shortcuts.",
+    "groups": {
+      "navigation": "Navigation",
+      "actions": "Actions",
+      "pageSpecific": "Page-specific"
+    },
+    "showShortcuts": "Show shortcuts",
+    "commandSearch": "Open command search",
+    "newChat": "Start a new chat",
+    "focusSearch": "Focus search",
+    "closeModal": "Close modal / drawer",
+    "goDashboard": "Go to Dashboard",
+    "goChat": "Go to Chat AI",
+    "quickNav": "Quick nav 1-9 (main pages)"
   }
 }
