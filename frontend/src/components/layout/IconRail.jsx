@@ -1,7 +1,7 @@
-import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { useUiStore, useAppStore, useChatStore } from '@/store';
+import { useUiStore, useAppStore } from '@/store';
 import { Tooltip } from '@/components/ui';
 import {
   LayoutDashboard, MessageSquare, BookOpen, FileText,
@@ -22,13 +22,11 @@ export default function IconRail() {
   const { t } = useTranslation();
   const lastSubjectId = useUiStore((s) => s.lastSubjectId);
   const setSearchOpen = useAppStore((s) => s.setSearchOpen);
-  const createChat = useChatStore((s) => s.createChat);
-  const navigate = useNavigate();
   const location = useLocation();
 
   const NAV = [
     { to: '/dashboard', icon: LayoutDashboard, label: t('nav.dashboard') },
-    { to: '/chat', icon: MessageSquare, label: t('nav.chat'), action: () => { const id = createChat(); navigate(`/chat?id=${id}`); } },
+    { to: '/chat', icon: MessageSquare, label: t('nav.chat') },
     { to: lastSubjectId ? `/subjects/${lastSubjectId}` : '/subjects', icon: BookOpen, label: t('nav.subjects') },
     { to: '/materi', icon: FileText, label: t('nav.materi') },
     { to: '/notebook', icon: BookMarked, label: t('nav.notebook') },
@@ -75,7 +73,7 @@ export default function IconRail() {
                 {active && (
                   <motion.span
                     layoutId="nav-active-indicator"
-                    className="absolute left-0 top-1/2 h-6 w-[3px] -translate-y-1/2 rounded-full bg-gradient-primary"
+                    className="absolute left-0 top-0 bottom-0 my-auto h-6 w-[3px] rounded-full bg-gradient-primary"
                     transition={{ type: 'spring', stiffness: 400, damping: 32 }}
                   />
                 )}
@@ -101,7 +99,7 @@ export default function IconRail() {
           {location.pathname.startsWith('/settings') && (
             <motion.span
               layoutId="nav-active-indicator"
-              className="absolute left-0 top-1/2 h-6 w-[3px] -translate-y-1/2 rounded-full bg-gradient-primary"
+              className="absolute left-0 top-0 bottom-0 my-auto h-6 w-[3px] rounded-full bg-gradient-primary"
               transition={{ type: 'spring', stiffness: 400, damping: 32 }}
             />
           )}

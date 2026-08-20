@@ -150,6 +150,7 @@
     "renameChat": "Rename",
     "groupToday": "Today",
     "groupYesterday": "Yesterday",
+    "unknownDate": "Unknown date",
     "groupLast7Days": "Last 7 Days",
     "relJustNow": "Just now",
     "relMinutesAgo": "{{count}} min ago",

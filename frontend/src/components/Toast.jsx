@@ -172,7 +172,7 @@ function ConfirmDialog({ state, onClose }) {
                 : 'bg-gradient-primary text-white shadow-btn-primary'
             }`}>
               {state.danger
-                ? <Warning size={20} />
+                ? <AlertTriangle size={20} />
                 : <Info size={20} />}
             </div>
             <div className="flex-1 min-w-0">

@@ -150,6 +150,7 @@
     "renameChat": "Ganti Nama",
     "groupToday": "Hari Ini",
     "groupYesterday": "Kemarin",
+    "unknownDate": "Tanggal tidak diketahui",
     "groupLast7Days": "7 Hari Terakhir",
     "relJustNow": "Baru saja",
     "relMinutesAgo": "{{count}} menit lalu",

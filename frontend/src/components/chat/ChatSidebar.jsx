@@ -40,15 +40,17 @@ export default function ChatSidebar() {
     return d.toDateString() === y.toDateString();
   };
   const groupDateLabel = (d) => {
+    if (isNaN(d.getTime())) return t('chat.unknownDate');
     if (isToday(d)) return t('chat.today');
     if (isYesterday(d)) return t('chat.yesterday');
     return formatChatDate(d.toISOString());
   };
+  const chatDate = (c) => new Date(c.updatedAt || c.created_at || c.createdAt || 0);
 
   const sortedChats = [...chats].sort((a, b) => {
     if (!!b.pinned !== !!a.pinned) return (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0);
-    const at = new Date(a.updatedAt || a.created_at || 0).getTime();
-    const bt = new Date(b.updatedAt || b.created_at || 0).getTime();
+    const at = chatDate(a).getTime();
+    const bt = chatDate(b).getTime();
     return bt - at;
   });
   const filteredChats = chatSearch.trim()
@@ -58,7 +60,7 @@ export default function ChatSidebar() {
   const groups = [];
   const map = {};
   filteredChats.forEach((c) => {
-    const key = groupDateLabel(new Date(c.updatedAt || c.created_at));
+    const key = groupDateLabel(chatDate(c));
     if (!map[key]) {
       map[key] = [];
       groups.push(key);
@@ -71,10 +73,12 @@ export default function ChatSidebar() {
     navigate('/chat');
   };
   const handleDeleteAll = () => {
-    toast(t('chat.deleteAllConfirm'), {
-      actionLabel: t('common.delete'),
-      variant: 'danger',
-      onAction: async () => {
+    toast.confirm({
+      title: t('chat.deleteAll'),
+      message: t('chat.confirmDeleteAllChats'),
+      danger: true,
+      confirmLabel: t('common.delete'),
+      onConfirm: async () => {
         await deleteAllChats();
         navigate('/chat');
       },

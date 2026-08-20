@@ -143,6 +143,7 @@
     "renameChat": "Ganti Ngaran",
     "groupToday": "Dinten Ieu",
     "groupYesterday": "Kamari",
+    "unknownDate": "Tanggal teu dipikanyaho",
     "groupLast7Days": "7 Poé Kaliwat",
     "relJustNow": "Kakara waé",
     "relMinutesAgo": "{{count}} menit katukang",
