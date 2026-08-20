@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useChatStore } from '@/store';
 import { streamChat } from '@/services/tutorStream';
@@ -16,6 +16,7 @@ export function useChatUrlSync() {
     setStreaming,
     updateLastMessage,
   } = useChatStore();
+  const tutorHandledRef = useRef(false);
 
   useEffect(() => {
     const tutorParam = searchParams.get('tutor');
@@ -30,7 +31,8 @@ export function useChatUrlSync() {
       }
     }
 
-    if (tutorParam) {
+    if (tutorParam && !tutorHandledRef.current) {
+      tutorHandledRef.current = true;
       (async () => {
         const newId = await createChat();
         const id = newId ?? currentChatId;
@@ -62,7 +64,7 @@ export function useChatUrlSync() {
               const body = await res.json();
               if (body?.detail) msg = body.detail;
             } catch {}
-            updateLastMessage((m) => (m.role === 'assistant' ? { ...m, content: `⚠️ ${msg}` } : m));
+            updateLastMessage((m) => (m.role === 'assistant' ? { ...m, content: `Error: ${msg}` } : m));
             return;
           }
           let acc = '';
@@ -76,12 +78,12 @@ export function useChatUrlSync() {
           }
         } catch (err) {
           console.error(err);
-          updateLastMessage((m) => (m.role === 'assistant' ? { ...m, content: '⚠️ Terjadi kesalahan saat memproses pesan.' } : m));
+          updateLastMessage((m) => (m.role === 'assistant' ? { ...m, content: 'Error: Terjadi kesalahan saat memproses pesan.' } : m));
         } finally {
           setStreaming(false, id);
         }
       })();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [currentChatId]);
 }

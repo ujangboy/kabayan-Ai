@@ -73,7 +73,7 @@ export function useChatMessaging() {
             }
           } else if (chunk.event === 'error') {
             const errMsg = chunk.data?.message || chunk.data || 'Terjadi kesalahan pada tutor.';
-            updateLastMessage((m) => (m.role === 'assistant' ? { ...m, content: `⚠️ ${errMsg}` } : m));
+            updateLastMessage((m) => (m.role === 'assistant' ? { ...m, content: `Error: ${errMsg}` } : m));
           }
         }
         setStreaming(false, chatId);
@@ -88,7 +88,7 @@ export function useChatMessaging() {
             const body = await res.json();
             if (body?.detail) msg = body.detail;
           } catch {}
-          updateLastMessage((m) => (m.role === 'assistant' ? { ...m, content: `⚠️ ${msg}` } : m));
+          updateLastMessage((m) => (m.role === 'assistant' ? { ...m, content: `Error: ${msg}` } : m));
           setStreaming(false, chatId);
           return;
         }
@@ -105,7 +105,7 @@ export function useChatMessaging() {
       }
     } catch (err) {
       console.error(err);
-      updateLastMessage((m) => (m.role === 'assistant' ? { ...m, content: '⚠️ Terjadi kesalahan saat memproses pesan.' } : m));
+      updateLastMessage((m) => (m.role === 'assistant' ? { ...m, content: 'Error: Terjadi kesalahan saat memproses pesan.' } : m));
       setStreaming(false, chatId);
     } finally {
       chatOp.finish(chatId);
@@ -120,7 +120,7 @@ export function useChatMessaging() {
       await tutorAPI.sendFeedback(currentChatId, rating);
       setMessageFeedback(rating);
     } catch {
-      toast(t('chat.feedbackError'));
+      toast.error(t('chat.feedbackError'));
     }
   };
 
@@ -130,11 +130,11 @@ export function useChatMessaging() {
     if (!currentChatId) return;
     if (isNoteSavingRef.current) return;
     if (!chat?.messages || chat.messages.length === 0) {
-      toast(t('chat.noteEmpty'));
+      toast.info(t('chat.noteEmpty'));
       return;
     }
     if (chat.messages[chat.messages.length - 1].role !== 'assistant') {
-      toast(t('chat.noteWaiting'));
+      toast.info(t('chat.noteWaiting'));
       return;
     }
     isNoteSavingRef.current = true;
