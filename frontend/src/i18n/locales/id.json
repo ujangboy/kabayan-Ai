@@ -122,7 +122,8 @@
     "yes": "Ya",
     "no": "Tidak",
     "undo": "Undo",
-    "notifications": "Notifikasi"
+    "notifications": "Notifikasi",
+    "menu": "Menu"
   },
   "dashboard": {
     "greetingMorning": "Selamat pagi",
@@ -221,7 +222,11 @@
     "disclaimerNote": "AI dapat membuat kesalahan. Verifikasi informasi penting.",
     "empty": "Belum ada percakapan",
     "chatDeleted": "Chat dihapus",
-    "deletedAllChats": "Semua chat dihapus"
+    "deletedAllChats": "Semua chat dihapus",
+    "history": "Riwayat",
+    "searchPlaceholder": "Cari percakapan...",
+    "noteEmpty": "Belum ada pesan untuk disimpan ke Notebook.",
+    "normalMode": "Mode Chat Biasa"
   },
   "materi": {
     "pageTitle": "Materi Belajar",
@@ -866,6 +871,21 @@
     "doneCount": "{{done}}/{{total}} selesai",
     "markDone": "Tandai selesai"
   },
+  "studyPlanPage": {
+    "empty": {
+      "title": "Belum Ada Rencana Belajar",
+      "desc": "Buat Ujian Simulasi untuk mendapatkan rencana belajar harian yang dipersonalisasi.",
+      "step1": "Kerjakan Ujian Simulasi",
+      "step2": "AI menyusun rencana dari hasil ujian",
+      "step3": "Tandai selesai & lacak progres",
+      "ctaPrimary": "Ujian Simulasi",
+      "ctaSecondary": "Lihat Materi",
+      "hint": "Rencana dibuat otomatis dari analisis kelemahan ujianmu."
+    },
+    "noSessionTitle": "Pilih Sesi Ujian",
+    "noSessionDesc": "Pilih salah satu sesi ujian dari menu Rencana Belajar di sidebar untuk melihat rencananya.",
+    "noPlan": "Belum ada rencana belajar untuk sesi ini. Buat ulang simulasi ujian untuk membuat rencana."
+  },
   "studyProgress": {
     "title": "Konsistensi Belajar",
     "subtitle": "Streak harian dan tren penguasaan materi dari waktu ke waktu.",
@@ -928,13 +948,22 @@
     "confirmTitle": "Konfirmasi"
   },
   "sidebar": {
-    "contextHint": "Pilih menu di sebelah kiri untuk mulai belajar"
+    "collapse": "Ciutkan sidebar",
+    "expand": "Bentangkan sidebar",
+    "toggle": "Buka/tutup sidebar",
+    "search": "Cari",
+    "allSubjects": "Semua mata kuliah"
   },
   "breadcrumb": {
     "label": "Breadcrumb",
     "loading": "Memuat...",
     "flashcardReview": "Review",
-    "more": "Lihat halaman tersembunyi"
+    "more": "Lihat halaman tersembunyi",
+    "showAll": "Tampilkan semua"
+  },
+  "back": {
+    "label": "Kembali ke {{name}}",
+    "ariaLabel": "Kembali ke {{name}}"
   },
   "help": {
     "dashboard": "Mulai dari sini: buat Chat AI untuk bertanya, upload materi, atau mulai quiz dari kartu aksi cepat.",

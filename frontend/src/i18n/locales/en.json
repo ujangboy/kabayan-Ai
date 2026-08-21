@@ -122,7 +122,8 @@
     "yes": "Yes",
     "no": "No",
     "undo": "Undo",
-    "notifications": "Notifications"
+    "notifications": "Notifications",
+    "menu": "Menu"
   },
   "dashboard": {
     "greetingMorning": "Good morning",
@@ -221,7 +222,11 @@
     "disclaimerNote": "AI can make mistakes. Verify important information.",
     "empty": "No conversations yet",
     "chatDeleted": "Chat deleted",
-    "deletedAllChats": "All chats deleted"
+    "deletedAllChats": "All chats deleted",
+    "history": "History",
+    "searchPlaceholder": "Search conversations...",
+    "noteEmpty": "No messages yet to save to Notebook.",
+    "normalMode": "Normal Chat Mode"
   },
   "materi": {
     "pageTitle": "Study Materials",
@@ -866,6 +871,21 @@
     "doneCount": "{{done}}/{{total}} done",
     "markDone": "Mark as done"
   },
+  "studyPlanPage": {
+    "empty": {
+      "title": "No Study Plan Yet",
+      "desc": "Take an Exam Simulation to get a personalized daily study plan.",
+      "step1": "Take an Exam Simulation",
+      "step2": "AI builds a plan from your results",
+      "step3": "Check off items & track progress",
+      "ctaPrimary": "Exam Simulator",
+      "ctaSecondary": "View Materials",
+      "hint": "Plans are generated automatically from your exam analysis."
+    },
+    "noSessionTitle": "Select an Exam Session",
+    "noSessionDesc": "Pick an exam session from the Study Plan menu in the sidebar to view its plan.",
+    "noPlan": "No study plan for this session yet. Re-run the exam simulation to create one."
+  },
   "studyProgress": {
     "title": "Study Consistency",
     "subtitle": "Daily streak and mastery trend over time.",
@@ -928,13 +948,22 @@
     "confirmTitle": "Confirm"
   },
   "sidebar": {
-    "contextHint": "Pick a menu on the left to start learning"
+    "collapse": "Collapse sidebar",
+    "expand": "Expand sidebar",
+    "toggle": "Toggle sidebar",
+    "search": "Search",
+    "allSubjects": "All subjects"
   },
   "breadcrumb": {
     "label": "Breadcrumb",
     "loading": "Loading...",
     "flashcardReview": "Review",
-    "more": "Show hidden pages"
+    "more": "Show hidden pages",
+    "showAll": "Show all"
+  },
+  "back": {
+    "label": "Back to {{name}}",
+    "ariaLabel": "Back to {{name}}"
   },
   "help": {
     "dashboard": "Start here: ask the AI tutor, upload materials, or start a quiz from the quick actions.",

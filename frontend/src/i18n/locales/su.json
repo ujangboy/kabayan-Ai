@@ -115,7 +115,8 @@
     "yes": "Enya",
     "no": "Henteu",
     "undo": "Batalkeun",
-    "notifications": "Notifikasi"
+    "notifications": "Notifikasi",
+    "menu": "Menu"
   },
   "dashboard": {
     "greetingMorning": "Wilujeng énjing",
@@ -214,7 +215,11 @@
     "disclaimerNote": "AI tiasa ngadamel kasalahan. Pariksa inpormasi anu penting.",
     "empty": "Acan aya obrolan",
     "chatDeleted": "Chat dihapus",
-    "deletedAllChats": "Sadaya chat dihapus"
+    "deletedAllChats": "Sadaya chat dihapus",
+    "history": "Riwayat",
+    "searchPlaceholder": "Paluruh obrolan...",
+    "noteEmpty": "Can aya pesen pikeun disimpen ka Catetan.",
+    "normalMode": "Mode Chat Biasa"
   },
   "materi": {
     "pageTitle": "Materi Diajar",
@@ -855,6 +860,21 @@
     "doneCount": "{{done}}/{{total}} réngsé",
     "markDone": "Tandaan réngsé"
   },
+  "studyPlanPage": {
+    "empty": {
+      "title": "Can Aya Rencana Diajar",
+      "desc": "Jieun Ujian Simulasi pikeun meunang rencana diajar harian anu dipersonalisasi.",
+      "step1": "Pék Ujian Simulasi",
+      "step2": "AI nyusun rencana tina hasil ujian",
+      "step3": "Tandaan réngsé & lacak progrés",
+      "ctaPrimary": "Ujian Simulasi",
+      "ctaSecondary": "Tingali Materi",
+      "hint": "Rencana dijieun otomatis tina analisis ujian anjeun."
+    },
+    "noSessionTitle": "Pilih Sési Ujian",
+    "noSessionDesc": "Pilih salah sahiji sési ujian tina menu Rencana Belajar di sidebar pikeun ningali rencanana.",
+    "noPlan": "Can aya rencana diajar pikeun sési ieu. Jieun deui simulasi ujian pikeun nyieun rencana."
+  },
   "studyProgress": {
     "title": "Konsisténsi Diajar",
     "subtitle": "Streak harian jeung tren ngawasaan materi kana wanci.",
@@ -917,13 +937,22 @@
     "confirmTitle": "Konfirmasi"
   },
   "sidebar": {
-    "contextHint": "Pilih menu di beulah kenca pikeun ngamimitian diajar"
+    "collapse": "Ciyutkeun sidebar",
+    "expand": "Jéntrékeun sidebar",
+    "toggle": "Buka/tutup sidebar",
+    "search": "Paluruh",
+    "allSubjects": "Sadaya mata kuliah"
   },
   "breadcrumb": {
     "label": "Breadcrumb",
     "loading": "Ngamuat...",
     "flashcardReview": "Review",
-    "more": "Témbongkeun halaman anu disumputkeun"
+    "more": "Témbongkeun halaman anu disumputkeun",
+    "showAll": "Témbongkeun sadayana"
+  },
+  "back": {
+    "label": "Balik ka {{name}}",
+    "ariaLabel": "Balik ka {{name}}"
   },
   "help": {
     "dashboard": "Mimitian ti dieu: tanya AI tutor, unggah materi, atanapi ngamimitian quiz tina aksi gancang.",
