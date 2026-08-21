@@ -231,23 +231,26 @@ function SidebarContent({ collapsed, onNavigate }) {
 
   return (
     <div className="flex h-full flex-col bg-sidebar/80 backdrop-blur-[16px] divider-gradient-r">
-      {/* Logo + toggle selalu di atas. Expanded: logo kiri, toggle kanan.
-          Collapsed/rail: logo di atas, toggle tepat di bawahnya (robot tetap kelihatan, tak tabrakan). */}
-      <div className={cn('flex shrink-0 items-center', collapsed ? 'flex-col items-center justify-center gap-2 px-0 py-3' : 'h-16 justify-between px-4')}>
-        <div className={cn('flex items-center gap-2.5', collapsed && 'justify-center')}>
-          <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-primary shadow-btn-primary">
-            <span className="absolute inset-0 rounded-xl bg-gradient-primary opacity-50 blur-md" />
-            <Icon name={ICONS.communication.bot} size={20} className="relative text-white" />
+      {/* Logo + toggle selalu di atas. Expanded: logo kiri + toggle kanan.
+          Collapsed/rail: logo disembunyi, toggle bentangkan menempati posisi logo di atas
+          (tidak ditumpuk di bawah logo). */}
+      <div className={cn('flex h-16 shrink-0 items-center', collapsed ? 'justify-center px-0' : 'justify-between px-4')}>
+        {!collapsed && (
+          <div className="flex items-center gap-2.5">
+            <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-primary shadow-btn-primary">
+              <span className="absolute inset-0 rounded-xl bg-gradient-primary opacity-50 blur-md" />
+              <Icon name={ICONS.communication.bot} size={20} className="relative text-white" />
+            </div>
+            <span className="text-sm font-semibold text-text">Kabayan AI</span>
           </div>
-          {!collapsed && <span className="text-sm font-semibold text-text">Kabayan AI</span>}
-        </div>
+        )}
         <button
           onClick={toggleCollapsed}
           aria-label={collapsed ? t('sidebar.expand') : t('sidebar.collapse')}
           title={collapsed ? t('sidebar.expand') : t('sidebar.collapse')}
-          className="flex h-8 w-8 items-center justify-center rounded-lg text-text-secondary transition-colors hover:bg-white/[0.06] hover:text-text"
+          className={cn('flex items-center justify-center rounded-xl text-text-secondary transition-colors hover:bg-white/[0.06] hover:text-text', collapsed ? 'h-10 w-10' : 'h-9 w-9')}
         >
-          <Icon name={collapsed ? ICONS.actions.chevronRight : ICONS.actions.chevronLeft} size={18} />
+          <Icon name={collapsed ? ICONS.actions.menuOpen : ICONS.actions.menu} size={18} />
         </button>
       </div>
 
