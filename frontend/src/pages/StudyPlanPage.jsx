@@ -85,39 +85,48 @@ export default function StudyPlanPage() {
   if (!sessionId) {
     return (
       <AnimatePresence mode="wait" initial={false}>
-        <motion.div key="nosession" {...fadeSlide} className="flex-1 flex flex-col items-center justify-center px-6 py-14 md:py-16">
+        <motion.div key="nosession" {...fadeSlide} className="flex-1 flex flex-col items-center justify-center px-6 py-10 md:py-14 overflow-y-auto">
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: 'spring', stiffness: 350, damping: 30 }}
-            className="flex w-full max-w-[560px] flex-col items-center gap-7 text-center"
+            className="flex w-full max-w-[560px] flex-col items-center gap-6 rounded-2xl border border-slate-800 bg-slate-900/50 backdrop-blur-md p-8 md:p-10 shadow-glass text-center"
           >
-            <div className="flex h-20 w-20 items-center justify-center rounded-[20px] bg-primary/10 text-primary-light">
+            <div className="flex h-20 w-20 items-center justify-center rounded-[20px] bg-gradient-to-br from-violet-500/20 to-indigo-500/20 border border-violet-500/20 text-violet-300 shadow-glow-sm">
               <Icon name={ICONS.learning.calendarCheck} size={36} />
             </div>
 
             <div className="space-y-2">
-              <h2 className="text-xl font-bold text-text md:text-2xl">{t('studyPlanPage.empty.title')}</h2>
-              <p className="mx-auto max-w-md text-sm text-text-secondary">{t('studyPlanPage.empty.desc')}</p>
+              <h2 className="text-xl font-bold tracking-tight text-text md:text-2xl">{t('studyPlanPage.empty.title')}</h2>
+              <p className="mx-auto max-w-md text-sm leading-relaxed text-text-secondary">{t('studyPlanPage.empty.desc')}</p>
             </div>
 
-            <ol className="w-full max-w-[420px] divide-y divide-white/[0.06] text-left">
+            <ol className="w-full max-w-[420px] divide-y divide-white/[0.06] rounded-xl border border-white/[0.06] bg-white/[0.02] px-2 text-left">
               {[1, 2, 3].map((n) => (
-                <li key={n} className="flex items-center gap-4 py-3.5">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/12 text-sm font-bold text-primary-light">{n}</span>
+                <li key={n} className="flex items-center gap-4 py-3.5 px-2">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-violet-500/15 border border-violet-500/20 text-sm font-bold text-violet-300">{n}</span>
                   <span className="text-sm text-text-secondary">{t(`studyPlanPage.empty.step${n}`)}</span>
                 </li>
               ))}
             </ol>
 
-            <div className="flex w-full flex-col items-center gap-3 sm:flex-row sm:justify-center">
-              <Button onClick={() => navigate('/exam-analyzer')} className="inline-flex items-center justify-center gap-2">
+            <div className="flex w-full flex-col gap-3 sm:flex-row sm:justify-center pt-2">
+              <Button
+                onClick={() => navigate('/exam-analyzer')}
+                size="lg"
+                className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 min-w-[200px] bg-gradient-primary hover:brightness-110"
+              >
                 <Icon name={ICONS.nav.exam} size={18} />
-                {t('studyPlanPage.empty.ctaPrimary')}
+                {t('studyPlanPage.empty.ctaPrimary', 'Kerjakan Ujian Simulasi')}
               </Button>
-              <Button variant="link" onClick={() => navigate('/materi')} className="inline-flex items-center justify-center gap-1">
-                {t('studyPlanPage.empty.ctaSecondary')}
-                <Icon name={ICONS.actions.chevronRight} size={16} />
+              <Button
+                variant="secondary"
+                size="lg"
+                onClick={() => navigate('/materi')}
+                className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 min-w-[160px] border-slate-700 bg-slate-800/60 hover:bg-slate-800 hover:border-violet-500/30"
+              >
+                <Icon name={ICONS.files.document} size={16} className="text-text-secondary" />
+                {t('studyPlanPage.empty.ctaSecondary', 'Lihat Materi')}
               </Button>
             </div>
 

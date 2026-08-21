@@ -11,8 +11,8 @@ import { subjectAPI, flashcardAPI, sessionsAPI } from '@/services/api';
 import { useSwipeGesture } from '@/hooks/useSwipeGesture';
 import StorageMeter from './StorageMeter';
 
-const EXPANDED_WIDTH = 240;
-const RAIL_WIDTH = 68;
+const EXPANDED_WIDTH = 260;
+const RAIL_WIDTH = 72;
 const DESKTOP_QUERY = '(min-width: 1024px)';
 const MOBILE_QUERY = '(max-width: 767px)';
 
@@ -39,7 +39,7 @@ const NAV = [
   { to: '/notebook', icon: ICONS.nav.notebook, labelKey: 'nav.notebook' },
   { to: '/flashcard', icon: ICONS.nav.flashcard, labelKey: 'nav.flashcard', group: 'flashcard' },
   { to: '/quiz', icon: ICONS.nav.quiz, labelKey: 'nav.quiz' },
-  { to: '/exam-analyzer', icon: ICONS.nav.exam, labelKey: 'nav.exam' },
+  { to: '/exam-analyzer', icon: ICONS.nav.exam, labelKey: 'nav.exam', group: 'exam' },
   { to: '/study-plan', icon: ICONS.nav.studyPlan, labelKey: 'nav.studyPlan', group: 'studyPlan' },
 ];
 
@@ -75,10 +75,10 @@ function SidebarContent({ collapsed, onNavigate }) {
       return next;
     });
 
+  // Subjects tetap di-fetch saat collapsed agar flyout materi/exam tetap terisi (tanpa count badge)
   const { data: subjects } = useQuery({
     queryKey: ['subjects'],
     queryFn: () => subjectAPI.getAll().then((r) => r.data),
-    enabled: !collapsed,
   });
   const { data: flashcards } = useQuery({
     queryKey: ['flashcard-all'],
@@ -90,6 +90,11 @@ function SidebarContent({ collapsed, onNavigate }) {
     queryFn: () => sessionsAPI.list().then((r) => r.data),
     enabled: !collapsed,
   });
+
+  // Flyout state untuk collapsed rail (materi & exam)
+  const [flyoutGroup, setFlyoutGroup] = useState(null);
+  const [flyoutRect, setFlyoutRect] = useState(null);
+  const flyoutTimeoutRef = useState(() => ({ current: null }))[0];
 
   const subjectList = subjects?.subjects || [];
 
@@ -118,6 +123,9 @@ function SidebarContent({ collapsed, onNavigate }) {
     if (group === 'materi') {
       return subjectList.map((s) => ({ key: `m-${s.id}`, label: s.name, to: `/materi?subject_id=${s.id}`, icon: ICONS.files.folder, active: new URLSearchParams(location.search).get('subject_id') === String(s.id) }));
     }
+    if (group === 'exam') {
+      return subjectList.map((s) => ({ key: `ex-${s.id}`, label: s.name, to: `/exam-analyzer?subject_id=${s.id}`, icon: ICONS.files.folder, active: new URLSearchParams(location.search).get('subject_id') === String(s.id) && location.pathname === '/exam-analyzer' }));
+    }
     if (group === 'flashcard') {
       return decks.map((d) => ({ key: `f-${d.batch_id}`, label: d.subject?.name || t('flashcard.defaultName'), to: `/flashcard?deck_id=${d.batch_id}`, icon: ICONS.nav.flashcard, active: new URLSearchParams(location.search).get('deck_id') === d.batch_id }));
     }
@@ -136,6 +144,9 @@ function SidebarContent({ collapsed, onNavigate }) {
     return [];
   };
 
+  const flyoutGroups = new Set(['materi', 'exam']);
+  const shouldShowFlyout = (group) => collapsed && flyoutGroups.has(group);
+
   const handleNav = (to) => {
     navigate(to);
     onNavigate?.();
@@ -145,6 +156,32 @@ function SidebarContent({ collapsed, onNavigate }) {
     const active = isActive(item.to, location.pathname);
     const hasGroup = !!item.group;
     const groupOpen = openGroups.has(item.group);
+    const isFlyout = shouldShowFlyout(item.group);
+
+    const openFlyout = (e) => {
+      if (!isFlyout) return;
+      if (flyoutTimeoutRef.current) {
+        clearTimeout(flyoutTimeoutRef.current);
+        flyoutTimeoutRef.current = null;
+      }
+      const rect = e.currentTarget.getBoundingClientRect();
+      setFlyoutRect(rect);
+      setFlyoutGroup(item.group);
+    };
+    const scheduleClose = () => {
+      if (!isFlyout) return;
+      if (flyoutTimeoutRef.current) clearTimeout(flyoutTimeoutRef.current);
+      flyoutTimeoutRef.current = setTimeout(() => {
+        setFlyoutGroup(null);
+        setFlyoutRect(null);
+      }, 140);
+    };
+    const cancelClose = () => {
+      if (flyoutTimeoutRef.current) {
+        clearTimeout(flyoutTimeoutRef.current);
+        flyoutTimeoutRef.current = null;
+      }
+    };
 
     const row = (
       <div className="relative flex items-center">
@@ -182,14 +219,27 @@ function SidebarContent({ collapsed, onNavigate }) {
       </div>
     );
 
-    const wrapped = collapsed ? (
-      <Tooltip label={t(item.labelKey)} side="right">
-        <div>{row}</div>
-      </Tooltip>
-    ) : row;
+    let wrapped;
+    if (collapsed) {
+      if (isFlyout) {
+        wrapped = (
+          <div onMouseEnter={openFlyout} onMouseLeave={scheduleClose}>
+            {row}
+          </div>
+        );
+      } else {
+        wrapped = (
+          <Tooltip label={t(item.labelKey)} side="right">
+            <div>{row}</div>
+          </Tooltip>
+        );
+      }
+    } else {
+      wrapped = row;
+    }
 
     return (
-      <div key={item.to}>
+      <div key={item.to} onMouseEnter={isFlyout ? cancelClose : undefined} onMouseLeave={isFlyout ? scheduleClose : undefined}>
         {wrapped}
         {!collapsed && hasGroup && (
           <AnimatePresence initial={false}>
@@ -202,7 +252,7 @@ function SidebarContent({ collapsed, onNavigate }) {
                 className="overflow-hidden"
               >
                 <div className="mb-1 ml-[26px] mt-1 border-l border-border pl-2">
-                  <div className="sidebar-scroll space-y-0.5 max-h-[28vh] overflow-y-auto pr-1 overscroll-contain md:max-h-[260px]">
+                  <div className="space-y-0.5 pr-1">
                     {submenuItems(item.group).map((sub) => (
                       <button
                         key={sub.key}
@@ -213,7 +263,7 @@ function SidebarContent({ collapsed, onNavigate }) {
                         )}
                       >
                         <Icon name={sub.icon} size={15} className={cn('shrink-0', sub.active ? 'text-primary-light' : 'text-warning')} />
-                        <span className="truncate">{sub.label}</span>
+                        <span className="truncate" title={sub.label}>{sub.label}</span>
                       </button>
                     ))}
                     {submenuItems(item.group).length === 0 && (
@@ -228,6 +278,10 @@ function SidebarContent({ collapsed, onNavigate }) {
       </div>
     );
   };
+
+  // Flyout card untuk collapsed rail — hanya materi & exam, tanpa count, ellipsis 200px
+  const activeFlyoutItems = flyoutGroup ? submenuItems(flyoutGroup) : [];
+  const flyoutLabelKey = flyoutGroup ? NAV.find((n) => n.group === flyoutGroup)?.labelKey : null;
 
   return (
     <div className="flex h-full flex-col bg-sidebar/80 backdrop-blur-[16px] divider-gradient-r">
@@ -270,31 +324,88 @@ function SidebarContent({ collapsed, onNavigate }) {
 
       <div className="my-2 h-px bg-border" />
 
-      {/* Nav utama */}
-      <nav className="sidebar-scroll flex-1 min-h-0 space-y-1 overflow-y-auto px-3">
+      {/* Nav utama — single root scrollbar, no nested scroll */}
+      <nav className="sidebar-scroll flex-1 min-h-0 space-y-1 overflow-y-auto overflow-x-hidden px-3">
         {NAV.map(renderTopItem)}
       </nav>
 
-      <div className="my-2 h-px bg-border" />
-
-      {/* Settings */}
-      <div className="px-3 pb-2">
-        {collapsed ? (
-          <Tooltip label={t('nav.settings')} side="right">
-            <NavLink to="/settings" onClick={() => onNavigate?.()} aria-label={t('nav.settings')} className="flex h-10 w-10 items-center justify-center rounded-xl text-text-secondary transition-colors hover:bg-card hover:text-text">
-              <Icon name={ICONS.nav.settings} size={20} />
-            </NavLink>
-          </Tooltip>
-        ) : (
-          <NavLink to="/settings" onClick={() => onNavigate?.()} className={cn('flex h-10 items-center gap-3 rounded-xl px-3 text-sm font-medium transition-colors', location.pathname.startsWith('/settings') ? 'bg-primary/15 text-primary-light' : 'text-text-secondary hover:bg-card hover:text-text')}>
-            <Icon name={ICONS.nav.settings} size={20} className="shrink-0" />
-            <span>{t('nav.settings')}</span>
-          </NavLink>
+      {/* Flyout card untuk collapsed rail — materi & exam, tanpa count */}
+      <AnimatePresence>
+        {collapsed && flyoutGroup && flyoutRect && (
+          <motion.div
+            key={flyoutGroup}
+            initial={{ opacity: 0, x: -8, scale: 0.98 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: -8, scale: 0.98 }}
+            transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+            onMouseEnter={() => {
+              if (flyoutTimeoutRef.current) {
+                clearTimeout(flyoutTimeoutRef.current);
+                flyoutTimeoutRef.current = null;
+              }
+            }}
+            onMouseLeave={() => {
+              setFlyoutGroup(null);
+              setFlyoutRect(null);
+            }}
+            style={{
+              position: 'fixed',
+              left: flyoutRect.left + flyoutRect.width + 10,
+              top: Math.max(12, Math.min(flyoutRect.top - 8, typeof window !== 'undefined' ? window.innerHeight - 340 : flyoutRect.top)),
+              zIndex: 60,
+            }}
+            className="w-[240px] rounded-2xl border border-white/10 bg-slate-900/95 backdrop-blur-xl shadow-glass-lg overflow-hidden"
+          >
+            <div className="px-3.5 py-3 border-b border-white/[0.06] flex items-center gap-2">
+              <Icon name={NAV.find((n) => n.group === flyoutGroup)?.icon || ICONS.files.folder} size={16} className="text-primary-light shrink-0" />
+              <span className="text-sm font-semibold text-text truncate">{flyoutLabelKey ? t(flyoutLabelKey) : ''}</span>
+              <span className="ml-auto text-[11px] text-text-muted">{activeFlyoutItems.length}</span>
+            </div>
+            <div className="p-2 max-h-[320px] overflow-y-auto sidebar-scroll">
+              {activeFlyoutItems.length === 0 ? (
+                <p className="px-2.5 py-6 text-center text-xs text-text-muted">{t('subjects.empty')}</p>
+              ) : (
+                <div className="space-y-0.5">
+                  {activeFlyoutItems.map((sub) => (
+                    <button
+                      key={sub.key}
+                      onClick={() => handleNav(sub.to)}
+                      className={cn(
+                        'group/item flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm transition-all duration-150',
+                        sub.active
+                          ? 'bg-primary/15 text-primary-light'
+                          : 'text-text-secondary hover:bg-white/[0.06] hover:text-text hover:translate-x-[1px]'
+                      )}
+                    >
+                      <Icon name={sub.icon} size={14} className={cn('shrink-0 transition-colors', sub.active ? 'text-primary-light' : 'text-text-muted group-hover/item:text-text-secondary')} />
+                      <span className="truncate max-w-[200px]" title={sub.label}>{sub.label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </motion.div>
         )}
-      </div>
+      </AnimatePresence>
 
-      {/* Storage meter (expanded only) */}
-      {!collapsed && <StorageMeter />}
+      {/* Bottom sticky area — pengaturan + storage meter */}
+      <div className="shrink-0 mt-auto border-t border-white/[0.06] bg-sidebar/95 backdrop-blur-md">
+        <div className="px-3 pt-2 pb-1">
+          {collapsed ? (
+            <Tooltip label={t('nav.settings')} side="right">
+              <NavLink to="/settings" onClick={() => onNavigate?.()} aria-label={t('nav.settings')} className="flex h-10 w-10 items-center justify-center rounded-xl text-text-secondary transition-colors hover:bg-card hover:text-text">
+                <Icon name={ICONS.nav.settings} size={20} />
+              </NavLink>
+            </Tooltip>
+          ) : (
+            <NavLink to="/settings" onClick={() => onNavigate?.()} className={cn('flex h-10 items-center gap-3 rounded-xl px-3 text-sm font-medium transition-colors', location.pathname.startsWith('/settings') ? 'bg-primary/15 text-primary-light' : 'text-text-secondary hover:bg-card hover:text-text')}>
+              <Icon name={ICONS.nav.settings} size={20} className="shrink-0" />
+              <span>{t('nav.settings')}</span>
+            </NavLink>
+          )}
+        </div>
+        {!collapsed && <StorageMeter />}
+      </div>
     </div>
   );
 }
@@ -342,11 +453,11 @@ export default function UnifiedSidebar() {
     );
   }
 
-  // Non-desktop: rail 68px di flow (tablet) + drawer overlay saat dibuka.
+  // Non-desktop: rail 72px di flow (tablet) + drawer overlay saat dibuka.
   return (
     <>
       {showRailInFlow && (
-        <aside className="relative z-20 h-screen w-[68px] shrink-0">
+        <aside className="relative z-20 h-screen w-[72px] shrink-0">
           <SidebarContent collapsed />
         </aside>
       )}

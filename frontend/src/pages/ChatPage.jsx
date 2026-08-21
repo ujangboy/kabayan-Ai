@@ -17,14 +17,15 @@ export default function ChatPage() {
   const isCurrentChatStreaming = useChatStore((s) => s.streamingChatIds.includes(currentChatId));
 
   return (
-    <div className="flex h-full">
+    <div className="flex h-full overflow-hidden">
       <ChatSidebar />
-      <div className="flex-1 flex flex-col min-w-0 relative">
+      <div className="flex-1 flex flex-col min-w-0 relative overflow-hidden bg-background">
         <ChatHeader chat={chat} isCurrentChatStreaming={isCurrentChatStreaming} />
         <ChatMessageList
           chat={chat}
           isCurrentChatStreaming={isCurrentChatStreaming}
           onFeedback={handleFeedback}
+          onPromptSelect={sendMessage}
         />
         <ChatNoteToast noteToast={noteToast} />
         <ChatComposer
