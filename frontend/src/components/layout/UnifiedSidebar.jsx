@@ -231,8 +231,9 @@ function SidebarContent({ collapsed, onNavigate }) {
 
   return (
     <div className="flex h-full flex-col bg-sidebar/80 backdrop-blur-[16px] divider-gradient-r">
-      {/* Logo + toggle (expanded: kanan; collapsed/rail: logo di tengah, toggle di footer) */}
-      <div className={cn('flex h-16 shrink-0 items-center', collapsed ? 'justify-center px-0' : 'justify-between px-4')}>
+      {/* Logo + toggle selalu di atas. Expanded: logo kiri, toggle kanan.
+          Collapsed/rail: logo di atas, toggle tepat di bawahnya (robot tetap kelihatan, tak tabrakan). */}
+      <div className={cn('flex shrink-0 items-center', collapsed ? 'flex-col items-center justify-center gap-2 px-0 py-3' : 'h-16 justify-between px-4')}>
         <div className={cn('flex items-center gap-2.5', collapsed && 'justify-center')}>
           <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-primary shadow-btn-primary">
             <span className="absolute inset-0 rounded-xl bg-gradient-primary opacity-50 blur-md" />
@@ -240,16 +241,14 @@ function SidebarContent({ collapsed, onNavigate }) {
           </div>
           {!collapsed && <span className="text-sm font-semibold text-text">Kabayan AI</span>}
         </div>
-        {!collapsed && (
-          <button
-            onClick={toggleCollapsed}
-            aria-label={t('sidebar.collapse')}
-            title={t('sidebar.collapse')}
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-text-secondary transition-colors hover:bg-white/[0.06] hover:text-text"
-          >
-            <Icon name={ICONS.actions.menu} size={18} />
-          </button>
-        )}
+        <button
+          onClick={toggleCollapsed}
+          aria-label={collapsed ? t('sidebar.expand') : t('sidebar.collapse')}
+          title={collapsed ? t('sidebar.expand') : t('sidebar.collapse')}
+          className="flex h-8 w-8 items-center justify-center rounded-lg text-text-secondary transition-colors hover:bg-white/[0.06] hover:text-text"
+        >
+          <Icon name={collapsed ? ICONS.actions.chevronRight : ICONS.actions.chevronLeft} size={18} />
+        </button>
       </div>
 
       {/* Search trigger */}
@@ -293,22 +292,6 @@ function SidebarContent({ collapsed, onNavigate }) {
 
       {/* Storage meter (expanded only) */}
       {!collapsed && <StorageMeter />}
-
-      {/* Toggle expand (collapsed/rail only — tidak overlap karena storage meter tersembunyi) */}
-      {collapsed && (
-        <div className="flex justify-center px-3 pb-3">
-          <Tooltip label={t('sidebar.expand')} side="right">
-            <button
-              onClick={toggleCollapsed}
-              aria-label={t('sidebar.expand')}
-              title={t('sidebar.expand')}
-              className="flex h-9 w-9 items-center justify-center rounded-xl text-text-secondary transition-colors hover:bg-card hover:text-text"
-            >
-              <Icon name={ICONS.actions.menuOpen} size={18} />
-            </button>
-          </Tooltip>
-        </div>
-      )}
     </div>
   );
 }
