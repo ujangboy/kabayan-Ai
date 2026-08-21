@@ -85,13 +85,46 @@ export default function StudyPlanPage() {
   if (!sessionId) {
     return (
       <AnimatePresence mode="wait" initial={false}>
-        <motion.div key="nosession" {...fadeSlide} className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-          <EmptyState
-            icon={ICONS.learning.calendarCheck}
-            title={t('studyplan.noSessionTitle', 'Belum ada rencana belajar')}
-            description={t('studyplan.noSessionDesc', 'Buat Ujian Simulasi terlebih dahulu untuk mendapatkan rencana belajar yang dipersonalisasi.')}
-            action={<button onClick={() => navigate('/exam-analyzer')} className="btn-primary">{t('nav.exam')}</button>}
-          />
+        <motion.div key="nosession" {...fadeSlide} className="flex-1 flex flex-col items-center justify-center px-6 py-10">
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+            className="w-full max-w-[680px]"
+          >
+            <div className="card-base flex flex-col items-center gap-6 p-8 text-center md:p-10">
+              <div className="flex h-[72px] w-[72px] items-center justify-center rounded-2xl bg-primary/10 text-primary-light">
+                <Icon name={ICONS.learning.calendarCheck} size={32} />
+              </div>
+
+              <div className="space-y-2">
+                <h2 className="text-xl font-bold text-text md:text-2xl">{t('studyPlanPage.empty.title')}</h2>
+                <p className="mx-auto max-w-md text-sm text-text-secondary">{t('studyPlanPage.empty.desc')}</p>
+              </div>
+
+              <ol className="w-full space-y-2.5 text-left">
+                {[1, 2, 3].map((n) => (
+                  <li key={n} className="flex items-center gap-3 rounded-xl bg-white/[0.03] px-3.5 py-2.5">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-bold text-primary-light">{n}</span>
+                    <span className="text-sm text-text-secondary">{t(`studyPlanPage.empty.step${n}`)}</span>
+                  </li>
+                ))}
+              </ol>
+
+              <div className="flex w-full flex-col gap-2.5 sm:flex-row sm:justify-center">
+                <Button onClick={() => navigate('/exam-analyzer')} className="inline-flex items-center justify-center gap-2">
+                  <Icon name={ICONS.nav.exam} size={18} />
+                  {t('studyPlanPage.empty.ctaPrimary')}
+                </Button>
+                <Button variant="ghost" onClick={() => navigate('/materi')} className="inline-flex items-center justify-center gap-2">
+                  <Icon name={ICONS.nav.materials} size={18} />
+                  {t('studyPlanPage.empty.ctaSecondary')}
+                </Button>
+              </div>
+
+              <p className="text-xs text-text-muted">{t('studyPlanPage.empty.hint')}</p>
+            </div>
+          </motion.div>
         </motion.div>
       </AnimatePresence>
     );
@@ -123,7 +156,7 @@ export default function StudyPlanPage() {
       <AnimatePresence mode="wait" initial={false}>
         <motion.div key="noplan" {...fadeSlide} className="flex-1 flex flex-col items-center justify-center p-6 text-center">
           <EmptyState
-            title={t('studyplan.noPlan', 'Belum ada rencana belajar untuk sesi ini.')}
+            title={t('studyPlanPage.noPlan')}
             action={<button onClick={() => navigate('/exam-analyzer')} className="btn-ghost border border-border">Kembali</button>}
           />
         </motion.div>

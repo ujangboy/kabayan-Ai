@@ -127,7 +127,7 @@ function SidebarContent({ collapsed, onNavigate }) {
       const shown = plans.length ? plans : list;
       return shown.map((s) => ({
         key: `sp-${s.id}`,
-        label: s.subject_name || t('studyplan.noSessionTitle', 'Rencana Belajar'),
+        label: s.subject_name || t('studyPlanPage.noSessionTitle', 'Rencana Belajar'),
         to: `/study-plan?session_id=${s.id}`,
         icon: ICONS.nav.studyPlan,
         active: new URLSearchParams(location.search).get('session_id') === String(s.id),
