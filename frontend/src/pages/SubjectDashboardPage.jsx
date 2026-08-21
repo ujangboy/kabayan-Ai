@@ -13,24 +13,50 @@ import BackButton from '@/components/layout/BackButton';
 import { useToast } from '@/components/Toast';
 import { extractErrorMessage } from '@/utils/errors';
 
-import StatCard from '@/components/dashboard/StatCard';
 import ScoreChart from '@/components/dashboard/ScoreChart';
 import EditSubjectModal from '@/components/dashboard/EditSubjectModal';
 import StudyRecommendationCard from '@/components/dashboard/StudyRecommendationCard';
 import MaterialsTable from '@/components/dashboard/MaterialsTable';
 
 const ACTIVITY_META = (t) => ({
-  quiz:      { icon: ICONS.ui.help, label: t('subjectDashboard.activityQuiz'),      cls: 'bg-accent-teal/10 text-accent-teal' },
-  ujian:     { icon: ICONS.learning.trophy,     label: t('subjectDashboard.activityExam'),      cls: 'bg-primary/10 text-primary' },
-  flashcard: { icon: ICONS.nav.flashcard, label: t('subjectDashboard.activityFlashcard'), cls: 'bg-accent-purple/10 text-accent-purple' },
-  materi:    { icon: ICONS.files.document,   label: t('subjectDashboard.activityMaterial'),  cls: 'bg-accent-blue/10 text-accent-blue' },
+  quiz:      { icon: ICONS.ui.help, label: t('subjectDashboard.activityQuiz'),      cls: 'bg-teal-500/10 text-teal-400 border-teal-500/20' },
+  ujian:     { icon: ICONS.learning.trophy,     label: t('subjectDashboard.activityExam'),      cls: 'bg-violet-600/10 text-violet-300 border-violet-600/20' },
+  flashcard: { icon: ICONS.nav.flashcard, label: t('subjectDashboard.activityFlashcard'), cls: 'bg-fuchsia-500/10 text-fuchsia-300 border-fuchsia-500/20' },
+  materi:    { icon: ICONS.files.document,   label: t('subjectDashboard.activityMaterial'),  cls: 'bg-sky-500/10 text-sky-300 border-sky-500/20' },
 });
 
 function QueryErrorCard({ title }) {
   const { t } = useTranslation();
   return (
-    <div className="card-base p-6 border-danger/30">
-      <p className="text-xs text-danger">{t('subjectDashboard.queryError', { title })}</p>
+    <div className="rounded-xl border border-red-500/30 bg-slate-900 p-4">
+      <p className="text-xs text-red-400">{t('subjectDashboard.queryError', { title })}</p>
+    </div>
+  );
+}
+
+function MetricBar({ subject, masteryPct, t }) {
+  const items = [
+    { icon: ICONS.files.document, label: t('subjectDashboard.statMaterials'), value: subject.total_materials, color: 'text-sky-400', bg: 'bg-sky-500/10' },
+    { icon: ICONS.nav.flashcard, label: t('subjectDashboard.statFlashcards'), value: subject.total_flashcards, color: 'text-fuchsia-400', bg: 'bg-fuchsia-500/10' },
+    { icon: ICONS.learning.trophy, label: t('subjectDashboard.statAvgScore'), value: subject.avg_score, suffix: subject.avg_score != null ? '/100' : '', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+    { icon: ICONS.learning.progress, label: t('subjectDashboard.statMastery', 'Progress'), value: masteryPct, suffix: masteryPct != null ? '%' : '', color: 'text-violet-300', bg: 'bg-violet-600/10' },
+  ];
+  return (
+    <div className="flex h-14 rounded-xl border border-slate-800 bg-slate-900 divide-x divide-slate-800 overflow-hidden">
+      {items.map((it) => (
+        <div key={it.label} className="flex-1 flex items-center gap-2.5 px-3.5 min-w-0">
+          <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${it.bg} border border-white/5`}>
+            <Icon name={it.icon} size={14} className={it.color} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold leading-none text-white truncate">
+              {it.value != null ? it.value : '—'}
+              {it.suffix && <span className="text-[11px] font-normal text-slate-400 ml-0.5">{it.suffix}</span>}
+            </p>
+            <p className="text-[11px] leading-none text-slate-400 truncate mt-0.5">{it.label}</p>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
@@ -45,12 +71,12 @@ export default function SubjectDashboardPage() {
   const setLastSubjectId = useUiStore((s) => s.setLastSubjectId);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('files');
 
-  // Remember last viewed subject for sidebar navigation
   useEffect(() => {
     if (subjectId) setLastSubjectId(subjectId);
     return () => setLastSubjectId(null);
-  }, [subjectId]);
+  }, [subjectId, setLastSubjectId]);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['subject-dashboard', subjectId],
@@ -99,9 +125,9 @@ export default function SubjectDashboardPage() {
   if (isLoading) {
     return (
       <AnimatePresence mode="wait" initial={false}>
-        <motion.div key="loading" {...fadeSlide} className="flex-1 overflow-y-auto p-6 md:p-10">
-          <div className="w-full card-base p-8 space-y-4">
-            {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-5 w-full" />)}
+        <motion.div key="loading" {...fadeSlide} className="flex-1 overflow-y-auto p-6 md:p-8 bg-slate-950">
+          <div className="w-full rounded-xl border border-slate-800 bg-slate-900 p-6 space-y-3">
+            {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-4 w-full bg-slate-800" />)}
           </div>
         </motion.div>
       </AnimatePresence>
@@ -111,8 +137,8 @@ export default function SubjectDashboardPage() {
   if (error || !subject) {
     return (
       <AnimatePresence mode="wait" initial={false}>
-        <motion.div key="notfound" {...fadeSlide} className="flex-1 overflow-y-auto p-6 md:p-10">
-          <div className="w-full card-base p-8 text-center text-text-muted">{t('subjectDashboard.notFound')}</div>
+        <motion.div key="notfound" {...fadeSlide} className="flex-1 overflow-y-auto p-6 md:p-8 bg-slate-950">
+          <div className="w-full rounded-xl border border-slate-800 bg-slate-900 p-8 text-center text-slate-400 text-sm">{t('subjectDashboard.notFound')}</div>
         </motion.div>
       </AnimatePresence>
     );
@@ -121,20 +147,20 @@ export default function SubjectDashboardPage() {
   const activityMeta = ACTIVITY_META(t);
 
   const quickActions = [
-    { icon: ICONS.learning.timer,      label: t('subjectDashboard.quickExamStart', 'Simulasi Ujian'),  to: `/exam-analyzer?subject_id=${subjectId}`, cls: 'hover:border-primary/50 hover:bg-primary/10' },
-    { icon: ICONS.ui.help, label: t('subjectDashboard.quickQuizStart', 'Mulai Quiz'),      to: `/quiz?subject_id=${subjectId}`,          cls: 'hover:border-accent-teal/50 hover:bg-accent-teal/10' },
-    { icon: ICONS.nav.flashcard, label: t('subjectDashboard.quickFlashcardReview', 'Review Flashcard'), to: `/flashcard?subject_id=${subjectId}`, cls: 'hover:border-accent-purple/50 hover:bg-accent-purple/10' },
-    { icon: ICONS.actions.upload,     label: t('subjectDashboard.quickUpload', 'Upload Materi'),      to: `/materi?subject_id=${subjectId}`,         cls: 'hover:border-accent-blue/50 hover:bg-accent-blue/10' },
+    { icon: ICONS.learning.timer,      label: t('subjectDashboard.quickExamStart', 'Simulasi Ujian'),  to: `/exam-analyzer?subject_id=${subjectId}` },
+    { icon: ICONS.ui.help, label: t('subjectDashboard.quickQuizStart', 'Mulai Quiz'),      to: `/quiz?subject_id=${subjectId}` },
+    { icon: ICONS.nav.flashcard, label: t('subjectDashboard.quickFlashcardReview', 'Review Flashcard'), to: `/flashcard?subject_id=${subjectId}` },
+    { icon: ICONS.actions.upload,     label: t('subjectDashboard.quickUpload', 'Upload Materi'),      to: `/materi?subject_id=${subjectId}` },
   ];
 
   return (
     <AnimatePresence mode="wait" initial={false}>
-      <motion.div key="main" {...fadeSlide} className="flex-1 overflow-y-auto p-6 md:p-10">
-        <div className="w-full space-y-6">
+      <motion.div key="main" {...fadeSlide} className="flex-1 overflow-y-auto p-6 md:p-8 bg-slate-950">
+        <div className="w-full max-w-7xl mx-auto space-y-5">
 
-        {/* Subject header + quick action bar — rapi, judul jelas, back ke Mata Kuliah */}
+        {/* Header compact */}
         <motion.div
-          initial={{ opacity: 0, y: 16 }}
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-slate-900 border border-slate-800 rounded-2xl p-5"
         >
@@ -146,7 +172,7 @@ export default function SubjectDashboardPage() {
                   <Icon name={ICONS.learning.progress} size={18} className="text-white" />
                 </div>
                 <div className="min-w-0">
-                  <h1 className="text-xl md:text-2xl font-semibold tracking-tight text-white truncate">{subject.name}</h1>
+                  <h1 className="text-xl font-semibold tracking-tight text-white truncate">{subject.name}</h1>
                   <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                     {subject.semester && (
                       <span className="text-[11px] px-2 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300">
@@ -178,7 +204,6 @@ export default function SubjectDashboardPage() {
             <p className="text-sm text-slate-400 mt-3 italic">"{subject.description}"</p>
           )}
 
-          {/* Action bar — pill buttons */}
           <div className="flex items-center gap-2 flex-wrap mt-4 pt-4 border-t border-slate-800">
             {quickActions.map(({ icon, label, to }) => (
               <motion.button
@@ -194,94 +219,102 @@ export default function SubjectDashboardPage() {
           </div>
         </motion.div>
 
-        {/* Main grid — 70% content : 30% insight sidebar */}
+        {/* Metric Bar compact h-14 */}
+        <MetricBar subject={subject} masteryPct={masteryPct} t={t} />
+
+        {/* Main grid: 8 + 4 with sticky sidebar w-80 */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
-          {/* LEFT — main workspace */}
-          <div className="lg:col-span-8 space-y-6 min-w-0">
-            {/* Metric overview cards */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <StatCard icon={ICONS.files.document} label={t('subjectDashboard.statMaterials')}          value={subject.total_materials}  color="text-accent-blue" />
-              <StatCard icon={ICONS.nav.flashcard}   label={t('subjectDashboard.statFlashcards')}        value={subject.total_flashcards} color="text-accent-purple" />
-              <StatCard icon={ICONS.learning.trophy}       label={t('subjectDashboard.statAvgScore')}          value={subject.avg_score}        color="text-success" suffix={subject.avg_score != null ? '/100' : ''} />
-              <StatCard icon={ICONS.learning.progress}   label={t('subjectDashboard.statMastery', 'Progress Penguasaan')} value={masteryPct} color="text-primary" suffix={masteryPct != null ? '%' : ''} />
-            </div>
+          {/* LEFT — tabbed view */}
+          <div className="lg:col-span-8 min-w-0">
+            <div className="rounded-2xl border border-slate-800 bg-slate-900 overflow-hidden">
+              {/* Tabs */}
+              <div className="flex items-center gap-1 px-2 pt-2 border-b border-slate-800 bg-slate-900/50">
+                {[
+                  { key: 'files', label: 'Berkas & Materi', icon: ICONS.files.document },
+                  { key: 'analytics', label: 'Riwayat & Analytics', icon: ICONS.learning.barChart },
+                ].map(tab => (
+                  <button
+                    key={tab.key}
+                    onClick={() => setActiveTab(tab.key)}
+                    className={`relative flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium rounded-t-lg transition-colors ${activeTab === tab.key ? 'text-white bg-slate-800' : 'text-slate-400 hover:text-white hover:bg-slate-800/50'}`}
+                  >
+                    <Icon name={tab.icon} size={14} className={activeTab === tab.key ? 'text-violet-300' : 'text-slate-500'} />
+                    {tab.label}
+                    {activeTab === tab.key && <motion.span layoutId="subject-tab-indicator" className="absolute inset-x-2 -bottom-px h-0.5 bg-violet-600 rounded-full" />}
+                  </button>
+                ))}
+              </div>
 
-            {/* Materials table — now in main workspace */}
-            <MaterialsTable materials={materials} subjectId={subjectId} />
-
-            {/* Bottom row — aktivitas terbaru + riwayat skor */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-              {/* Recent activity */}
-              <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                className={`bg-slate-900 border border-slate-800 rounded-2xl p-5 ${!hasScores ? 'lg:col-span-2' : ''}`}
-              >
-                <div className="flex items-center gap-2 mb-3">
-                  <Icon name={ICONS.ui.bolt} size={16} className="text-text-secondary" />
-                  <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('subjectDashboard.recentActivityTitle')}</h2>
-                </div>
-                {recentActivity.length === 0 ? (
-                  <div className="text-center py-8">
-                    <Icon name={ICONS.ui.bolt} size={26} className="mx-auto mb-2 text-text-muted opacity-40" />
-                    <p className="text-xs text-text-muted">{t('subjectDashboard.recentActivityEmpty')}</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {recentActivity.map((a, i) => {
-                      const meta = activityMeta[a.type] || activityMeta.materi;
-                      const iconName = meta.icon;
-                      return (
-                        <div key={i} className="flex items-start gap-2.5">
-                          <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${meta.cls}`}>
-                            <Icon name={iconName} size={13} />
+              <div className="p-4">
+                <AnimatePresence mode="wait">
+                  {activeTab === 'files' ? (
+                    <motion.div key="files" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.18 }}>
+                      <MaterialsTable materials={materials} subjectId={subjectId} compact />
+                    </motion.div>
+                  ) : (
+                    <motion.div key="analytics" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.18 }} className="space-y-4">
+                      {hasScores ? (
+                        <div className="rounded-xl border border-slate-800 bg-slate-950 p-4">
+                          <div className="flex items-center gap-2 mb-3">
+                            <Icon name={ICONS.learning.progress} size={14} className="text-violet-400" />
+                            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{t('subjectDashboard.scoreHistoryTitle')}</h3>
                           </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-[11px] font-medium text-text truncate" title={a.label}>{a.label}</p>
-                            <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                              <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-white/[0.04] border border-white/[0.06] text-[9px] text-text-secondary">
-                                {meta.label}
-                              </span>
-                              <span className="text-[10px] text-text-muted">{formatDate(a.date)}</span>
-                              {a.score != null && (
-                                <span className="text-[10px] font-semibold text-success">{a.score}</span>
-                              )}
-                            </div>
-                          </div>
+                          <ScoreChart history={scoreHistory} />
                         </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </motion.div>
-
-              {/* Score history chart */}
-              {hasScores && (
-                <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Icon name={ICONS.learning.progress} size={16} className="text-primary" />
-                    <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('subjectDashboard.scoreHistoryTitle')}</h2>
-                  </div>
-                  <ScoreChart history={scoreHistory} />
-                </motion.div>
-              )}
+                      ) : (
+                        <div className="rounded-xl border border-dashed border-slate-700 bg-slate-900 p-6 text-center text-sm text-slate-500">
+                          {t('subjectDashboard.chartNoScores', 'Belum ada riwayat skor')}
+                        </div>
+                      )}
+                      <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+                        <div className="flex items-center gap-2 mb-3">
+                          <Icon name={ICONS.ui.bolt} size={14} className="text-slate-400" />
+                          <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{t('subjectDashboard.recentActivityTitle')}</h3>
+                        </div>
+                        {recentActivity.length === 0 ? (
+                          <p className="text-sm text-slate-500 text-center py-6">{t('subjectDashboard.recentActivityEmpty')}</p>
+                        ) : (
+                          <div className="space-y-2.5">
+                            {recentActivity.slice(0, 8).map((a, i) => {
+                              const meta = activityMeta[a.type] || activityMeta.materi;
+                              return (
+                                <div key={i} className="flex items-center gap-2.5 py-1">
+                                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border ${meta.cls}`}>
+                                    <Icon name={meta.icon} size={12} />
+                                  </div>
+                                  <div className="min-w-0 flex-1">
+                                    <p className="text-xs font-medium text-white truncate" title={a.label}>{a.label}</p>
+                                    <p className="text-[11px] text-slate-500">{formatDate(a.date)}{a.score != null ? ` • ${a.score}` : ''}</p>
+                                  </div>
+                                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-400 shrink-0">{meta.label}</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
           </div>
 
-          {/* RIGHT — insight sidebar */}
-          <div className="lg:col-span-4 space-y-6 min-w-0">
-            {isProgressError ? (
-              <QueryErrorCard title={t('subjectDashboard.progressTitle', 'Konsistensi')} />
-            ) : (
-              <ProgressCard progress={studyProgress} />
-            )}
-
-            {isRouteError ? (
-              <QueryErrorCard title={t('studyRoute.title')} />
-            ) : (
-              <StudyRecommendationCard route={studyRoute} subjectId={subjectId} />
-            )}
+          {/* RIGHT — sticky sidebar w-80 / col-span-4 */}
+          <div className="lg:col-span-4 min-w-0">
+            <div className="lg:sticky lg:top-6 space-y-4">
+              {isProgressError ? (
+                <QueryErrorCard title={t('studyProgress.title')} />
+              ) : (
+                <ProgressCard progress={studyProgress} />
+              )}
+              {isRouteError ? (
+                <QueryErrorCard title={t('studyRoute.title')} />
+              ) : (
+                <StudyRecommendationCard route={studyRoute} subjectId={subjectId} />
+              )}
+            </div>
           </div>
         </div>
       </div>

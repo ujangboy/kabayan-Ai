@@ -11,7 +11,7 @@ import FileTypeIcon from '@/components/FileTypeIcon';
 import { useToast } from '@/components/Toast';
 import { Tooltip, ConfirmDialog , Icon } from '@/components/ui';
 
-export default function MaterialsTable({ materials, subjectId }) {
+export default function MaterialsTable({ materials, subjectId, compact = false }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -40,45 +40,49 @@ export default function MaterialsTable({ materials, subjectId }) {
     ? allMaterials.filter((m) => (m.filename || '').toLowerCase().includes(query.trim().toLowerCase()))
     : allMaterials;
 
+  const rowPy = compact ? 'py-2' : 'py-2.5';
+  const headerPy = 'py-2';
+
   return (
     <>
-      <div className="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-2xl overflow-x-auto">
+      <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
         {/* Header — title + search + add */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 divider-gradient-b relative">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-3 py-2.5 border-b border-slate-800 bg-slate-900">
           <div className="flex items-center gap-2">
-            <Icon name={ICONS.files.document} size={14} className="text-text-secondary" />
-            <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">
+            <Icon name={ICONS.files.document} size={13} className="text-slate-500" />
+            <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
               {t('subjectDashboard.materialsTitle', { count: allMaterials.length })}
             </h2>
           </div>
           <div className="flex items-center gap-2">
             <div className="relative">
-              <Icon name={ICONS.actions.search} size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-text-muted" />
+              <Icon name={ICONS.actions.search} size={11} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500" />
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={t('subjectDashboard.searchMaterials', 'Cari materi...')}
-                className="w-40 sm:w-48 bg-white/[0.03] border border-white/[0.08] rounded-lg pl-7 pr-2 py-1.5 text-xs text-text placeholder:text-text-muted focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all"
+                className="w-36 sm:w-44 bg-slate-800 border border-slate-700 rounded-lg pl-7 pr-2 py-1.5 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-violet-600/50 focus:ring-1 focus:ring-violet-600/20 transition-all"
               />
             </div>
             <button
               onClick={() => navigate(`/materi?subject_id=${subjectId}`)}
-              className="btn-primary px-3 py-1.5 rounded-lg text-xs"
+              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-violet-600 text-white hover:bg-violet-700 transition-colors"
             >
               <Icon name={ICONS.actions.addOutline} size={12} /> {t('subjectDashboard.addMaterial', 'Tambah')}
             </button>
           </div>
         </div>
 
+        <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="tr-divider text-[10px] text-text-muted uppercase tracking-wider">
-              <th className="px-4 py-2 text-left font-semibold">#</th>
-              <th className="px-4 py-2 text-left font-semibold">{t('subjectDashboard.materialName', 'Nama')}</th>
-              <th className="px-4 py-2 text-left font-semibold">{t('subjectDashboard.materialType', 'Tipe')}</th>
-              <th className="px-4 py-2 text-right font-semibold">{t('subjectDashboard.materialStatus', 'Status')}</th>
-              <th className="px-4 py-2 text-left font-semibold">{t('subjectDashboard.materialDate', 'Tanggal')}</th>
-              <th className="px-4 py-2 text-right font-semibold">{t('subjectDashboard.materialActions', 'Aksi')}</th>
+            <tr className="text-[11px] text-slate-500 uppercase tracking-wider border-b border-slate-800 bg-slate-950/50">
+              <th className={`px-3 ${headerPy} text-left font-medium`}>#</th>
+              <th className={`px-3 ${headerPy} text-left font-medium`}>{t('subjectDashboard.materialName', 'Nama')}</th>
+              <th className={`px-3 ${headerPy} text-left font-medium`}>{t('subjectDashboard.materialType', 'Tipe')}</th>
+              <th className={`px-3 ${headerPy} text-right font-medium`}>{t('subjectDashboard.materialStatus', 'Status')}</th>
+              <th className={`px-3 ${headerPy} text-left font-medium`}>{t('subjectDashboard.materialDate', 'Tanggal')}</th>
+              <th className={`px-3 ${headerPy} text-right font-medium`}>{t('subjectDashboard.materialActions', 'Aksi')}</th>
             </tr>
           </thead>
           <tbody>
@@ -94,48 +98,48 @@ export default function MaterialsTable({ materials, subjectId }) {
               </tr>
             ) : (
               filtered.map((m, idx) => (
-                <tr key={m.id} className="tr-divider last:border-0 hover:bg-background/50 transition-colors">
-                  <td className="px-4 py-3 text-text-muted text-xs w-8">{idx + 1}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      <FileTypeIcon type={(m.filename || '').split('.').pop()?.toUpperCase() || m.material_type} className="text-lg text-text-muted" />
-                      <span className="text-text font-medium truncate max-w-[220px]" title={m.filename}>{m.filename}</span>
+                <tr key={m.id} className="border-b border-slate-800 last:border-0 hover:bg-slate-800/50 transition-colors">
+                  <td className={`px-3 ${rowPy} text-slate-500 text-xs w-8`}>{idx + 1}</td>
+                  <td className={`px-3 ${rowPy}`}>
+                    <div className="flex items-center gap-2.5">
+                      <FileTypeIcon type={(m.filename || '').split('.').pop()?.toUpperCase() || m.material_type} className="text-base text-slate-500" />
+                      <span className="text-sm text-white font-medium truncate max-w-[220px]" title={m.filename}>{m.filename}</span>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-text-secondary text-xs">{(m.filename || '').split('.').pop()?.toUpperCase() || m.material_type}</td>
-                  <td className="px-4 py-3 text-right">
-                    <span className={`badge text-[10px] ${m.status === 'Ready' ? 'badge-success' : m.status === 'Failed' ? 'badge-danger' : 'badge-warning'}`}>
+                  <td className={`px-3 ${rowPy} text-slate-400 text-xs`}>{(m.filename || '').split('.').pop()?.toUpperCase() || m.material_type}</td>
+                  <td className={`px-3 ${rowPy} text-right`}>
+                    <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border ${m.status === 'Ready' ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20' : m.status === 'Failed' ? 'bg-red-500/10 text-red-300 border-red-500/20' : 'bg-amber-500/10 text-amber-300 border-amber-500/20'}`}>
                       {m.status}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-text-secondary text-xs whitespace-nowrap">{formatDate(m.upload_date)}</td>
-                  <td className="px-4 py-3 text-right">
+                  <td className={`px-3 ${rowPy} text-slate-400 text-xs whitespace-nowrap`}>{formatDate(m.upload_date)}</td>
+                  <td className={`px-3 ${rowPy} text-right`}>
                     <div className="flex items-center justify-end gap-1">
                       <Tooltip label={t('subjectDashboard.viewMaterial', 'Lihat')}>
                         <button
                           onClick={() => navigate('/materi')}
                           aria-label={t('subjectDashboard.viewMaterial', 'Lihat')}
-                          className="p-1.5 rounded-lg text-text-muted hover:text-accent-blue hover:bg-accent-blue/10 transition-colors"
+                          className="p-1 rounded-md text-slate-500 hover:text-sky-300 hover:bg-sky-500/10 transition-colors"
                         >
-                          <Icon name={ICONS.ui.eye} size={13} />
+                          <Icon name={ICONS.ui.eye} size={12} />
                         </button>
                       </Tooltip>
                       <Tooltip label={t('subjectDashboard.quizMaterial', 'Quiz dari materi ini')}>
                         <button
                           onClick={() => navigate(`/quiz?subject_id=${subjectId}`)}
                           aria-label={t('subjectDashboard.quizMaterial', 'Quiz dari materi ini')}
-                          className="p-1.5 rounded-lg text-text-muted hover:text-accent-teal hover:bg-accent-teal/10 transition-colors"
+                          className="p-1 rounded-md text-slate-500 hover:text-teal-300 hover:bg-teal-500/10 transition-colors"
                         >
-                          <Icon name={ICONS.ui.help} size={13} />
+                          <Icon name={ICONS.ui.help} size={12} />
                         </button>
                       </Tooltip>
                       <Tooltip label={t('subjectDashboard.deleteMaterial', 'Hapus')}>
                         <button
                           onClick={() => setDeleteTarget(m)}
                           aria-label={t('subjectDashboard.deleteMaterial', 'Hapus')}
-                          className="p-1.5 rounded-lg text-text-muted hover:text-danger hover:bg-danger/10 transition-colors"
+                          className="p-1 rounded-md text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
                         >
-                          <Icon name={ICONS.actions.delete} size={13} />
+                          <Icon name={ICONS.actions.delete} size={12} />
                         </button>
                       </Tooltip>
                     </div>
@@ -145,6 +149,7 @@ export default function MaterialsTable({ materials, subjectId }) {
             )}
           </tbody>
         </table>
+        </div>
       </div>
 
       <ConfirmDialog

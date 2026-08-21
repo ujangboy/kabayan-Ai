@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useChatStore } from '@/store';
 import { abortActiveStream } from '@/services/tutorStream';
 import { useChatUrlSync } from '@/hooks/useChatUrlSync';
@@ -7,6 +8,9 @@ import ChatHeader from '@/components/chat/ChatHeader';
 import ChatMessageList from '@/components/chat/ChatMessageList';
 import ChatNoteToast from '@/components/chat/ChatNoteToast';
 import ChatComposer from '@/components/chat/ChatComposer';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ICONS } from '@/lib/icons';
+import { Icon } from '@/components/ui';
 
 export default function ChatPage() {
   useChatUrlSync();
@@ -15,25 +19,78 @@ export default function ChatPage() {
   const currentChatId = useChatStore((s) => s.currentChatId);
   const chat = useChatStore((s) => s.getCurrentChat());
   const isCurrentChatStreaming = useChatStore((s) => s.streamingChatIds.includes(currentChatId));
+  const [historyCollapsed, setHistoryCollapsed] = useState(false);
+
+  // Shortcut: Ctrl/Cmd + B toggle history
+  useEffect(() => {
+    const onKey = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+        e.preventDefault();
+        setHistoryCollapsed(v => !v);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   return (
-    <div className="flex h-full overflow-hidden">
-      <ChatSidebar />
-      <div className="flex-1 flex flex-col min-w-0 relative overflow-hidden bg-background">
-        <ChatHeader chat={chat} isCurrentChatStreaming={isCurrentChatStreaming} />
-        <ChatMessageList
-          chat={chat}
-          isCurrentChatStreaming={isCurrentChatStreaming}
-          onFeedback={handleFeedback}
-          onPromptSelect={sendMessage}
-        />
+    <div className="flex h-full overflow-hidden bg-slate-950">
+      <AnimatePresence initial={false}>
+        {!historyCollapsed && (
+          <motion.div
+            key="chat-history"
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: 256, opacity: 1 }}
+            exit={{ width: 0, opacity: 0 }}
+            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+            className="shrink-0 overflow-hidden border-r border-slate-800"
+          >
+            <div className="w-64 h-full">
+              <ChatSidebar />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div className="flex-1 flex flex-col min-w-0 relative overflow-hidden bg-slate-950">
+        {/* Top bar with PanelLeft toggle */}
+        <div className="shrink-0 flex items-center gap-2 px-3 py-2 border-b border-slate-800 bg-slate-900/50 backdrop-blur-sm">
+          <button
+            onClick={() => setHistoryCollapsed(v => !v)}
+            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            title={historyCollapsed ? 'Tampilkan riwayat' : 'Sembunyikan riwayat'}
+            aria-label="Toggle history"
+          >
+            <Icon name={historyCollapsed ? ICONS.actions.panelLeft : ICONS.actions.panelLeftClose} size={18} />
+          </button>
+          <div className="h-4 w-px bg-slate-800 mx-1" />
+          <ChatHeader chat={chat} isCurrentChatStreaming={isCurrentChatStreaming} />
+        </div>
+
+        {/* Centered conversation */}
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+          <div className="flex-1 overflow-hidden flex flex-col min-w-0">
+            <ChatMessageList
+              chat={chat}
+              isCurrentChatStreaming={isCurrentChatStreaming}
+              onFeedback={handleFeedback}
+              onPromptSelect={sendMessage}
+            />
+          </div>
+          {/* Floating composer centered max-w-3xl bottom-6 */}
+          <div className="shrink-0 px-4 pb-6 pt-2 bg-gradient-to-t from-slate-950 via-slate-950 to-transparent">
+            <div className="mx-auto w-full max-w-3xl">
+              <ChatComposer
+                onSend={sendMessage}
+                isStreaming={isCurrentChatStreaming}
+                onStop={() => abortActiveStream(currentChatId)}
+                tutorMode={!!chat?.tutorEnabled}
+              />
+            </div>
+          </div>
+        </div>
+
         <ChatNoteToast noteToast={noteToast} />
-        <ChatComposer
-          onSend={sendMessage}
-          isStreaming={isCurrentChatStreaming}
-          onStop={() => abortActiveStream(currentChatId)}
-          tutorMode={!!chat?.tutorEnabled}
-        />
       </div>
     </div>
   );

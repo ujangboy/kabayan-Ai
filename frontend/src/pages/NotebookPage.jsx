@@ -21,6 +21,7 @@ export default function NotebookPage() {
   const [isCreating, setIsCreating] = useState(false);
   const [showGeneratePanel, setShowGeneratePanel] = useState(false);
   const [noteSearch, setNoteSearch] = useState('');
+  const [showList, setShowList] = useState(true);
   const createMutexRef = useRef(false);
   // Refs to avoid stale closures in callbacks
   const rawNotesRef = useRef([]);
@@ -184,29 +185,61 @@ export default function NotebookPage() {
   };
 
   return (
-    <div className="flex h-full overflow-hidden bg-background">
+    <div className="flex h-full overflow-hidden bg-slate-950">
 
-      {/* ═══ Sidebar ═══ */}
-      <NotebookSidebar
-        isLoading={isLoading}
-        notes={notes}
-        filteredNotes={filteredNotes}
-        pinnedNotes={pinnedNotes}
-        unpinnedNotes={unpinnedNotes}
-        selectedNote={selectedNote}
-        noteSearch={noteSearch}
-        setNoteSearch={setNoteSearch}
-        isCreating={isCreating}
-        onCreateNote={handleCreateNote}
-        onShowGenerate={() => setShowGeneratePanel(true)}
-        onSelectNote={(n) => setSelectedNote(n)}
-        onPin={(id) => pinMutation.mutate(id)}
-        onDelete={handleDelete}
-        onClearAll={handleClearAll}
-      />
+      {/* ═══ Sidebar — collapsible with Toggle List ═══ */}
+      <AnimatePresence initial={false}>
+        {showList && (
+          <motion.div
+            key="note-list"
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: 288, opacity: 1 }}
+            exit={{ width: 0, opacity: 0 }}
+            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+            className="shrink-0 overflow-hidden border-r border-slate-800 hidden md:flex"
+          >
+            <div className="w-72 h-full">
+              <NotebookSidebar
+                isLoading={isLoading}
+                notes={notes}
+                filteredNotes={filteredNotes}
+                pinnedNotes={pinnedNotes}
+                unpinnedNotes={unpinnedNotes}
+                selectedNote={selectedNote}
+                noteSearch={noteSearch}
+                setNoteSearch={setNoteSearch}
+                isCreating={isCreating}
+                onCreateNote={handleCreateNote}
+                onShowGenerate={() => setShowGeneratePanel(true)}
+                onSelectNote={(n) => setSelectedNote(n)}
+                onPin={(id) => pinMutation.mutate(id)}
+                onDelete={handleDelete}
+                onClearAll={handleClearAll}
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* ═══ Main content ═══ */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      {/* ═══ Main content — max space when list hidden ═══ */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-slate-950">
+        {/* Toggle List bar — hidden when sidebar visible on desktop, always visible on mobile */}
+        <div className="shrink-0 flex items-center gap-2 px-3 py-2 border-b border-slate-800 bg-slate-900/50 backdrop-blur-sm">
+          <button
+            onClick={() => setShowList(v => !v)}
+            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-300 hover:text-white hover:bg-slate-700 text-xs font-medium transition-colors"
+            title={showList ? 'Sembunyikan daftar' : 'Tampilkan daftar'}
+          >
+            <span className="w-3.5 h-3.5 flex items-center justify-center">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="shrink-0">
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <path d="M9 3v18" />
+              </svg>
+            </span>
+            {showList ? 'Sembunyikan Daftar' : 'Tampilkan Daftar'}
+          </button>
+          <span className="text-xs text-slate-500 hidden sm:inline">Notebook — Editor & Previewer</span>
+        </div>
         <AnimatePresence mode="wait" initial={false}>
           {selectedNote ? (
             <motion.div

@@ -64,8 +64,7 @@ export default function ChatComposer({ onSend, isStreaming, onStop, tutorMode })
   };
 
   return (
-    <div className="shrink-0 bg-transparent px-4 pb-4 pt-2">
-      <div className="mx-auto w-full max-w-3xl relative">
+    <div className="w-full relative">
         <AnimatePresence>
           {showQuickPrompts && (
             <motion.div
@@ -96,8 +95,8 @@ export default function ChatComposer({ onSend, isStreaming, onStop, tutorMode })
           )}
         </AnimatePresence>
 
-        {/* Floating capsule — paperclip kiri, sparkles/bot opsional, send bulat kanan */}
-        <div className="flex items-end gap-2 rounded-2xl bg-slate-900 border border-slate-800 shadow-lg px-2.5 py-2">
+        {/* Floating capsule — bottom-6 shadow-2xl border-slate-800/80 */}
+        <div className="flex items-end gap-2 rounded-2xl bg-slate-900 border border-slate-800/80 shadow-2xl px-2.5 py-2">
           {/* Left: Paperclip attachment */}
           <Tooltip label={t('chat.attachFile', 'Lampiran')}>
             <button
@@ -159,6 +158,5 @@ export default function ChatComposer({ onSend, isStreaming, onStop, tutorMode })
           )}
         </div>
       </div>
-    </div>
   );
 }

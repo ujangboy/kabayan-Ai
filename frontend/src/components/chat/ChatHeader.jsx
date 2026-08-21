@@ -6,13 +6,13 @@ import { Tooltip , Icon } from '@/components/ui';
 import { useChatStore } from '@/store';
 import { subjectAPI } from '@/services/api';
 
-export default function ChatHeader({ chat, isCurrentChatStreaming }) {
+export default function ChatHeader({ chat, isCurrentChatStreaming, onToggleHistory, historyCollapsed }) {
   const { t } = useTranslation();
   const [subjects, setSubjects] = useState([]);
   const { setChatTutor, setTutorBadge, clearSelectedDocs, selectedDocs, tutorBadge } = useChatStore();
 
   useEffect(() => {
-    subjectAPI.getAll().then((res) => setSubjects(res || []));
+    subjectAPI.getAll().then((res) => setSubjects(res.data?.subjects || res || []));
   }, []);
 
   const tutorMode = !!chat?.tutorEnabled;
@@ -24,7 +24,7 @@ export default function ChatHeader({ chat, isCurrentChatStreaming }) {
   const handleLevelChange = (e) => setChatTutor(chat.id, true, tutorSubject, e.target.value);
 
   return (
-    <header className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between gap-3 bg-surface">
+    <header className="shrink-0 flex items-center justify-between gap-3 bg-transparent min-w-0 flex-1">
       <div className="min-w-0">
         <h1 className="text-base font-semibold text-text truncate">{chat?.title || t('chat.untitled')}</h1>
         <p className="text-xs text-text-muted truncate">

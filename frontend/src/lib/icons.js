@@ -60,6 +60,9 @@ export const ICONS = {
     externalLink: 'open_in_new',
     undo: 'undo',
     redo: 'redo',
+    panelLeft: 'menu_open',
+    panelLeftClose: 'menu',
+    toggleList: 'view_list',
   },
   // Status
   status: {
