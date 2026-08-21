@@ -117,11 +117,11 @@ function ToolBtn({ onClick, active, disabled, title, children, className: cls })
         disabled={disabled}
         title={title}
         className={cn(
-          'rounded-lg transition-all select-none flex items-center justify-center shrink-0',
-          'w-7 h-7',
+          'rounded-md transition-all select-none flex items-center justify-center shrink-0',
+          'w-7 h-7 p-1.5',
           active
-            ? 'bg-primary/20 text-primary shadow-sm shadow-primary/10'
-            : 'text-text-muted hover:text-text hover:bg-white/8',
+            ? 'bg-violet-600/20 text-violet-300 border border-violet-600/30'
+            : 'text-slate-400 hover:text-white hover:bg-slate-800',
           disabled && 'opacity-25 cursor-not-allowed pointer-events-none',
           cls
         )}
@@ -133,7 +133,7 @@ function ToolBtn({ onClick, active, disabled, title, children, className: cls })
 }
 
 function Sep() {
-  return <div className="w-px h-4 bg-border/40 mx-0.5 shrink-0" />;
+  return <div className="w-px h-4 bg-slate-700/60 mx-1 shrink-0" />;
 }
 
 // ─── Font size dropdown (top toolbar + floating bubble) ───────────────────
@@ -273,7 +273,7 @@ function Toolbar({ editor, onPreview, onInsertMath }) {
   const ia = (n, a) => editor.isActive(n, a);
 
   return (
-    <div className="flex flex-wrap items-center gap-0.5 px-3 py-1.5 divider-gradient-b relative bg-sidebar sticky top-0 z-10">
+    <div className="flex flex-wrap items-center gap-1.5 px-3 py-2 bg-slate-900 border-b border-slate-800 sticky top-0 z-10">
       <button
         type="button"
         onClick={onPreview}
@@ -619,11 +619,11 @@ export default function NoteEditor({ content, onSave, noteId, defaultMode = 'vie
   return (
     <div className="flex flex-col h-full">
 
-      {/* ═══ VIEW MODE — bersih, tanpa toolbar ═══ */}
+      {/* ═══ VIEW MODE — bersih, tanpa toolbar, scroll terisolasi ═══ */}
       {mode === 'view' && (
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto overscroll-contain sidebar-scroll">
           <div
-            className="w-full px-8 md:px-12 py-8 cursor-text min-h-full"
+            className="w-full max-w-3xl mx-auto px-6 md:px-10 py-8 cursor-text min-h-full"
             onDoubleClick={handleToggle}
             title={t('noteEditor.doubleClickToEdit')}
           >
@@ -632,12 +632,12 @@ export default function NoteEditor({ content, onSave, noteId, defaultMode = 'vie
         </div>
       )}
 
-      {/* ═══ EDIT MODE — Tiptap WYSIWYG ═══ */}
+      {/* ═══ EDIT MODE — Tiptap WYSIWYG, scroll terisolasi ═══ */}
       {mode === 'edit' && (
         <>
           <Toolbar editor={editor} onPreview={handleToggle} onInsertMath={handleInsertMath} />
-          <div className="flex-1 overflow-y-auto">
-            <div className="w-full px-8 md:px-12 py-8">
+          <div className="flex-1 overflow-y-auto overscroll-contain sidebar-scroll">
+            <div className="w-full max-w-3xl mx-auto px-6 md:px-10 py-8">
               <EditorContent editor={editor} />
             </div>
           </div>

@@ -11,7 +11,7 @@ import ChatComposer from '@/components/chat/ChatComposer';
 export default function ChatPage() {
   useChatUrlSync();
 
-  const { sendMessage, handleFeedback, generateAndSaveNote, noteToast, isNoteSaving } = useChatMessaging();
+  const { sendMessage, handleFeedback, noteToast } = useChatMessaging();
   const currentChatId = useChatStore((s) => s.currentChatId);
   const chat = useChatStore((s) => s.getCurrentChat());
   const isCurrentChatStreaming = useChatStore((s) => s.streamingChatIds.includes(currentChatId));
@@ -32,8 +32,6 @@ export default function ChatPage() {
           onSend={sendMessage}
           isStreaming={isCurrentChatStreaming}
           onStop={() => abortActiveStream(currentChatId)}
-          onSaveNote={generateAndSaveNote}
-          isNoteSaving={isNoteSaving}
           tutorMode={!!chat?.tutorEnabled}
         />
       </div>

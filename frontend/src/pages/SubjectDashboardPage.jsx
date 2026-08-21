@@ -132,29 +132,29 @@ export default function SubjectDashboardPage() {
       <motion.div key="main" {...fadeSlide} className="flex-1 overflow-y-auto p-6 md:p-10">
         <div className="w-full space-y-6">
 
-        {/* Subject header + quick action bar */}
+        {/* Subject header + quick action bar — rapi, judul jelas, back ke Mata Kuliah */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-2xl p-5"
+          className="bg-slate-900 border border-slate-800 rounded-2xl p-5"
         >
           <div className="flex items-center gap-3 flex-wrap">
-            <BackButton />
+            <BackButton fallback="/subjects" label={t('back.label', { name: t('nav.subjects') })} />
             <div className="flex-1 min-w-[200px]">
               <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center shrink-0 shadow-lg shadow-primary/25">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shrink-0 shadow-md">
                   <Icon name={ICONS.learning.progress} size={18} className="text-white" />
                 </div>
                 <div className="min-w-0">
-                  <h1 className="text-xl md:text-2xl font-bold text-text truncate">{subject.name}</h1>
+                  <h1 className="text-xl md:text-2xl font-semibold tracking-tight text-white truncate">{subject.name}</h1>
                   <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                     {subject.semester && (
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/[0.04] border border-white/[0.08] text-text-secondary">
+                      <span className="text-[11px] px-2 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300">
                         {subject.semester}
                       </span>
                     )}
                     {subject.lecturer && (
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-accent-blue/10 border border-accent-blue/20 text-accent-blue">
+                      <span className="text-[11px] px-2 py-0.5 rounded-full bg-violet-600/15 border border-violet-600/20 text-violet-300">
                         {t('subjectDashboard.headerLecturer', { name: subject.lecturer })}
                       </span>
                     )}
@@ -163,11 +163,11 @@ export default function SubjectDashboardPage() {
               </div>
             </div>
             <div className="flex gap-2">
-              <button onClick={() => setIsEditOpen(true)} className="btn-ghost px-3 py-2 rounded-xl text-sm border border-border">
+              <button onClick={() => setIsEditOpen(true)} className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium bg-slate-800 border border-slate-700 text-slate-200 hover:bg-slate-700 transition-colors">
                 <Icon name={ICONS.actions.edit} size={14} /> {t('subjectDashboard.editButton')}
               </button>
               <Tooltip label={t('common.delete')}>
-                <button onClick={() => setIsDeleteOpen(true)} aria-label={t('common.delete')} className="btn-ghost px-3 py-2 rounded-xl text-sm text-danger border border-border">
+                <button onClick={() => setIsDeleteOpen(true)} aria-label={t('common.delete')} className="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-slate-800 border border-slate-700 text-slate-400 hover:text-red-400 hover:border-red-500/30 transition-colors">
                   <Icon name={ICONS.actions.delete} size={14} />
                 </button>
               </Tooltip>
@@ -175,18 +175,18 @@ export default function SubjectDashboardPage() {
           </div>
 
           {subject.description && (
-            <p className="text-sm text-text-secondary mt-3 italic">"{subject.description}"</p>
+            <p className="text-sm text-slate-400 mt-3 italic">"{subject.description}"</p>
           )}
 
           {/* Action bar — pill buttons */}
-          <div className="flex items-center gap-2 flex-wrap mt-4 pt-4 border-t border-white/[0.06]">
-            {quickActions.map(({ icon, label, to, cls }) => (
+          <div className="flex items-center gap-2 flex-wrap mt-4 pt-4 border-t border-slate-800">
+            {quickActions.map(({ icon, label, to }) => (
               <motion.button
                 key={to}
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => navigate(to)}
-                className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/[0.03] border border-slate-700/80 text-xs font-semibold text-text transition-colors cursor-pointer ${cls}`}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-slate-800 border border-slate-700 text-xs font-medium text-slate-200 hover:bg-slate-700 hover:border-violet-600/30 transition-colors"
               >
                 <Icon name={icon} size={13} /> {label}
               </motion.button>
@@ -216,7 +216,7 @@ export default function SubjectDashboardPage() {
               <motion.div
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                className={`bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-2xl p-5 ${!hasScores ? 'lg:col-span-2' : ''}`}
+                className={`bg-slate-900 border border-slate-800 rounded-2xl p-5 ${!hasScores ? 'lg:col-span-2' : ''}`}
               >
                 <div className="flex items-center gap-2 mb-3">
                   <Icon name={ICONS.ui.bolt} size={16} className="text-text-secondary" />
@@ -258,7 +258,7 @@ export default function SubjectDashboardPage() {
 
               {/* Score history chart */}
               {hasScores && (
-                <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-2xl p-5">
+                <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
                   <div className="flex items-center gap-2 mb-3">
                     <Icon name={ICONS.learning.progress} size={16} className="text-primary" />
                     <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('subjectDashboard.scoreHistoryTitle')}</h2>

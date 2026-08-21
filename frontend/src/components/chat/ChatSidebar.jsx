@@ -123,7 +123,7 @@ export default function ChatSidebar() {
                 onClick={handleNewChat}
                 className="p-1.5 rounded-md hover:bg-base text-text-muted hover:text-text transition-colors"
               >
-                <Icon name={ICONS.communication.bot} size={16} />
+                <Icon name={ICONS.actions.addOutline} size={16} />
               </button>
             </Tooltip>
             <Tooltip label={t('chat.deleteAll')}>

@@ -230,7 +230,7 @@ export default function FlashcardReviewPage() {
 
   return (
     <AnimatePresence mode="wait" initial={false}>
-      <motion.div key="main" {...fadeSlide} className="flex-1 flex flex-col w-full p-6 md:p-10">
+      <motion.div key="main" {...fadeSlide} className="flex-1 overflow-y-auto overscroll-contain flex flex-col w-full p-6 md:p-10">
 
       {/* Top bar */}
       <div className="flex items-center justify-between mb-4 shrink-0">
