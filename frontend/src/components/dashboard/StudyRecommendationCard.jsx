@@ -19,7 +19,7 @@ export default function StudyRecommendationCard({ route, subjectId }) {
   const enterFocus = useFocusStore((s) => s.enterFocus);
   if (!route?.recommendations) {
     return (
-      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-2xl p-5">
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="card-base">
         <div className="flex items-center gap-2 mb-3">
           <Icon name={ICONS.ui.bolt} size={16} className="text-primary" />
           <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('studyRoute.title')}</h2>

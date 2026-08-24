@@ -61,12 +61,12 @@ export default function MaterialsTable({ materials, subjectId, compact = false }
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={t('subjectDashboard.searchMaterials', 'Cari materi...')}
-                className="w-36 sm:w-44 bg-slate-800 border border-slate-700 rounded-lg pl-7 pr-2 py-1.5 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-violet-600/50 focus:ring-1 focus:ring-violet-600/20 transition-all"
+                className="w-36 sm:w-44 bg-slate-800 border border-slate-700 rounded-lg pl-7 pr-2 py-1.5 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all"
               />
             </div>
             <button
               onClick={() => navigate(`/materi?subject_id=${subjectId}`)}
-              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-violet-600 text-white hover:bg-violet-700 transition-colors"
+              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-primary text-white hover:bg-primary-hover transition-colors"
             >
               <Icon name={ICONS.actions.addOutline} size={12} /> {t('subjectDashboard.addMaterial', 'Tambah')}
             </button>

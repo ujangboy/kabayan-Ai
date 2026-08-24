@@ -77,7 +77,7 @@ export default function ChatPage() {
             />
           </div>
           {/* Floating composer centered max-w-3xl bottom-6 */}
-          <div className="shrink-0 px-4 pb-6 pt-2 bg-gradient-to-t from-slate-950 via-slate-950 to-transparent">
+          <div className="shrink-0 px-4 pb-6 pt-2 bg-gradient-to-t from-[#0E1520] via-[#0E1520]/95 to-transparent">
             <div className="mx-auto w-full max-w-3xl">
               <ChatComposer
                 onSend={sendMessage}

@@ -143,7 +143,7 @@ export default function ChatSidebar() {
             value={chatSearch}
             onChange={(e) => setChatSearch(e.target.value)}
             placeholder={t('chat.searchPlaceholder')}
-            className="w-full pl-8 pr-2 py-1.5 text-sm rounded-lg bg-slate-800 border border-slate-700 focus:outline-none focus:ring-1 focus:ring-violet-600/30 text-white placeholder:text-slate-500"
+            className="w-full pl-8 pr-2 py-1.5 text-sm rounded-lg bg-slate-800 border border-slate-700 focus:outline-none focus:ring-1 focus:ring-primary/30 text-white placeholder:text-slate-500"
           />
         </div>
       </div>
@@ -158,7 +158,7 @@ export default function ChatSidebar() {
                   key={c.id}
                   className={cn(
                     'group flex items-center gap-2 rounded-lg px-2 py-1.5 cursor-pointer transition-colors',
-                    c.id === currentChatId ? 'bg-violet-600/15 border border-violet-600/20' : 'hover:bg-slate-800'
+                    c.id === currentChatId ? 'bg-primary/10 border border-primary/20' : 'hover:bg-slate-800'
                   )}
                   onClick={() => {
                     setCurrentChat(c.id);

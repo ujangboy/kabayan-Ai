@@ -17,7 +17,7 @@ const formatBytes = (bytes) => {
 };
 
 const QUICK_ACTIONS = (t) => [
-  { icon: ICONS.communication.chat, label: t('dashboard.quickChat'),       desc: t('dashboard.quickChatDesc'),     to: '/chat',      color: 'bg-gradient-primary text-white',       shadow: 'shadow-btn-primary' },
+  { icon: ICONS.communication.chat, label: t('dashboard.quickChat'),       desc: t('dashboard.quickChatDesc'),     to: '/chat',      color: 'bg-primary text-white',       shadow: 'shadow-btn-primary' },
   { icon: ICONS.files.document,      label: t('dashboard.quickUpload'),     desc: t('dashboard.quickUploadDesc'),    to: '/materi',    color: 'bg-accent-blue/15 text-accent-blue',   shadow: '' },
   { icon: ICONS.nav.flashcard,    label: t('dashboard.quickFlashcard'),  desc: t('dashboard.quickFlashcardDesc'),  to: '/flashcard', color: 'bg-accent-purple/15 text-accent-purple', shadow: '' },
   { icon: ICONS.ui.help,    label: t('dashboard.quickQuiz'),       desc: t('dashboard.quickQuizDesc'),        to: '/quiz',      color: 'bg-accent-teal/15 text-accent-teal',   shadow: '' },
@@ -32,7 +32,7 @@ const STAT_TONES = {
 
 const container = {
   hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.08 } },
+  show: { opacity: 1, transition: { staggerChildren: 0.05 } },
 };
 
 const item = {
@@ -42,13 +42,13 @@ const item = {
 
 function StatCard({ icon, label, value, tone, loading }) {
   return (
-    <motion.div className="card-base card-hoverable relative overflow-hidden flex items-center gap-4 p-4">
-      <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-primary opacity-70" />
+    <motion.div variants={item} className="card-base card-hoverable relative overflow-hidden flex items-center gap-4 p-4">
+      <div className="absolute top-0 left-0 w-full h-0.5 bg-primary opacity-70" />
       <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${STAT_TONES[tone]}`}>
         <Icon name={icon} size={18} />
       </div>
       <div>
-        <div className="text-2xl font-bold bg-gradient-to-r from-text to-text-secondary bg-clip-text text-transparent">
+        <div className="text-2xl font-bold text-text">
             {loading ? <Skeleton className="inline-block h-6 w-8" /> : (value ?? 0)}
         </div>
         <p className="text-xs text-text-secondary">{label}</p>
@@ -104,11 +104,11 @@ export default function DashboardPage() {
           transition={{ duration: 0.5, ease: [0.32, 0.72, 0, 1] }}
         >
           <div className="flex items-center gap-3 mb-1.5">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-primary flex items-center justify-center shadow-btn-primary">
+            <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center shadow-btn-primary">
               <Icon name={ICONS.learning.wavingHand} size={24} className="text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-text bg-gradient-to-r from-primary-light to-accent-blue bg-clip-text text-transparent">
+              <h1 className="text-3xl font-bold text-text tracking-headline">
                 {greeting}!
               </h1>
               <p className="text-text-secondary text-sm">

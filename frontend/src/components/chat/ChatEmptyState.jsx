@@ -37,7 +37,7 @@ export default function ChatEmptyState({ onPromptSelect }) {
           transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
           className={cn(
             'w-12 h-12 rounded-xl flex items-center justify-center text-white mb-4 shadow-md relative overflow-hidden',
-            'bg-gradient-to-br from-violet-600 to-indigo-600'
+            'bg-primary'
           )}
         >
           <Icon name={ICONS.communication.bot} size={22} className="relative" />
@@ -76,10 +76,10 @@ export default function ChatEmptyState({ onPromptSelect }) {
               onClick={() => onPromptSelect?.(card.prompt)}
               className={cn(
                 'group flex items-center gap-2.5 rounded-xl border bg-slate-900 border-slate-800 p-3.5 text-left',
-                'hover:bg-slate-800 hover:border-violet-600/30 hover:shadow-md transition-all duration-200'
+                'hover:bg-slate-800 hover:border-primary/30 transition-[background-color,border-color] duration-150 ease-out'
               )}
             >
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-violet-600/15 text-violet-300 border border-violet-600/20">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary-light border border-primary/20">
                 <Icon name={card.icon} size={14} />
               </span>
               <span className="flex-1 min-w-0">

@@ -84,7 +84,7 @@ export default function ChatComposer({ onSend, isStreaming, onStop, tutorMode })
                     }}
                     className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs text-slate-200 hover:bg-slate-800 transition-colors text-left group"
                   >
-                    <span className="w-6 h-6 rounded-lg bg-violet-600/15 text-violet-300 flex items-center justify-center shrink-0">
+                    <span className="w-6 h-6 rounded-lg bg-primary/10 text-primary-light flex items-center justify-center shrink-0">
                       <Icon name={q.icon} size={13} />
                     </span>
                     <span className="truncate">{q.label}</span>
@@ -128,7 +128,7 @@ export default function ChatComposer({ onSend, isStreaming, onStop, tutorMode })
                 className={cn(
                   'flex h-8 w-8 items-center justify-center rounded-full border shrink-0 transition-colors mb-1',
                   showQuickPrompts || tutorMode
-                    ? 'bg-violet-600 border-violet-600 text-white'
+                    ? 'bg-primary border-primary text-white'
                     : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white hover:bg-slate-700'
                 )}
               >
@@ -150,7 +150,7 @@ export default function ChatComposer({ onSend, isStreaming, onStop, tutorMode })
             <button
               onClick={handleSend}
               disabled={!input.trim()}
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-violet-600 text-white hover:bg-violet-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0 mb-1"
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white hover:bg-primary-hover disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0 mb-1"
               aria-label="Send"
             >
               <Icon name={ICONS.actions.send} size={14} className="ml-px" />
