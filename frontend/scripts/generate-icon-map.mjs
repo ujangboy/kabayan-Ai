@@ -18,6 +18,12 @@ const PKG_ICONS_DIR = resolve(
   'node_modules/@material-symbols-svg/react/dist/rounded/icons'
 );
 
+// Icon yang tidak tersedia di package tapi di-vendor manual (SVG lokal).
+// Key = nama glyph (snake_case) di ICONS; value = komponen + path import.
+const VENDORED = {
+  push_pin: { component: 'PushPinSvg', from: '@/components/ui/icons/PushPinSvg' },
+};
+
 const src = readFileSync(ICONS_SRC, 'utf8');
 const match = src.match(/export const ICONS = \{([\s\S]*?)\n\};/);
 if (!match) {
@@ -48,7 +54,7 @@ function kebab(name) {
   return name.replaceAll('_', '-');
 }
 
-const missing = uniq.filter((n) => !existsSync(resolve(PKG_ICONS_DIR, `${kebab(n)}.js`)));
+const missing = uniq.filter((n) => !VENDORED[n] && !existsSync(resolve(PKG_ICONS_DIR, `${kebab(n)}.js`)));
 if (missing.length > 0) {
   console.error('Icon file tidak ditemukan di package:', missing.join(', '));
   process.exit(1);
@@ -59,7 +65,15 @@ lines.push('/**');
 lines.push(' * AUTO-GENERATED — jangan edit manual.');
 lines.push(' * Regenerate: node scripts/generate-icon-map.mjs');
 lines.push(' */');
+
+// Import icon yang di-vendor (tidak dari package).
+for (const [n, v] of Object.entries(VENDORED)) {
+  if (uniq.includes(n)) lines.push(`import { ${v.component} } from '${v.from}';`);
+}
+lines.push('');
+
 for (const n of uniq) {
+  if (VENDORED[n]) continue;
   const P = pascal(n);
   lines.push(
     `import { ${P}W100, ${P}W200, ${P}W300, ${P}W400, ${P}W500, ${P}W600, ${P}W700, ` +
@@ -71,6 +85,14 @@ lines.push('');
 lines.push('/** Map nama glyph → komponen SVG per weight (regular/filled). */');
 lines.push('export const MATERIAL_ICONS = {');
 for (const n of uniq) {
+  if (VENDORED[n]) {
+    const c = VENDORED[n].component;
+    lines.push(`  '${n}': {`);
+    lines.push(`    regular: { 400: ${c} },`);
+    lines.push(`    filled: { 400: ${c} },`);
+    lines.push('  },');
+    continue;
+  }
   const P = pascal(n);
   lines.push(`  '${n}': {`);
   lines.push(`    regular: { 100: ${P}W100, 200: ${P}W200, 300: ${P}W300, 400: ${P}W400, 500: ${P}W500, 600: ${P}W600, 700: ${P}W700 },`);

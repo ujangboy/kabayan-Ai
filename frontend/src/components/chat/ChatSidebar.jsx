@@ -8,6 +8,7 @@ import { Tooltip, EmptyState , Icon } from '@/components/ui';
 import { useToast } from '@/components/Toast';
 import { useChatStore } from '@/store';
 import { cn } from '@/utils';
+import { springWave } from '@/lib/motion';
 
 export default function ChatSidebar() {
   const { t } = useTranslation();
@@ -167,9 +168,9 @@ export default function ChatSidebar() {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.2, delay: idx * 0.02, ease: [0.16, 1, 0.3, 1] }}
                   className={cn(
-                    'group flex items-center gap-2 rounded-xl px-2.5 py-2 cursor-pointer transition-all duration-150 border',
+                    'group relative overflow-hidden flex items-center gap-2 rounded-xl px-2.5 py-2 cursor-pointer transition-all duration-150 border',
                     c.id === currentChatId
-                      ? 'bg-primary/10 border-primary/20 text-primary-light'
+                      ? 'border-primary/20 text-primary-light'
                       : 'border-transparent hover:bg-card hover:border-border'
                   )}
                   onClick={() => {
@@ -177,31 +178,42 @@ export default function ChatSidebar() {
                     navigate('/chat');
                   }}
                 >
-                  <div className="flex-1 min-w-0">
+                  {c.id === currentChatId && (
+                    <motion.span
+                      layoutId="chat-active-indicator"
+                      transition={springWave}
+                      className="absolute inset-0 bg-primary/10"
+                    />
+                  )}
+                  <div className="relative z-10 flex-1 min-w-0">
                     {editingChatId === c.id ? (
-                      <input
+                      <textarea
                         autoFocus
+                        rows={2}
                         value={editingTitle}
                         onChange={(e) => setEditingTitle(e.target.value)}
                         onBlur={submitRename}
                         onKeyDown={(e) => {
-                          if (e.key === 'Enter') submitRename();
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            submitRename();
+                          }
                           if (e.key === 'Escape') {
                             setEditingChatId(null);
                             setEditingTitle('');
                           }
                         }}
-                        className="w-full text-sm bg-background border border-border rounded-lg px-2 py-0.5 text-text focus:outline-none focus:ring-1 focus:ring-primary/40"
+                        className="w-full max-h-20 text-sm bg-background border border-border rounded-lg px-2 py-1 text-text resize-none break-words whitespace-pre-wrap focus:outline-none focus:ring-1 focus:ring-primary/40"
                       />
                     ) : (
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-start gap-1.5">
                         <span className={cn(
-                          'truncate text-sm',
+                          'break-words whitespace-normal line-clamp-2 text-sm',
                           c.id === currentChatId ? 'text-primary-light font-medium' : 'text-text'
                         )}>
                           {c.title || t('chat.untitled')}
                         </span>
-                        {c.pinned && <Icon name={ICONS.actions.pin} size={12} className="text-warning shrink-0" />}
+                        {c.pinned && <Icon name={ICONS.actions.pin} size={12} className="text-warning shrink-0 mt-0.5" />}
                       </div>
                     )}
                   </div>

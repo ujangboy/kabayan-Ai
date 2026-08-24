@@ -1,9 +1,11 @@
 import { useTranslation } from 'react-i18next';
+import { motion } from 'framer-motion';
 
 import { Tooltip , Icon } from '@/components/ui';
 import { ICONS } from '@/lib/icons';
 import { formatDate } from '@/utils';
 import { cn } from '@/utils';
+import { springWave } from '@/lib/motion';
 
 export function NoteCard({
   note, isSelected, onSelect, onPin, onDelete,
@@ -22,14 +24,21 @@ export function NoteCard({
   return (
     <div
       className={cn(
-        'group relative rounded-xl transition-all duration-200',
+        'group relative overflow-hidden rounded-xl border transition-colors duration-200',
         isSelected
-          ? 'bg-primary-soft ring-1 ring-primary/30'
-          : 'hover:bg-card/80'
+          ? 'border-primary/20'
+          : 'border-transparent hover:border-border hover:bg-card/70'
       )}
     >
+      {isSelected && (
+        <motion.span
+          layoutId="notebook-active-indicator"
+          transition={springWave}
+          className="absolute inset-0 bg-primary/10 rounded-xl"
+        />
+      )}
       {isEditing ? (
-        <div className="pl-3 pr-24 py-2.5">
+        <div className="relative z-10 pl-3 pr-24 py-2.5">
           <div className="flex items-center gap-1.5 mb-0.5 min-w-0">
             {note.is_pinned && (
               <Icon name={ICONS.actions.pin} size={14} fill={1} className="text-primary shrink-0" />
@@ -50,7 +59,7 @@ export function NoteCard({
       ) : (
         <button
           onClick={onSelect}
-          className="w-full text-left pl-3 pr-24 py-2.5"
+          className="relative z-10 w-full text-left pl-3 pr-24 py-2.5"
         >
           <div className="flex items-center gap-1.5 mb-0.5 min-w-0">
             {note.is_pinned && (

@@ -11,6 +11,7 @@ import { profileAPI } from '@/services/api';
 import { useAppStore } from '@/store';
 import { setAppLanguage, STORAGE_KEY } from '@/i18n';
 import { cn } from '@/utils';
+import { springWave } from '@/lib/motion';
 
 const LANGS = [
   { code: 'id', label: 'Indonesia', short: 'ID' },
@@ -101,15 +102,22 @@ export default function TopBar() {
                 key={l.code}
                 onSelect={() => switchLang(l.code)}
                 className={cn(
-                  'flex cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2 text-sm outline-none transition-all duration-100',
+                  'relative overflow-hidden flex cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2 text-sm outline-none transition-all duration-100',
                   currentLang === l.code
-                    ? 'bg-primary/10 text-primary-light'
+                    ? 'text-primary-light'
                     : 'text-text-secondary hover:bg-card-hover hover:text-text'
                 )}
               >
-                <span className="text-xs font-bold text-text-muted w-6 text-center">{l.short}</span>
-                <span className="flex-1">{l.label}</span>
-                {currentLang === l.code && <Icon name={ICONS.status.check} size={14} />}
+                {currentLang === l.code && (
+                  <motion.span
+                    layoutId="quick-lang-indicator"
+                    transition={springWave}
+                    className="absolute inset-0 bg-primary/10 rounded-xl"
+                  />
+                )}
+                <span className="relative text-xs font-bold text-text-muted w-6 text-center">{l.short}</span>
+                <span className="relative flex-1">{l.label}</span>
+                {currentLang === l.code && <Icon name={ICONS.status.check} size={14} className="relative" />}
               </DropdownMenu.Item>
             ))}
 

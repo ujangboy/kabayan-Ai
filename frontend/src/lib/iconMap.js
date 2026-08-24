@@ -2,6 +2,8 @@
  * AUTO-GENERATED — jangan edit manual.
  * Regenerate: node scripts/generate-icon-map.mjs
  */
+import { PushPinSvg } from '@/components/ui/icons/PushPinSvg';
+
 import { DashboardW100, DashboardW200, DashboardW300, DashboardW400, DashboardW500, DashboardW600, DashboardW700, DashboardFillW100, DashboardFillW200, DashboardFillW300, DashboardFillW400, DashboardFillW500, DashboardFillW600, DashboardFillW700 } from '@material-symbols-svg/react/rounded/icons/dashboard';
 import { ChatW100, ChatW200, ChatW300, ChatW400, ChatW500, ChatW600, ChatW700, ChatFillW100, ChatFillW200, ChatFillW300, ChatFillW400, ChatFillW500, ChatFillW600, ChatFillW700 } from '@material-symbols-svg/react/rounded/icons/chat';
 import { MenuBookW100, MenuBookW200, MenuBookW300, MenuBookW400, MenuBookW500, MenuBookW600, MenuBookW700, MenuBookFillW100, MenuBookFillW200, MenuBookFillW300, MenuBookFillW400, MenuBookFillW500, MenuBookFillW600, MenuBookFillW700 } from '@material-symbols-svg/react/rounded/icons/menu-book';
@@ -38,7 +40,6 @@ import { SendW100, SendW200, SendW300, SendW400, SendW500, SendW600, SendW700, S
 import { ShareW100, ShareW200, ShareW300, ShareW400, ShareW500, ShareW600, ShareW700, ShareFillW100, ShareFillW200, ShareFillW300, ShareFillW400, ShareFillW500, ShareFillW600, ShareFillW700 } from '@material-symbols-svg/react/rounded/icons/share';
 import { MenuW100, MenuW200, MenuW300, MenuW400, MenuW500, MenuW600, MenuW700, MenuFillW100, MenuFillW200, MenuFillW300, MenuFillW400, MenuFillW500, MenuFillW600, MenuFillW700 } from '@material-symbols-svg/react/rounded/icons/menu';
 import { MenuOpenW100, MenuOpenW200, MenuOpenW300, MenuOpenW400, MenuOpenW500, MenuOpenW600, MenuOpenW700, MenuOpenFillW100, MenuOpenFillW200, MenuOpenFillW300, MenuOpenFillW400, MenuOpenFillW500, MenuOpenFillW600, MenuOpenFillW700 } from '@material-symbols-svg/react/rounded/icons/menu-open';
-import { PinW100, PinW200, PinW300, PinW400, PinW500, PinW600, PinW700, PinFillW100, PinFillW200, PinFillW300, PinFillW400, PinFillW500, PinFillW600, PinFillW700 } from '@material-symbols-svg/react/rounded/icons/pin';
 import { OpenInNewW100, OpenInNewW200, OpenInNewW300, OpenInNewW400, OpenInNewW500, OpenInNewW600, OpenInNewW700, OpenInNewFillW100, OpenInNewFillW200, OpenInNewFillW300, OpenInNewFillW400, OpenInNewFillW500, OpenInNewFillW600, OpenInNewFillW700 } from '@material-symbols-svg/react/rounded/icons/open-in-new';
 import { UndoW100, UndoW200, UndoW300, UndoW400, UndoW500, UndoW600, UndoW700, UndoFillW100, UndoFillW200, UndoFillW300, UndoFillW400, UndoFillW500, UndoFillW600, UndoFillW700 } from '@material-symbols-svg/react/rounded/icons/undo';
 import { RedoW100, RedoW200, RedoW300, RedoW400, RedoW500, RedoW600, RedoW700, RedoFillW100, RedoFillW200, RedoFillW300, RedoFillW400, RedoFillW500, RedoFillW600, RedoFillW700 } from '@material-symbols-svg/react/rounded/icons/redo';
@@ -312,9 +313,9 @@ export const MATERIAL_ICONS = {
     regular: { 100: MenuOpenW100, 200: MenuOpenW200, 300: MenuOpenW300, 400: MenuOpenW400, 500: MenuOpenW500, 600: MenuOpenW600, 700: MenuOpenW700 },
     filled: { 100: MenuOpenFillW100, 200: MenuOpenFillW200, 300: MenuOpenFillW300, 400: MenuOpenFillW400, 500: MenuOpenFillW500, 600: MenuOpenFillW600, 700: MenuOpenFillW700 },
   },
-  'pin': {
-    regular: { 100: PinW100, 200: PinW200, 300: PinW300, 400: PinW400, 500: PinW500, 600: PinW600, 700: PinW700 },
-    filled: { 100: PinFillW100, 200: PinFillW200, 300: PinFillW300, 400: PinFillW400, 500: PinFillW500, 600: PinFillW600, 700: PinFillW700 },
+  'push_pin': {
+    regular: { 400: PushPinSvg },
+    filled: { 400: PushPinSvg },
   },
   'open_in_new': {
     regular: { 100: OpenInNewW100, 200: OpenInNewW200, 300: OpenInNewW300, 400: OpenInNewW400, 500: OpenInNewW500, 600: OpenInNewW600, 700: OpenInNewW700 },
