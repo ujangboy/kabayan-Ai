@@ -102,7 +102,7 @@ export function SectionHeader({ icon, title, subtitle, action }) {
 export const STATUS_META = {
   mastered:       { label: 'Mastered',        color: 'success', border: 'border-success/40',  bg: 'bg-success/5'  },
   completed:      { label: 'Selesai',          color: 'primary', border: 'border-primary/30',  bg: 'bg-primary/5'  },
-  active:         { label: 'Sedang Belajar',   color: 'blue',    border: 'border-accent-blue/30', bg: 'bg-accent-blue/5' },
+  active:        { label: 'Sedang Belajar',   color: 'blue',    border: 'border-accent-blue/30', bg: 'bg-accent-blue/5' },
   archived:       { label: 'Arsip',            color: 'teal',    border: 'border-accent-teal/30', bg: 'bg-accent-teal/5' },
 };
 

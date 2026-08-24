@@ -85,7 +85,7 @@ export default function ReviewView({ sessionData, evalData }) {
                   {isOpen && (
                     <motion.div initial={{ height:0 }} animate={{ height:'auto' }} exit={{ height:0 }}
                       transition={{ duration:0.2 }} className="overflow-hidden">
-                      <div className="px-4 pb-4 space-y-3 border-t border-border/50 pt-3">
+                      <div className="px-4 pb-4 space-y-3 border-t border-border pt-3">
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                           <div className="p-3 rounded-lg bg-background">

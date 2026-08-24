@@ -122,7 +122,7 @@ function ToastItem({ toast, onDismiss }) {
       animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
       exit={{ opacity: 0, y: 12, scale: 0.95, filter: 'blur(2px)' }}
       transition={{ duration: 0.35, ease: [0.32, 0.72, 0, 1] }}
-      className={`pointer-events-auto flex items-start gap-3 pl-3.5 pr-2.5 py-3 rounded-2xl
+      className={`pointer-events-auto flex items-start gap-3 pl-3.5 pr-2.5 py-3 rounded-lg
         glass ring-1 ${RING[toast.type] || RING.info} ${GLOW[toast.type] || GLOW.info} text-base text-text`}
     >
       <span className="mt-0.5">
@@ -184,10 +184,10 @@ function ConfirmDialog({ state, onClose }) {
           className="w-full max-w-sm glass rounded-dialog p-6 shadow-modal border border-border"
         >
           <div className="flex items-start gap-4">
-            <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 ${
+            <div className={`w-11 h-11 rounded-lg flex items-center justify-center shrink-0 ${
               state.danger
                 ? 'bg-danger/15 text-danger'
-                : 'bg-primary text-white shadow-btn-primary'
+                : 'bg-primary text-white shadow-card'
             }`}>
               {state.danger
                 ? <Icon name={ICONS.status.warning} size={20} />

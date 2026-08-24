@@ -90,7 +90,7 @@ export default function StudyPlanPage() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: 'spring', stiffness: 350, damping: 30 }}
-            className="flex w-full max-w-[560px] flex-col items-center gap-6 rounded-2xl border border-white/[0.08] bg-surface-2 p-8 md:p-10 text-center"
+            className="flex w-full max-w-[560px] flex-col items-center gap-6 rounded-lg border border-border bg-surface-2 p-8 md:p-10 text-center"
           >
             <div className="flex h-20 w-20 items-center justify-center rounded-[20px] bg-primary/10 border border-primary/20 text-primary-light">
               <Icon name={ICONS.learning.calendarCheck} size={36} />
@@ -101,7 +101,7 @@ export default function StudyPlanPage() {
               <p className="mx-auto max-w-md text-base leading-relaxed text-text-secondary">{t('studyPlanPage.empty.desc')}</p>
             </div>
 
-            <ol className="w-full max-w-[420px] divide-y divide-white/[0.06] rounded-xl border border-white/[0.06] bg-white/[0.02] px-2 text-left">
+            <ol className="w-full max-w-[420px] divide-y divide-border rounded-xl border border-border bg-wash px-2 text-left">
               {[1, 2, 3].map((n) => (
                 <li key={n} className="flex items-center gap-4 py-3.5 px-2">
                   <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 border border-primary/20 text-sm font-bold text-primary-light">{n}</span>
@@ -123,7 +123,7 @@ export default function StudyPlanPage() {
                 variant="secondary"
                 size="lg"
                 onClick={() => navigate('/materi')}
-                className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 min-w-[160px] border-slate-700 bg-slate-800/60 hover:bg-slate-800 hover:border-primary/30"
+                className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 min-w-[160px] border-border bg-subtle hover:bg-subtle hover:border-primary/30"
               >
                 <Icon name={ICONS.files.document} size={16} className="text-text-secondary" />
                 {t('studyPlanPage.empty.ctaSecondary', 'Lihat Materi')}
@@ -264,7 +264,7 @@ export default function StudyPlanPage() {
               {progress >= 100 ? <span className="flex items-center gap-1"><Icon name={ICONS.learning.certificate} size={12} className="text-success" /> Rencana Selesai!</span> : `${completedItems}/${totalItems} hari · ${progress}%`}
             </span>
           </div>
-          <div className="h-3 bg-background rounded-full overflow-hidden border border-border/50">
+          <div className="h-3 bg-background rounded-full overflow-hidden border border-border">
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${progress}%` }}
@@ -273,7 +273,7 @@ export default function StudyPlanPage() {
             />
           </div>
           {(plan.priority_actions || []).length > 0 && (
-            <div className="mt-4 pt-4 border-t border-border/50 space-y-1.5">
+            <div className="mt-4 pt-4 border-t border-border space-y-1.5">
               <p className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-1">Aksi Prioritas</p>
               {(plan.priority_actions || []).map((a, i) => (
                 <p key={i} className="text-xs text-text flex items-start gap-2">

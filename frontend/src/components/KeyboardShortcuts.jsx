@@ -143,7 +143,7 @@ export default function KeyboardShortcuts() {
               {group.items.map((item) => (
                 <li
                   key={item.label}
-                  className="flex items-center justify-between gap-3 rounded-lg px-2 py-1.5 hover:bg-white/[0.04]"
+                  className="flex items-center justify-between gap-3 rounded-lg px-2 py-1.5 hover:bg-wash"
                 >
                   <span className="text-sm text-text-secondary">{item.label}</span>
                   <span className="flex shrink-0 items-center gap-1">

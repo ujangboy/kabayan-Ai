@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ICONS } from '@/lib/icons';
-import { Icon, Tooltip } from '@/components/ui';
+import { Icon, Tooltip, ThemeToggle } from '@/components/ui';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { motion } from 'framer-motion';
@@ -66,7 +66,7 @@ export default function TopBar() {
       <motion.button
         whileTap={{ scale: 0.95 }}
         onClick={toggleCollapsed}
-        className="hidden lg:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-card border border-border text-text-secondary hover:text-text hover:bg-card-hover hover:border-border/80 transition-all duration-150 text-xs font-medium shrink-0"
+        className="hidden lg:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-card border border-border text-text-secondary hover:text-text hover:bg-card-hover hover:border-border transition-all duration-150 text-xs font-medium shrink-0"
         title={collapsed ? t('sidebar.expand', 'Tampilkan sidebar') : t('sidebar.collapse', 'Sembunyikan sidebar')}
         aria-label="Toggle sidebar"
         aria-expanded={!collapsed}
@@ -102,7 +102,7 @@ export default function TopBar() {
           <DropdownMenu.Content
             sideOffset={8}
             align="end"
-            className="z-50 w-56 rounded-2xl border border-border bg-card p-1.5 shadow-glass-lg"
+            className="z-50 w-56 rounded-lg border border-border bg-card p-1.5 shadow-modal"
           >
             <p className="px-3 py-1.5 text-2xs font-semibold uppercase tracking-wider text-text-muted">
               {t('settings.tabs.language')}
@@ -158,6 +158,9 @@ export default function TopBar() {
         </DropdownMenu.Portal>
       </DropdownMenu.Root>
 
+      {/* Theme toggle */}
+      <ThemeToggle />
+
       {/* Keyboard shortcuts */}
       <Tooltip label={t('shortcuts.title')}>
         <button
@@ -184,7 +187,7 @@ export default function TopBar() {
       <Tooltip label={displayName}>
         <button
           onClick={() => navigate('/settings')}
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-sm font-semibold text-white shadow-btn-primary transition-all duration-150 hover:bg-primary-hover hover:shadow-glow-sm active:scale-95"
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-sm font-semibold text-white shadow-card transition-all duration-150 hover:bg-primary-hover active:scale-[0.98]"
           title={displayName}
         >
           {profile?.avatar_url

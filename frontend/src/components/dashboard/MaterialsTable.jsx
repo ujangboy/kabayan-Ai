@@ -45,23 +45,23 @@ export default function MaterialsTable({ materials, subjectId, compact = false }
 
   return (
     <>
-      <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+      <div className="bg-surface border border-border rounded-xl overflow-hidden">
         {/* Header — title + search + add */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-3 py-2.5 border-b border-slate-800 bg-slate-900">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-3 py-2.5 border-b border-border bg-surface">
           <div className="flex items-center gap-2">
-            <Icon name={ICONS.files.document} size={13} className="text-slate-500" />
-            <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+            <Icon name={ICONS.files.document} size={13} className="text-text-secondary" />
+            <h2 className="text-xs font-semibold text-text-secondary uppercase tracking-wider">
               {t('subjectDashboard.materialsTitle', { count: allMaterials.length })}
             </h2>
           </div>
           <div className="flex items-center gap-2">
             <div className="relative">
-              <Icon name={ICONS.actions.search} size={11} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500" />
+              <Icon name={ICONS.actions.search} size={11} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-text-secondary" />
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={t('subjectDashboard.searchMaterials', 'Cari materi...')}
-                className="w-36 sm:w-44 bg-slate-800 border border-slate-700 rounded-lg pl-7 pr-2 py-1.5 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all"
+                className="w-36 sm:w-44 bg-subtle border border-border rounded-lg pl-7 pr-2 py-1.5 text-xs text-white placeholder:text-text-secondary focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all"
               />
             </div>
             <button
@@ -76,7 +76,7 @@ export default function MaterialsTable({ materials, subjectId, compact = false }
         <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-2xs text-slate-500 uppercase tracking-wider border-b border-slate-800 bg-slate-950/50">
+            <tr className="text-2xs text-text-secondary uppercase tracking-wider border-b border-border bg-base/50">
               <th className={`px-3 ${headerPy} text-left font-medium`}>#</th>
               <th className={`px-3 ${headerPy} text-left font-medium`}>{t('subjectDashboard.materialName', 'Nama')}</th>
               <th className={`px-3 ${headerPy} text-left font-medium`}>{t('subjectDashboard.materialType', 'Tipe')}</th>
@@ -98,28 +98,28 @@ export default function MaterialsTable({ materials, subjectId, compact = false }
               </tr>
             ) : (
               filtered.map((m, idx) => (
-                <tr key={m.id} className="border-b border-slate-800 last:border-0 hover:bg-slate-800/50 transition-colors">
-                  <td className={`px-3 ${rowPy} text-slate-500 text-xs w-8`}>{idx + 1}</td>
+                <tr key={m.id} className="border-b border-border last:border-0 hover:bg-subtle transition-colors">
+                  <td className={`px-3 ${rowPy} text-text-secondary text-xs w-8`}>{idx + 1}</td>
                   <td className={`px-3 ${rowPy}`}>
                     <div className="flex items-center gap-2.5">
-                      <FileTypeIcon type={(m.filename || '').split('.').pop()?.toUpperCase() || m.material_type} className="text-base text-slate-500" />
+                      <FileTypeIcon type={(m.filename || '').split('.').pop()?.toUpperCase() || m.material_type} className="text-base text-text-secondary" />
                       <span className="text-sm text-white font-medium truncate max-w-[220px]" title={m.filename}>{m.filename}</span>
                     </div>
                   </td>
-                  <td className={`px-3 ${rowPy} text-slate-400 text-xs`}>{(m.filename || '').split('.').pop()?.toUpperCase() || m.material_type}</td>
+                  <td className={`px-3 ${rowPy} text-text-secondary text-xs`}>{(m.filename || '').split('.').pop()?.toUpperCase() || m.material_type}</td>
                   <td className={`px-3 ${rowPy} text-right`}>
                     <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-3xs font-medium border ${m.status === 'Ready' ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20' : m.status === 'Failed' ? 'bg-red-500/10 text-red-300 border-red-500/20' : 'bg-amber-500/10 text-amber-300 border-amber-500/20'}`}>
                       {m.status}
                     </span>
                   </td>
-                  <td className={`px-3 ${rowPy} text-slate-400 text-xs whitespace-nowrap`}>{formatDate(m.upload_date)}</td>
+                  <td className={`px-3 ${rowPy} text-text-secondary text-xs whitespace-nowrap`}>{formatDate(m.upload_date)}</td>
                   <td className={`px-3 ${rowPy} text-right`}>
                     <div className="flex items-center justify-end gap-1">
                       <Tooltip label={t('subjectDashboard.viewMaterial', 'Lihat')}>
                         <button
                           onClick={() => navigate('/materi')}
                           aria-label={t('subjectDashboard.viewMaterial', 'Lihat')}
-                          className="p-1 rounded-md text-slate-500 hover:text-sky-300 hover:bg-sky-500/10 transition-colors"
+                          className="p-1 rounded-md text-text-secondary hover:text-sky-300 hover:bg-sky-500/10 transition-colors"
                         >
                           <Icon name={ICONS.ui.eye} size={12} />
                         </button>
@@ -128,7 +128,7 @@ export default function MaterialsTable({ materials, subjectId, compact = false }
                         <button
                           onClick={() => navigate(`/quiz?subject_id=${subjectId}`)}
                           aria-label={t('subjectDashboard.quizMaterial', 'Quiz dari materi ini')}
-                          className="p-1 rounded-md text-slate-500 hover:text-teal-300 hover:bg-teal-500/10 transition-colors"
+                          className="p-1 rounded-md text-text-secondary hover:text-teal-300 hover:bg-teal-500/10 transition-colors"
                         >
                           <Icon name={ICONS.ui.help} size={12} />
                         </button>
@@ -137,7 +137,7 @@ export default function MaterialsTable({ materials, subjectId, compact = false }
                         <button
                           onClick={() => setDeleteTarget(m)}
                           aria-label={t('subjectDashboard.deleteMaterial', 'Hapus')}
-                          className="p-1 rounded-md text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                          className="p-1 rounded-md text-text-secondary hover:text-red-400 hover:bg-red-500/10 transition-colors"
                         >
                           <Icon name={ICONS.actions.delete} size={12} />
                         </button>

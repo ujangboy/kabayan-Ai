@@ -17,7 +17,7 @@ const formatBytes = (bytes) => {
 };
 
 const QUICK_ACTIONS = (t) => [
-  { icon: ICONS.communication.chat, label: t('dashboard.quickChat'),       desc: t('dashboard.quickChatDesc'),     to: '/chat',      color: 'bg-primary text-white',       shadow: 'shadow-btn-primary' },
+  { icon: ICONS.communication.chat, label: t('dashboard.quickChat'),       desc: t('dashboard.quickChatDesc'),     to: '/chat',      color: 'bg-primary text-white',       shadow: 'shadow-card' },
   { icon: ICONS.files.document,      label: t('dashboard.quickUpload'),     desc: t('dashboard.quickUploadDesc'),    to: '/materi',    color: 'bg-accent-blue/15 text-accent-blue',   shadow: '' },
   { icon: ICONS.nav.flashcard,    label: t('dashboard.quickFlashcard'),  desc: t('dashboard.quickFlashcardDesc'),  to: '/flashcard', color: 'bg-accent-purple/15 text-accent-purple', shadow: '' },
   { icon: ICONS.ui.help,    label: t('dashboard.quickQuiz'),       desc: t('dashboard.quickQuizDesc'),        to: '/quiz',      color: 'bg-accent-teal/15 text-accent-teal',   shadow: '' },
@@ -105,7 +105,7 @@ export default function DashboardPage() {
           transition={{ duration: 0.5, ease: [0.32, 0.72, 0, 1] }}
         >
           <div className="flex items-center gap-3 mb-1.5">
-            <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center shadow-btn-primary">
+            <div className="w-12 h-12 rounded-lg bg-primary flex items-center justify-center shadow-card">
               <Icon name={ICONS.learning.wavingHand} size={24} className="text-white" />
             </div>
             <div>

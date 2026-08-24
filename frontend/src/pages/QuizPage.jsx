@@ -137,7 +137,7 @@ export default function QuizPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-btn-primary shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-card shrink-0">
               <Icon name={ICONS.ui.help} size={20} className="text-white" />
             </div>
             <div>
@@ -220,7 +220,7 @@ export default function QuizPage() {
                         </h3>
                         <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                           {quiz.question_type && (
-                            <span className="text-2xs px-1.5 py-0.5 rounded bg-white/[0.04] border border-white/[0.08] text-text-secondary shrink-0">
+                            <span className="text-2xs px-1.5 py-0.5 rounded bg-wash border border-border text-text-secondary shrink-0">
                               {QTYPE_LABEL[quiz.question_type] ? t(QTYPE_LABEL[quiz.question_type]) : quiz.question_type}
                             </span>
                           )}
@@ -246,7 +246,7 @@ export default function QuizPage() {
                   {/* Body — grid mini metrik */}
                   <div className="grid grid-cols-4 gap-1.5">
                     {stats.map(({ icon, value, label, color }) => (
-                      <div key={label} className="rounded-lg bg-white/[0.03] border border-white/[0.06] py-2 px-1 text-center">
+                      <div key={label} className="rounded-lg bg-wash border border-border py-2 px-1 text-center">
                         <Icon name={icon} size={12} className={`mx-auto mb-0.5 ${color}`} />
                         <p className="text-base font-bold text-text leading-tight truncate">{value}</p>
                         <p className="text-2xs text-text-muted uppercase tracking-wide truncate">{label}</p>
@@ -270,7 +270,7 @@ export default function QuizPage() {
 
                   {/* Footer — progress bar + timestamp */}
                   <div className="space-y-2">
-                    <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+                    <div className="h-1.5 rounded-full bg-wash overflow-hidden">
                       <motion.div
                         className="h-full rounded-full bg-primary"
                         initial={{ width: 0 }}

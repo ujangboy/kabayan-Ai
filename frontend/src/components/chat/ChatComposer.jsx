@@ -74,7 +74,7 @@ export default function ChatComposer({ onSend, isStreaming, onStop, tutorMode })
             transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
             className="absolute bottom-full mb-3 left-0 right-0 origin-bottom z-10"
           >
-            <div className="rounded-2xl border border-border bg-card shadow-glass-lg p-2 grid grid-cols-2 gap-2">
+            <div className="rounded-lg border border-border bg-card shadow-modal p-2 grid grid-cols-2 gap-2">
               {QUICK_PROMPTS.map((q) => (
                 <motion.button
                   key={q.label}
@@ -84,7 +84,7 @@ export default function ChatComposer({ onSend, isStreaming, onStop, tutorMode })
                     onSend(q.prompt);
                     setShowQuickPrompts(false);
                   }}
-                  className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-xs text-text hover:bg-card-hover transition-all duration-150 text-left group border border-transparent hover:border-border/60"
+                  className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-xs text-text hover:bg-card-hover transition-all duration-150 text-left group border border-transparent hover:border-border"
                 >
                   <span className="w-7 h-7 rounded-lg bg-primary/10 text-primary-light flex items-center justify-center shrink-0 border border-primary/15">
                     <Icon name={q.icon} size={14} />
@@ -99,9 +99,9 @@ export default function ChatComposer({ onSend, isStreaming, onStop, tutorMode })
 
       {/* Main composer box */}
       <div className={cn(
-        'flex items-end gap-2 rounded-2xl border shadow-glass px-2.5 py-2 transition-all duration-200',
+        'flex items-end gap-2 rounded-lg border shadow-card px-2.5 py-2 transition-all duration-200',
         'bg-card border-border',
-        'focus-within:border-primary/40 focus-within:shadow-glow-sm'
+        'focus-within:border-primary/40 focus-within:'
       )}>
         {/* Paperclip attachment */}
         <Tooltip label={t('chat.attachFile', 'Lampiran')}>
@@ -138,7 +138,7 @@ export default function ChatComposer({ onSend, isStreaming, onStop, tutorMode })
               className={cn(
                 'flex h-8 w-8 items-center justify-center rounded-full border shrink-0 transition-all duration-200 mb-1',
                 showQuickPrompts || tutorMode
-                  ? 'bg-primary border-primary text-white shadow-glow-sm'
+                  ? 'bg-primary border-primary text-white '
                   : 'bg-card-hover border-border text-text-secondary hover:text-primary-light hover:border-primary/40'
               )}
             >
@@ -172,7 +172,7 @@ export default function ChatComposer({ onSend, isStreaming, onStop, tutorMode })
               onClick={handleSend}
               disabled={!input.trim()}
               whileTap={{ scale: 0.9 }}
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white hover:bg-primary-hover disabled:opacity-35 disabled:cursor-not-allowed transition-all duration-150 shrink-0 mb-1 shadow-btn-primary"
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white hover:bg-primary-hover disabled:opacity-35 disabled:cursor-not-allowed transition-all duration-150 shrink-0 mb-1 shadow-card"
               aria-label="Send"
             >
               <Icon name={ICONS.actions.send} size={14} className="ml-px" />

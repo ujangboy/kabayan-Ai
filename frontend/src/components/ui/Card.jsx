@@ -5,7 +5,7 @@ export const Card = forwardRef(({ className, hoverable = false, as: Comp = 'div'
   <Comp
     ref={ref}
     className={cn(
-      'bg-surface-2 border border-white/[0.08] rounded-2xl shadow-card',
+      'bg-surface-2 border border-border rounded-lg shadow-card',
       hoverable && 'card-hoverable',
       className
     )}

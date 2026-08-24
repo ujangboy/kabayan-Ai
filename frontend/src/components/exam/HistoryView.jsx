@@ -131,22 +131,22 @@ function SubjectCard({ subject, onSelectSubject, onStartConfig, onDelete, t, ton
 
        {/* Body — grid mini metrik */}
        <div className="grid grid-cols-4 gap-1.5">
-         <div className="rounded-lg bg-white/[0.03] border border-white/[0.06] py-2 px-1 text-center">
+         <div className="rounded-lg bg-wash border border-border py-2 px-1 text-center">
            <Icon name={ICONS.learning.trophy} size={12} className="mx-auto mb-0.5 text-warning" />
            <p className="text-base font-bold text-text leading-tight">{subject.best_score ?? '—'}</p>
            <p className="text-2xs text-text-muted uppercase tracking-wide">{t('exam.history.scoreLabel', 'Skor')}</p>
          </div>
-         <div className="rounded-lg bg-white/[0.03] border border-white/[0.06] py-2 px-1 text-center">
+         <div className="rounded-lg bg-wash border border-border py-2 px-1 text-center">
            <Icon name={ICONS.ui.help} size={12} className="mx-auto mb-0.5 text-accent-teal" />
            <p className="text-base font-bold text-text leading-tight">{subject.total_quizzes ?? 0}</p>
            <p className="text-2xs text-text-muted uppercase tracking-wide">{t('exam.history.quizLabel', 'Quiz')}</p>
          </div>
-         <div className="rounded-lg bg-white/[0.03] border border-white/[0.06] py-2 px-1 text-center">
+         <div className="rounded-lg bg-wash border border-border py-2 px-1 text-center">
            <Icon name={ICONS.nav.flashcard} size={12} className="mx-auto mb-0.5 text-accent-purple" />
            <p className="text-base font-bold text-text leading-tight">{subject.total_flashcards ?? 0}</p>
            <p className="text-2xs text-text-muted uppercase tracking-wide">{t('exam.history.cardLabel', 'Kartu')}</p>
          </div>
-         <div className="rounded-lg bg-white/[0.03] border border-white/[0.06] py-2 px-1 text-center">
+         <div className="rounded-lg bg-wash border border-border py-2 px-1 text-center">
            <Icon name={ICONS.files.document} size={12} className="mx-auto mb-0.5 text-accent-blue" />
            <p className="text-base font-bold text-text leading-tight">{materialCount}</p>
            <p className="text-2xs text-text-muted uppercase tracking-wide">{t('exam.history.materialLabel', 'Materi')}</p>
@@ -170,7 +170,7 @@ function SubjectCard({ subject, onSelectSubject, onStartConfig, onDelete, t, ton
 
        {/* Footer — progress tipis + timestamp */}
        <div className="space-y-2">
-         <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+         <div className="h-1.5 rounded-full bg-wash overflow-hidden">
            <div className="h-full w-full rounded-full bg-primary origin-left transition-transform" style={{ transform: `scaleX(${progress / 100})` }} />
          </div>
          <div className="flex items-center justify-between text-3xs text-text-muted">
@@ -187,7 +187,7 @@ function SubjectCard({ subject, onSelectSubject, onStartConfig, onDelete, t, ton
        </div>
 
        <div className="flex gap-2 mt-auto">
-         <button onClick={() => onSelectSubject(subject.id)} className="flex-1 px-3 py-2 rounded-lg border border-white/10 bg-white/[0.03] text-text text-xs font-medium hover:border-primary/40 hover:bg-white/[0.06] transition-colors">
+         <button onClick={() => onSelectSubject(subject.id)} className="flex-1 px-3 py-2 rounded-lg border border-strong bg-wash text-text text-xs font-medium hover:border-primary/40 hover:bg-wash transition-colors">
            <Icon name={ICONS.learning.history} size={12} className="inline mr-1 -mt-0.5" /> {t('exam.history.history')}
          </button>
          <button onClick={() => onStartConfig(subject.id)} className="flex-1 px-3 py-2 rounded-lg bg-primary text-white text-xs font-medium hover:opacity-90 transition-opacity">

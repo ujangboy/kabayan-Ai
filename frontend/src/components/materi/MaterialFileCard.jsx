@@ -105,7 +105,7 @@ export function MaterialFileCard({ material: m, index, showSubject, isRagActive,
       </div>
 
       {/* RAG toggle */}
-      <div className="mt-auto pt-2 border-t border-border/50 flex items-center justify-between">
+      <div className="mt-auto pt-2 border-t border-border flex items-center justify-between">
         <span className="text-2xs text-text-muted">{t('materi.enableAsRagSource')}</span>
         <Tooltip label={m.status !== 'Ready' ? t('materi.notReady', { status: m.status }) : t('materi.enableAsRagSource')}>
           <label className="inline-flex items-center">

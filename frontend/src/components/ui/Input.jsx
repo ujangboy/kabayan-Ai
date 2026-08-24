@@ -41,8 +41,8 @@ export const Select = forwardRef(({ className, error = false, children, ...props
       base,
       // Override keras agar teks selalu terang di bg gelap — fix screenshot: text gelap di bg gelap
       'cursor-pointer pr-9 text-text placeholder:text-text-secondary',
-      'bg-slate-800/90 border-slate-600/60',
-      'focus:bg-slate-800 focus:border-primary/60',
+      'bg-subtle border-strong',
+      'focus:bg-subtle focus:border-primary/60',
       'disabled:opacity-60 disabled:cursor-not-allowed',
       error && 'border-danger/60',
       className

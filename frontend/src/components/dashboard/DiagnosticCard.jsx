@@ -69,7 +69,7 @@ export default function DiagnosticCard({ diagnostic }) {
                     pct: overview.coverage_pct ?? 0,
                   })}</span>
                 </div>
-                <div className="h-1.5 bg-background rounded-full overflow-hidden border border-border/50">
+                <div className="h-1.5 bg-background rounded-full overflow-hidden border border-border">
                   <div className="h-full w-full rounded-full bg-primary origin-left transition-transform duration-500" style={{ transform: `scaleX(${(overview.coverage_pct ?? 0) / 100})` }} />
                 </div>
               </div>

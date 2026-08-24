@@ -170,7 +170,7 @@ export default function ChatSidebar() {
                     'group flex items-center gap-2 rounded-xl px-2.5 py-2 cursor-pointer transition-all duration-150 border',
                     c.id === currentChatId
                       ? 'bg-primary/10 border-primary/20 text-primary-light'
-                      : 'border-transparent hover:bg-card hover:border-border/60'
+                      : 'border-transparent hover:bg-card hover:border-border'
                   )}
                   onClick={() => {
                     setCurrentChat(c.id);

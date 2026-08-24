@@ -318,7 +318,7 @@ export default function DataTab() {
           ) : (
             <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
               {backups.backups.map((b) => (
-                <div key={b.filename} className="flex items-center justify-between gap-2 bg-background border border-border/60 rounded-lg px-3 py-2">
+                <div key={b.filename} className="flex items-center justify-between gap-2 bg-background border border-border rounded-lg px-3 py-2">
                   <div className="min-w-0">
                     <p className="text-xs text-text truncate" title={b.filename}>{b.filename}</p>
                     <p className="text-3xs text-text-muted">

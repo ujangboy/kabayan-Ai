@@ -1,394 +1,105 @@
 ---
-version: 1.0
+version: 2.0
 name: kabayan-agent-design-system
 description: >
-  Design system untuk frontend kabayan_agent — asisten belajar berbasis AI.
-  Tema gelap (dark-first) dengan satu aksen teal (#14B8A6) yang digunakan
-  hemat: brand mark, primary CTA, focus ring, dan link. Elevasi dibangun dari
-  "surface ladder" (base → rail → surface → card → card-hover) dipadukan dengan
-  hairline border, bukan drop-shadow tebal. Icon menggunakan Google Material
-  Symbols; micro-interaction & transisi pakai framer-motion (dengan
-  MotionConfig reducedMotion="user"). Prinsip diadaptasi dari referensi
-  awesome-design-md: Linear (single accent, surface ladder, hairline), Raycast
-  (dark chrome, hairline depth, radius rapat), Cursor (sistem button/radius konsisten).
-
-colors:
-  primary: "#14B8A6"
-  primary-hover: "#2DD4BF"
-  primary-light: "#5EEAD4"
-  on-primary: "#FFFFFF"
-  base: "#0E1520"
-  rail: "#0B111B"
-  surface: "#121A27"
-  sidebar: "#121A27"
-  card: "#1A2332"
-  card-hover: "#212D40"
-  border: "#263349"
-  text: "#EDF1F7"
-  text-secondary: "#8C97A9"
-  text-muted: "#5C6675"
-  success: "#22C55E"
-  danger: "#EF4444"
-  warning: "#F6B93B"
-  info: "#29A8DF"
-  accent-blue: "#29A8DF"
-  accent-purple: "#14B8A6"
-  accent-teal: "#10B981"
-  accent-pink: "#EC4899"
-  overlay: "#000000"
-
-typography:
-  # Skala diadaptasi dari Gemini (Google Sans → Inter fallback)
-  # Reference: awesome-ios-design-md/ gemini — body 16pt/1.55, heading 20pt, chip 14pt
-  display-xl:
-    fontFamily: Inter
-    fontSize: 40px # hero kabayan (Gemini greeting 28pt ≈ 37px — kabayan sedikit lebih besar untuk dark premium)
-    fontWeight: 700
-    lineHeight: 1.1
-    letterSpacing: -0.02em
-  display-lg:
-    fontFamily: Inter
-    fontSize: 32px
-    fontWeight: 700
-    lineHeight: 1.15
-    letterSpacing: -0.015em
-  greeting:
-    fontFamily: Inter
-    fontSize: 28px # Gemini Greeting Hero 28pt/500
-    fontWeight: 500
-    lineHeight: 1.2
-    letterSpacing: -0.02em
-  screen-title:
-    fontFamily: Inter
-    fontSize: 22px # Gemini Screen Title 22pt/500
-    fontWeight: 500
-    lineHeight: 1.25
-    letterSpacing: -0.01em
-  section-header:
-    fontFamily: Inter
-    fontSize: 18px # Gemini Section Header 18pt/500
-    fontWeight: 500
-    lineHeight: 1.3
-    letterSpacing: 0em
-  heading:
-    fontFamily: Inter
-    fontSize: 20px # Gemini Answer Heading 20pt/500 (was 600 → Gemini 500)
-    fontWeight: 500
-    lineHeight: 1.3
-    letterSpacing: 0em
-  subhead:
-    fontFamily: Inter
-    fontSize: 17px # Gemini Answer Subheading 17pt/500
-    fontWeight: 500
-    lineHeight: 1.35
-    letterSpacing: 0em
-  answer-body:
-    fontFamily: Inter
-    fontSize: 16px # Gemini Answer Body / User Turn / List Item / Prompt Input 16pt/400
-    fontWeight: 400
-    lineHeight: 1.55
-  body-lg:
-    fontFamily: Inter
-    fontSize: 16px # alias answer-body
-    fontWeight: 400
-    lineHeight: 1.55
-  body:
-    fontFamily: Inter
-    fontSize: 16px # NAIK dari 14px → 16px (Gemini body), line-height 1.6 → 1.55
-    fontWeight: 400
-    lineHeight: 1.55
-  body-sm:
-    fontFamily: Inter
-    fontSize: 14px # Gemini Suggestion Chip 14pt/500 & Code 14pt — untuk secondary
-    fontWeight: 400
-    lineHeight: 1.4
-  caption:
-    fontFamily: Inter
-    fontSize: 12px
-    fontWeight: 400
-    lineHeight: 1.4
-  metadata:
-    fontFamily: Inter
-    fontSize: 13px # Gemini Metadata 13pt/400
-    fontWeight: 400
-    lineHeight: 1.3
-  label-upper:
-    fontFamily: Inter
-    fontSize: 11px # Gemini Label UPPER 11pt/500 + 0.6pt tracking
-    fontWeight: 500
-    lineHeight: 1.2
-    letterSpacing: 0.05em
-  button:
-    fontFamily: Inter
-    fontSize: 15px # Gemini Button 15pt/500 (was 14px)
-    fontWeight: 500
-    lineHeight: 1.0
-  composer:
-    fontFamily: Inter
-    fontSize: 18px # Gemini composer actual 18px (commit fc3f539)
-    fontWeight: 400
-    lineHeight: 1.4
-  mono:
-    fontFamily: "JetBrains Mono"
-    fontSize: 14px # Gemini Code 14pt (was 13px)
-    fontWeight: 400
-    lineHeight: 1.5
-
-rounded:
-  btn: 8px
-  input: 8px
-  card: 12px
-  dialog: 16px
-  pill: 9999px
-  full: 9999px
-
-spacing:
-  xxs: 4px
-  xs: 8px
-  sm: 12px
-  md: 16px
-  lg: 24px
-  xl: 32px
-  xxl: 48px
-  section: 96px
-
-components:
-  button-primary:
-    backgroundColor: "{colors.primary}"
-    background: "#14B8A6" (solid — gradien dihapus)
-    textColor: "{colors.on-primary}"
-    typography: "{typography.button}"
-    rounded: "{rounded.btn}"
-    padding: 10px 16px
-    height: 40px
-  button-secondary:
-    backgroundColor: "{colors.card}"
-    textColor: "{colors.text}"
-    borderColor: "{colors.border}"
-    typography: "{typography.button}"
-    rounded: "{rounded.btn}"
-    padding: 10px 16px
-    height: 40px
-  button-ghost:
-    backgroundColor: "transparent"
-    textColor: "{colors.text-secondary}"
-    typography: "{typography.button}"
-    rounded: "{rounded.btn}"
-    padding: 10px 16px
-    height: 40px
-  button-danger:
-    backgroundColor: "{colors.danger}"
-    opacity: 0.1
-    textColor: "{colors.danger}"
-    borderColor: "{colors.danger}"
-    borderOpacity: 0.2
-    typography: "{typography.button}"
-    rounded: "{rounded.btn}"
-    padding: 10px 16px
-    height: 40px
-  card:
-    backgroundColor: "{colors.card}"
-    textColor: "{colors.text}"
-    rounded: "{rounded.card}"
-    borderColor: "{colors.border}"
-    padding: 20px
-    shadow: "0 2px 8px rgba(0,0,0,0.25)"
-  card-hoverable:
-    backgroundColor: "{colors.card}"
-    textColor: "{colors.text}"
-    rounded: "{rounded.card}"
-    borderColor: "{colors.border}"
-    padding: 20px
-    shadow: "0 4px 16px rgba(0,0,0,0.3), 0 0 0 1px rgba(139,92,246,0.15)"
-  modal:
-    backgroundColor: "{colors.card}"
-    textColor: "{colors.text}"
-    rounded: "{rounded.dialog}"
-    borderColor: "{colors.border}"
-    shadow: "0 20px 40px rgba(0,0,0,0.5)"
-  text-input:
-    backgroundColor: "{colors.card}"
-    textColor: "{colors.text}"
-    borderColor: "{colors.border}"
-    typography: "{typography.body}"
-    rounded: "{rounded.input}"
-    padding: 10px 16px
-    height: 42px
-  badge:
-    backgroundColor: "{colors.primary}"
-    opacity: 0.15
-    textColor: "{colors.primary-light}"
-    typography: "{typography.caption}"
-    rounded: "{rounded.pill}"
-    padding: 2px 8px
-  tooltip:
-    backgroundColor: "{colors.card}"
-    textColor: "{colors.text}"
-    typography: "{typography.caption}"
-    rounded: "{rounded.btn}"
-    padding: 6px 10px
-
+  Design system Kabayan AI — Modern Minimalist & Polish. Berakar pada palet
+  Zinc netral (60% base / 30% surface / 10% aksen), border hairline 1px,
+  tanpa drop-shadow tebal, dan motion berbasis physics 60 FPS.
+  Referensi gaya: Linear, Vercel/Geist, shadcn-ui.
 ---
 
-# DESIGN.md — kabayan_agent Frontend
+# Design System & UI Specification — Modern Minimalist & Polish
 
-Panduan otoritatif untuk membangun & memodifikasi UI frontend kabayan_agent.
-Ikuti token & komponen di sini agar seluruh halaman konsisten. Semua komponen
-ada di `frontend/src/components/ui/` (Button, Card, Modal, Input, Badge, Tooltip,
-Spinner, Skeleton, ConfirmDialog) — **gunakan komponen tersebut, jangan buat
-button/card/modal dari nol**.
+## 1. Overview & Core Philosophy
 
-## 1. Visual Theme & Atmosphere
-Aplikasi tutor AI dengan nuansa "premium dark, tenang, fokus belajar". Kanvas
-gelap dengan satu aksen teal yang dipakai hemat. Tidak ada tema terang.
-Kedalaman dibangun dari surface ladder + hairline, bukan shadow tebal.
-Gradien dekoratif dan glow dihilangkan — warna selalu solid.
+Standar UI dan panduan interaksi untuk menghapus karakteristik "generic AI slop"
+(gradien jenuh, nested cards, glow tebal, animasi kaku).
 
-## 2. Color Palette & Roles
-- **Primary teal `#14B8A6`** — satu-satunya aksen kromatik. Dipakai pada:
-  brand mark (logo), primary CTA, focus ring, link, active nav indicator.
-  Hover `#2DD4BF`, light `#5EEAD4`.
-- **Surface ladder** (untuk hierarki/elevasi): `base #0E1520` (canvas) →
-  `rail #0B111B` (nav rail) → `surface #121A27` (topbar/sidebar) →
-  `card #1A2332` (kartu) → `card-hover #212D40` (hover).
-- **Text**: `text #EDF1F7` (utama), `text-secondary #8C97A9` (meta),
-  `text-muted #5C6675` (disabled/footnote).
-- **Semantic**: `success #22C55E`, `danger #EF4444`, `warning #F6B93B`,
-  `info #29A8DF` — untuk status, notifikasi, validasi.
-- **Accent (data-viz only)**: `accent-blue/purple/teal/pink` — HANYA untuk
-  chart/visualisasi data & badge status, BUKAN chrome (button/nav/text).
-- **Overlay**: `black/60` + `backdrop-blur` untuk scrim modal.
+Prinsip utama:
+- **Functional Minimalism:** 90% warna netral (Zinc), 10% aksen interaktif (teal).
+- **Micro-precision:** Border 1px presisi, tipografi terkalibrasi, grid kelipatan 4px/8px.
+- **Natural Motion:** Animasi berbasis physics (spring), 60 FPS, GPU-accelerated
+  (hanya `transform` + `opacity`).
+- **Adaptive Theming:** Light & Dark mode via CSS Variables tanpa FOUC
+  (script init di `index.html`, class `.dark` pada `<html>`).
 
-## 3. Typography (Gemini scale — Inter fallback for Google Sans)
-- Font: **Inter** (body/display, fallback Google Sans / Google Sans Text) + **JetBrains Mono** (code, fallback Roboto Mono).
-- Skala Gemini: greeting 28/500 → screen-title 22/500 → section-header 18/500 → heading 20/500 → subhead 17/500 → **body 16/400/1.55** (was 14/1.6, naik +2px) → chip/code 14 → metadata 13 → label-upper 11/500/0.05em.
-- Display & greeting pakai **negative letter-spacing** (-0.02em); heading/body `0em` (Gemini body 0 tracking).
-- Hierarchy: body 16 adalah default prose/chat/composer (composer 18px aktual `gemini.google.com`), `text-sm` (14px) sekarang untuk secondary/chip, `text-xs` (12px) caption, `11px` untuk label UPPER, `13px` metadata.
-- Jangan hardcode string UI — selalu lewat `i18n` (`t()`).
-- Ref: `awesome-ios-design-md` Gemini spec + `just-marketing/prompt-area@fc3f539` (composer 18px, pill 16px).
+## 2. Color Palette & Adaptive Tokens
 
-## 4. Components
-Semua di `src/components/ui/`:
-- **Button** (`variant`: primary/secondary/ghost/danger/outline/link;
-  `size`: sm/md/lg/icon; `loading`; `asChild` via Radix Slot). Radius `btn` 8px,
-  press `scale-[0.97]`, focus ring teal. Submit button wajib `type="submit"`.
-- **Card** (+ CardHeader/Title/Content/Footer). `bg-card border border-border
-  rounded-card`. `hoverable` menambah shadow + `-translate-y-0.5`.
-- **Modal** (Radix Dialog + framer-motion): `open`, `onClose`, `title`,
-  `footer`, `size`. Otomatis focus-trap, scroll-lock, Esc, `aria-modal`.
-- **ConfirmDialog** — modal konfirmasi hapus (pakai Modal + Button).
-- **Input / Textarea / Select** — `input-base`, state `error`/`disabled`.
-- **Badge** (`variant` primary/success/danger/warning/info/secondary).
-- **Tooltip** (Radix) — untuk tombol icon-only.
-- **Spinner / Skeleton** — loading state.
-- **Domain components** — komponen spesifik halaman hasil ekstraksi revamp berada di
-   `src/components/<domain>/` (mis. `chat/`, `flashcard/`, `exam/`, `studyplan/`, `materi/`,
-   `quiz/`, `notebook/`, `layout/`). Tujuannya menjaga `src/pages/*.jsx` di bawah ~350 baris.
-   Semua komponen ini murni presentasional dan **hanya memakai token/utilitas yang sudah ada**
-   — tidak ada token warna/spacing/radius baru yang diperkenalkan selama revamp. `IconRail`
-   (`src/components/layout/IconRail.jsx`)
-  adalah nav rail kiri tunggal (item: Dashboard, Chat, Subjects, Materi, Notebook,
-  Flashcard, Quiz, Exam Analyzer, Study Plan, Settings) dengan indikator aktif
-  framer-motion (`layoutId="nav-active-indicator"`).
+Semantic tokens berbasis CSS Variables (didefinisikan di `src/index.css`,
+dipetakan ke Tailwind di `tailwind.config.js`):
 
-## 5. Layout & Spacing
-- Base unit 4px. Spacing token: xxs 4 / xs 8 / sm 12 / md 16 / lg 24 / xl 32.
-- Max content lebar ~1280px; grid kartu 3-up (desktop) → 2-up (tablet) → 1-up (mobile).
-- Section rhythm: jarak antar-bagian `lg`/`xl`; tidak perlu whitespace ekstrem.
-- Radius: button/input 8px, card 12px, dialog 16px, pill 999px. Konsisten.
+| Token | Light (`:root`) | Dark (`.dark`) | Peruntukan |
+| :--- | :--- | :--- | :--- |
+| `--bg-base` | `#ffffff` | `#09090b` Zinc-950 | Background halaman |
+| `--bg-subtle` | `#f4f4f5` Zinc-100 | `#18181b` Zinc-900 | Sidebar, rail, container |
+| `--bg-surface` | `#ffffff` | `#131316` | Card, dialog, panel |
+| `--popover` | `#ffffff` | `#1c1c1f` | Dropdown, tooltip, menu |
+| `--border-subtle` | `rgba(0,0,0,0.08)` | `rgba(255,255,255,0.08)` | Border default 1px |
+| `--border-strong` | `rgba(0,0,0,0.16)` | `rgba(255,255,255,0.16)` | Border hover/aktif |
+| `--text-primary` | `#09090b` | `#fafafa` Zinc-50 | Heading, teks utama |
+| `--text-secondary` | `#71717a` Zinc-500 | `#a1a1aa` Zinc-400 | Subtitle, helper |
+| `--text-muted` | `#a1a1aa` | `#71717a` | Disabled, footnote |
+| `--accent` | `#0d9488` Teal-600 | `#14b8a6` Teal-500 | Brand / CTA (satu-satunya aksen) |
+| `--accent-hover` | `#0f766e` | `#2dd4bf` | Hover state aksen |
 
-## 6. Depth & Elevation
-| Level | Treatment | Use |
-|---|---|---|
-| 0 | base canvas | background halaman |
-| 1 | card + hairline border | kartu default |
-| 2 | card-hover + shadow-card-hover | kartu hover / highlighted |
-| 3 | gradient-primary + shadow-btn-primary | primary CTA, logo |
-| focus | 2px ring primary/50 | elemen fokus keyboard |
+Aturan 60-30-10:
+- **60%** `bg-base` — kanvas halaman.
+- **30%** `bg-subtle` / `bg-surface` — sidebar, kartu, panel.
+- **10%** `accent` teal — CTA primer, link, focus ring, indikator aktif. Tidak untuk dekorasi.
 
-Hindari shadow tebal di luar token (`shadow-modal` hanya untuk dialog).
+Warna semantik status tetap ada dan hemat: `success #22c55e`, `danger #ef4444`,
+`warning #f59e0b`, `info #38bdf8` — hanya untuk status/notifikasi/validasi.
+Badge mata kuliah boleh multi-hue (functional color-coding), bukan chrome.
 
-## 7. Motion (framer-motion)
-- Page transition: fade + slide-y 8px (`AppLayout`).
-- Modal: overlay fade + content scale 0.96→1, y 8→0.
-- Button: `active:scale-[0.97]` (press). Card hover: lift halus.
-- List/grid: stagger entrance (`staggerChildren`).
-- **Wajib**: `MotionConfig reducedMotion="user"` di root agar menghormati
-  preferensi `prefers-reduced-motion`.
+## 3. Typography Hierarchy
 
-## 8. Icons
-- **Google Material Symbols** (style **Rounded**) via `@material-symbols-svg/react`.
-- Satu-satunya cara render: komponen `<Icon />` dari `@/components/ui` dengan
-  prop `name` (wajib). Nama glyph WAJIB diambil dari registry semantik
-  `ICONS` (`src/lib/icons.js`) — jangan hardcode string atau import package
-  langsung.
-- Registry `ICONS` mengelompokkan glyph per fungsi: `nav`, `actions`,
-  `status`, `empty`, `files`, `learning`, `ui`, `editor`, `media`,
-  `communication`.
-- Prop `<Icon />`: `name`, `size` (default 24; minimum 20px icon interaktif,
-  16px dekoratif kecil), `weight` (100–700, default 400), `fill` (0/1),
-  `grade`, `opticalSize`, `className`, `ariaLabel`, `ariaHidden` (default true).
-- Aksesibilitas: icon fungsional (tombol icon-only) wajib `ariaLabel`; icon
-  dekoratif dibiarkan `aria-hidden` default.
-- Peta glyph → komponen SVG di-generate ke `src/lib/iconMap.js`
-  (AUTO-GENERATED, jangan edit manual; regenerate via
-  `node scripts/generate-icon-map.mjs`). Nama Material Symbols 2024 tidak
-  memakai suffix lama (`expand_more` → `keyboard_arrow_down`, `help_outline`
-  → `help`, `star_border` → `star`, dst). Fallback global: `help`.
+Font: **Inter** (weight 400/500/600/700 saja).
 
-## 9. Do's and Don'ts
+- **Display / H1:** `text-3xl`–`text-4xl`, `font-semibold`, `tracking-headline` (-0.02em), `leading-tight`
+- **Heading / H2-H3:** `text-xl`–`text-2xl`, `font-medium`, `tracking-headline`
+- **Body:** `text-sm`–`text-base`, `font-normal`, `leading-relaxed` (1.55)
+- **Caption / Meta:** `text-xs`, `font-normal`, warna `text-secondary`
+
+Maksimal 2 font weight per komponen.
+
+## 4. Components & Layout Rules
+
+- **Nested card di dalam card dilarang keras.** Pakai `border-t border-border`
+  atau perbedaan surface untuk memisahkan data.
+- **Radius:** `rounded-lg` (8px) card · `rounded-md` (6px) input/dropdown ·
+  `rounded-xl` (12px) modal · `rounded-full` khusus badge & avatar.
+- **Elevation:**
+  - Dark Mode: `shadow-none` — elevasi dari kontras surface + border 1px.
+  - Light Mode: `shadow-card = 0 1px 2px rgba(0,0,0,0.05)` (sangat halus).
+- **Iconography:** Material Symbols rounded, stroke seragam. Ukuran standar:
+  16px inline, 20px action button, 24px header/nav.
+- **Spacing:** kelipatan 4px/8px; beri ruang (whitespace) lega antar-section —
+  section padding minimum `p-5`, gap antar-kartu `gap-3`–`gap-4`.
+
+## 5. Motion & Interaction Standards
+
+Library: framer-motion (tokens terpusat di `src/utils/index.js`).
+
+- **Hover & Press tombol:** `transition-[background-color,color,border-color,transform] duration-150 ease-out`,
+  active `scale-[0.98]`.
+- **Modal / Popover / Dropdown:**
+  initial `{ opacity: 0, scale: 0.96, y: -4 }` → animate `{ opacity: 1, scale: 1, y: 0 }`,
+  spring `{ stiffness: 400, damping: 30 }` (`SPRING`).
+- **List rendering:** stagger `staggerContainer()` default **0.04s** antar-item.
+- **Performance rule:** hanya animasikan `transform` & `opacity`. Dilarang
+  menganimasi `height`, `width`, `margin`. Progress bar pakai `scaleX`.
+- `MotionConfig reducedMotion="user"` wajib aktif (sudah di `AppLayout`).
+
+## 6. Do's and Don'ts
+
 ### Do
-- Pakai teal HANYA sebagai aksen tunggal (brand/CTA/focus/link). Tanpa gradien/glow.
-- Bangun elevasi dari surface ladder + hairline, bukan shadow tebal.
-- Gunakan komponen `ui/` yang sudah ada; teruskan prop via `className` + `cn()`.
-- Semua modal pakai `Modal`/`ConfirmDialog` (Radix) — jangan `fixed inset-0` manual.
-- String UI selalu lewat `i18n`.
-- Hormati `prefers-reduced-motion` (sudah dibungkus `MotionConfig`).
+- Pakai token semantik (`bg-base`, `bg-surface`, `border-border`, `text-text`) — bukan hex/palette mentah.
+- Aksen teal hanya untuk interaksi (CTA/link/focus/aktif).
+- Bangun elevasi dari surface ladder + hairline border.
+- Gunakan komponen `ui/` yang ada; semua modal via `Modal`/`ConfirmDialog`.
 
 ### Don't
-- Jangan perkenalkan warna aksen kedua di chrome (button/nav/text).
-- Jangan hardcode hex di JSX; gunakan token Tailwind (`bg-card`, `text-text-secondary`, dll).
-- Jangan buat modal hand-rolled tanpa focus-trap/scroll-lock.
-- Jangan pill-round CTA (selalu radius 8px kecuali badge/pill).
-- Jangan tinggalkan tombol tanpa handler / `disabled` yang jelas.
-- Jangan hardcode teks user-facing (selalu `t()`).
-
-## 10. Responsive
-- Breakpoint: mobile <768px (1-up), tablet 768–1024px (2-up), desktop >1024px (3-up).
-- Touch target tombol ≥40px tinggi.
-- Nav rail tetap 56px (w-14) di semua breakpoint; sidebar kanan bisa collapse.
-
-## 11. Navigation & Wayfinding (PRD-01)
-### Breadcrumb
-- Komponen: `src/components/layout/Breadcrumbs.jsx` (auto-detect route, bukan props).
-- Hierarki: akar Dashboard → seksi (`nav.*`) → entitas deep (`subjects/:id`, `flashcard/review`).
-- `maxItems` default 4; bila lebih, segmen tengah dikolaps jadi "…" (non-link, `breadcrumb.more`).
-- Crumb terakhir = halaman aktif: `span` non-link + `aria-current="page"`, font-medium.
-- Icon crumb opsional 13px `text-primary-light`; separator `chevron_right` `text-text-muted/50`.
-- Sembunyi di layar <640px (`hidden sm:flex`).
-### Back Navigation
-- Hook: `src/hooks/useBackNavigation.js` — `resolveBackDestination()` adalah satu-satunya sumber
-  logika tujuan back; prioritas: `?from=` param → `document.referrer` (same-origin) → route induk → fallback `/dashboard`.
-- Komponen: `src/components/layout/BackButton.jsx` — icon `arrow_back`, label dinamis
-  `backButton.to` ("Kembali ke {{page}}"), sembunyi otomatis bila tujuan = fallback
-  (kecuali `label` kustom di-override). Posisi: kiri atas header halaman.
-- Jangan pakai `window.history.back()`; selalu lewat hook/komponen ini.
-### Keyboard Shortcuts
-- Modal: `src/components/KeyboardShortcuts.jsx` (Radix `Modal`, grid 2 kolom).
-- `?` toggle; ⌘K / ⌘/ buka command search; ⌘N chat baru; `G` lalu `D`/`C` navigasi cepat;
-  `1-9` quick nav (dashboard, chat, subjects, materi, notebook, flashcard, quiz, exam, study-plan).
-- Shortcut nonaktif saat fokus di input/textarea/contenteditable (kecuali kombinasi ⌘/Ctrl).
-### Mobile Drawer (ContextSidebar)
-- `useSwipeGesture`: swipe kanan dari tepi kiri layar (<24px, `window` listener, mobile saja)
-  buka drawer; swipe kiri di dalam drawer tutup.
-- Threshold jarak 50px DAN kecepatan ≥500px/s; gerakan dominan vertikal diabaikan
-  (`touch-action: pan-y` agar scroll tetap mulus).
-### Settings
-- Quick settings (bahasa + notifikasi + link pengaturan lengkap) di TopBar;
-  full settings tetap di IconRail bawah (nav.settings).
-
-## 12. Agent Prompt Guide
-Warna cepat: teal `#14B8A6`, canvas `#0E1520`, card `#1A2332`, border `#263349`,
-text `#EDF1F7`. Komponen: `import { Button, Card, Modal, Input, Badge } from '@/components/ui'`.
-Prompt contoh: "Buat kartu pakai `<Card hoverable>` dengan `<Button variant=primary>`,
-ikuti radius 12px & token warna di DESIGN.md."
+- Gradien dekoratif, glow shadow, backdrop-blur pada kartu konten.
+- Nested card dengan border/shadow ganda.
+- Hardcode warna slate/zinc/hex langsung di komponen.
+- Animasi layout-shifting (`width`/`height`/`top`/`left`).

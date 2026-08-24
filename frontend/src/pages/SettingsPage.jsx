@@ -34,16 +34,16 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="flex-1 overflow-hidden flex flex-col bg-slate-950">
+    <div className="flex-1 overflow-hidden flex flex-col bg-base">
       {/* Header */}
-      <div className="shrink-0 px-6 md:px-8 py-6 border-b border-slate-800/60">
+      <div className="shrink-0 px-6 md:px-8 py-6 border-b border-border">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shrink-0">
             <Icon name={ICONS.nav.settings} size={18} className="text-white" />
           </div>
           <div>
             <h1 className="text-xl font-semibold text-white">{t('settings.title')}</h1>
-            <p className="text-slate-400 text-sm mt-0.5">{t('settings.subtitle')}</p>
+            <p className="text-text-secondary text-sm mt-0.5">{t('settings.subtitle')}</p>
           </div>
         </div>
       </div>
@@ -51,7 +51,7 @@ export default function SettingsPage() {
       {/* Two-Column Layout */}
       <div className="flex-1 flex flex-col md:flex-row min-h-0 overflow-hidden">
         {/* Left: vertical mini sidebar w-64 — statis, tanpa slide */}
-        <aside className="w-full md:w-64 shrink-0 border-b md:border-b-0 md:border-r border-slate-800/60 bg-slate-900/30 p-3 md:p-4 overflow-y-auto">
+        <aside className="w-full md:w-64 shrink-0 border-b md:border-b-0 md:border-r border-border bg-surface p-3 md:p-4 overflow-y-auto">
           <nav className="flex md:flex-col gap-1.5 overflow-x-auto md:overflow-visible pb-1 md:pb-0">
             {TABS.map(({ key, icon, labelKey }) => {
               const isActive = active === key;
@@ -63,10 +63,10 @@ export default function SettingsPage() {
                     'flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all duration-150 shrink-0 md:shrink',
                     isActive
                       ? 'bg-primary text-white'
-                      : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                      : 'text-text-secondary hover:text-white hover:bg-subtle'
                   )}
                 >
-                  <Icon name={icon} size={16} className={isActive ? 'text-white' : 'text-slate-500'} />
+                  <Icon name={icon} size={16} className={isActive ? 'text-white' : 'text-text-secondary'} />
                   <span>{t(labelKey)}</span>
                 </button>
               );
@@ -75,9 +75,9 @@ export default function SettingsPage() {
         </aside>
 
         {/* Right: content panel clean bordered slate-800/60 */}
-        <div className="flex-1 min-w-0 overflow-y-auto bg-slate-950">
+        <div className="flex-1 min-w-0 overflow-y-auto bg-base">
           <div className="p-6 md:p-8">
-            <div className="rounded-2xl border border-white/[0.08] bg-surface-2 p-6 md:p-7">
+            <div className="rounded-lg border border-border bg-surface-2 p-6 md:p-7">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={active}

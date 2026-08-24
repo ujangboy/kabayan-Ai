@@ -291,7 +291,7 @@ function ReviewTab({ attempt }) {
               {expandedIdx === i && (
                 <motion.div initial={{ height:0 }} animate={{ height:'auto' }} exit={{ height:0 }}
                   transition={{ duration:0.2 }} className="overflow-hidden">
-                  <div className="px-4 pb-4 space-y-2 border-t border-border/40 pt-3">
+                  <div className="px-4 pb-4 space-y-2 border-t border-border pt-3">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
                       <div className="p-2 rounded-lg bg-background">
                          <p className="text-3xs text-text-muted mb-0.5">{t('exam.detail.yourAnswer')}</p>
@@ -615,7 +615,7 @@ function InlinePractice({ questions, topic, onComplete, onClose, onRetryTopic })
           </div>
 
           {/* Explanation */}
-          <div className="border-t border-border/50 pt-2">
+          <div className="border-t border-border pt-2">
             <p className="text-3xs font-semibold text-text-secondary uppercase tracking-wider mb-1 flex items-center gap-1"><Icon name={ICONS.actions.edit} size={10} /> Penjelasan</p>
             {fetchingExpl ? (
               <p className="text-text-muted flex items-center gap-1"><Icon name={ICONS.status.loading} size={10} className="animate-spin" /> Memuat penjelasan...</p>
@@ -628,7 +628,7 @@ function InlinePractice({ questions, topic, onComplete, onClose, onRetryTopic })
 
           {/* Tips */}
           {q.tips && (
-            <div className="border-t border-border/50 pt-2">
+            <div className="border-t border-border pt-2">
               <p className="text-primary/80 flex items-start gap-1.5">
                 <Icon name={ICONS.learning.lightbulb} size={10} className="shrink-0 mt-0.5" />
                 <span>{q.tips}</span>

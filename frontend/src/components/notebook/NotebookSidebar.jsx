@@ -94,7 +94,7 @@ export function NotebookSidebar({
           </div>
         ) : notes.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
-            <div className="w-12 h-12 rounded-2xl bg-card border border-border flex items-center justify-center mb-3">
+            <div className="w-12 h-12 rounded-lg bg-card border border-border flex items-center justify-center mb-3">
               <Icon name={ICONS.files.document} size={20} className="text-text-muted" />
             </div>
             <p className="text-xs text-text-muted">{t('notebook.noNotes')}</p>

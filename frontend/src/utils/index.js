@@ -33,7 +33,7 @@ export const scaleIn = {
 };
 
 // Variants untuk list/grid stagger (container + item)
-export const staggerContainer = (stagger = 0.05, delayChildren = 0) => ({
+export const staggerContainer = (stagger = 0.04, delayChildren = 0) => ({
   hidden: { opacity: 0 },
   show: {
     opacity: 1,

@@ -28,7 +28,7 @@ const ACTIVITY_META = (t) => ({
 function QueryErrorCard({ title }) {
   const { t } = useTranslation();
   return (
-    <div className="rounded-xl border border-red-500/30 bg-slate-900 p-4">
+    <div className="rounded-xl border border-red-500/30 bg-surface p-4">
       <p className="text-xs text-red-400">{t('subjectDashboard.queryError', { title })}</p>
     </div>
   );
@@ -42,18 +42,18 @@ function MetricBar({ subject, masteryPct, t }) {
     { icon: ICONS.learning.progress, label: t('subjectDashboard.statMastery', 'Progress'), value: masteryPct, suffix: masteryPct != null ? '%' : '', color: 'text-primary-light', bg: 'bg-primary/10' },
   ];
   return (
-    <div className="flex h-14 rounded-xl border border-slate-800 bg-slate-900 divide-x divide-slate-800 overflow-hidden">
+    <div className="flex h-14 rounded-xl border border-border bg-surface divide-x divide-border overflow-hidden">
       {items.map((it) => (
         <div key={it.label} className="flex-1 flex items-center gap-2.5 px-3.5 min-w-0">
-          <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${it.bg} border border-white/5`}>
+          <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${it.bg} border border-border`}>
             <Icon name={it.icon} size={14} className={it.color} />
           </div>
           <div className="min-w-0">
             <p className="text-sm font-semibold leading-none text-white truncate">
               {it.value != null ? it.value : '—'}
-              {it.suffix && <span className="text-2xs font-normal text-slate-400 ml-0.5">{it.suffix}</span>}
+              {it.suffix && <span className="text-2xs font-normal text-text-secondary ml-0.5">{it.suffix}</span>}
             </p>
-            <p className="text-2xs leading-none text-slate-400 truncate mt-0.5">{it.label}</p>
+            <p className="text-2xs leading-none text-text-secondary truncate mt-0.5">{it.label}</p>
           </div>
         </div>
       ))}
@@ -125,9 +125,9 @@ export default function SubjectDashboardPage() {
   if (isLoading) {
     return (
       <AnimatePresence mode="wait" initial={false}>
-        <motion.div key="loading" {...fadeSlide} className="flex-1 overflow-y-auto p-6 md:p-8 bg-slate-950">
-          <div className="w-full rounded-xl border border-slate-800 bg-slate-900 p-6 space-y-3">
-            {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-4 w-full bg-slate-800" />)}
+        <motion.div key="loading" {...fadeSlide} className="flex-1 overflow-y-auto p-6 md:p-8 bg-base">
+          <div className="w-full rounded-xl border border-border bg-surface p-6 space-y-3">
+            {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-4 w-full bg-subtle" />)}
           </div>
         </motion.div>
       </AnimatePresence>
@@ -137,8 +137,8 @@ export default function SubjectDashboardPage() {
   if (error || !subject) {
     return (
       <AnimatePresence mode="wait" initial={false}>
-        <motion.div key="notfound" {...fadeSlide} className="flex-1 overflow-y-auto p-6 md:p-8 bg-slate-950">
-          <div className="w-full rounded-xl border border-slate-800 bg-slate-900 p-8 text-center text-slate-400 text-sm">{t('subjectDashboard.notFound')}</div>
+        <motion.div key="notfound" {...fadeSlide} className="flex-1 overflow-y-auto p-6 md:p-8 bg-base">
+          <div className="w-full rounded-xl border border-border bg-surface p-8 text-center text-text-secondary text-sm">{t('subjectDashboard.notFound')}</div>
         </motion.div>
       </AnimatePresence>
     );
@@ -155,14 +155,14 @@ export default function SubjectDashboardPage() {
 
   return (
     <AnimatePresence mode="wait" initial={false}>
-      <motion.div key="main" {...fadeSlide} className="flex-1 overflow-y-auto p-6 md:p-8 bg-slate-950">
+      <motion.div key="main" {...fadeSlide} className="flex-1 overflow-y-auto p-6 md:p-8 bg-base">
         <div className="w-full max-w-7xl mx-auto space-y-5">
 
         {/* Header compact */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-slate-900 border border-slate-800 rounded-2xl p-5"
+          className="bg-surface border border-border rounded-lg p-5"
         >
           <div className="flex items-center gap-3 flex-wrap">
             <BackButton fallback="/subjects" label={t('back.label', { name: t('nav.subjects') })} />
@@ -175,7 +175,7 @@ export default function SubjectDashboardPage() {
                   <h1 className="text-xl font-semibold tracking-tight text-white truncate">{subject.name}</h1>
                   <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                     {subject.semester && (
-                      <span className="text-2xs px-2 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300">
+                      <span className="text-2xs px-2 py-0.5 rounded-full bg-subtle border border-border text-text">
                         {subject.semester}
                       </span>
                     )}
@@ -189,11 +189,11 @@ export default function SubjectDashboardPage() {
               </div>
             </div>
             <div className="flex gap-2">
-              <button onClick={() => setIsEditOpen(true)} className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium bg-slate-800 border border-slate-700 text-slate-200 hover:bg-slate-700 transition-colors">
+              <button onClick={() => setIsEditOpen(true)} className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium bg-subtle border border-border text-text hover:bg-wash-strong transition-colors">
                 <Icon name={ICONS.actions.edit} size={14} /> {t('subjectDashboard.editButton')}
               </button>
               <Tooltip label={t('common.delete')}>
-                <button onClick={() => setIsDeleteOpen(true)} aria-label={t('common.delete')} className="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-slate-800 border border-slate-700 text-slate-400 hover:text-red-400 hover:border-red-500/30 transition-colors">
+                <button onClick={() => setIsDeleteOpen(true)} aria-label={t('common.delete')} className="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-subtle border border-border text-text-secondary hover:text-red-400 hover:border-red-500/30 transition-colors">
                   <Icon name={ICONS.actions.delete} size={14} />
                 </button>
               </Tooltip>
@@ -201,17 +201,17 @@ export default function SubjectDashboardPage() {
           </div>
 
           {subject.description && (
-            <p className="text-sm text-slate-400 mt-3 italic">"{subject.description}"</p>
+            <p className="text-sm text-text-secondary mt-3 italic">"{subject.description}"</p>
           )}
 
-          <div className="flex items-center gap-2 flex-wrap mt-4 pt-4 border-t border-slate-800">
+          <div className="flex items-center gap-2 flex-wrap mt-4 pt-4 border-t border-border">
             {quickActions.map(({ icon, label, to }) => (
               <motion.button
                 key={to}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => navigate(to)}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-slate-800 border border-slate-700 text-xs font-medium text-slate-200 hover:bg-slate-700 hover:border-primary/30 transition-colors"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-subtle border border-border text-xs font-medium text-text hover:bg-wash-strong hover:border-primary/30 transition-colors"
               >
                 <Icon name={icon} size={13} /> {label}
               </motion.button>
@@ -227,9 +227,9 @@ export default function SubjectDashboardPage() {
 
           {/* LEFT — tabbed view */}
           <div className="lg:col-span-8 min-w-0">
-            <div className="rounded-2xl border border-slate-800 bg-slate-900 overflow-hidden">
+            <div className="rounded-lg border border-border bg-surface overflow-hidden">
               {/* Tabs */}
-              <div className="flex items-center gap-1 px-2 pt-2 border-b border-slate-800 bg-slate-900/50">
+              <div className="flex items-center gap-1 px-2 pt-2 border-b border-border bg-surface">
                 {[
                   { key: 'files', label: 'Berkas & Materi', icon: ICONS.files.document },
                   { key: 'analytics', label: 'Riwayat & Analytics', icon: ICONS.learning.barChart },
@@ -237,9 +237,9 @@ export default function SubjectDashboardPage() {
                   <button
                     key={tab.key}
                     onClick={() => setActiveTab(tab.key)}
-                    className={`relative flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium rounded-t-lg transition-colors ${activeTab === tab.key ? 'text-white bg-slate-800' : 'text-slate-400 hover:text-white hover:bg-slate-800/50'}`}
+                    className={`relative flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium rounded-t-lg transition-colors ${activeTab === tab.key ? 'text-white bg-subtle' : 'text-text-secondary hover:text-white hover:bg-subtle'}`}
                   >
-                    <Icon name={tab.icon} size={14} className={activeTab === tab.key ? 'text-primary-light' : 'text-slate-500'} />
+                    <Icon name={tab.icon} size={14} className={activeTab === tab.key ? 'text-primary-light' : 'text-text-secondary'} />
                     {tab.label}
                     {activeTab === tab.key && <motion.span layoutId="subject-tab-indicator" className="absolute inset-x-2 -bottom-px h-0.5 bg-primary rounded-full" />}
                   </button>
@@ -255,25 +255,25 @@ export default function SubjectDashboardPage() {
                   ) : (
                     <motion.div key="analytics" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.18 }} className="space-y-4">
                       {hasScores ? (
-                        <div className="rounded-xl border border-slate-800 bg-slate-950 p-4">
+                        <div className="rounded-xl border border-border bg-base p-4">
                           <div className="flex items-center gap-2 mb-3">
                             <Icon name={ICONS.learning.progress} size={14} className="text-primary-light" />
-                            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{t('subjectDashboard.scoreHistoryTitle')}</h3>
+                            <h3 className="text-xs font-semibold text-text-secondary uppercase tracking-wider">{t('subjectDashboard.scoreHistoryTitle')}</h3>
                           </div>
                           <ScoreChart history={scoreHistory} />
                         </div>
                       ) : (
-                        <div className="rounded-xl border border-dashed border-slate-700 bg-slate-900 p-6 text-center text-sm text-slate-500">
+                        <div className="rounded-xl border border-dashed border-border bg-surface p-6 text-center text-sm text-text-secondary">
                           {t('subjectDashboard.chartNoScores', 'Belum ada riwayat skor')}
                         </div>
                       )}
-                      <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+                      <div className="rounded-xl border border-border bg-surface p-4">
                         <div className="flex items-center gap-2 mb-3">
-                          <Icon name={ICONS.ui.bolt} size={14} className="text-slate-400" />
-                          <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{t('subjectDashboard.recentActivityTitle')}</h3>
+                          <Icon name={ICONS.ui.bolt} size={14} className="text-text-secondary" />
+                          <h3 className="text-xs font-semibold text-text-secondary uppercase tracking-wider">{t('subjectDashboard.recentActivityTitle')}</h3>
                         </div>
                         {recentActivity.length === 0 ? (
-                          <p className="text-sm text-slate-500 text-center py-6">{t('subjectDashboard.recentActivityEmpty')}</p>
+                          <p className="text-sm text-text-secondary text-center py-6">{t('subjectDashboard.recentActivityEmpty')}</p>
                         ) : (
                           <div className="space-y-2.5">
                             {recentActivity.slice(0, 8).map((a, i) => {
@@ -285,9 +285,9 @@ export default function SubjectDashboardPage() {
                                   </div>
                                   <div className="min-w-0 flex-1">
                                     <p className="text-xs font-medium text-white truncate" title={a.label}>{a.label}</p>
-                                    <p className="text-2xs text-slate-500">{formatDate(a.date)}{a.score != null ? ` • ${a.score}` : ''}</p>
+                                    <p className="text-2xs text-text-secondary">{formatDate(a.date)}{a.score != null ? ` • ${a.score}` : ''}</p>
                                   </div>
-                                  <span className="text-3xs px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-400 shrink-0">{meta.label}</span>
+                                  <span className="text-3xs px-1.5 py-0.5 rounded bg-subtle border border-border text-text-secondary shrink-0">{meta.label}</span>
                                 </div>
                               );
                             })}

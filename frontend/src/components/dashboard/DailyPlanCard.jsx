@@ -101,7 +101,7 @@ export default function DailyPlanCard({ subjectId }) {
         <div className="space-y-2">
           {doneCount > 0 && (
             <div className="flex items-center gap-2">
-              <div className="h-1.5 flex-1 bg-background rounded-full overflow-hidden border border-border/50">
+              <div className="h-1.5 flex-1 bg-background rounded-full overflow-hidden border border-border">
                 <motion.div
                   className="h-full rounded-full bg-success"
                   initial={{ width: 0 }}

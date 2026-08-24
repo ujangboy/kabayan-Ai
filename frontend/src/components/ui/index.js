@@ -12,3 +12,4 @@ export { Tooltip, TooltipProvider } from './Tooltip';
 export { HelpTip } from './HelpTip';
 export { default as Icon } from './Icon';
 export { default as PageHeaderBack } from './PageHeaderBack';
+export { ThemeToggle } from './ThemeToggle';

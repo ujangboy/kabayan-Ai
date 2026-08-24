@@ -67,7 +67,7 @@ export function Modal({
                 )}
               >
                 {title ? (
-                  <div className="divider-gradient-b relative flex items-center justify-between gap-3 bg-white/[0.03] px-4 py-3 shrink-0">
+                  <div className="divider-gradient-b relative flex items-center justify-between gap-3 bg-wash px-4 py-3 shrink-0">
                     <div className="min-w-0">
                       <Dialog.Title className="font-semibold text-text truncate">{title}</Dialog.Title>
                       {description && (
@@ -81,7 +81,7 @@ export function Modal({
                         <button
                           type="button"
                           aria-label="Tutup"
-                          className="text-text-muted hover:text-text transition-colors rounded-btn p-1 hover:bg-white/[0.06] shrink-0"
+                          className="text-text-muted hover:text-text transition-colors rounded-btn p-1 hover:bg-wash shrink-0"
                         >
                           <Icon name={ICONS.actions.close} size={18} />
                         </button>
@@ -96,7 +96,7 @@ export function Modal({
                         <button
                           type="button"
                           aria-label="Tutup"
-                          className="absolute right-3 top-3 z-10 text-text-muted hover:text-text transition-colors rounded-btn p-1 hover:bg-white/[0.06]"
+                          className="absolute right-3 top-3 z-10 text-text-muted hover:text-text transition-colors rounded-btn p-1 hover:bg-wash"
                         >
                           <Icon name={ICONS.actions.close} size={18} />
                         </button>
@@ -108,7 +108,7 @@ export function Modal({
                 <div className={cn('flex-1 overflow-y-auto', bodyClassName)}>{children}</div>
 
                 {footer && (
-                  <div className="relative flex items-center justify-end gap-2 border-t border-white/10 bg-white/[0.03] px-4 py-3 shrink-0">
+                  <div className="relative flex items-center justify-end gap-2 border-t border-strong bg-wash px-4 py-3 shrink-0">
                     {footer}
                   </div>
                 )}

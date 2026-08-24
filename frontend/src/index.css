@@ -11,50 +11,87 @@
     padding: 0;
   }
 
+  /* ── Semantic design tokens (DESIGN.md v2) — Light default, .dark override ── */
   :root {
-    --scrollbar-width: 6px;
-    --scrollbar-color: rgba(255, 255, 255, 0.1);
-    color-scheme: dark;
-    /* Smooth rendering baseline */
+    --bg-base: 255 255 255;
+    --bg-subtle: 244 244 245;
+    --bg-surface: 255 255 255;
+    --popover: 255 255 255;
+    --border-subtle: rgba(0, 0, 0, 0.08);
+    --border-strong: rgba(0, 0, 0, 0.16);
+    --text-primary: #09090b;
+    --text-secondary: #71717a;
+    --text-muted: #a1a1aa;
+    --accent: 13 148 136;
+    --accent-hover: 15 118 110;
+    --accent-light: 15 118 110;
+    --wash: rgba(0, 0, 0, 0.04);
+    --wash-strong: rgba(0, 0, 0, 0.08);
+    --code-bg: #f4f4f5;
+    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.05);
+    color-scheme: light;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
   }
 
-  /* Native dropdown — paksa dark agar teks terang terbaca.
-     Screenshot menunjukkan select tertutup teks gelap di bg gelap
-     → override keras dengan bg solid + teks terang. */
+  .dark {
+    --bg-base: 9 9 11;
+    --bg-subtle: 24 24 27;
+    --bg-surface: 19 19 22;
+    --popover: 28 28 31;
+    --border-subtle: var(--border-subtle);
+    --border-strong: rgba(255, 255, 255, 0.16);
+    --text-primary: #fafafa;
+    --text-secondary: #a1a1aa;
+    --text-muted: #71717a;
+    --accent: 20 184 166;
+    --accent-hover: 45 212 191;
+    --accent-light: 94 234 212;
+    --wash: rgba(255, 255, 255, 0.05);
+    --wash-strong: rgba(255, 255, 255, 0.09);
+    --code-bg: #18181b;
+    --shadow-card: none;
+    color-scheme: dark;
+  }
+
+  :root {
+    --scrollbar-width: 6px;
+    --scrollbar-color: var(--wash-strong);
+  }
+
+  /* Native dropdown ikut tema via color-scheme */
   select {
-    color: #EDF1F7 !important;
-    background-color: rgba(30, 41, 59, 0.9) !important;
-    -webkit-text-fill-color: #EDF1F7;
+    color: var(--text-primary) !important;
+    background-color: var(--bg-surface) !important;
+    -webkit-text-fill-color: var(--text-primary);
   }
   select option {
-    background-color: #1A2332 !important;
-    color: #E2E8F0 !important;
+    background-color: var(--popover) !important;
+    color: var(--text-primary) !important;
   }
   select option:hover,
   select option:checked,
   select option:focus {
-    background-color: rgba(20, 184, 166, 0.35) !important;
-    color: #FFFFFF !important;
+    background-color: var(--wash-strong) !important;
+    color: var(--text-primary) !important;
   }
-  /* Custom arrow untuk select appearance-none — DESIGN.md: hairline + violet focus */
+  /* Custom arrow untuk select appearance-none — hairline + accent focus */
   select.input-base {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238C97A9' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 12px center;
     background-size: 14px;
     padding-right: 2.25rem !important;
   }
   select.input-base:focus {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235EEAD4' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2314B8A6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   }
 
   input,
   select,
   textarea {
-    color-scheme: dark;
+    color-scheme: inherit;
   }
 
   html {
@@ -63,8 +100,8 @@
 
   body {
     font-family: 'Inter', system-ui, sans-serif;
-    background-color: #0E1520;
-    color: #EDF1F7;
+    background-color: rgb(var(--bg-base));
+    color: var(--text-primary);
     font-size: 16px;
     line-height: 1.55;
     -webkit-font-smoothing: antialiased;
@@ -82,24 +119,24 @@
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--wash-strong);
     border-radius: 99px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.18);
+    background: var(--border-strong);
   }
 
-  /* Focus ring */
+  /* Focus ring — aksen tunggal */
   *:focus-visible {
-    outline: 2px solid #14B8A6;
+    outline: 2px solid var(--accent);
     outline-offset: 2px;
     border-radius: 6px;
   }
 
   /* Selection */
   ::selection {
-    background: rgba(20, 184, 166, 0.35);
-    color: #F1F5F9;
+    background: rgba(20, 184, 166, 0.3);
+    color: var(--text-primary);
   }
 
   /* Default smooth transitions untuk interactive elements */
@@ -108,12 +145,11 @@
   input,
   select,
   textarea {
-    transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-                border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-                color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    transition: background-color 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+                border-color 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+                color 0.15s cubic-bezier(0.4, 0, 0.2, 1),
                 transform 0.15s cubic-bezier(0.4, 0, 0.2, 1),
-                box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-                opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+                opacity 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
 
@@ -128,7 +164,7 @@
     inset-y: 0;
     right: 0;
     width: 1px;
-    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.08), transparent 80%);
+    background: linear-gradient(to bottom, var(--border-subtle), transparent 80%);
   }
 
   .divider-gradient-b {
@@ -141,14 +177,14 @@
     right: 0;
     bottom: 0;
     height: 1px;
-    background: linear-gradient(to right, rgba(255, 255, 255, 0.08), transparent 80%);
+    background: linear-gradient(to right, var(--border-subtle), transparent 80%);
   }
 
   /* Table-row divider: border-image gradient (safe on <tr>, no pseudo-element
      layer cost). Gunakan bersama `last:border-0` untuk baris terakhir. */
   .tr-divider {
     border-bottom: 1px solid transparent;
-    border-image: linear-gradient(to right, rgba(255, 255, 255, 0.08), transparent 80%) 1;
+    border-image: linear-gradient(to right, var(--border-subtle), transparent 80%) 1;
   }
 
   /* ── Sidebar scrollbar overlay (no layout shift) ──────────────────────── */
@@ -159,7 +195,7 @@
     transition: scrollbar-color 0.2s ease;
   }
   .sidebar-scroll:hover {
-    scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+    scrollbar-color: var(--wash-strong) transparent;
   }
   .sidebar-scroll::-webkit-scrollbar {
     width: 6px;
@@ -173,24 +209,24 @@
     border-radius: 99px;
   }
   .sidebar-scroll:hover::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--wash-strong);
   }
 
   .glass {
-    background: #1A2332;
-    border: 1px solid #263349;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
   }
 
   .glass-light {
-    background: rgba(26, 35, 50, 0.7);
+    background: var(--bg-surface);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(38, 51, 73, 0.8);
+    border: 1px solid var(--border-subtle);
   }
 
   /* Glassmorphism card — solid surface, hairline border, shadow tipis netral. */
   .glass-card {
-    @apply bg-surface-2 border border-border rounded-2xl shadow-card;
+    @apply bg-surface border border-border rounded-lg shadow-card;
     transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
                 border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
                 transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
@@ -204,7 +240,7 @@
 
   /* Elevated glass — modal & popup */
   .glass-elevated {
-    @apply bg-surface-2 border border-border/80 rounded-2xl shadow-glass-lg;
+    @apply bg-popover border border-strong rounded-xl shadow-modal;
   }
 
   .sidebar-item {
@@ -217,35 +253,35 @@
   }
 
   .sidebar-item:hover {
-    @apply bg-white/[0.06] text-text;
+    @apply bg-wash text-text;
   }
 
   .sidebar-item.active {
-    @apply bg-primary/10 text-primary-light border border-white/[0.06];
+    @apply bg-primary/10 text-primary-light;
   }
 
   .btn-primary {
     @apply inline-flex items-center gap-2 px-4 py-2 rounded-btn bg-primary text-white text-[15px] font-medium
-           hover:bg-primary-hover active:scale-95 transition-[background-color,transform] duration-150 ease-out cursor-pointer select-none;
+           hover:bg-primary-hover active:scale-[0.98] transition-[background-color,transform] duration-150 ease-out cursor-pointer select-none;
   }
 
   .btn-ghost {
     @apply inline-flex items-center gap-2 px-4 py-2 rounded-btn text-text-secondary text-[15px] font-medium
-           hover:bg-white/[0.06] hover:text-text active:scale-95 transition-[background-color,color,transform] duration-150 ease-out cursor-pointer select-none;
+           hover:bg-wash hover:text-text active:scale-[0.98] transition-[background-color,color,transform] duration-150 ease-out cursor-pointer select-none;
   }
 
   .btn-danger {
     @apply inline-flex items-center gap-2 px-4 py-2 rounded-btn bg-danger/10 text-danger border border-danger/20 text-[15px] font-medium
-           hover:bg-danger/20 active:scale-95 transition-[background-color,transform] duration-150 ease-out cursor-pointer select-none;
+           hover:bg-danger/20 active:scale-[0.98] transition-[background-color,transform] duration-150 ease-out cursor-pointer select-none;
   }
 
   .input-base {
-    @apply w-full px-4 py-2.5 rounded-input bg-white/[0.06] border border-white/[0.15] text-text text-base placeholder:text-text-secondary
+    @apply w-full px-4 py-2.5 rounded-input bg-wash border border-strong text-text text-base placeholder:text-text-secondary
            focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/30 transition-[border-color,box-shadow] duration-150 ease-out;
   }
 
   .card-base {
-    @apply bg-card border border-border rounded-2xl p-5 shadow-card;
+    @apply bg-surface border border-border rounded-lg p-5 shadow-card;
     transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
                 border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
                 transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
@@ -254,8 +290,8 @@
 
   /* Hover kartu: border terang + lift halus + shadow — GPU-friendly */
   .card-hoverable {
-    @apply transition-[transform,border-color,background-color,box-shadow] duration-200 ease-out
-           hover:-translate-y-0.5 hover:border-border/80 hover:bg-card-hover hover:shadow-card-hover;
+    @apply transition-[transform,border-color] duration-200 ease-out
+           hover:-translate-y-0.5 hover:border-strong;
   }
 
   /* Prose overrides for markdown — AI response typography (Gemini 16/1.55) */
@@ -263,7 +299,7 @@
     font-family: 'Inter', -apple-system, sans-serif;
     font-size: 1rem; /* 16px Gemini Answer Body */
     line-height: 1.55; /* Gemini 1.55 (was 1.65) */
-    color: #e2e8f0;
+    color: var(--text-primary);
   }
 
   /* Headings — Gemini Answer Heading 20/500, Subheading 17/500 */
@@ -271,7 +307,7 @@
   .prose-dark h2,
   .prose-dark h3,
   .prose-dark h4 {
-    color: #ffffff;
+    color: var(--text-primary);
     font-weight: 500; /* Gemini 500 (was 700) */
     margin-top: 1.75rem;
     margin-bottom: 0.75rem;
@@ -288,15 +324,15 @@
 
   /* Paragraphs — Gemini list 1.5, body 1.55 */
   .prose-dark p {
-    color: #e2e8f0;
+    color: var(--text-primary);
     line-height: 1.55;
     margin-bottom: 1.25rem;
   }
   .prose-dark p:last-child { margin-bottom: 0; }
 
   /* Bold & italic */
-  .prose-dark strong { color: #ffffff; font-weight: 600; }
-  .prose-dark em { color: #cbd5e1; font-style: italic; }
+  .prose-dark strong { color: var(--text-primary); font-weight: 600; }
+  .prose-dark em { color: var(--text-secondary); font-style: italic; }
 
   /* Jangan timpa warna inline (span textStyle) pada strong/em bersarang */
   .prose-dark [style*="color"] strong,
@@ -306,7 +342,7 @@
   .prose-dark ul { list-style: disc; padding-left: 1.5rem; margin-bottom: 1.25rem; }
   .prose-dark ol { list-style: decimal; padding-left: 1.5rem; margin-bottom: 1.25rem; }
   .prose-dark li {
-    color: #e2e8f0;
+    color: var(--text-primary);
     margin-bottom: 0.5rem;
     line-height: 1.5; /* Gemini List Item 1.5 */
   }
@@ -314,8 +350,8 @@
 
   /* Inline code */
   .prose-dark code {
-    background: #1E1E2E;
-    color: #99F6E4;
+    background: var(--code-bg);
+    color: var(--accent-light);
     padding: 0.15em 0.45em;
     border-radius: 5px;
     font-size: 0.875em;
@@ -324,8 +360,8 @@
 
   /* Code blocks */
   .prose-dark pre {
-    background: #1E1E2E;
-    border: 1px solid #1E293B;
+    background: var(--code-bg);
+    border: 1px solid var(--border-subtle);
     border-radius: 12px;
     padding: 1rem 1.25rem;
     overflow-x: auto;
@@ -335,7 +371,7 @@
     background: transparent;
     padding: 0;
     font-size: 0.875rem;
-    color: #e2e8f0;
+    color: var(--text-primary);
   }
 
   /* Blockquote */
@@ -343,14 +379,14 @@
     border-left: 3px solid #14B8A6;
     padding-left: 1rem;
     margin: 1.25rem 0;
-    color: #94A3B8;
+    color: var(--text-secondary);
     font-style: italic;
   }
 
   /* Horizontal rule */
   .prose-dark hr {
     border: none;
-    border-top: 1px solid #1E293B;
+    border-top: 1px solid var(--border-subtle);
     margin: 1.5rem 0;
   }
 
@@ -382,11 +418,11 @@
   }
 
   /* KaTeX symbol colors in dark mode */
-  .prose-dark .katex { color: #e2e8f0; }
+  .prose-dark .katex { color: var(--text-primary); }
   .prose-dark .katex .mbin,
   .prose-dark .katex .mrel { color: #5EEAD4; }
   .prose-dark .katex .mopen,
-  .prose-dark .katex .mclose { color: #94a3b8; }
+  .prose-dark .katex .mclose { color: var(--text-secondary); }
 
   /* ──────────────────────────────────────────────────────────────────────── */
 
@@ -403,23 +439,23 @@
     font-size: 0.875rem; /* 14px (was 0.9rem/14.4px) */
   }
   .prose-dark thead {
-    background: #232A3D;
+    background: var(--bg-subtle);
   }
   .prose-dark th {
     padding: 12px 16px;
     text-align: left;
     font-weight: 600;
-    color: #ffffff;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-strong);
     white-space: nowrap;
   }
   .prose-dark td {
     padding: 12px 16px;
-    color: #e2e8f0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-subtle);
   }
   .prose-dark tbody tr:nth-child(even) td {
-    background: rgba(255, 255, 255, 0.02);
+    background: transparent;
   }
   .prose-dark tbody tr:last-child td {
     border-bottom: none;
@@ -431,7 +467,7 @@
 
   /* Shimmer loading effect */
   .skeleton {
-    @apply bg-gradient-to-r from-white/[0.04] via-white/[0.09] to-white/[0.04];
+    background: linear-gradient(90deg, transparent 20%, var(--wash-strong) 50%, transparent 80%);
     background-size: 200% 100%;
     @apply animate-shimmer rounded-lg;
   }
@@ -444,7 +480,7 @@
   .badge-success { @apply bg-success/15 text-success; }
   .badge-danger { @apply bg-danger/15 text-danger; }
   .badge-warning { @apply bg-warning/15 text-warning; }
-  .badge-secondary { @apply bg-white/[0.04] text-text-secondary border border-white/[0.08]; }
+  .badge-secondary { @apply bg-wash text-text-secondary border border-border; }
 
   /* 3D transforms for Flashcards */
   .perspective-1000 { perspective: 1000px; }
@@ -457,7 +493,7 @@
   font-family: 'Inter', sans-serif;
   font-size: 16px; /* was 14px → Gemini Answer Body 16px */
   line-height: 1.55; /* was 1.7 → Gemini 1.55 */
-  color: #e2e8f0;
+  color: var(--text-primary);
 }
 
 /* Font size dari dropdown (inline style) menang atas style default,
@@ -467,16 +503,16 @@
 .note-editor-content h2[style*="font-size"] { font-size: inherit; }
 .note-editor-content h3[style*="font-size"] { font-size: inherit; }
 
-.note-editor-content h1 { font-size: 1.75rem; font-weight: 500; color: #fff; margin: 1.5rem 0 0.75rem; } /* 28px Gemini greeting */
-.note-editor-content h2 { font-size: 1.25rem; font-weight: 500; color: #fff; margin: 1.25rem 0 0.6rem; } /* 20px Gemini heading */
-.note-editor-content h3 { font-size: 1.0625rem; font-weight: 500; color: #fff; margin: 1rem 0 0.5rem; } /* 17px Gemini subhead */
+.note-editor-content h1 { font-size: 1.75rem; font-weight: 500; color: var(--text-primary); margin: 1.5rem 0 0.75rem; } /* 28px Gemini greeting */
+.note-editor-content h2 { font-size: 1.25rem; font-weight: 500; color: var(--text-primary); margin: 1.25rem 0 0.6rem; } /* 20px Gemini heading */
+.note-editor-content h3 { font-size: 1.0625rem; font-weight: 500; color: var(--text-primary); margin: 1rem 0 0.5rem; } /* 17px Gemini subhead */
 
 .note-editor-content p { margin-bottom: 0.85rem; }
 .note-editor-content p:last-child { margin-bottom: 0; }
 
-.note-editor-content strong { color: #fff; font-weight: 600; }
-.note-editor-content em { font-style: italic; color: #cbd5e1; }
-.note-editor-content s { text-decoration: line-through; color: #64748b; }
+.note-editor-content strong { color: var(--text-primary); font-weight: 600; }
+.note-editor-content em { font-style: italic; color: var(--text-secondary); }
+.note-editor-content s { text-decoration: line-through; color: var(--text-muted); }
 .note-editor-content u { text-underline-offset: 3px; }
 
 /* Teks berwarna (inline style pada span textStyle) tidak boleh ditimpa
@@ -514,35 +550,35 @@
 }
 .note-editor-content ul[data-type="taskList"] li[data-checked="true"] > div {
   text-decoration: line-through;
-  color: #475569;
+  color: var(--text-muted);
 }
 .note-editor-content ul[data-type="taskList"] li > div { flex: 1; }
 
 /* Code */
 .note-editor-content code {
-  background: #1E1E2E;
-  color: #99F6E4;
+  background: var(--code-bg);
+  color: var(--accent-light);
   padding: 0.15em 0.4em;
   border-radius: 5px;
   font-size: 0.875em;
   font-family: 'JetBrains Mono', monospace;
 }
 .note-editor-content pre {
-  background: #1E1E2E;
-  border: 1px solid #1e293b;
+  background: var(--code-bg);
+  border: 1px solid var(--border-subtle);
   border-radius: 10px;
   padding: 1rem 1.25rem;
   overflow-x: auto;
   margin-bottom: 1rem;
 }
-.note-editor-content pre code { background: transparent; padding: 0; color: #e2e8f0; }
+.note-editor-content pre code { background: transparent; padding: 0; color: var(--text-primary); }
 
 /* Blockquote */
 .note-editor-content blockquote {
   border-left: 3px solid #14b8a6;
   padding-left: 1rem;
   margin: 1rem 0;
-  color: #94a3b8;
+  color: var(--text-secondary);
   font-style: italic;
 }
 
@@ -556,7 +592,7 @@
 }
 .note-editor-content th,
 .note-editor-content td {
-  border: 1px solid #334155;
+  border: 1px solid var(--border-subtle);
   padding: 0.5rem 0.75rem;
   text-align: left;
   min-width: 80px;
@@ -566,8 +602,8 @@
   color: #f1f5f9;
   font-weight: 600;
 }
-.note-editor-content td { color: #e2e8f0; }
-.note-editor-content tr:hover td { background: #1e293b66; }
+.note-editor-content td { color: var(--text-primary); }
+.note-editor-content tr:hover td { background: var(--wash); }
 .note-editor-content .selectedCell { background: #14b8a633; }
 .note-editor-content .columnResizeHandle {
   position: absolute;
@@ -621,7 +657,7 @@
 /* Placeholder */
 .note-editor-content p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
-  color: #475569;
+  color: var(--text-muted);
   float: left;
   height: 0;
   pointer-events: none;

@@ -297,8 +297,7 @@ function SidebarContent({ collapsed, onNavigate }) {
       <div className={cn('flex h-16 shrink-0 items-center', collapsed ? 'justify-center px-0' : 'justify-between px-4')}>
         {!collapsed && (
           <div className="flex items-center gap-2.5">
-            <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary shadow-btn-primary">
-              <span className="absolute inset-0 rounded-xl bg-primary opacity-50 blur-md" />
+            <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary shadow-card">
               <Icon name={ICONS.communication.bot} size={20} className="relative text-white" />
             </div>
             <span className="text-base font-semibold text-text">Kabayan AI</span>
@@ -360,7 +359,7 @@ function SidebarContent({ collapsed, onNavigate }) {
               top: Math.max(12, Math.min(flyoutRect.top - 8, typeof window !== 'undefined' ? window.innerHeight - 340 : flyoutRect.top)),
               zIndex: 60,
             }}
-            className="w-[240px] rounded-2xl border border-border bg-card/95 backdrop-blur-xl shadow-glass-lg overflow-hidden"
+            className="w-[240px] rounded-lg border border-border bg-card/95 backdrop-blur-xl shadow-modal overflow-hidden"
           >
             <div className="px-3.5 py-3 border-b border-border flex items-center gap-2">
               <Icon name={NAV.find((n) => n.group === flyoutGroup)?.icon || ICONS.files.folder} size={16} className="text-primary-light shrink-0" />
@@ -395,7 +394,7 @@ function SidebarContent({ collapsed, onNavigate }) {
       </AnimatePresence>
 
       {/* Bottom sticky area — pengaturan + storage meter */}
-      <div className="shrink-0 mt-auto border-t border-border bg-sidebar/95 backdrop-blur-md">
+      <div className="shrink-0 mt-auto border-t border-border bg-sidebar">
         <div className="px-3 pt-2 pb-1">
           {collapsed ? (
             <Tooltip label={t('nav.settings')} side="right">

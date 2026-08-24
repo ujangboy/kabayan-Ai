@@ -8,7 +8,7 @@ export function NotebookEmptyState({ onCreate, isCreating }) {
   const { t } = useTranslation();
   return (
     <div className="h-full flex flex-col items-center justify-center text-center px-4">
-      <div className="w-16 h-16 rounded-2xl bg-card border border-border flex items-center justify-center mb-4">
+      <div className="w-16 h-16 rounded-lg bg-card border border-border flex items-center justify-center mb-4">
         <Icon name={ICONS.files.document} size={28} className="text-text-muted/40" />
       </div>
       <h2 className="text-base font-semibold text-text mb-1">{t('notebook.emptyTitle')}</h2>

@@ -70,7 +70,7 @@ export default function ContextSidebar() {
         initial={false}
         animate={{ width: contextCollapsed ? 0 : 240, opacity: contextCollapsed ? 0 : 1 }}
         transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
-        className="hidden lg:flex h-screen shrink-0 overflow-hidden border-r border-slate-700/60 bg-surface/80 shadow-[4px_0_24px_rgba(0,0,0,0.20)]"
+        className="hidden lg:flex h-screen shrink-0 overflow-hidden border-r border-border bg-surface/80 shadow-[4px_0_24px_rgba(0,0,0,0.20)]"
         style={{ willChange: 'width' }}
       >
         <div className="w-60 h-full shrink-0">{content}</div>
@@ -134,7 +134,7 @@ function MateriSidebar() {
         action={
           <button
             onClick={() => navigate('/materi?upload=1')}
-            className="p-1.5 rounded-xl text-primary-light hover:bg-white/[0.06] transition-colors"
+            className="p-1.5 rounded-xl text-primary-light hover:bg-wash transition-colors"
             title={t('materi.upload')}
           >
             <Icon name={ICONS.actions.upload} size={16} />
@@ -149,7 +149,7 @@ function MateriSidebar() {
             <button
               key={s.id}
               onClick={() => navigate(`/materi?subject_id=${s.id}`)}
-              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left text-text-secondary hover:bg-white/[0.06] hover:text-text transition-colors text-sm"
+              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left text-text-secondary hover:bg-wash hover:text-text transition-colors text-sm"
             >
               <Icon name={ICONS.files.folder} size={15} className="text-warning shrink-0" />
               <span className="truncate">{s.name}</span>
@@ -179,7 +179,7 @@ function SubjectsSidebar() {
         action={
           <button
             onClick={() => navigate('/subjects?new=1')}
-            className="p-1.5 rounded-xl text-primary-light hover:bg-white/[0.06] transition-colors"
+            className="p-1.5 rounded-xl text-primary-light hover:bg-wash transition-colors"
             title={t('subjects.new')}
           >
             <Icon name={ICONS.actions.addOutline} size={16} />
@@ -191,7 +191,7 @@ function SubjectsSidebar() {
           <button
             key={s.id}
             onClick={() => navigate(`/subjects/${s.id}`)}
-            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left text-text-secondary hover:bg-white/[0.06] hover:text-text transition-colors text-sm"
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left text-text-secondary hover:bg-wash hover:text-text transition-colors text-sm"
           >
             <Icon name={ICONS.files.folder} size={15} className="text-warning shrink-0" />
             <span className="truncate">{s.name}</span>
@@ -232,7 +232,7 @@ function FlashcardSidebar() {
           <button
             key={d.batch_id}
             onClick={() => navigate(`/flashcard?deck_id=${d.batch_id}`)}
-            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left text-text-secondary hover:bg-white/[0.06] hover:text-text transition-colors text-sm"
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left text-text-secondary hover:bg-wash hover:text-text transition-colors text-sm"
           >
             <Icon name={ICONS.nav.flashcard} size={15} className="text-primary-light shrink-0" />
             <span className="truncate">{d.subject?.name || t('flashcard.defaultName')}</span>

@@ -7,14 +7,14 @@ import { Spinner } from './Spinner';
 const buttonVariants = cva(
   'inline-flex items-center justify-center gap-2 font-medium select-none whitespace-nowrap transition-all duration-200 cursor-pointer ' +
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-1 focus-visible:ring-offset-background ' +
-    'disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed active:scale-[0.97]',
+    'disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed active:scale-[0.98]',
   {
     variants: {
       variant: {
         primary:
-          'bg-primary text-white shadow-btn-primary hover:bg-primary-hover',
+          'bg-primary text-white shadow-card hover:bg-primary-hover',
         secondary:
-          'bg-card text-text border border-border hover:bg-card-hover hover:border-white/[0.16]',
+          'bg-card text-text border border-border hover:bg-card-hover hover:border-strong',
         ghost: 'text-text-secondary hover:bg-card hover:text-text',
         danger: 'bg-danger/10 text-danger border border-danger/20 hover:bg-danger/20',
         outline: 'border border-border text-text hover:bg-card hover:border-primary/30',

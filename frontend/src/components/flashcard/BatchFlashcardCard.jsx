@@ -94,14 +94,14 @@ export default function BatchFlashcardCard({ group, onStart, onReview, onHistory
       )}
 
       {cards[0] && (
-        <div className="bg-black/25 rounded-lg p-3 border border-white/[0.06] text-xs text-text-secondary line-clamp-2">
+        <div className="bg-black/25 rounded-lg p-3 border border-border text-xs text-text-secondary line-clamp-2">
           <MathMarkdown>{cards[0].question}</MathMarkdown>
         </div>
       )}
 
       {/* Footer — progress bar + timestamp */}
       <div className="space-y-2">
-        <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+        <div className="h-1.5 rounded-full bg-wash overflow-hidden">
           <div className="h-full w-full rounded-full bg-primary origin-left transition-transform" style={{ transform: `scaleX(${progress / 100})` }} />
         </div>
         <div className="flex items-center justify-between text-3xs text-text-muted">

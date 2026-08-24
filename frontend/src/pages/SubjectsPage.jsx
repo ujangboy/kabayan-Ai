@@ -154,7 +154,7 @@ export default function SubjectsPage() {
                     {/* Body — grid mini metrik */}
                     <div className="grid grid-cols-4 gap-1.5">
                       {meta.map(({ icon, value, label, color }) => (
-                        <div key={label} className="rounded-lg bg-white/[0.03] border border-white/[0.06] py-2 px-1 text-center">
+                        <div key={label} className="rounded-lg bg-wash border border-border py-2 px-1 text-center">
                           <Icon name={icon} size={12} className={`mx-auto mb-0.5 ${color}`} />
                           <p className="text-base font-bold text-text leading-tight">{value}</p>
                           <p className="text-2xs text-text-muted uppercase tracking-wide">{label}</p>
@@ -164,7 +164,7 @@ export default function SubjectsPage() {
 
                     {/* Footer — progress bar tipis + timestamp */}
                     <div className="space-y-2">
-                      <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+                      <div className="h-1.5 rounded-full bg-wash overflow-hidden">
                         <motion.div
                           className="h-full rounded-full bg-primary"
                           initial={{ width: 0 }}

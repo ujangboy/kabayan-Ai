@@ -80,7 +80,7 @@ export default function ScoreChart({ history }) {
       </svg>
       {hoverIdx != null && data[hoverIdx] && (
         <div
-          className="absolute pointer-events-none z-10 bg-slate-800/95 backdrop-blur-sm border border-white/10 rounded-lg px-3 py-2 shadow-lg text-xs"
+          className="absolute pointer-events-none z-10 bg-popover backdrop-blur-sm border border-strong rounded-lg px-3 py-2 shadow-lg text-xs"
           style={{
             left: `${(x(hoverIdx) / W) * 100}%`,
             top: `${(y(data[hoverIdx].score) / H) * 100 - 12}%`,

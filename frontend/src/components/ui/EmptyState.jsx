@@ -22,9 +22,9 @@ export function EmptyState({ icon, title, description, action, className, compac
           className="relative mb-5"
         >
           {/* Subtle glow backdrop */}
-          <div className="absolute inset-0 rounded-2xl bg-primary opacity-15 blur-lg scale-110" />
+          <div className="absolute inset-0 rounded-lg bg-primary opacity-15 blur-lg scale-110" />
           <div className={cn(
-            'relative flex items-center justify-center rounded-2xl bg-primary/10 text-primary-light border border-primary/15',
+            'relative flex items-center justify-center rounded-lg bg-primary/10 text-primary-light border border-primary/15',
             compact ? 'h-12 w-12' : 'h-16 w-16'
           )}>
             <Icon name={icon} size={compact ? 22 : 28} />

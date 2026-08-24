@@ -13,7 +13,7 @@ export default function QuizProgressBar({ current, total }) {
         </span>
         <span className="text-xs font-bold text-primary">{pct}%</span>
       </div>
-      <div className="h-2.5 bg-background rounded-full overflow-hidden border border-border/50">
+      <div className="h-2.5 bg-background rounded-full overflow-hidden border border-border">
         <motion.div
           className="h-full bg-primary rounded-full"
           initial={{ width: 0 }}

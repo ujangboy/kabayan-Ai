@@ -104,7 +104,7 @@ export default function Breadcrumb({ maxItems = 3 }) {
                   <DropdownMenu.Content
                     sideOffset={6}
                     align="start"
-                    className="z-50 max-h-64 w-56 overflow-y-auto rounded-lg border border-white/10 bg-slate-900/95 p-1 shadow-glass-lg backdrop-blur-md"
+                    className="z-50 max-h-64 w-56 overflow-y-auto rounded-lg border border-strong bg-popover p-1 shadow-modal backdrop-blur-md"
                   >
                     {crumb.hidden.map((h) => (
                       <DropdownMenu.Item key={h.to} asChild>

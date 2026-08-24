@@ -54,7 +54,7 @@ export default function ChatPage() {
         <div className="shrink-0 flex items-center gap-2 px-3 py-2 border-b border-border bg-surface/80 backdrop-blur-sm">
           <button
             onClick={() => setHistoryCollapsed(v => !v)}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-card border border-border text-text hover:bg-card-hover hover:border-border/80 transition-all duration-150 text-xs font-medium"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-card border border-border text-text hover:bg-card-hover hover:border-border transition-all duration-150 text-xs font-medium"
             title={historyCollapsed ? 'Tampilkan riwayat' : 'Sembunyikan riwayat'}
             aria-label="Toggle history"
             aria-expanded={!historyCollapsed}
@@ -77,7 +77,7 @@ export default function ChatPage() {
             />
           </div>
           {/* Floating composer centered max-w-3xl bottom-6 */}
-          <div className="shrink-0 px-4 pb-6 pt-2 bg-gradient-to-t from-[#0E1520] via-[#0E1520]/95 to-transparent">
+          <div className="shrink-0 px-4 pb-6 pt-2 bg-gradient-to-t from-base via-base/95 to-transparent">
             <div className="mx-auto w-full max-w-3xl">
               <ChatComposer
                 onSend={sendMessage}

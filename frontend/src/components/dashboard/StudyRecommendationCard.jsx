@@ -91,7 +91,7 @@ export default function StudyRecommendationCard({ route, subjectId }) {
         })}
       </div>
       {primary && (
-        <p className="text-3xs text-text-muted mt-3 bg-background border border-border/50 rounded-lg p-2">
+        <p className="text-3xs text-text-muted mt-3 bg-background border border-border rounded-lg p-2">
           {t('studyRoute.primaryNote', { label: primary.modality_label, n: primary.resources.flashcards_total ?? 0, q: primary.resources.quizzes_total ?? 0 })}
         </p>
       )}

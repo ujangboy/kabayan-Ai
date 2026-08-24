@@ -121,7 +121,7 @@ function ToolBtn({ onClick, active, disabled, title, children, className: cls })
           'w-7 h-7 p-1.5',
           active
             ? 'bg-primary/10 text-primary-light border border-primary/30'
-            : 'text-slate-400 hover:text-white hover:bg-slate-800',
+            : 'text-text-secondary hover:text-white hover:bg-subtle',
           disabled && 'opacity-25 cursor-not-allowed pointer-events-none',
           cls
         )}
@@ -133,7 +133,7 @@ function ToolBtn({ onClick, active, disabled, title, children, className: cls })
 }
 
 function Sep() {
-  return <div className="w-px h-4 bg-slate-700/60 mx-1 shrink-0" />;
+  return <div className="w-px h-4 bg-wash-strong mx-1 shrink-0" />;
 }
 
 // ─── Font size dropdown (top toolbar + floating bubble) ───────────────────
@@ -144,7 +144,7 @@ function FontSizeDropdown({ editor, floating = false }) {
   const [liveSize, setLiveSize] = useState(14);
   const wrapRef = useRef(null);
 
-  // Reactive: baca fontSize dari selection setiap kali editor state berubah.
+  // Re baca fontSize dari selection setiap kali editor state berubah.
   // Berlaku untuk toolbar atas MAUPUN floating toolbar (label harus real-time).
   useEffect(() => {
     if (!editor) return;
@@ -236,7 +236,7 @@ function FontSizeDropdown({ editor, floating = false }) {
             className={cn(
               'absolute z-50 flex flex-col overflow-y-auto rounded-xl shadow-xl border p-1',
               floating
-                ? 'bg-card/95 backdrop-blur-xl border-white/10'
+                ? 'bg-card/95 backdrop-blur-xl border-strong'
                 : 'bg-card border-border',
               pos === 'bottom' ? 'top-full mt-1 left-0' : 'bottom-full mb-1 left-0'
             )}
@@ -273,7 +273,7 @@ function Toolbar({ editor, onPreview, onInsertMath }) {
   const ia = (n, a) => editor.isActive(n, a);
 
   return (
-    <div className="flex flex-wrap items-center gap-1.5 px-3 py-2 bg-slate-900 border-b border-slate-800 sticky top-0 z-10">
+    <div className="flex flex-wrap items-center gap-1.5 px-3 py-2 bg-surface border-b border-border sticky top-0 z-10">
       <button
         type="button"
         onClick={onPreview}
@@ -442,7 +442,7 @@ function FloatingToolbar({ editor, editorMode }) {
       }}
       onMouseDown={(e) => e.preventDefault()}
     >
-      <div className="flex items-center gap-px px-2 py-1.5 bg-card/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.05)]">
+      <div className="flex items-center gap-px px-2 py-1.5 bg-card/95 backdrop-blur-xl border border-strong rounded-lg shadow-[0_8px_32px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.05)]">
         {/* ── Font size ── */}
         <FontSizeDropdown editor={editor} floating />
         <div className="w-px h-5 bg-white/10 mx-1 shrink-0" />
@@ -497,11 +497,11 @@ function FloatingToolbar({ editor, editorMode }) {
             active={showColors}
             title={t('noteEditor.textColor')}
           >
-            <div className="w-3 h-3 rounded-full bg-warning ring-1 ring-white/20" />
+            <div className="w-3 h-3 rounded-full bg-warning ring-1 ring-primary/30" />
           </ToolBtn>
           {showColors && (
             <div
-              className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 flex items-center gap-1 px-2 py-1.5 bg-card/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.5)]"
+              className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 flex items-center gap-1 px-2 py-1.5 bg-card/95 backdrop-blur-xl border border-strong rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.5)]"
               onMouseDown={(e) => e.preventDefault()}
             >
               {COLOR_PALETTE.map(({ color, labelKey }) => (
@@ -519,7 +519,7 @@ function FloatingToolbar({ editor, editorMode }) {
                 type="button"
                 onClick={clearColor}
                 title={t('noteEditor.clearColor')}
-                className="w-5 h-5 rounded-full border-2 border-dashed border-white/20 flex items-center justify-center text-2xs text-white/40 hover:border-white/50 hover:text-white/70 transition-all"
+                className="w-5 h-5 rounded-full border-2 border-dashed border-strong flex items-center justify-center text-2xs text-white/40 hover:border-white/50 hover:text-white/70 transition-all"
               >
                 <Icon name={ICONS.actions.close} size={9} />
               </button>
@@ -530,7 +530,7 @@ function FloatingToolbar({ editor, editorMode }) {
 
       {/* ── Arrow pointer ── */}
       <div className="flex justify-center">
-        <div className="w-2.5 h-2.5 bg-card/95 border-r border-b border-white/10 rotate-45 -mt-1.5" />
+        <div className="w-2.5 h-2.5 bg-card/95 border-r border-b border-strong rotate-45 -mt-1.5" />
       </div>
     </div>,
     document.body

@@ -39,10 +39,10 @@ export default function ChatEmptyState({ onPromptSelect }) {
           className="relative mb-5"
         >
           {/* Glow ring */}
-          <div className="absolute inset-0 rounded-2xl bg-primary opacity-20 blur-xl scale-110" />
+          <div className="absolute inset-0 rounded-lg bg-primary opacity-20 blur-xl scale-110" />
           <div className={cn(
-            'relative w-14 h-14 rounded-2xl flex items-center justify-center text-white',
-            'bg-primary shadow-glow-primary'
+            'relative w-14 h-14 rounded-lg flex items-center justify-center text-white',
+            'bg-primary '
           )}>
             <Icon name={ICONS.communication.bot} size={26} className="relative" />
           </div>
@@ -86,7 +86,7 @@ export default function ChatEmptyState({ onPromptSelect }) {
               className={cn(
                 'group flex items-center gap-2.5 rounded-xl border p-3.5 text-left',
                 'bg-card border-border',
-                'hover:bg-card-hover hover:border-border/80 hover:shadow-card',
+                'hover:bg-card-hover hover:border-strong',
                 'transition-all duration-200 ease-out'
               )}
             >

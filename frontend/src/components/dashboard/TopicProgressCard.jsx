@@ -45,7 +45,7 @@ export default function TopicProgressCard({ topicProgress }) {
           {t('subjectDashboard.topicProgressEmpty')}
         </p>
       ) : (
-        <div className="space-y-0 divide-y divide-border/50">
+        <div className="space-y-0 divide-y divide-border">
           {visibleTopics.map((tp) => {
             const meta = topicMeta[tp.status] || topicMeta.berjalan;
             return (

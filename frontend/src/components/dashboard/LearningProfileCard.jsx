@@ -27,15 +27,15 @@ export default function LearningProfileCard({ profile }) {
       ) : (
         <div className="space-y-4">
           <div className="grid grid-cols-3 gap-3">
-            <div className="bg-black/25 border border-white/[0.06] rounded-xl p-3 text-center">
+            <div className="bg-black/25 border border-border rounded-xl p-3 text-center">
               <p className="text-xl font-bold text-text">{profile?.estimated_level ?? 0}<span className="text-xs text-text-muted font-normal">/100</span></p>
               <p className="text-3xs text-text-secondary mt-0.5">{t('subjectDashboard.learningLevel')}</p>
             </div>
-            <div className="bg-black/25 border border-white/[0.06] rounded-xl p-3 text-center">
+            <div className="bg-black/25 border border-border rounded-xl p-3 text-center">
               <p className="text-xl font-bold text-text">{profile?.total_sessions ?? 0}</p>
               <p className="text-3xs text-text-secondary mt-0.5">{t('subjectDashboard.learningSessions')}</p>
             </div>
-            <div className="bg-black/25 border border-white/[0.06] rounded-xl p-3 text-center">
+            <div className="bg-black/25 border border-border rounded-xl p-3 text-center">
               <p className="text-xl font-bold text-text">{profile?.total_questions ?? 0}</p>
               <p className="text-3xs text-text-secondary mt-0.5">{t('subjectDashboard.learningQuestions')}</p>
             </div>
@@ -55,7 +55,7 @@ export default function LearningProfileCard({ profile }) {
                         {m.accuracy}% · {m.attempts} soal · {m.sessions} sesi
                       </span>
                     </div>
-                    <div className="h-1.5 bg-background rounded-full overflow-hidden border border-border/50">
+                    <div className="h-1.5 bg-background rounded-full overflow-hidden border border-border">
                       <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${m.accuracy}%` }}
@@ -92,7 +92,7 @@ export default function LearningProfileCard({ profile }) {
             </div>
           </div>
 
-          <p className="text-2xs text-text-muted bg-black/25 border border-white/[0.06] rounded-lg p-2.5 leading-relaxed">
+          <p className="text-2xs text-text-muted bg-black/25 border border-border rounded-lg p-2.5 leading-relaxed">
             <Icon name={ICONS.learning.sparkles} size={11} className="inline mr-1 text-accent-purple" />
             {t('subjectDashboard.learningAdaptiveNote')}
             <span className="block mt-1 opacity-80">{t('subjectDashboard.learningThreshold', { n: profile?.confidence_threshold ?? 2 })}</span>

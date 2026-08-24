@@ -165,7 +165,7 @@ export default function ResultView({ evalData, onReview, onFinish, sessionId, on
             </p>
             <div className="space-y-2">
               {weak_topics.map((topic, i) => (
-                <div key={i} className="flex items-start justify-between gap-2 p-2 rounded-lg bg-background/50 border border-border/50">
+                <div key={i} className="flex items-start justify-between gap-2 p-2 rounded-lg bg-background/50 border border-border">
                   <div className="flex flex-col min-w-0">
                     <span className="text-base text-text font-medium">{topic.topic}</span>
                     {topic.issue && <p className="text-xs text-text-muted mt-0.5">{topic.issue}</p>}
@@ -230,7 +230,7 @@ export default function ResultView({ evalData, onReview, onFinish, sessionId, on
           <p className="text-xs text-text-secondary mb-3">{planPreview.motivational_message}</p>
           <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
             {(planPreview.study_plan || []).map((item, i) => (
-              <div key={i} className="flex items-start gap-2 p-2 rounded-lg bg-background/50 border border-border/50 text-xs">
+              <div key={i} className="flex items-start gap-2 p-2 rounded-lg bg-background/50 border border-border text-xs">
                 <span className="text-text-muted font-mono shrink-0 w-12">H{i+1}</span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 mb-0.5">

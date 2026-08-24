@@ -41,8 +41,7 @@ export default function IconRail() {
     <aside className="flex h-screen w-14 flex-col items-center bg-rail py-3 relative z-20 shrink-0 divider-gradient-r gap-1">
       {/* Logo + slide bar toggle nav menu (hanya di halaman dengan context sidebar) */}
       <div className="flex flex-col items-center gap-1.5 mb-2">
-        <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary shadow-btn-primary">
-          <span className="absolute inset-0 rounded-xl bg-primary opacity-50 blur-md" />
+        <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary shadow-card">
           <Icon name={ICONS.communication.bot} size={20} className="relative text-white" />
         </div>
         {hasContextSidebar && (
@@ -51,7 +50,7 @@ export default function IconRail() {
               onClick={toggleContextSidebar}
               aria-label={contextCollapsed ? t('common.expand', 'Tampilkan sidebar') : t('common.collapse', 'Sembunyikan sidebar')}
               aria-expanded={!contextCollapsed}
-              className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-800 border border-slate-600 text-slate-200 hover:bg-slate-700 hover:text-white hover:border-slate-500 transition-all duration-200 shadow-sm"
+              className="flex h-7 w-7 items-center justify-center rounded-lg bg-subtle border border-strong text-text hover:bg-wash-strong hover:text-white hover:border-strong transition-all duration-200 shadow-sm"
             >
               <Icon name={contextCollapsed ? ICONS.actions.panelLeft : ICONS.actions.panelLeftClose} size={14} />
             </button>

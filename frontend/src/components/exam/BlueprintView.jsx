@@ -55,7 +55,7 @@ export default function BlueprintView({ blueprint, onGenerate, onGenerating, onB
             <span>Membuat soal dari blueprint...</span>
             <span className="font-semibold text-primary">{progress}%</span>
           </div>
-          <div className="h-3 bg-background rounded-full overflow-hidden border border-border/50">
+          <div className="h-3 bg-background rounded-full overflow-hidden border border-border">
             <div
               className="h-full bg-primary rounded-full transition-all duration-1000"
               style={{ width: `${progress}%` }}

@@ -1,11 +1,22 @@
 <!doctype html>
-<html lang="id">
+<html lang="id" class="dark">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Kabayan AI — Asisten belajar cerdas dengan AI" />
     <title>Kabayan AI</title>
+    <script>
+      // Anti-FOUC: set tema sebelum paint (default dark).
+      (function () {
+        try {
+          var t = localStorage.getItem('theme');
+          if (!t) t = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+          document.documentElement.classList.toggle('dark', t !== 'light');
+          document.documentElement.style.colorScheme = t === 'light' ? 'light' : 'dark';
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
