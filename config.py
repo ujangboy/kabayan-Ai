@@ -1,4 +1,6 @@
 import os
+import re
+import logging
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -9,7 +11,25 @@ SERVER_HOST = "127.0.0.1"
 SERVER_PORT = 7860
 
 # --- API Configurations ---
-GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "").strip()
+if not GROQ_API_KEY:
+    logging.warning(
+        "GROQ_API_KEY belum diatur — fitur AI (chat, tutor, quiz, exam) tidak akan "
+        "berfungsi. Isi file .env dan restart backend."
+    )
+elif not re.fullmatch(r"gsk_[A-Za-z0-9]{20,}", GROQ_API_KEY):
+    # Fail-loud: key salah format (mis. terpotong, typo, atau key dari
+    # screenshot yang tidak lengkap) akan membuat semua request Groq gagal.
+    logging.error(
+        "[SECRET-FORMAT] GROQ_API_KEY terdeteksi format tidak valid — harus diawali "
+        "'gsk_' diikuti >=20 karakter alfanumerik. Periksa kembali isi .env. "
+        "JANGAN salin key dari screenshot/teks yang terpotong."
+    )
+# Default model must be a valid Groq model. Override via GROQ_MODEL env var
+# if your account has access to a different one.
+# Akun Groq ini tidak punya akses ke llama-3.1-8b-instant; pakai gpt-oss-20b
+# (ringan, respons bersih tanpa blok <think>). Cek model via groq models.list().
+GROQ_MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-20b")
 
 # We use sentence-transformers locally for embeddings
 EMBEDDING_MODEL = "all-MiniLM-L6-v2"

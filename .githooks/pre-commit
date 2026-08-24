@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+# ============================================================
+# Kabayan AI — Pre-commit Secret Scanner
+# ------------------------------------------------------------
+# Mencegah kebocoran secret (API key, token) ke Git history.
+# Dipasang otomatis lewat: git config core.hooksPath .githooks
+# (lihat skrip scripts/security/install-hooks.sh)
+#
+# Akan memblokir commit jika:
+#   1. File .env / .env.*  ikut ke-stage (harus di-ignore)
+#   2. Ada baris di staged content yang cocok pola secret:
+#      - Groq key:        gsk_[A-Za-z0-9]{20,}
+#      - OpenAI key:      sk-[A-Za-z0-9]{20,}
+#      - AWS access key:  AKIA[0-9A-Z]{16}
+#      - Generic token:   (api_key|apikey|secret|token|password)\s*=\s*['\"]?[A-Za-z0-9_\-]{16,}
+#
+# Jika terlanjur ada false-positive, bypass dengan:
+#   git commit --no-verify   (HINDARI kecuali yakin aman)
+# ============================================================
+
+set -euo pipefail
+
+# --- 1. Blok file .env ikut ter-stage ---
+STAGED_ENV=$(git diff --cached --name-only --diff-filter=ACM | grep -E '^(\.env$|\.env\.)' || true)
+if [ -n "$STAGED_ENV" ]; then
+  echo "❌ [SECRET-SCAN] File env ter-stage: $STAGED_ENV" >&2
+  echo "   .env harus di-ignore. Hapus dari stage: git reset HEAD <file>" >&2
+  exit 1
+fi
+
+# --- 2. Scan isi staged file untuk pola secret ---
+SECRET_PATTERN='(gsk_[A-Za-z0-9]{20,}|sk-[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16}|(api[_-]?key|secret|token|password)\s*[:=]\s*['"'"'"]?[A-Za-z0-9_\-]{16,})'
+
+LEAK_FOUND=0
+while IFS= read -r file; do
+  # Lewati file biner & lockfile dependency
+  case "$file" in
+    *.png|*.jpg|*.jpeg|*.gif|*.ico|*.pdf|*.zip|*.woff*|*.ttf) continue ;;
+    package-lock.json|pnpm-lock.yaml|yarn.lock|poetry.lock) continue ;;
+  esac
+  # Ambil hanya konten staged (diff vs HEAD) untuk file yang diubah
+  matches=$(git diff --cached --unified=0 -- "$file" | grep -E -i "$SECRET_PATTERN" || true)
+  if [ -n "$matches" ]; then
+    echo "❌ [SECRET-SCAN] Kemungkinan secret di: $file" >&2
+    echo "$matches" | sed 's/^/     /' >&2
+    LEAK_FOUND=1
+  fi
+done < <(git diff --cached --name-only --diff-filter=ACM)
+
+if [ "$LEAK_FOUND" -ne 0 ]; then
+  echo "" >&2
+  echo "🛑 Commit dibatalkan. Hapus secret dari staging / gunakan .env (di-ignore)." >&2
+  echo "   Jika yakin false-positive: git commit --no-verify" >&2
+  exit 1
+fi
+
+echo "✅ [SECRET-SCAN] Tidak ada secret terdeteksi."
+exit 0

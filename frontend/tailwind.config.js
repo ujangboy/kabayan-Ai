@@ -22,6 +22,7 @@ export default {
           strong: "rgb(var(--wash-strong) / <alpha-value>)",
         },
         card: "rgb(var(--wash) / <alpha-value>)",
+        subtle: "rgb(var(--bg-subtle) / <alpha-value>)",
         "card-hover": "rgb(var(--wash-strong) / <alpha-value>)",
         border: "var(--border-subtle)",
         strong: "var(--border-strong)",
@@ -77,6 +78,7 @@ export default {
         "4xl": ["36px", { lineHeight: "40px" }],
         meta: ["13px", { lineHeight: "16.9px" }],
         "2xs": ["11px", { lineHeight: "13.2px" }],
+        "3xs": ["10px", { lineHeight: "12px" }],
       },
       letterSpacing: {
         headline: "-0.02em",

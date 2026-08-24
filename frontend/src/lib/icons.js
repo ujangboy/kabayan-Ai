@@ -21,7 +21,7 @@ export const ICONS = {
     chat: 'chat',
     subjects: 'menu_book',
     materials: 'description',
-    notebook: 'bookmark',
+    notebook: 'book',
     flashcard: 'style',
     quiz: 'quiz',
     exam: 'psychology',

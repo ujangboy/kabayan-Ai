@@ -434,7 +434,7 @@ class TutorService:
                 messages.append(AIMessage(content=msg["content"]))
         messages.append(HumanMessage(content=wrapped_input))
 
-        llm = ai_service._get_llm(capability, max_tokens=2000)
+        llm = ai_service._get_llm(capability, max_tokens=1000)
 
         # Cache lookup — keyed by message + capability + level + subject + profil + material
         # (material_fp agar cache lama tanpa material context tidak dipakai)
@@ -464,12 +464,23 @@ class TutorService:
                     last_yield = time.time()
         except Exception as exc:
             err = str(exc).lower()
-            if any(x in err for x in ["timeout", "connection", "502", "503", "504"]):
-                yield "\n\n⚠️ Koneksi ke AI terputus. Coba kirim pesan lagi."
+            if "401" in err or "invalid api key" in err or "invalid_api_key" in err or "authentication" in err:
+                logging.error(f"[GROQ_AUTH_ERROR] Groq API key invalid: {exc}")
+                yield "\n\nError: Groq API key tidak valid (401). Periksa file .env dan restart backend."
+            elif any(x in err for x in ["timeout", "connection", "502", "503", "504"]):
+                yield "\n\nError: Koneksi ke AI terputus. Coba kirim pesan lagi."
             elif "rate limit" in err or "429" in err:
-                yield "\n\n⚠️ Limit API tercapai. Tunggu sebentar lalu coba lagi."
+                yield "\n\nError: Limit API tercapai. Tunggu sebentar lalu coba lagi."
+            elif any(x in err for x in [
+                "413", "request too large", "tokens per minute", "tokens_exceeded",
+                "tpm", "context_length_exceeded", "context length", "payload too large"
+            ]):
+                yield ("\n\n⚠️ Konteks terlalu panjang (batas 8000 token/menit untuk model ini). "
+                       "Coba: 1) kurangi dokumen terpilih, 2) mulai chat baru, "
+                       "3) ringkas pertanyaanmu.")
             else:
-                yield f"\n\n⚠️ Error: {str(exc)}"
+                logging.error(f"[TUTOR_STREAM_ERROR] {exc}")
+                yield f"\n\nError: {str(exc)}"
             return
 
         # Normalize math delimiters on complete response (same as ai_service)

@@ -16,8 +16,10 @@ from services.usage_service import record_usage
 logger = logging.getLogger(__name__)
 
 # ─── REQ-04: Token Context Guard ────────────────────────────────────────────
-MAX_CONTEXT_CHARS = 6000 * 4   # ~6000 token estimasi (1 token ≈ 4 char)
-MAX_HISTORY_TURNS = 20         # simpan 20 turn terakhir
+# ~2000 token — batas agar request total (context + history + system + output)
+# tetap di bawah TPM 8000 model openai/gpt-oss-20b (Groq on_demand free tier).
+MAX_CONTEXT_CHARS = 8000
+MAX_HISTORY_TURNS = 8          # simpan 8 turn terakhir (cukup + hemat token)
 
 # ─── Math Delimiter Normalization ────────────────────────────────────────────
 def _normalize_math(text: str) -> str:
@@ -112,28 +114,28 @@ global_rate_limiter = InternalRateLimiter()
 # ─── Capability Router ───────────────────────────────────────────────────────
 class CapabilityRouter:
     CAPABILITIES = {
-        "chat":          "openai/gpt-oss-20b",
+        "chat":          config.GROQ_MODEL,
         "vision":        "meta-llama/llama-4-scout-17b-16e-instruct",
-        "reasoning":     "openai/gpt-oss-20b",
-        "summary":       "openai/gpt-oss-20b",
-        "quiz":          "openai/gpt-oss-20b",
-        "flashcard":     "openai/gpt-oss-20b",
-        "prediction":    "openai/gpt-oss-20b",
+        "reasoning":     config.GROQ_MODEL,
+        "summary":       config.GROQ_MODEL,
+        "quiz":          config.GROQ_MODEL,
+        "flashcard":     config.GROQ_MODEL,
+        "prediction":    config.GROQ_MODEL,
         # Exam Analyzer capabilities
-        "exam_analysis": "openai/gpt-oss-20b",
-        "exam_blueprint":"openai/gpt-oss-20b",
-        "exam_question": "openai/gpt-oss-20b",
-        "exam_evaluate": "openai/gpt-oss-20b",
+        "exam_analysis": config.GROQ_MODEL,
+        "exam_blueprint":config.GROQ_MODEL,
+        "exam_question": config.GROQ_MODEL,
+        "exam_evaluate": config.GROQ_MODEL,
     }
 
     @staticmethod
     def get_model(capability: str) -> str:
-        return CapabilityRouter.CAPABILITIES.get(capability, "openai/gpt-oss-20b")
+        return CapabilityRouter.CAPABILITIES.get(capability, config.GROQ_MODEL)
 
 # ─── AI Service ──────────────────────────────────────────────────────────────
 class AIService:
 
-    def _get_llm(self, capability: str, temperature: float = None, max_tokens: int = 4000) -> ChatGroq:
+    def _get_llm(self, capability: str, temperature: float = None, max_tokens: int = 1200) -> ChatGroq:
         global_rate_limiter.check_limit(capability)
         # Exam-related capabilities need longer timeout (multi-topic generation)
         exam_caps = {"exam_analysis", "exam_blueprint", "exam_question", "exam_evaluate", "reasoning", "quiz"}
@@ -315,12 +317,23 @@ class AIService:
             except Exception as e:
                 err_str = str(e).lower()
                 # REQ-03: graceful stream error — beri tahu user, jangan crash
-                if any(x in err_str for x in ["timeout", "connection", "502", "503", "504"]):
-                    yield "\n\n⚠️ Koneksi ke Groq API terputus. Coba kirim pesan lagi."
+                if "401" in err_str or "invalid api key" in err_str or "invalid_api_key" in err_str or "authentication" in err_str:
+                    logging.error(f"[GROQ_AUTH_ERROR] Groq API key invalid: {e}")
+                    yield "\n\nError: Groq API key tidak valid (401). Periksa file .env dan restart backend."
+                elif any(x in err_str for x in ["timeout", "connection", "502", "503", "504"]):
+                    yield "\n\nError: Koneksi ke Groq API terputus. Coba kirim pesan lagi."
                 elif "rate limit" in err_str or "429" in err_str:
-                    yield "\n\n⚠️ Limit API Groq tercapai. Tunggu sebentar lalu coba lagi."
+                    yield "\n\nError: Limit API Groq tercapai. Tunggu sebentar lalu coba lagi."
+                elif any(x in err_str for x in [
+                    "413", "request too large", "tokens per minute", "tokens_exceeded",
+                    "tpm", "context_length_exceeded", "context length", "payload too large"
+                ]):
+                    yield ("\n\n⚠️ Konteks terlalu panjang (batas 8000 token/menit untuk model ini). "
+                           "Coba: 1) kurangi dokumen terpilih, 2) mulai chat baru, "
+                           "3) ringkas pertanyaanmu.")
                 else:
-                    yield f"\n\n⚠️ Error: {str(e)}"
+                    logging.error(f"[CHAT_STREAM_ERROR] {e}")
+                    yield f"\n\nError: {str(e)}"
                 return
 
             # Normalize math delimiters on the full response before caching

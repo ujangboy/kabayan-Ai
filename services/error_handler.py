@@ -35,6 +35,17 @@ _PATTERNS: list[Tuple[list[str], int, str, str]] = [
      429, "AI_RATE_LIMIT",
      "Kuota AI sedang mencapai batas. Silakan coba beberapa menit lagi."),
 
+    # Groq API key auth — must come BEFORE generic "invalid" validation match
+    (["invalid api key", "invalid_api_key", "authentication_error", "groq.apikey", "authenticationerror"],
+     503, "GROQ_AUTH_ERROR",
+     "Groq API key tidak valid. Periksa konfigurasi .env dan restart backend."),
+
+    # Context too large (Groq 413 / TPM / context length) — before generic 500
+    (["413", "request too large", "payload too large", "tokens per minute", "tokens_exceeded",
+      "tpm", "context_length_exceeded", "context length", "maximum context length"],
+     413, "CONTEXT_TOO_LARGE",
+     "Konteks terlalu panjang untuk model ini (batas 8000 token/menit). Coba: kurangi dokumen terpilih, mulai chat baru, atau ringkas pertanyaanmu."),
+
     # Timeout / network
     (["timeout", "timed out", "read timeout", "connect timeout"],
      408, "TIMEOUT",

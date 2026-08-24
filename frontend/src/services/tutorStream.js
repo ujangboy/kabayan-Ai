@@ -32,7 +32,17 @@ export async function streamChat({ chatId, endpoint, body, onChunk }) {
       signal: controller.signal,
     });
 
-    if (!res.ok) throw new Error(`Server error (${res.status})`);
+    if (!res.ok) {
+      let detail = `Server error (${res.status})`;
+      try {
+        const data = await res.json();
+        if (typeof data?.detail === 'string') detail = data.detail;
+        else if (typeof data?.message === 'string') detail = data.message;
+      } catch {
+        /* ignore parse errors, keep status fallback */
+      }
+      throw new Error(detail);
+    }
 
     const reader = res.body.getReader();
     const decoder = new TextDecoder();

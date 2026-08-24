@@ -38,7 +38,7 @@ async def chat_endpoint(request: ChatRequest, db: Session = Depends(get_db)):
             chat_repository.add_message(db, chat_id, "user", request.message)
             db.commit()
 
-        limited_history = request.history[-20:]
+        limited_history = request.history[-8:]
         hist_dicts = [{"role": msg.role, "content": msg.content} for msg in limited_history]
 
         context = ""
@@ -71,19 +71,19 @@ async def chat_endpoint(request: ChatRequest, db: Session = Depends(get_db)):
                             text = extract_text(mat.filepath)
                             if text:
                                 words = text.split()
-                                chunk = " ".join(words[:1500])
+                                chunk = " ".join(words[:400])
                                 fallback_texts.append(chunk)
-                                word_total += min(len(words), 1500)
+                                word_total += min(len(words), 400)
                         except Exception:
                             pass
-                    if word_total >= 3000:
+                    if word_total >= 800:
                         break
 
                 if fallback_texts:
                     context = "--- DOKUMEN REFERENSI LOKAL ---\n" + "\n\n---\n\n".join(fallback_texts) + "\n\n"
 
         if context:
-            max_chars = 24000
+            max_chars = 6000
             history_chars = sum(len(m.content) for m in limited_history)
             available = max_chars - history_chars - len(request.message)
             if available > 0 and len(context) > available:
