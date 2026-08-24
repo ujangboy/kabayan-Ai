@@ -12,12 +12,16 @@
  * The previous sanitizer was corrupting markdown (##, **, *, ---).
  */
 import ReactMarkdown from 'react-markdown';
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import rehypeRaw from 'rehype-raw';
 import rehypeSanitize from 'rehype-sanitize';
+import { Icon } from '@/components/ui';
+import { ICONS } from '@/lib/icons';
+import { copyText, tableToTSV, tableToMarkdown } from '@/utils/copyTable';
 import 'katex/dist/katex.min.css';
 
 // Syntax highlighter di-lazy-load + PrismLight (bahasa terdaftar terbatas)
@@ -137,8 +141,61 @@ function CodeBlock({ node, inline, className, children, ...props }) {
   );
 }
 
+// ─── 3b. Copy controls (code + table) ────────────────────────────────────────
+function CopyBar({ kind, getText, t }) {
+  const [state, setState] = useState('idle');
+  const onClick = async () => {
+    const ok = await copyText(getText() || '');
+    setState(ok ? 'ok' : 'err');
+    setTimeout(() => setState('idle'), 1400);
+  };
+  const label =
+    kind === 'code'
+      ? t('noteEditor.copyCode')
+      : kind === 'excel'
+      ? t('noteEditor.copyTableExcel')
+      : t('noteEditor.copyTableMarkdown');
+  return (
+    <button type="button" onClick={onClick} className="dom-copy-btn" title={label} aria-label={label}>
+      {kind !== 'code' && <span className="dom-copy-label">{kind === 'excel' ? 'Excel' : 'MD'}</span>}
+      {state === 'ok' ? (
+        <Icon name={ICONS.ui.check} size={13} />
+      ) : (
+        <Icon name={ICONS.ui.copy} size={13} />
+      )}
+      {state === 'ok' && <span className="dom-copy-label">{t('noteEditor.copied')}</span>}
+    </button>
+  );
+}
+
+function PreBlock({ t, children, ...rest }) {
+  const ref = useRef(null);
+  return (
+    <div className="md-pre-wrap group relative my-5">
+      <div className="dom-copy-bar">
+        <CopyBar kind="code" t={t} getText={() => ref.current?.innerText || ''} />
+      </div>
+      <pre ref={ref} {...rest}>{children}</pre>
+    </div>
+  );
+}
+
+function TableBlock({ t, children, ...rest }) {
+  const ref = useRef(null);
+  return (
+    <div className="md-table-wrap group relative my-5 overflow-x-auto">
+      <div className="dom-copy-bar">
+        <CopyBar kind="excel" t={t} getText={() => tableToTSV(ref.current)} />
+        <CopyBar kind="md" t={t} getText={() => tableToMarkdown(ref.current)} />
+      </div>
+      <table ref={ref} {...rest}>{children}</table>
+    </div>
+  );
+}
+
 // ─── 4. Main component ────────────────────────────────────────────────────────
 export default function MathMarkdown({ children = '', className = '' }) {
+  const { t } = useTranslation();
   if (!children) return null;
 
   const raw = String(children);
@@ -166,6 +223,8 @@ export default function MathMarkdown({ children = '', className = '' }) {
         ]}
         components={{
           code: CodeBlock,
+          pre: (props) => <PreBlock t={t} {...props} />,
+          table: (props) => <TableBlock t={t} {...props} />,
           div({ node, className: cls, children: ch, ...rest }) {
             if (cls && cls.includes('math-display')) {
               return (
