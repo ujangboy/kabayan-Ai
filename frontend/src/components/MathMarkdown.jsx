@@ -12,14 +12,17 @@
  * The previous sanitizer was corrupting markdown (##, **, *, ---).
  */
 import ReactMarkdown from 'react-markdown';
+import { lazy, Suspense } from 'react';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import rehypeRaw from 'rehype-raw';
 import rehypeSanitize from 'rehype-sanitize';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import 'katex/dist/katex.min.css';
+
+// Syntax highlighter di-lazy-load + PrismLight (bahasa terdaftar terbatas)
+// agar tidak masuk critical bundle — blok kode jarang tampil di first paint.
+const HighlightedCode = lazy(() => import('./HighlightedCode'));
 
 // ─── 1. Delimiter normalization ───────────────────────────────────────────────
 /**
@@ -108,15 +111,20 @@ function CodeBlock({ node, inline, className, children, ...props }) {
   const match = /language-(\w+)/.exec(className || '');
   if (!inline && match) {
     return (
-      <SyntaxHighlighter
-        style={oneDark}
-        language={match[1]}
-        PreTag="div"
-        className="rounded-xl !text-xs !my-2"
-        {...props}
+      <Suspense
+        fallback={
+          <pre className="rounded-xl !text-xs !my-2 bg-[#1E1E2E] p-4 overflow-x-auto">
+            <code>{String(children).replace(/\n$/, '')}</code>
+          </pre>
+        }
       >
-        {String(children).replace(/\n$/, '')}
-      </SyntaxHighlighter>
+        <HighlightedCode
+          language={match[1]}
+          className="rounded-xl !text-xs !my-2"
+        >
+          {String(children).replace(/\n$/, '')}
+        </HighlightedCode>
+      </Suspense>
     );
   }
   return (
