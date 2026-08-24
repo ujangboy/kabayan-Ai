@@ -215,7 +215,7 @@ export default function NotebookPage() {
         initial={false}
         animate={{ width: showList ? 288 : 0, opacity: showList ? 1 : 0 }}
         transition={{ type: 'spring', stiffness: 320, damping: 32 }}
-        className="shrink-0 overflow-hidden border-r border-border bg-surface shadow-[4px_0_24px_rgba(0,0,0,0.25)] h-full min-h-0 flex flex-col"
+        className="shrink-0 overflow-hidden border-r border-strong bg-subtle h-full min-h-0 flex flex-col"
         style={{ willChange: 'width' }}
       >
         <div className="w-72 h-full min-h-0 flex flex-col">
@@ -248,10 +248,10 @@ export default function NotebookPage() {
       {/* ═══ Main content — max space when list hidden ═══ */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-base">
         {/* Toggle List bar — selalu terlihat */}
-        <div className="shrink-0 flex items-center gap-2 px-3 py-2 border-b border-border bg-surface backdrop-blur-sm">
+        <div className="shrink-0 flex items-center gap-2 px-3 py-1.5 border-b border-strong/50 bg-base/80 backdrop-blur">
           <button
             onClick={() => setShowList(v => !v)}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-subtle border border-strong text-text hover:text-white hover:bg-wash-strong text-xs font-medium transition-colors"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-subtle border border-strong text-text hover:text-text hover:bg-wash-strong text-xs font-medium transition-colors"
             title={showList ? 'Sembunyikan daftar' : 'Tampilkan daftar'}
           >
             <span className="w-3.5 h-3.5 flex items-center justify-center">
@@ -262,7 +262,7 @@ export default function NotebookPage() {
             </span>
             {showList ? 'Sembunyikan Daftar' : 'Tampilkan Daftar'}
           </button>
-          <span className="text-xs text-text-secondary hidden sm:inline">Notebook — Editor & Previewer</span>
+          <span className="text-xs text-text-secondary hidden lg:inline">Notebook — Editor & Previewer</span>
         </div>
         <AnimatePresence mode="wait" initial={false}>
           {selectedNote ? (

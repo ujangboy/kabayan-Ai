@@ -119,7 +119,7 @@ export default function AppLayout() {
         <UnifiedSidebar />
         <main className="flex-1 overflow-hidden flex flex-col min-w-0">
           <TopBar />
-          <Breadcrumbs />
+          {location.pathname !== '/notebook' && <Breadcrumbs />}
           <div className="flex-1 overflow-hidden flex flex-col min-w-0">
             <PendingBanner t={t} />
             <AnimatePresence mode="wait">

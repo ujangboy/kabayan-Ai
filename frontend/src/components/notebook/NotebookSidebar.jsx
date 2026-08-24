@@ -31,7 +31,7 @@ export function NotebookSidebar({
   const { t } = useTranslation();
 
   return (
-    <div className="w-72 divider-gradient-r relative bg-gradient-to-b from-sidebar to-background backdrop-blur-md flex flex-col shrink-0 h-full min-h-0">
+    <div className="w-72 divider-gradient-r relative bg-subtle flex flex-col shrink-0 h-full min-h-0">
       {/* Sidebar header */}
       <div className="px-4 pt-4 pb-3 flex items-center justify-between">
         <h2 className="text-base font-semibold text-text">{t('notebook.notes')}</h2>
@@ -71,7 +71,7 @@ export function NotebookSidebar({
             value={noteSearch}
             onChange={(e) => setNoteSearch(e.target.value)}
             placeholder="Cari catatan..."
-            className="w-full pl-7 pr-7 py-1.5 bg-card border border-border rounded-lg text-xs text-text placeholder-text-muted focus:outline-none focus:border-primary transition-colors"
+            className="w-full pl-7 pr-7 py-1.5 bg-popover border border-strong rounded-lg text-xs text-text placeholder-text-secondary focus:outline-none focus:border-primary transition-colors"
           />
           {noteSearch && (
             <Tooltip label="Bersihkan pencarian">

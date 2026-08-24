@@ -27,14 +27,14 @@ export function NoteCard({
         'group relative overflow-hidden rounded-xl border transition-colors duration-200',
         isSelected
           ? 'border-primary/40 ring-1 ring-primary/30 bg-primary/5'
-          : 'border-transparent hover:border-border hover:bg-card/70'
+          : 'border-transparent hover:border-strong hover:bg-card'
       )}
     >
       {isSelected && (
         <motion.span
           layoutId="notebook-active-indicator"
           transition={springWave}
-          className="absolute inset-0 bg-primary/10 rounded-xl"
+          className="absolute inset-0 bg-primary/10 rounded-xl pointer-events-none"
         />
       )}
       {isEditing ? (
@@ -66,7 +66,7 @@ export function NoteCard({
               <Icon name={ICONS.actions.pin} size={14} fill={1} className="text-primary shrink-0" />
             )}
             <span className={cn(
-              'text-sm font-medium truncate min-w-0',
+              'text-sm font-medium line-clamp-2 break-words whitespace-normal min-w-0 leading-snug',
               isSelected ? 'text-primary-light' : 'text-text'
             )} title={note.title || t('notebook.untitled')}>
               {note.title || t('notebook.untitled')}
@@ -84,7 +84,7 @@ export function NoteCard({
       )}
 
       {/* Hover actions */}
-      <div className="absolute right-1.5 top-2 hidden group-hover:flex items-center gap-0.5">
+      <div className="absolute right-1.5 top-2 z-10 hidden group-hover:flex items-center gap-0.5">
           <Tooltip label={t('notebook.rename')}>
             <button
               onClick={(e) => { e.stopPropagation(); onStartRename?.(note); }}
