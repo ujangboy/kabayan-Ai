@@ -26,7 +26,7 @@ export default function BatchFlashcardCard({ group, onStart, onReview, onHistory
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-slate-900/70 border border-slate-800 hover:border-white/[0.16] rounded-2xl p-5 flex flex-col justify-between gap-3 transition-all shadow-md"
+      className="card-base card-hoverable flex flex-col justify-between gap-3"
     >
       {/* Header — badge inisial + nama + aksi */}
       <div className="flex items-start justify-between gap-2">

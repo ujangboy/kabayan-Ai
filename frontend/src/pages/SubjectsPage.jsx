@@ -120,7 +120,7 @@ export default function SubjectsPage() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.05 }}
-                    className="bg-slate-900/70 border border-slate-800 hover:border-white/[0.16] rounded-2xl p-5 flex flex-col justify-between gap-4 transition-all shadow-md group h-full"
+                    className="card-base card-hoverable flex flex-col justify-between gap-4 group h-full"
                   >
                     {/* Header — badge inisial + nama + aksi */}
                     <div className="flex items-start gap-3">

@@ -108,7 +108,7 @@ function SubjectCard({ subject, onSelectSubject, onStartConfig, onDelete, t, ton
    const progress = Math.min(100, subject.best_score ?? 0);
 
    return (
-     <div className="bg-slate-900/70 border border-slate-800 hover:border-white/[0.16] rounded-2xl p-5 flex flex-col justify-between gap-4 transition-all shadow-md">
+     <div className="card-base card-hoverable flex flex-col justify-between gap-4">
        {/* Header — badge inisial + nama + aksi */}
        <div className="flex items-start gap-3">
          <SubjectBadge name={subject.name} tone={tone} />
