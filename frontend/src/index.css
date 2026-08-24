@@ -290,8 +290,19 @@
 
   /* Hover kartu: border terang + lift halus + shadow — GPU-friendly */
   .card-hoverable {
-    @apply transition-[transform,border-color] duration-200 ease-out
-           hover:-translate-y-0.5 hover:border-strong;
+    @apply transition-[transform,border-color,background-color,color] duration-200 ease-out
+           hover:-translate-y-0.5 hover:border-strong hover:bg-wash;
+  }
+
+  /* ── Selectable option row (lists, tabs, tables) ─────────────────────────
+     Hover langsung ubah warna teks + background agar tidak ambigu dengan
+     state terpilih (active). Dipakai di semua halaman. */
+  .option-row {
+    @apply transition-[background-color,color,border-color] duration-150 ease-out cursor-pointer
+           hover:bg-wash hover:text-text;
+  }
+  .option-row.active {
+    @apply bg-primary/10 text-primary-light;
   }
 
   /* Prose overrides for markdown — AI response typography (Gemini 16/1.55) */

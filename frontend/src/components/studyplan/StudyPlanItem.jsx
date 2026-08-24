@@ -224,7 +224,7 @@ export function StudyPlanItem({
       <div className="flex items-start gap-3 p-4">
         <button
           onClick={() => onToggle(item.id)}
-          className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 mt-0.5 transition-all ${item.completed ? 'bg-success border-success text-white' : 'border-border hover:border-primary'}`}
+          className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 mt-0.5 transition-all ${item.completed ? 'bg-success border-success text-white' : 'border-border hover:border-primary hover:bg-primary/10'}`}
         >
           {item.completed && <Icon name={ICONS.status.check} size={11} />}
         </button>

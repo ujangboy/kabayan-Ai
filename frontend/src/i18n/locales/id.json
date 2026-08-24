@@ -302,6 +302,8 @@
     "saved": "Tersimpan",
     "pin": "Sematkan",
     "unpin": "Lepas sematan",
+    "rename": "Ganti nama",
+    "renameTitle": "Ganti Nama Catatan",
     "deleteNote": "Hapus Catatan",
     "noteTitlePlaceholder": "Judul catatan...",
     "emptyTitle": "Pilih atau buat catatan",

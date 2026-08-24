@@ -302,6 +302,8 @@
     "saved": "Saved",
     "pin": "Pin",
     "unpin": "Unpin",
+    "rename": "Rename",
+    "renameTitle": "Rename Note",
     "deleteNote": "Delete Note",
     "noteTitlePlaceholder": "Note title...",
     "emptyTitle": "Select or create a note",

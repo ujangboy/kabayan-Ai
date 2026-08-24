@@ -61,9 +61,9 @@ export default function LanguageTab() {
               onClick={() => handleSelect(code)}
               disabled={mutation.isPending}
               className={cn(
-                'w-full flex items-center justify-between px-4 py-3 rounded-lg border transition-colors text-left',
+                'w-full flex items-center justify-between px-4 py-3 rounded-lg border text-left option-row',
                 active
-                  ? 'border-primary bg-primary/5'
+                  ? 'border-primary bg-primary/10 text-primary-light'
                   : 'border-border hover:border-primary/40'
               )}
             >

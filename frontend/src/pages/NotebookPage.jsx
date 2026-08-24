@@ -20,6 +20,8 @@ export default function NotebookPage() {
   const [selectedNote, setSelectedNote] = useState(null);
   const [isCreating, setIsCreating] = useState(false);
   const [showGeneratePanel, setShowGeneratePanel] = useState(false);
+  const [editingNoteId, setEditingNoteId] = useState(null);
+  const [editingTitle, setEditingTitle] = useState('');
   const [noteSearch, setNoteSearch] = useState('');
   const [showList, setShowList] = useState(() =>
     typeof window === 'undefined' ? true : window.innerWidth >= 768
@@ -186,6 +188,23 @@ export default function NotebookPage() {
     });
   };
 
+  const startRename = (note) => {
+    setEditingNoteId(note.id);
+    setEditingTitle(note.title || '');
+  };
+
+  const submitRename = () => {
+    if (!editingNoteId) return;
+    const next = editingTitle.trim();
+    const note = notesRef.current.find((n) => n.id === editingNoteId);
+    setEditingNoteId(null);
+    if (next && note && next !== note.title) {
+      renameMutateRef.current?.({ id: editingNoteId, title: next });
+    }
+  };
+
+  const cancelRename = () => setEditingNoteId(null);
+
   return (
     <div className="flex h-full overflow-hidden bg-base">
 
@@ -195,11 +214,11 @@ export default function NotebookPage() {
       <motion.div
         initial={false}
         animate={{ width: showList ? 288 : 0, opacity: showList ? 1 : 0 }}
-        transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
-        className="shrink-0 overflow-hidden border-r border-border bg-surface shadow-[4px_0_24px_rgba(0,0,0,0.25)]"
+        transition={{ type: 'spring', stiffness: 320, damping: 32 }}
+        className="shrink-0 overflow-hidden border-r border-border bg-surface shadow-[4px_0_24px_rgba(0,0,0,0.25)] h-full min-h-0 flex flex-col"
         style={{ willChange: 'width' }}
       >
-        <div className="w-72 h-full">
+        <div className="w-72 h-full min-h-0 flex flex-col">
           <NotebookSidebar
             isLoading={isLoading}
             notes={notes}
@@ -215,6 +234,12 @@ export default function NotebookPage() {
             onSelectNote={(n) => setSelectedNote(n)}
             onPin={(id) => pinMutation.mutate(id)}
             onDelete={handleDelete}
+            editingId={editingNoteId}
+            editingValue={editingTitle}
+            onEditChange={setEditingTitle}
+            onEditSubmit={submitRename}
+            onEditCancel={cancelRename}
+            onStartRename={startRename}
             onClearAll={handleClearAll}
           />
         </div>

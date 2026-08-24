@@ -59,15 +59,26 @@ export default function SettingsPage() {
                 <button
                   key={key}
                   onClick={() => setActive(key)}
+                  whileHover={{ x: 1 }}
+                  whileTap={{ scale: 0.98 }}
                   className={cn(
-                    'flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all duration-150 shrink-0 md:shrink',
+                    'relative flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-[background-color,color] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] shrink-0 md:shrink',
                     isActive
-                      ? 'bg-primary text-white'
-                      : 'text-text-secondary hover:text-white hover:bg-subtle'
+                      ? 'text-white'
+                      : 'text-text-secondary hover:text-white hover:bg-wash'
                   )}
                 >
-                  <Icon name={icon} size={16} className={isActive ? 'text-white' : 'text-text-secondary'} />
-                  <span>{t(labelKey)}</span>
+                  {isActive && (
+                    <motion.span
+                      layoutId="settings-active-indicator"
+                      className="absolute inset-0 rounded-xl bg-primary"
+                      transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                    />
+                  )}
+                  <span className="relative flex items-center gap-2.5">
+                    <Icon name={icon} size={16} className={isActive ? 'text-white' : 'text-text-secondary'} />
+                    <span>{t(labelKey)}</span>
+                  </span>
                 </button>
               );
             })}
@@ -81,10 +92,10 @@ export default function SettingsPage() {
               <AnimatePresence mode="wait">
                 <motion.div
                   key={active}
-                  initial={{ opacity: 0, y: 6 }}
+                  initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -6 }}
-                  transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ type: 'spring', stiffness: 350, damping: 30 }}
                 >
                   {renderTab()}
                 </motion.div>

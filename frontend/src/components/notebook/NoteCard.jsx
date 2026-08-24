@@ -5,8 +5,12 @@ import { ICONS } from '@/lib/icons';
 import { formatDate } from '@/utils';
 import { cn } from '@/utils';
 
-export function NoteCard({ note, isSelected, onSelect, onPin, onDelete }) {
+export function NoteCard({
+  note, isSelected, onSelect, onPin, onDelete,
+  editingId, editingValue, onEditChange, onEditSubmit, onEditCancel, onStartRename,
+}) {
   const { t } = useTranslation();
+  const isEditing = editingId === note.id;
   const snippet = (note.content || '')
     .replace(/<[^>]+>/g, '')
     .replace(/#+\s/g, '')
@@ -24,31 +28,63 @@ export function NoteCard({ note, isSelected, onSelect, onPin, onDelete }) {
           : 'hover:bg-card/80'
       )}
     >
-      <button
-        onClick={onSelect}
-        className="w-full text-left pl-3 pr-12 py-2.5"
-      >
-        <div className="flex items-center gap-1.5 mb-0.5">
-          {note.is_pinned && <Icon name={ICONS.actions.pin} size={14} className="text-primary shrink-0 rotate-45" />}
-          <span className={cn(
-            'text-sm font-medium truncate',
-            isSelected ? 'text-primary-light' : 'text-text'
-          )}>
-            {note.title || t('notebook.untitled')}
-          </span>
+      {isEditing ? (
+        <div className="pl-3 pr-12 py-2.5">
+          <div className="flex items-center gap-1.5 mb-0.5">
+            {note.is_pinned && (
+              <Icon name={ICONS.actions.pin} size={14} fill={1} className="text-primary shrink-0" />
+            )}
+            <input
+              autoFocus
+              value={editingValue}
+              onChange={(e) => onEditChange(e.target.value)}
+              onBlur={onEditSubmit}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') onEditSubmit();
+                if (e.key === 'Escape') onEditCancel();
+              }}
+              className="w-full text-sm font-medium text-text bg-background border border-primary/50 rounded-md px-1.5 py-0.5 focus:outline-none focus:ring-1 focus:ring-primary/40"
+            />
+          </div>
         </div>
-        {snippet && (
-          <p className="text-2xs text-text-muted line-clamp-1 leading-relaxed mb-1">
-            {snippet}
-          </p>
-        )}
-        <span className="text-3xs text-text-muted/70">
-          {formatDate(note.created_at)}
-        </span>
-      </button>
+      ) : (
+        <button
+          onClick={onSelect}
+          className="w-full text-left pl-3 pr-12 py-2.5"
+        >
+          <div className="flex items-center gap-1.5 mb-0.5">
+            {note.is_pinned && (
+              <Icon name={ICONS.actions.pin} size={14} fill={1} className="text-primary shrink-0" />
+            )}
+            <span className={cn(
+              'text-sm font-medium truncate',
+              isSelected ? 'text-primary-light' : 'text-text'
+            )}>
+              {note.title || t('notebook.untitled')}
+            </span>
+          </div>
+          {snippet && (
+            <p className="text-2xs text-text-muted line-clamp-1 leading-relaxed mb-1">
+              {snippet}
+            </p>
+          )}
+          <span className="text-3xs text-text-muted/70">
+            {formatDate(note.created_at)}
+          </span>
+        </button>
+      )}
 
       {/* Hover actions */}
       <div className="absolute right-1.5 top-2 hidden group-hover:flex items-center gap-0.5">
+        <Tooltip label={t('notebook.rename')}>
+          <button
+            onClick={(e) => { e.stopPropagation(); onStartRename?.(note); }}
+            aria-label={t('notebook.rename')}
+            className="p-1.5 rounded-md text-text-muted hover:text-primary transition-colors"
+          >
+            <Icon name={ICONS.actions.editNote} size={14} />
+          </button>
+        </Tooltip>
         <Tooltip label={note.is_pinned ? t('notebook.unpin') : t('notebook.pin')}>
           <button
             onClick={(e) => { e.stopPropagation(); onPin(); }}
@@ -58,7 +94,7 @@ export function NoteCard({ note, isSelected, onSelect, onPin, onDelete }) {
               note.is_pinned ? 'text-primary' : 'text-text-muted hover:text-primary'
             )}
           >
-            <Icon name={ICONS.actions.pin} size={14} className="rotate-45" />
+            <Icon name={ICONS.actions.pin} size={14} fill={note.is_pinned ? 1 : 0} />
           </button>
         </Tooltip>
         <Tooltip label={t('common.delete')}>

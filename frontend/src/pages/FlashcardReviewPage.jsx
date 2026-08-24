@@ -261,17 +261,28 @@ export default function FlashcardReviewPage() {
         />
       </div>
 
-      {/* Card */}
-      <FlashcardReviewCard
-        currentCard={currentCard}
-        isFlipped={isFlipped}
-        feedback={feedback}
-        autoProgress={autoProgress}
-        isSaving={isSaving}
-        onFlip={handleFlip}
-        onRate={handleRate}
-        onSkipAutoAdvance={handleSkipAutoAdvance}
-      />
+      {/* Card — ganti kartu dengan slide horizontal (keyed by card id) */}
+      <AnimatePresence mode="popLayout" initial={false}>
+        <motion.div
+          key={currentCard.id}
+          initial={{ opacity: 0, x: 28, scale: 0.97 }}
+          animate={{ opacity: 1, x: 0, scale: 1 }}
+          exit={{ opacity: 0, x: -28, scale: 0.97 }}
+          transition={{ type: 'spring', stiffness: 420, damping: 32 }}
+          className="w-full"
+        >
+          <FlashcardReviewCard
+            currentCard={currentCard}
+            isFlipped={isFlipped}
+            feedback={feedback}
+            autoProgress={autoProgress}
+            isSaving={isSaving}
+            onFlip={handleFlip}
+            onRate={handleRate}
+            onSkipAutoAdvance={handleSkipAutoAdvance}
+          />
+        </motion.div>
+      </AnimatePresence>
       </motion.div>
     </AnimatePresence>
   );

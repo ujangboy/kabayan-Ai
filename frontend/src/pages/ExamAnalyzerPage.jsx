@@ -255,10 +255,10 @@ export default function ExamAnalyzerPage() {
               <button
                 key={tab.v}
                 onClick={() => go(tab.v)}
-                className={cn(
-                  'relative px-4 py-2 text-sm font-medium transition-colors',
-                  view === tab.v ? 'text-text' : 'text-text-secondary hover:text-text'
-                )}
+                  className={cn(
+                    'relative px-4 py-2 text-sm font-medium transition-colors rounded-lg',
+                    view === tab.v ? 'text-text' : 'text-text-secondary hover:text-text hover:bg-wash'
+                  )}
               >
                 {tab.label}
                 {view === tab.v && (

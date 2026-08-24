@@ -20,12 +20,18 @@ export function NotebookSidebar({
   onSelectNote,
   onPin,
   onDelete,
+  editingId,
+  editingValue,
+  onEditChange,
+  onEditSubmit,
+  onEditCancel,
+  onStartRename,
   onClearAll,
 }) {
   const { t } = useTranslation();
 
   return (
-    <div className="w-72 divider-gradient-r relative bg-gradient-to-b from-sidebar to-background backdrop-blur-md flex flex-col shrink-0">
+    <div className="w-72 divider-gradient-r relative bg-gradient-to-b from-sidebar to-background backdrop-blur-md flex flex-col shrink-0 h-full min-h-0">
       {/* Sidebar header */}
       <div className="px-4 pt-4 pb-3 flex items-center justify-between">
         <h2 className="text-base font-semibold text-text">{t('notebook.notes')}</h2>
@@ -82,7 +88,7 @@ export function NotebookSidebar({
       </div>
 
       {/* Note list */}
-      <div className="flex-1 overflow-y-auto sidebar-scroll px-2 pb-2 space-y-0.5">
+      <div className="flex-1 min-h-0 overflow-y-auto sidebar-scroll px-2 pb-2 space-y-0.5">
         {isLoading ? (
           <div className="space-y-2 p-2">
             {[0, 1, 2, 3, 4].map(i => (
@@ -124,6 +130,12 @@ export function NotebookSidebar({
                     isSelected={selectedNote?.id === n.id}
                     onSelect={() => onSelectNote(n)}
                     onPin={() => onPin(n.id)}
+                    editingId={editingId}
+                    editingValue={editingValue}
+                    onEditChange={onEditChange}
+                    onEditSubmit={onEditSubmit}
+                    onEditCancel={onEditCancel}
+                    onStartRename={onStartRename}
                     onDelete={onDelete}
                   />
                 ))}
@@ -143,6 +155,12 @@ export function NotebookSidebar({
                     isSelected={selectedNote?.id === n.id}
                     onSelect={() => onSelectNote(n)}
                     onPin={() => onPin(n.id)}
+                    editingId={editingId}
+                    editingValue={editingValue}
+                    onEditChange={onEditChange}
+                    onEditSubmit={onEditSubmit}
+                    onEditCancel={onEditCancel}
+                    onStartRename={onStartRename}
                     onDelete={onDelete}
                   />
                 ))}

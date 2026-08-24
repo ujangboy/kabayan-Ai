@@ -244,24 +244,24 @@ export default function FlashcardSession({ cards, subjectName, onClose }) {
         />
       </div>
 
-      {/* Card — ganti kartu dengan crossfade (keyed by card id) */}
-      <div className="flex-1 flex flex-col items-center justify-center w-full max-w-xl mx-auto">
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.div
-            key={currentCard.id}
-            className="w-full"
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -12 }}
-            transition={{ duration: 0.2, ease: [0.32, 0.72, 0, 1] }}
-          >
-            <FlashcardCard
-              currentCard={currentCard}
-              isFlipped={isFlipped}
-              onFlip={() => setIsFlipped(f => !f)}
-            />
-          </motion.div>
-        </AnimatePresence>
+        {/* Card — ganti kartu dengan slide horizontal (keyed by card id) */}
+        <div className="flex-1 flex flex-col items-center justify-center w-full max-w-xl mx-auto">
+          <AnimatePresence mode="popLayout" initial={false}>
+            <motion.div
+              key={currentCard.id}
+              className="w-full"
+              initial={{ opacity: 0, x: 28, scale: 0.97 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
+              exit={{ opacity: 0, x: -28, scale: 0.97 }}
+              transition={{ type: 'spring', stiffness: 420, damping: 32 }}
+            >
+              <FlashcardCard
+                currentCard={currentCard}
+                isFlipped={isFlipped}
+                onFlip={() => setIsFlipped(f => !f)}
+              />
+            </motion.div>
+          </AnimatePresence>
 
         {/* Action buttons / feedback — after flip */}
         <AnimatePresence>
