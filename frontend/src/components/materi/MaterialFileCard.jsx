@@ -77,8 +77,8 @@ export function MaterialFileCard({ material: m, index, showSubject, isRagActive,
           <div className="space-y-1">
             <div className="w-full h-1 bg-border rounded-full overflow-hidden">
               <div
-                className={`h-full transition-all duration-700 ${m.status === 'Pending' ? 'bg-text-muted' : 'bg-primary'}`}
-                style={{ width: `${Math.max(m.progress || 0, 4)}%` }}
+                className={`h-full w-full origin-left transition-transform duration-700 ${m.status === 'Pending' ? 'bg-text-muted' : 'bg-primary'}`}
+                style={{ transform: `scaleX(${Math.max(m.progress || 0, 4) / 100})` }}
               />
             </div>
             <div className="flex items-center gap-1">

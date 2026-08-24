@@ -79,7 +79,7 @@ export default function QuizView({ sessionData, clockStart, onDone }) {
             <span className="text-xs text-text-muted">{t('exam.quiz.answeredCount', { count: answered })}</span>
           </div>
           <div className="h-2 bg-border rounded-full overflow-hidden">
-            <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${progress}%` }} />
+            <div className="h-full w-full bg-primary rounded-full origin-left transition-transform" style={{ transform: `scaleX(${progress / 100})` }} />
           </div>
         </div>
 

@@ -102,7 +102,7 @@ export default function BatchFlashcardCard({ group, onStart, onReview, onHistory
       {/* Footer — progress bar + timestamp */}
       <div className="space-y-2">
         <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
-          <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${progress}%` }} />
+          <div className="h-full w-full rounded-full bg-primary origin-left transition-transform" style={{ transform: `scaleX(${progress / 100})` }} />
         </div>
         <div className="flex items-center justify-between text-3xs text-text-muted">
           {createdAt ? (

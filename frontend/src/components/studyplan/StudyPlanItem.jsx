@@ -136,7 +136,7 @@ export default function InlinePlanPractice({ item, practiceState, onClose, onSub
         </span>
       </div>
       <div className="h-1.5 bg-border rounded-full mb-4 overflow-hidden">
-        <div className="h-full bg-primary rounded-full transition-all duration-300" style={{ width: `${((idx + 1) / total) * 100}%` }} />
+        <div className="h-full w-full bg-primary rounded-full origin-left transition-transform duration-300" style={{ transform: `scaleX(${((idx + 1) / total) / 100})` }} />
       </div>
 
       <AnimatePresence mode="wait" initial={false}>

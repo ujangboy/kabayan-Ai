@@ -239,8 +239,8 @@ export default function FlashcardSession({ cards, subjectName, onClose }) {
       {/* Progress bar */}
       <div className="w-full h-1.5 bg-border rounded-full mb-8 shrink-0">
         <div
-          className="h-full bg-primary rounded-full transition-all duration-300"
-          style={{ width: `${((currentIndex + 1) / total) * 100}%` }}
+          className="h-full w-full bg-primary rounded-full origin-left transition-transform duration-300"
+          style={{ transform: `scaleX(${((currentIndex + 1) / total)})` }}
         />
       </div>
 
@@ -292,8 +292,8 @@ export default function FlashcardSession({ cards, subjectName, onClose }) {
               {/* Auto-advance progress bar */}
               <div className="w-full h-1 bg-border rounded-full overflow-hidden">
                 <motion.div
-                  className={`h-full rounded-full ${feedback.known ? 'bg-success' : 'bg-danger'}`}
-                  style={{ width: `${autoAdvanceProgress}%` }}
+                  className={`h-full w-full rounded-full origin-left ${feedback.known ? 'bg-success' : 'bg-danger'}`}
+                  style={{ transform: `scaleX(${autoAdvanceProgress / 100})` }}
                   transition={{ ease: 'linear' }}
                 />
               </div>

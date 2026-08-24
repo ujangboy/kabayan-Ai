@@ -98,8 +98,8 @@ export default function FlashcardReviewCard({
             {/* Auto-advance progress bar */}
             <div className="w-full h-1 bg-border rounded-full overflow-hidden">
               <motion.div
-                className={`h-full rounded-full ${feedback.rating === 0 ? 'bg-danger' : feedback.rating === 2 ? 'bg-accent-blue' : 'bg-success'}`}
-                style={{ width: `${autoProgress}%` }}
+                className={`h-full w-full rounded-full origin-left ${feedback.rating === 0 ? 'bg-danger' : feedback.rating === 2 ? 'bg-accent-blue' : 'bg-success'}`}
+                style={{ transform: `scaleX(${autoProgress / 100})` }}
               />
             </div>
           </motion.div>
