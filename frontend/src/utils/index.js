@@ -9,7 +9,7 @@ export function cn(...inputs) {
 // Satu sumber kebenaran untuk durasi/easing framer-motion agar konsisten.
 // Durasi pendek (0.15–0.35s) + ease khas "springy ease-out" dari design system.
 export const EASE = [0.32, 0.72, 0, 1];
-export const SPRING = { type: 'spring', stiffness: 400, damping: 32 };
+export const SPRING = { type: 'spring', stiffness: 400, damping: 30 };
 
 export const fadeSlide = {
   initial: { opacity: 0, y: 8 },
@@ -33,7 +33,7 @@ export const scaleIn = {
 };
 
 // Variants untuk list/grid stagger (container + item)
-export const staggerContainer = (stagger = 0.06, delayChildren = 0) => ({
+export const staggerContainer = (stagger = 0.05, delayChildren = 0) => ({
   hidden: { opacity: 0 },
   show: {
     opacity: 1,

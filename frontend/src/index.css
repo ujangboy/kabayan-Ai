@@ -185,12 +185,14 @@
   }
 
   /* Glassmorphism card — fondasi semua kartu modern */
+  /* Card — solid surface, hairline border, shadow tipis netral.
+     Tanpa backdrop-blur: blur mahal untuk render & tidak diperlukan
+     pada kartu konten yang menempel di canvas. */
   .glass-card {
-    @apply bg-slate-900/60 backdrop-blur-md border border-white/[0.08] rounded-2xl shadow-glass;
-    transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-                border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-                box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-                transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    @apply bg-surface-2 border border-white/[0.08] rounded-2xl shadow-card;
+    transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+                border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+                transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   /* Glass panel — untuk sidebar, header, dan area statis */
@@ -217,39 +219,40 @@
   }
 
   .sidebar-item.active {
-    @apply bg-gradient-primary-soft text-primary-light border border-white/[0.06];
+    @apply bg-primary/10 text-primary-light border border-white/[0.06];
   }
 
   .btn-primary {
-    @apply inline-flex items-center gap-2 px-4 py-2 rounded-btn bg-gradient-primary text-white text-[15px] font-medium
-           hover:shadow-glow-primary hover:brightness-110 active:scale-95 transition-all duration-200 cursor-pointer select-none;
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-btn bg-primary text-white text-[15px] font-medium
+           hover:bg-primary-hover active:scale-95 transition-[background-color,transform] duration-150 ease-out cursor-pointer select-none;
   }
 
   .btn-ghost {
     @apply inline-flex items-center gap-2 px-4 py-2 rounded-btn text-text-secondary text-[15px] font-medium
-           hover:bg-white/[0.06] hover:text-text active:scale-95 transition-all duration-200 cursor-pointer select-none;
+           hover:bg-white/[0.06] hover:text-text active:scale-95 transition-[background-color,color,transform] duration-150 ease-out cursor-pointer select-none;
   }
 
   .btn-danger {
     @apply inline-flex items-center gap-2 px-4 py-2 rounded-btn bg-danger/10 text-danger border border-danger/20 text-[15px] font-medium
-           hover:bg-danger/20 hover:shadow-[0_0_16px_rgba(239,68,68,0.15)] active:scale-95 transition-all duration-200 cursor-pointer select-none;
+           hover:bg-danger/20 active:scale-95 transition-[background-color,transform] duration-150 ease-out cursor-pointer select-none;
   }
 
   .input-base {
     @apply w-full px-4 py-2.5 rounded-input bg-white/[0.06] border border-white/[0.15] text-text text-base placeholder:text-text-secondary
-           focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/30 focus:shadow-glow-sm transition-all duration-200;
+           focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/30 transition-[border-color,box-shadow] duration-150 ease-out;
   }
 
   .card-base {
-    @apply bg-slate-900/60 backdrop-blur-md border border-white/[0.08] rounded-2xl p-5 shadow-glass;
-    transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-                border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-                box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-                transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    @apply bg-surface-2 border border-white/[0.08] rounded-2xl p-5 shadow-card;
+    transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+                border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+                transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
+  /* Hover kartu: hairline menebal + lift kecil (transform saja, GPU-friendly) */
   .card-hoverable {
-    @apply transition-all duration-300 hover:shadow-glass-lg hover:-translate-y-0.5 hover:border-purple-500/40 hover:bg-slate-800/70;
+    @apply transition-[transform,border-color,background-color] duration-200 ease-out
+           hover:-translate-y-0.5 hover:border-white/[0.16] hover:bg-[#1B2434];
   }
 
   /* Prose overrides for markdown — AI response typography (Gemini 16/1.55) */
