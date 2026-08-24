@@ -31,6 +31,7 @@ import { Icon } from '@/components/ui';
 import { ICONS } from '@/lib/icons';
 import { MathInline, MathBlock } from '@/extensions/math';
 import { FontSize, FONT_SIZE_OPTIONS } from '@/extensions/fontSize';
+import DomCopyEnhancer from '@/components/DomCopyEnhancer';
 
 // ─── Konfigurasi marked ───────────────────────────────────────────────────
 marked.setOptions({ breaks: true, gfm: true });
@@ -108,9 +109,9 @@ function getDomSelectionRange(editor) {
 }
 
 // ─── Shared components ────────────────────────────────────────────────────
-function ToolBtn({ onClick, active, disabled, title, children, className: cls }) {
+function ToolBtn({ onClick, active, disabled, title, children, className: cls, size = 'md', tooltipSide = 'bottom' }) {
   return (
-    <Tooltip label={title} side="bottom">
+    <Tooltip label={title} side={tooltipSide}>
       <button
         type="button"
         onMouseDown={(e) => { e.preventDefault(); onClick(); }}
@@ -118,7 +119,7 @@ function ToolBtn({ onClick, active, disabled, title, children, className: cls })
         title={title}
         className={cn(
           'rounded-lg transition-all select-none flex items-center justify-center shrink-0',
-          'w-8 h-8 p-1.5',
+          size === 'sm' ? 'w-7 h-7 p-1' : 'w-8 h-8 p-1.5',
           active
             ? 'bg-primary/15 text-primary-light border border-primary/20 shadow-sm'
             : 'text-text-secondary hover:text-text hover:bg-card-hover border border-transparent',
@@ -136,8 +137,12 @@ function Sep() {
   return <div className="w-px h-5 bg-border mx-1 shrink-0" />;
 }
 
+function SepV() {
+  return <div className="h-px w-5 bg-border my-1 shrink-0" />;
+}
+
 // ─── Font size dropdown (top toolbar + floating bubble) ───────────────────
-function FontSizeDropdown({ editor, floating = false }) {
+function FontSizeDropdown({ editor, floating = false, vertical = false }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState('bottom');
@@ -183,7 +188,7 @@ function FontSizeDropdown({ editor, floating = false }) {
 
   // Decide popup direction based on available space
   const measure = () => {
-    if (!open || !floating) return;
+    if (!open || !floating || vertical) return;
     const el = wrapRef.current;
     if (!el) return;
     const rect = el.getBoundingClientRect();
@@ -217,7 +222,7 @@ function FontSizeDropdown({ editor, floating = false }) {
         title={t('noteEditor.fontSize')}
         className={cn(
           'rounded-lg transition-all select-none flex items-center justify-center gap-1 font-medium border border-transparent',
-          floating ? 'w-8 h-7 text-xs' : 'w-11 h-8 text-xs',
+          vertical ? 'w-9 h-8 text-xs' : floating ? 'w-8 h-7 text-xs' : 'w-11 h-8 text-xs',
           open
             ? 'bg-primary/15 text-primary shadow-sm border-primary/20'
             : 'text-text-secondary hover:text-text hover:bg-card-hover'
@@ -238,7 +243,9 @@ function FontSizeDropdown({ editor, floating = false }) {
               floating
                 ? 'bg-card/95 backdrop-blur-xl border-strong'
                 : 'bg-card border-border',
-              pos === 'bottom' ? 'top-full mt-1 left-0' : 'bottom-full mb-1 left-0'
+              vertical
+                ? 'right-full mr-1 top-1/2 -translate-y-1/2'
+                : pos === 'bottom' ? 'top-full mt-1 left-0' : 'bottom-full mb-1 left-0'
             )}
             style={{ maxHeight: 200 }}
           >
@@ -267,13 +274,13 @@ function FontSizeDropdown({ editor, floating = false }) {
 }
 
 // ─── Top toolbar (edit mode) ──────────────────────────────────────────────
-function Toolbar({ editor, onPreview, onInsertMath }) {
+function Toolbar({ editor, onPreview, onInsertMath, className = '' }) {
   const { t } = useTranslation();
   if (!editor) return null;
   const ia = (n, a) => editor.isActive(n, a);
 
   return (
-    <div className="flex flex-nowrap items-center gap-1.5 px-4 py-2 bg-card border-b border-border sticky top-0 z-10 shadow-sm overflow-x-auto sidebar-scroll shrink-0">
+    <div className={cn('flex flex-nowrap items-center gap-1 px-3 py-1.5 bg-wash/40 border-b border-strong/50 sticky top-0 z-10 overflow-x-auto sidebar-scroll shrink-0', className)}>
       <button
         type="button"
         onClick={onPreview}
@@ -286,54 +293,123 @@ function Toolbar({ editor, onPreview, onInsertMath }) {
       <Sep />
       <FontSizeDropdown editor={editor} />
       <Sep />
-      <ToolBtn onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} title={t('noteEditor.undo')}>
+      <ToolBtn size="sm" onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} title={t('noteEditor.undo')}>
         <Icon name={ICONS.editor.undo} size={14} />
       </ToolBtn>
-      <ToolBtn onClick={() => editor.chain().focus().redo().run()} disabled={!editor.can().redo()} title={t('noteEditor.redo')}>
+      <ToolBtn size="sm" onClick={() => editor.chain().focus().redo().run()} disabled={!editor.can().redo()} title={t('noteEditor.redo')}>
         <Icon name={ICONS.editor.redo} size={14} />
       </ToolBtn>
 
       <Sep />
-      <ToolBtn onClick={() => editor.chain().focus().toggleBold().run()} active={ia('bold')} title={t('noteEditor.bold')}>
+      <ToolBtn size="sm" onClick={() => editor.chain().focus().toggleBold().run()} active={ia('bold')} title={t('noteEditor.bold')}>
         <Icon name={ICONS.editor.bold} size={14} />
       </ToolBtn>
-      <ToolBtn onClick={() => editor.chain().focus().toggleItalic().run()} active={ia('italic')} title={t('noteEditor.italic')}>
+      <ToolBtn size="sm" onClick={() => editor.chain().focus().toggleItalic().run()} active={ia('italic')} title={t('noteEditor.italic')}>
         <Icon name={ICONS.editor.italic} size={14} />
       </ToolBtn>
-      <ToolBtn onClick={() => editor.chain().focus().toggleUnderline().run()} active={ia('underline')} title={t('noteEditor.underline')}>
+      <ToolBtn size="sm" onClick={() => editor.chain().focus().toggleUnderline().run()} active={ia('underline')} title={t('noteEditor.underline')}>
         <Icon name={ICONS.editor.underline} size={14} />
       </ToolBtn>
-      <ToolBtn onClick={() => editor.chain().focus().toggleStrike().run()} active={ia('strike')} title={t('noteEditor.strike')}>
+      <ToolBtn size="sm" onClick={() => editor.chain().focus().toggleStrike().run()} active={ia('strike')} title={t('noteEditor.strike')}>
         <Icon name={ICONS.editor.strikethrough} size={14} />
       </ToolBtn>
 
       <Sep />
-      <ToolBtn onClick={() => editor.chain().focus().setTextAlign('left').run()} active={ia({ textAlign: 'left' })} title={t('noteEditor.alignLeft')}>
+      <ToolBtn size="sm" onClick={() => editor.chain().focus().setTextAlign('left').run()} active={ia({ textAlign: 'left' })} title={t('noteEditor.alignLeft')}>
         <Icon name={ICONS.editor.alignLeft} size={14} />
       </ToolBtn>
-      <ToolBtn onClick={() => editor.chain().focus().setTextAlign('center').run()} active={ia({ textAlign: 'center' })} title={t('noteEditor.alignCenter')}>
+      <ToolBtn size="sm" onClick={() => editor.chain().focus().setTextAlign('center').run()} active={ia({ textAlign: 'center' })} title={t('noteEditor.alignCenter')}>
         <Icon name={ICONS.editor.alignCenter} size={14} />
       </ToolBtn>
-      <ToolBtn onClick={() => editor.chain().focus().setTextAlign('right').run()} active={ia({ textAlign: 'right' })} title={t('noteEditor.alignRight')}>
+      <ToolBtn size="sm" onClick={() => editor.chain().focus().setTextAlign('right').run()} active={ia({ textAlign: 'right' })} title={t('noteEditor.alignRight')}>
         <Icon name={ICONS.editor.alignRight} size={14} />
       </ToolBtn>
-      <ToolBtn onClick={() => editor.chain().focus().setTextAlign('justify').run()} active={ia({ textAlign: 'justify' })} title={t('noteEditor.alignJustify')}>
+      <ToolBtn size="sm" onClick={() => editor.chain().focus().setTextAlign('justify').run()} active={ia({ textAlign: 'justify' })} title={t('noteEditor.alignJustify')}>
         <Icon name={ICONS.editor.alignJustify} size={14} />
       </ToolBtn>
 
       <Sep />
-      <ToolBtn onClick={() => editor.chain().focus().toggleBulletList().run()} active={ia('bulletList')} title={t('noteEditor.bulletList')}>
+      <ToolBtn size="sm" onClick={() => editor.chain().focus().toggleBulletList().run()} active={ia('bulletList')} title={t('noteEditor.bulletList')}>
         <Icon name={ICONS.editor.list} size={14} />
       </ToolBtn>
-      <ToolBtn onClick={() => editor.chain().focus().toggleOrderedList().run()} active={ia('orderedList')} title={t('noteEditor.orderedList')}>
+      <ToolBtn size="sm" onClick={() => editor.chain().focus().toggleOrderedList().run()} active={ia('orderedList')} title={t('noteEditor.orderedList')}>
         <Icon name={ICONS.editor.listOrdered} size={14} />
       </ToolBtn>
-      <ToolBtn onClick={() => editor.chain().focus().toggleTaskList().run()} active={ia('taskList')} title={t('noteEditor.todoList')}>
+      <ToolBtn size="sm" onClick={() => editor.chain().focus().toggleTaskList().run()} active={ia('taskList')} title={t('noteEditor.todoList')}>
         <Icon name={ICONS.editor.listChecks} size={14} />
       </ToolBtn>
 
       <Sep />
-      <ToolBtn onClick={onInsertMath} title={t('noteEditor.insertMath')}>
+      <ToolBtn size="sm" onClick={onInsertMath} title={t('noteEditor.insertMath')}>
+        <Icon name={ICONS.editor.pi} size={14} />
+      </ToolBtn>
+    </div>
+  );
+}
+
+// ─── Vertical rail toolbar (desktop, right side, outside the paper) ────────
+export function VerticalToolbar({ editor, onPreview, onInsertMath, className = '' }) {
+  const { t } = useTranslation();
+  if (!editor) return null;
+  const ia = (n, a) => editor.isActive(n, a);
+
+  return (
+    <div
+      className={cn(
+        'flex-col items-center gap-1 py-3 px-2 bg-surface border border-border rounded-xl shadow-card shrink-0 my-3 max-h-[calc(100%-1.5rem)] overflow-y-auto sidebar-scroll',
+        className
+      )}
+    >
+      <ToolBtn size="sm" onClick={onPreview} title={t('noteEditor.readMode')} tooltipSide="left">
+        <Icon name={ICONS.ui.eye} size={16} />
+      </ToolBtn>
+      <SepV />
+      <FontSizeDropdown editor={editor} vertical />
+      <SepV />
+      <ToolBtn size="sm" onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} title={t('noteEditor.undo')} tooltipSide="left">
+        <Icon name={ICONS.editor.undo} size={14} />
+      </ToolBtn>
+      <ToolBtn size="sm" onClick={() => editor.chain().focus().redo().run()} disabled={!editor.can().redo()} title={t('noteEditor.redo')} tooltipSide="left">
+        <Icon name={ICONS.editor.redo} size={14} />
+      </ToolBtn>
+      <SepV />
+      <ToolBtn size="sm" onClick={() => editor.chain().focus().toggleBold().run()} active={ia('bold')} title={t('noteEditor.bold')} tooltipSide="left">
+        <Icon name={ICONS.editor.bold} size={14} />
+      </ToolBtn>
+      <ToolBtn size="sm" onClick={() => editor.chain().focus().toggleItalic().run()} active={ia('italic')} title={t('noteEditor.italic')} tooltipSide="left">
+        <Icon name={ICONS.editor.italic} size={14} />
+      </ToolBtn>
+      <ToolBtn size="sm" onClick={() => editor.chain().focus().toggleUnderline().run()} active={ia('underline')} title={t('noteEditor.underline')} tooltipSide="left">
+        <Icon name={ICONS.editor.underline} size={14} />
+      </ToolBtn>
+      <ToolBtn size="sm" onClick={() => editor.chain().focus().toggleStrike().run()} active={ia('strike')} title={t('noteEditor.strike')} tooltipSide="left">
+        <Icon name={ICONS.editor.strikethrough} size={14} />
+      </ToolBtn>
+      <SepV />
+      <ToolBtn size="sm" onClick={() => editor.chain().focus().setTextAlign('left').run()} active={ia({ textAlign: 'left' })} title={t('noteEditor.alignLeft')} tooltipSide="left">
+        <Icon name={ICONS.editor.alignLeft} size={14} />
+      </ToolBtn>
+      <ToolBtn size="sm" onClick={() => editor.chain().focus().setTextAlign('center').run()} active={ia({ textAlign: 'center' })} title={t('noteEditor.alignCenter')} tooltipSide="left">
+        <Icon name={ICONS.editor.alignCenter} size={14} />
+      </ToolBtn>
+      <ToolBtn size="sm" onClick={() => editor.chain().focus().setTextAlign('right').run()} active={ia({ textAlign: 'right' })} title={t('noteEditor.alignRight')} tooltipSide="left">
+        <Icon name={ICONS.editor.alignRight} size={14} />
+      </ToolBtn>
+      <ToolBtn size="sm" onClick={() => editor.chain().focus().setTextAlign('justify').run()} active={ia({ textAlign: 'justify' })} title={t('noteEditor.alignJustify')} tooltipSide="left">
+        <Icon name={ICONS.editor.alignJustify} size={14} />
+      </ToolBtn>
+      <SepV />
+      <ToolBtn size="sm" onClick={() => editor.chain().focus().toggleBulletList().run()} active={ia('bulletList')} title={t('noteEditor.bulletList')} tooltipSide="left">
+        <Icon name={ICONS.editor.list} size={14} />
+      </ToolBtn>
+      <ToolBtn size="sm" onClick={() => editor.chain().focus().toggleOrderedList().run()} active={ia('orderedList')} title={t('noteEditor.orderedList')} tooltipSide="left">
+        <Icon name={ICONS.editor.listOrdered} size={14} />
+      </ToolBtn>
+      <ToolBtn size="sm" onClick={() => editor.chain().focus().toggleTaskList().run()} active={ia('taskList')} title={t('noteEditor.todoList')} tooltipSide="left">
+        <Icon name={ICONS.editor.listChecks} size={14} />
+      </ToolBtn>
+      <SepV />
+      <ToolBtn size="sm" onClick={onInsertMath} title={t('noteEditor.insertMath')} tooltipSide="left">
         <Icon name={ICONS.editor.pi} size={14} />
       </ToolBtn>
     </div>
@@ -538,9 +614,22 @@ function FloatingToolbar({ editor, editorMode }) {
 }
 
 // ─── Main component ───────────────────────────────────────────────────────
-export default function NoteEditor({ content, onSave, noteId, defaultMode = 'view' }) {
+export default function NoteEditor({
+  content,
+  onSave,
+  noteId,
+  defaultMode = 'view',
+  mode,
+  onModeChange,
+  onEditorReady,
+}) {
   const { t } = useTranslation();
-  const [mode, setMode] = useState(defaultMode);
+  const [internalMode, setInternalMode] = useState(defaultMode);
+  const activeMode = mode ?? internalMode;
+  const setMode = (m) => {
+    if (mode !== undefined) onModeChange?.(m);
+    else setInternalMode(m);
+  };
   const saveTimerRef = useRef(null);
   const lastSavedRef = useRef(null);
 
@@ -582,10 +671,17 @@ export default function NoteEditor({ content, onSave, noteId, defaultMode = 'vie
   // Hanya dimuat SEKALI per note — toggle view/edit tidak boleh me-reset
   // editor (setContent ulang menimpa format font size/warna yang sudah
   // diterapkan user, padahal content prop masih markdown lama).
+  // Expose editor instance ke parent (untuk vertical rail di luar kertas)
+  useEffect(() => { if (editor) onEditorReady?.(editor); }, [editor, onEditorReady]);
+
+  // Load content ke Tiptap saat masuk edit mode.
+  // Hanya dimuat SEKALI per note — toggle view/edit tidak boleh me-reset
+  // editor (setContent ulang menimpa format font size/warna yang sudah
+  // diterapkan user, padahal content prop masih markdown lama).
   const loadedNoteIdRef = useRef(null);
   useEffect(() => {
     if (!editor) return;
-    if (mode !== 'edit') return;
+    if (activeMode !== 'edit') return;
     if (loadedNoteIdRef.current === noteId) return;
     loadedNoteIdRef.current = noteId;
     (async () => {
@@ -599,14 +695,12 @@ export default function NoteEditor({ content, onSave, noteId, defaultMode = 'vie
         setTimeout(() => editor.commands.focus('end'), 50);
       }, 0);
     })();
-  }, [noteId, mode, editor, content]);
+  }, [noteId, activeMode, editor, content]);
 
-  // Reset ke default mode saat pindah note
-  useEffect(() => { setMode(defaultMode); }, [noteId]);
   useEffect(() => () => clearTimeout(saveTimerRef.current), []);
   useEffect(() => () => { editor?.destroy(); }, [editor]);
 
-  const handleToggle = () => setMode(m => m === 'view' ? 'edit' : 'view');
+  const handleToggle = () => setMode(m => (m === 'view' ? 'edit' : 'view'));
 
   const handleInsertMath = useCallback(() => {
     if (!editor) return;
@@ -617,13 +711,13 @@ export default function NoteEditor({ content, onSave, noteId, defaultMode = 'vie
   }, [editor, t]);
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full min-h-0">
 
       {/* ═══ VIEW MODE — bersih, tanpa toolbar, scroll terisolasi ═══ */}
-      {mode === 'view' && (
+      {activeMode === 'view' && (
         <div className="flex-1 overflow-y-auto overscroll-contain sidebar-scroll">
           <div
-            className="w-full max-w-3xl mx-auto px-6 md:px-10 py-8 cursor-text min-h-full"
+            className="w-full max-w-[860px] mx-auto px-4 sm:px-6 lg:px-8 py-10 cursor-text min-h-full"
             onDoubleClick={handleToggle}
             title={t('noteEditor.doubleClickToEdit')}
           >
@@ -632,20 +726,22 @@ export default function NoteEditor({ content, onSave, noteId, defaultMode = 'vie
         </div>
       )}
 
-      {/* ═══ EDIT MODE — Tiptap WYSIWYG, scroll terisolasi ═══ */}
-      {mode === 'edit' && (
+      {/* ═══ EDIT MODE — Tiptap WYSIWYG, scroll terisolasi ═══
+          Toolbar horizontal hanya untuk <lg (rail vertikal di NoteView). */}
+      {activeMode === 'edit' && (
         <>
-          <Toolbar editor={editor} onPreview={handleToggle} onInsertMath={handleInsertMath} />
-          <div className="flex-1 overflow-y-auto overscroll-contain sidebar-scroll">
-            <div className="w-full max-w-3xl mx-auto px-6 md:px-10 py-8">
+          <Toolbar editor={editor} onPreview={handleToggle} onInsertMath={handleInsertMath} className="lg:hidden" />
+          <div className="flex-1 overflow-y-auto overscroll-contain sidebar-scroll min-h-0">
+            <div className="w-full max-w-[860px] mx-auto px-4 sm:px-6 lg:px-8 py-10">
               <EditorContent editor={editor} />
             </div>
           </div>
+          <DomCopyEnhancer selector=".note-editor-content" />
         </>
       )}
 
       {/* ═══ FLOATING TOOLBAR — custom, pure React, no BubbleMenu ═══ */}
-      <FloatingToolbar editor={editor} editorMode={mode} />
+      <FloatingToolbar editor={editor} editorMode={activeMode} />
 
       {/* ═══ Floating edit/preview button ═══ */}
       <button
@@ -657,9 +753,9 @@ export default function NoteEditor({ content, onSave, noteId, defaultMode = 'vie
           'bg-primary text-white hover:bg-primary/90',
           'transition-all hover:scale-105'
         )}
-        title={mode === 'view' ? t('noteEditor.editNote') : t('noteEditor.preview')}
+        title={activeMode === 'view' ? t('noteEditor.editNote') : t('noteEditor.preview')}
       >
-        {mode === 'view' ? <Icon name={ICONS.actions.edit} size={18} /> : <Icon name={ICONS.ui.eye} size={18} />}
+        {activeMode === 'view' ? <Icon name={ICONS.actions.edit} size={18} /> : <Icon name={ICONS.ui.eye} size={18} />}
       </button>
     </div>
   );
