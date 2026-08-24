@@ -41,6 +41,7 @@ export default function CreateFlashcardModal({ open, subjects, onClose, onSucces
       onClose={onClose}
       size="md"
       title={<span className="flex items-center gap-2"><Icon name={ICONS.nav.flashcard} size={18} className="text-primary" />{t('flashcard.manualModalTitle')}</span>}
+      description={t('flashcard.manualModalDesc')}
       footer={
         <>
           <Button variant="ghost" onClick={onClose} disabled={isSubmitting}>{t('common.cancel')}</Button>
@@ -55,7 +56,6 @@ export default function CreateFlashcardModal({ open, subjects, onClose, onSucces
         <div>
           <label className="mb-1 block text-xs font-medium text-text-secondary">{t('flashcard.subjectLabel')}</label>
           <Select
-            required
             value={formData.subject_id}
             onChange={(e) => setFormData(p => ({ ...p, subject_id: e.target.value }))}
           >
@@ -68,8 +68,8 @@ export default function CreateFlashcardModal({ open, subjects, onClose, onSucces
         <div>
           <label className="mb-1 block text-xs font-medium text-text-secondary">{t('flashcard.questionFrontLabel')}</label>
           <Textarea
-            required
             rows={2}
+            placeholder={t('flashcard.questionPlaceholder')}
             value={formData.question}
             onChange={(e) => setFormData(p => ({ ...p, question: e.target.value }))}
           />
@@ -77,8 +77,8 @@ export default function CreateFlashcardModal({ open, subjects, onClose, onSucces
         <div>
           <label className="mb-1 block text-xs font-medium text-text-secondary">{t('flashcard.answerBackLabel')}</label>
           <Textarea
-            required
             rows={3}
+            placeholder={t('flashcard.answerPlaceholder')}
             value={formData.answer}
             onChange={(e) => setFormData(p => ({ ...p, answer: e.target.value }))}
           />

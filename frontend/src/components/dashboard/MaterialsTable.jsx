@@ -61,7 +61,7 @@ export default function MaterialsTable({ materials, subjectId, compact = false }
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={t('subjectDashboard.searchMaterials', 'Cari materi...')}
-                className="w-36 sm:w-44 bg-subtle border border-border rounded-lg pl-7 pr-2 py-1.5 text-xs text-white placeholder:text-text-secondary focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all"
+                className="w-36 sm:w-44 bg-subtle border border-border rounded-lg pl-7 pr-2 py-1.5 text-xs text-text placeholder:text-text-secondary focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all"
               />
             </div>
             <button
@@ -103,7 +103,7 @@ export default function MaterialsTable({ materials, subjectId, compact = false }
                   <td className={`px-3 ${rowPy}`}>
                     <div className="flex items-center gap-2.5">
                       <FileTypeIcon type={(m.filename || '').split('.').pop()?.toUpperCase() || m.material_type} className="text-base text-text-secondary" />
-                      <span className="text-sm text-white font-medium truncate max-w-[220px]" title={m.filename}>{m.filename}</span>
+                      <span className="text-sm text-text font-medium truncate max-w-[220px]" title={m.filename}>{m.filename}</span>
                     </div>
                   </td>
                   <td className={`px-3 ${rowPy} text-text-secondary text-xs`}>{(m.filename || '').split('.').pop()?.toUpperCase() || m.material_type}</td>

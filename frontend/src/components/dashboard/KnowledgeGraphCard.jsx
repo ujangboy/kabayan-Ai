@@ -77,7 +77,7 @@ export default function KnowledgeGraphCard({ graph }) {
                 const hasConcepts = childTopics.some(n => (n.concepts || []).length > 0);
 
                 return (
-                  <div key={bab.id} className="bg-black/25 border border-border rounded-xl p-3">
+                  <div key={bab.id} className="bg-subtle border border-border rounded-xl p-3">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-xs font-semibold text-text">{bab.label}</span>
                       <div className="flex items-center gap-2">
@@ -119,8 +119,8 @@ export default function KnowledgeGraphCard({ graph }) {
               })}
 
               {ungrouped.length > 0 && (
-                <div className="bg-black/25 border border-border rounded-xl p-3">
-                  <p className="text-xs font-semibold text-text mb-2">{t('studyGraph.ungrouped')}</p>
+                 <div className="bg-subtle border border-border rounded-xl p-3">
+                   <p className="text-xs font-semibold text-text mb-2">{t('studyGraph.ungrouped')}</p>
                   <div className="flex flex-wrap gap-1.5">
                     {ungrouped.map(n => {
                       const sb = statusBadge(n);
@@ -137,8 +137,8 @@ export default function KnowledgeGraphCard({ graph }) {
               )}
 
               {dependencies.length > 0 && (
-                <div className="bg-black/25 border border-border rounded-xl p-3">
-                  <p className="text-xs font-semibold text-text mb-2">{t('studyGraph.dependencies')}</p>
+                 <div className="bg-subtle border border-border rounded-xl p-3">
+                   <p className="text-xs font-semibold text-text mb-2">{t('studyGraph.dependencies')}</p>
                   <div className="flex flex-wrap gap-1.5">
                     {dependencies.map((e, i) => (
                       <span key={i} className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-card border border-border text-3xs text-text-secondary">

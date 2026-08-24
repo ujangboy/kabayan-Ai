@@ -79,7 +79,7 @@ export default function DetailModal({ open = false, historySessionId, onClose, o
           </div>
         </div>
 
-        <div className="flex gap-1 mt-4">
+        <div className="flex gap-1 mt-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory -mx-1 px-1">
           {[
             { id:'overview', label:t('exam.detail.overview'),  icon: ICONS.learning.barChart },
             { id:'review',   label:t('exam.detail.review'),     icon: ICONS.learning.bookOpen },
@@ -87,7 +87,7 @@ export default function DetailModal({ open = false, historySessionId, onClose, o
             { id:'attempts', label:t('exam.detail.attempts'),    icon: ICONS.actions.replay },
           ].map(({ id, label, icon }) => (
             <button type="button" key={id} onClick={() => setTab(id)}
-              className={cn('flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
+              className={cn('flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap shrink-0 snap-start',
                 tab === id ? 'bg-primary text-white' : 'bg-card text-text-secondary hover:text-text border border-border')}>
               <Icon name={icon} size={11} />{label}
             </button>
@@ -128,9 +128,9 @@ export default function DetailModal({ open = false, historySessionId, onClose, o
         </AnimatePresence>
       </div>
 
-      <div className="p-4 border-t border-border shrink-0 flex gap-2 flex-wrap">
+      <div className="p-4 border-t border-border shrink-0 flex items-center gap-2 flex-wrap justify-end">
         <RetryButton historySessionId={historySessionId} sessionData={data} onClose={onClose} onResume={onResume} />
-         <button type="button" onClick={onClose} className="btn-ghost text-sm border border-border ml-auto">
+         <button type="button" onClick={onClose} className="btn-ghost text-sm border border-border">
            {t('common.close')}
          </button>
       </div>
@@ -174,12 +174,12 @@ function OverviewTab({ data }) {
       {hasGrowth && (
         <div className="card-base p-4">
            <p className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-3">{t('exam.detail.gradeProgression')}</p>
-          <div className="flex items-end gap-3 h-16">
+          <div className="flex items-end gap-3 h-24">
             {attempts.map((a, i) => {
-              const h = Math.max(8, ((a.score||0)/100)*64);
+              const h = Math.max(8, ((a.score||0)/100)*88);
               return (
-                <div key={a.id} className="flex flex-col items-center gap-1 flex-1">
-                  <span className="text-3xs font-bold text-text">{a.score}</span>
+                <div key={a.id} className="flex flex-col items-center gap-1 flex-1 min-w-0">
+                  <span className="text-2xs font-bold text-text">{a.score}</span>
                   <div className="w-full rounded-t-md bg-primary/20 relative overflow-hidden"
                     style={{ height: `${h}px` }}>
                     <div className="absolute bottom-0 left-0 right-0 bg-primary rounded-t-md"

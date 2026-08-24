@@ -63,7 +63,7 @@ export default function ScoreChart({ history }) {
               <circle
                 cx={x(i)} cy={y(d.score)}
                 r={isHovered ? 6 : 4}
-                className={cn('stroke-card', d.score >= 70 ? 'fill-success' : d.score >= 50 ? 'fill-warning' : 'fill-danger')}
+                className={cn('stroke-strong', d.score >= 70 ? 'fill-success' : d.score >= 50 ? 'fill-warning' : 'fill-danger')}
                 strokeWidth="1.5"
               />
               <text x={x(i)} y={y(d.score) - 10} fontSize="10" fontWeight="700" className="fill-text" textAnchor="middle">

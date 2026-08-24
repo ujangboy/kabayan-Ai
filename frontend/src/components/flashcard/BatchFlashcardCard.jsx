@@ -97,7 +97,7 @@ export default function BatchFlashcardCard({ group, onStart, onReview, onHistory
       )}
 
       {cards[0] && (
-        <div className="bg-black/25 rounded-lg p-3 border border-border text-xs text-text-secondary line-clamp-2">
+        <div className="bg-subtle rounded-lg p-3 border border-border text-xs text-text-secondary line-clamp-2">
           <MathMarkdown>{cards[0].question}</MathMarkdown>
         </div>
       )}

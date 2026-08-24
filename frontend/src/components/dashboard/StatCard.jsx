@@ -13,7 +13,7 @@ export default function StatCard({ icon, label, value, color = 'text-text', suff
         <Icon name={icon} size={15} className={color} />
       </div>
       <div className="min-w-0">
-        <p className="text-lg font-semibold leading-none text-white">
+        <p className="text-lg font-semibold leading-none text-text">
           {value != null ? value : '—'}
           {suffix && <span className="text-xs text-text-secondary font-normal ml-0.5">{suffix}</span>}
         </p>

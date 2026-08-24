@@ -49,7 +49,7 @@ function MetricBar({ subject, masteryPct, t }) {
             <Icon name={it.icon} size={14} className={it.color} />
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-semibold leading-none text-white truncate">
+            <p className="text-sm font-semibold leading-none text-text truncate">
               {it.value != null ? it.value : '—'}
               {it.suffix && <span className="text-2xs font-normal text-text-secondary ml-0.5">{it.suffix}</span>}
             </p>
@@ -172,7 +172,7 @@ export default function SubjectDashboardPage() {
                   <Icon name={ICONS.learning.progress} size={18} className="text-white" />
                 </div>
                 <div className="min-w-0">
-                  <h1 className="text-xl font-semibold tracking-tight text-white truncate">{subject.name}</h1>
+                  <h1 className="text-xl font-semibold tracking-tight text-text truncate">{subject.name}</h1>
                   <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                     {subject.semester && (
                       <span className="text-2xs px-2 py-0.5 rounded-full bg-subtle border border-border text-text">
@@ -237,7 +237,7 @@ export default function SubjectDashboardPage() {
                   <button
                     key={tab.key}
                     onClick={() => setActiveTab(tab.key)}
-                    className={`relative flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium rounded-t-lg transition-colors ${activeTab === tab.key ? 'text-white bg-subtle' : 'text-text-secondary hover:text-white hover:bg-subtle'}`}
+                    className={`relative flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium rounded-t-lg transition-colors ${activeTab === tab.key ? 'text-text bg-subtle' : 'text-text-secondary hover:text-text hover:bg-subtle'}`}
                   >
                     <Icon name={tab.icon} size={14} className={activeTab === tab.key ? 'text-primary-light' : 'text-text-secondary'} />
                     {tab.label}
@@ -284,7 +284,7 @@ export default function SubjectDashboardPage() {
                                     <Icon name={meta.icon} size={12} />
                                   </div>
                                   <div className="min-w-0 flex-1">
-                                    <p className="text-xs font-medium text-white truncate" title={a.label}>{a.label}</p>
+                                    <p className="text-xs font-medium text-text truncate" title={a.label}>{a.label}</p>
                                     <p className="text-2xs text-text-secondary">{formatDate(a.date)}{a.score != null ? ` • ${a.score}` : ''}</p>
                                   </div>
                                   <span className="text-3xs px-1.5 py-0.5 rounded bg-subtle border border-border text-text-secondary shrink-0">{meta.label}</span>

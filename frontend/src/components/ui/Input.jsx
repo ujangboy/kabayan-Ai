@@ -24,7 +24,7 @@ export const Textarea = forwardRef(({ className, error = false, ...props }, ref)
     ref={ref}
     className={cn(
       base,
-      'resize-y',
+      'resize-y text-text',
       error && 'border-danger/60 focus:border-danger/60 focus:ring-danger/30',
       className
     )}
@@ -36,7 +36,7 @@ Textarea.displayName = 'Textarea';
 export const Select = forwardRef(({ className, error = false, children, ...props }, ref) => (
   <select
     ref={ref}
-    style={{ colorScheme: 'dark' }}
+    style={{ colorScheme: 'light dark' }}
     className={cn(
       base,
       // Override keras agar teks selalu terang di bg gelap — fix screenshot: text gelap di bg gelap

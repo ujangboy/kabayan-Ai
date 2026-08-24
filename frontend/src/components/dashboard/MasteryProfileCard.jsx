@@ -27,30 +27,30 @@ export default function MasteryProfileCard({ profile, subject }) {
 
       {hasData ? (
         <div className="grid grid-cols-3 gap-3">
-          <div className="bg-black/25 border border-border rounded-xl p-3 text-center">
+          <div className="bg-subtle border border-border rounded-xl p-3 text-center">
             <p className="text-2xl font-bold text-text">{bestScore ?? level}<span className="text-xs text-text-muted font-normal">/100</span></p>
             <p className="text-3xs text-text-secondary mt-1">{t('subjectDashboard.profileMastery', 'Penguasaan Materi')}</p>
           </div>
-          <div className="bg-black/25 border border-border rounded-xl p-3 text-center">
+          <div className="bg-subtle border border-border rounded-xl p-3 text-center">
             <p className="text-2xl font-bold text-danger">{weakCount}</p>
             <p className="text-3xs text-text-secondary mt-1">{t('subjectDashboard.profileWeak', 'Topik Lemah')}</p>
           </div>
-          <div className="bg-black/25 border border-border rounded-xl p-3 text-center">
+          <div className="bg-subtle border border-border rounded-xl p-3 text-center">
             <p className="text-2xl font-bold text-success">{strongCount}</p>
             <p className="text-3xs text-text-secondary mt-1">{t('subjectDashboard.profileStrong', 'Topik Dikuasai')}</p>
           </div>
         </div>
       ) : (
         <div className="grid grid-cols-3 gap-3">
-          <div className="bg-black/25 border border-border rounded-xl p-3 text-center">
+          <div className="bg-subtle border border-border rounded-xl p-3 text-center">
             <p className="text-2xl font-bold text-text-muted">—</p>
             <p className="text-3xs text-text-secondary mt-1">{t('subjectDashboard.profileMastery', 'Penguasaan Materi')}</p>
           </div>
-          <div className="bg-black/25 border border-border rounded-xl p-3 text-center">
+          <div className="bg-subtle border border-border rounded-xl p-3 text-center">
             <p className="text-2xl font-bold text-text-muted">—</p>
             <p className="text-3xs text-text-secondary mt-1">{t('subjectDashboard.profileWeak', 'Topik Lemah')}</p>
           </div>
-          <div className="bg-black/25 border border-border rounded-xl p-3 text-center">
+          <div className="bg-subtle border border-border rounded-xl p-3 text-center">
             <p className="text-2xl font-bold text-text-muted">—</p>
             <p className="text-3xs text-text-secondary mt-1">{t('subjectDashboard.profileStrong', 'Topik Dikuasai')}</p>
           </div>

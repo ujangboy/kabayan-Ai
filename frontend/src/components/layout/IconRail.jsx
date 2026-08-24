@@ -50,7 +50,7 @@ export default function IconRail() {
               onClick={toggleContextSidebar}
               aria-label={contextCollapsed ? t('common.expand', 'Tampilkan sidebar') : t('common.collapse', 'Sembunyikan sidebar')}
               aria-expanded={!contextCollapsed}
-              className="flex h-7 w-7 items-center justify-center rounded-lg bg-subtle border border-strong text-text hover:bg-wash-strong hover:text-white hover:border-strong transition-all duration-200 shadow-sm"
+              className="flex h-7 w-7 items-center justify-center rounded-lg bg-subtle border border-strong text-text hover:bg-wash-strong hover:text-text hover:border-strong transition-all duration-200 shadow-sm"
             >
               <Icon name={contextCollapsed ? ICONS.actions.panelLeft : ICONS.actions.panelLeftClose} size={14} />
             </button>

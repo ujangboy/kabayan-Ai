@@ -55,17 +55,17 @@ export default function ProgressCard({ progress }) {
         <div className="space-y-4">
           {/* Stats */}
           <div className="grid grid-cols-3 gap-3">
-            <div className="bg-black/25 border border-border rounded-xl p-3 text-center">
+            <div className="bg-subtle border border-border rounded-xl p-3 text-center">
               <p className="text-xl font-bold text-warning flex items-center justify-center gap-1">
                 <Icon name={ICONS.learning.streak} size={16} className="shrink-0" />{streak.current_streak_days ?? 0}
               </p>
               <p className="text-3xs text-text-secondary mt-0.5">{t('studyProgress.streakCurrent')}</p>
             </div>
-            <div className="bg-black/25 border border-border rounded-xl p-3 text-center">
+            <div className="bg-subtle border border-border rounded-xl p-3 text-center">
               <p className="text-xl font-bold text-text">{streak.longest_streak_days ?? 0}</p>
               <p className="text-3xs text-text-secondary mt-0.5">{t('studyProgress.streakLongest')}</p>
             </div>
-            <div className="bg-black/25 border border-border rounded-xl p-3 text-center">
+            <div className="bg-subtle border border-border rounded-xl p-3 text-center">
               <p className="text-xl font-bold text-text">{streak.total_active_days ?? 0}</p>
               <p className="text-3xs text-text-secondary mt-0.5">{t('studyProgress.activeDays')}</p>
             </div>
@@ -78,7 +78,7 @@ export default function ProgressCard({ progress }) {
               {windowDays.map((d) => (
                 <div key={d.date} className="flex-1 flex flex-col items-center justify-end gap-1" title={`${d.date}`}>
                   <div
-                    className={`w-full rounded-sm transition-colors ${d.active ? 'bg-warning' : 'bg-border/60'}`}
+                    className={`w-full rounded-sm transition-colors ${d.active ? 'bg-warning' : 'bg-wash-strong'}`}
                     style={{ height: d.active ? '100%' : '22%' }}
                   />
                 </div>
@@ -88,7 +88,7 @@ export default function ProgressCard({ progress }) {
           </div>
 
           {/* Mastery trend */}
-          <div className="bg-black/25 border border-border rounded-xl p-3">
+            <div className="bg-subtle border border-border rounded-xl p-3">
             <div className="flex items-center justify-between mb-2">
               <p className="text-3xs font-semibold text-text-secondary uppercase tracking-wider flex items-center gap-1">
                 <Icon name={ICONS.learning.trophy} size={11} /> {t('studyProgress.trendTitle')}
@@ -144,7 +144,7 @@ function TrendMiniChart({ series }) {
         {series.map((s, i) => (
           <g key={i} className="cursor-pointer" onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(null)}>
             <rect x={x(i) - 8} y={0} width="16" height={H} fill="transparent" />
-            <circle cx={x(i)} cy={y(s.avg_accuracy)} r={hover === i ? 4.5 : 3} className={cn('stroke-card', s.avg_accuracy >= 70 ? 'fill-success' : s.avg_accuracy >= 40 ? 'fill-warning' : 'fill-danger')} strokeWidth="1.5" />
+            <circle cx={x(i)} cy={y(s.avg_accuracy)} r={hover === i ? 4.5 : 3} className={cn('stroke-strong', s.avg_accuracy >= 70 ? 'fill-success' : s.avg_accuracy >= 40 ? 'fill-warning' : 'fill-danger')} strokeWidth="1.5" />
           </g>
         ))}
       </svg>

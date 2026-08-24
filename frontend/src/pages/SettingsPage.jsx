@@ -42,7 +42,7 @@ export default function SettingsPage() {
             <Icon name={ICONS.nav.settings} size={18} className="text-white" />
           </div>
           <div>
-            <h1 className="text-xl font-semibold text-white">{t('settings.title')}</h1>
+            <h1 className="text-xl font-semibold text-text">{t('settings.title')}</h1>
             <p className="text-text-secondary text-sm mt-0.5">{t('settings.subtitle')}</p>
           </div>
         </div>
@@ -65,7 +65,7 @@ export default function SettingsPage() {
                     'relative flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-[background-color,color] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] shrink-0 md:shrink',
                     isActive
                       ? 'text-white'
-                      : 'text-text-secondary hover:text-white hover:bg-wash'
+                      : 'text-text-secondary hover:text-text hover:bg-wash'
                   )}
                 >
                   {isActive && (
