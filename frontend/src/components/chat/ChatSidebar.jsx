@@ -46,8 +46,8 @@ export default function ChatSidebar() {
   };
   const groupDateLabel = (d) => {
     if (isNaN(d.getTime())) return t('chat.unknownDate');
-    if (isToday(d)) return t('chat.today');
-    if (isYesterday(d)) return t('chat.yesterday');
+    if (isToday(d)) return t('chat.groupToday');
+    if (isYesterday(d)) return t('chat.groupYesterday');
     return formatChatDate(d.toISOString());
   };
   const chatDate = (c) => new Date(c.updatedAt || c.created_at || c.createdAt || 0);
@@ -171,7 +171,7 @@ export default function ChatSidebar() {
                     'group relative overflow-hidden flex items-center gap-2 rounded-xl px-2.5 py-2 cursor-pointer transition-all duration-150 border',
                     c.id === currentChatId
                       ? 'border-primary/20 text-primary-light'
-                      : 'border-transparent hover:bg-card hover:border-border'
+                      : 'border-transparent hover:bg-card-hover hover:border-strong'
                   )}
                   onClick={() => {
                     setCurrentChat(c.id);
@@ -182,7 +182,7 @@ export default function ChatSidebar() {
                     <motion.span
                       layoutId="chat-active-indicator"
                       transition={springWave}
-                      className="absolute inset-0 bg-primary/10"
+                      className="absolute inset-0 bg-primary/10 pointer-events-none"
                     />
                   )}
                   <div className="relative z-10 flex-1 min-w-0">
@@ -218,8 +218,8 @@ export default function ChatSidebar() {
                     )}
                   </div>
                   {editingChatId !== c.id && (
-                    <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                      <Tooltip label={t('chat.rename')}>
+                    <div className="relative z-10 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                      <Tooltip label={t('chat.renameChat')}>
                         <button
                           onClick={(e) => { e.stopPropagation(); handleRename(c); }}
                           className="p-1 rounded-lg hover:bg-card-hover text-text-muted hover:text-text transition-colors"

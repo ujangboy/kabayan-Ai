@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import MessageBubble from './MessageBubble';
-import TypingIndicator from './TypingIndicator';
 import ChatEmptyState from './ChatEmptyState';
 
 export default function ChatMessageList({ chat, isCurrentChatStreaming, onFeedback, onPromptSelect }) {
@@ -32,7 +31,7 @@ export default function ChatMessageList({ chat, isCurrentChatStreaming, onFeedba
   if (messages.length === 0) {
     return (
       <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto w-full max-w-3xl">
+        <div className="mx-auto w-full max-w-4xl px-4 sm:px-6">
           <ChatEmptyState tutorMode={!!chat?.tutorEnabled} onPromptSelect={onPromptSelect} />
         </div>
       </div>
@@ -43,7 +42,7 @@ export default function ChatMessageList({ chat, isCurrentChatStreaming, onFeedba
 
   return (
     <div className="flex-1 overflow-y-auto">
-      <div className="mx-auto w-full max-w-3xl px-4 py-6 space-y-6">
+      <div className="mx-auto w-full max-w-4xl px-4 sm:px-6 py-6 space-y-6">
         {messages.map((m, i) => (
           <motion.div
             key={m.id || `${i}-${m.role}`}
@@ -59,7 +58,6 @@ export default function ChatMessageList({ chat, isCurrentChatStreaming, onFeedba
             />
           </motion.div>
         ))}
-        {isCurrentChatStreaming && messages[messages.length - 1]?.content === '' && <TypingIndicator />}
         <div ref={messagesEndRef} />
       </div>
     </div>

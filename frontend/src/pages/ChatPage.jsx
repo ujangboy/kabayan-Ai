@@ -41,7 +41,7 @@ export default function ChatPage() {
         initial={false}
         animate={{ width: historyCollapsed ? 0 : 256, opacity: historyCollapsed ? 0 : 1 }}
         transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-        className="shrink-0 overflow-hidden border-r border-border bg-sidebar shadow-sidebar"
+        className="shrink-0 overflow-hidden border-r border-strong bg-subtle"
         style={{ willChange: 'width' }}
       >
         <div className="w-64 h-full">
@@ -51,10 +51,10 @@ export default function ChatPage() {
 
       <div className="flex-1 flex flex-col min-w-0 relative overflow-hidden bg-background">
         {/* Top bar with PanelLeft toggle */}
-        <div className="shrink-0 flex items-center gap-2 px-3 py-2 border-b border-border bg-surface/80 backdrop-blur-sm">
+        <div className="shrink-0 flex items-center gap-2 px-3 py-2 border-b border-strong bg-popover">
           <button
             onClick={() => setHistoryCollapsed(v => !v)}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-card border border-border text-text hover:bg-card-hover hover:border-border transition-all duration-150 text-xs font-medium"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-subtle border border-strong text-text hover:bg-wash-strong hover:border-strong transition-all duration-150 text-xs font-medium"
             title={historyCollapsed ? 'Tampilkan riwayat' : 'Sembunyikan riwayat'}
             aria-label="Toggle history"
             aria-expanded={!historyCollapsed}
@@ -76,9 +76,9 @@ export default function ChatPage() {
               onPromptSelect={sendMessage}
             />
           </div>
-          {/* Floating composer centered max-w-3xl bottom-6 */}
-          <div className="shrink-0 px-4 pb-6 pt-2 bg-gradient-to-t from-base via-base/95 to-transparent">
-            <div className="mx-auto w-full max-w-3xl">
+          {/* Floating composer centered max-w-4xl bottom-6 */}
+          <div className="shrink-0 px-4 sm:px-6 pb-6 pt-2 bg-gradient-to-t from-base via-base/95 to-transparent">
+            <div className="mx-auto w-full max-w-4xl">
               <ChatComposer
                 onSend={sendMessage}
                 isStreaming={isCurrentChatStreaming}

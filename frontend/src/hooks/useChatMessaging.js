@@ -9,26 +9,21 @@ import { useToast } from '@/components/Toast';
 export function useChatMessaging() {
   const { t } = useTranslation();
   const { toast } = useToast();
-  const { chatOp, notebookOp } = usePendingOperation();
-  const {
-    addMessage,
-    updateLastMessage,
-    patchLastMessage,
-    setMessageFeedback,
-    setStreaming,
-    getCurrentChat,
-    setTutorBadge,
-  } = useChatStore();
-
+  const chatOp = usePendingOperation();
+  const notebookOp = usePendingOperation();
   const [noteToast, setNoteToast] = useState(null);
   const [isNoteSaving, setIsNoteSaving] = useState(false);
   const isNoteSavingRef = useRef(false);
 
   const sendMessage = async (text) => {
-    const chat = getCurrentChat();
+    const state = useChatStore.getState();
+    const chat = state.getCurrentChat();
+    const chatId = chat?.id;
     const trimmed = text.trim();
-    if (!trimmed) return;
+    if (!trimmed || !chatId) return;
     const isTutor = !!chat?.tutorEnabled;
+    const { addMessage, updateLastMessage, setStreaming, selectedDocs } = state;
+
     const newMsg = {
       id: `temp-${Date.now()}`,
       role: 'user',
@@ -41,91 +36,75 @@ export function useChatMessaging() {
       content: '',
       created_at: new Date().toISOString(),
     };
-    addMessage(newMsg);
-    addMessage(assistantPlaceholder);
-    const chatId = chat?.id;
-    const tutorSubject = chat?.tutorSubject || '';
-    const tutorLevel = chat?.tutorLevel || 'intermediate';
+    addMessage(chatId, newMsg);
+    addMessage(chatId, assistantPlaceholder);
     chatOp.start(chatId);
+    setStreaming(true, chatId);
     try {
+      const history = (chat.messages || []).map((m) => ({ role: m.role, content: m.content }));
       if (isTutor) {
-        setStreaming(true, chatId);
-        const note = await notesAPI.getOrCreateNote(chatId);
-        const noteId = note?.id;
-        let acc = '';
-        let firstChunk = true;
-        for await (const chunk of tutorAPI.streamTutorReply({
+        await streamChat({
           chatId,
-          message: trimmed,
-          subject: tutorSubject,
-          level: tutorLevel,
-          noteId,
-        })) {
-          if (chunk.event === 'message') {
-            acc += chunk.data;
-            updateLastMessage((m) => (m.role === 'assistant' ? { ...m, content: acc } : m));
-          } else if (chunk.event === 'note') {
-            if (firstChunk) {
-              firstChunk = false;
-              patchLastMessage((m) => (m.role === 'assistant' ? { ...m, note_saved: true } : m));
-            } else {
-              patchLastMessage((m) => (m.role === 'assistant' ? { ...m, note_saved: true } : m));
+          endpoint: '/api/tutor/chat',
+          body: {
+            message: trimmed,
+            history,
+            session_id: String(chatId),
+            mata_kuliah: chat.tutorSubject || null,
+            student_level: chat.tutorLevel || 'intermediate',
+            exam_session_id: chat.examSessionId || null,
+            rag_docs: selectedDocs || [],
+          },
+          onChunk: (chunk, full) => {
+            let clean = full;
+            if (full.startsWith('\x00TYPE:')) {
+              const end = full.indexOf('\x00', 1);
+              if (end !== -1) clean = full.slice(end + 1);
             }
-          } else if (chunk.event === 'error') {
-            const errMsg = chunk.data?.message || chunk.data || 'Terjadi kesalahan pada tutor.';
-            updateLastMessage((m) => (m.role === 'assistant' ? { ...m, content: `Error: ${errMsg}` } : m));
-          }
-        }
-        setStreaming(false, chatId);
-      } else {
-        setStreaming(true, chatId);
-        const res = await streamChat(chatId, trimmed, (partial) => {
-          updateLastMessage((m) => (m.role === 'assistant' ? { ...m, content: partial } : m));
+            updateLastMessage(chatId, clean);
+          },
         });
-        if (!res.ok) {
-          let msg = 'Gagal memproses permintaan.';
-          try {
-            const body = await res.json();
-            if (body?.detail) msg = body.detail;
-          } catch {}
-          updateLastMessage((m) => (m.role === 'assistant' ? { ...m, content: `Error: ${msg}` } : m));
-          setStreaming(false, chatId);
-          return;
-        }
-        let acc = '';
-        const reader = res.body.getReader();
-        const decoder = new TextDecoder();
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          acc += decoder.decode(value, { stream: true });
-          updateLastMessage((m) => (m.role === 'assistant' ? { ...m, content: acc } : m));
-        }
-        setStreaming(false, chatId);
+      } else {
+        await streamChat({
+          chatId,
+          endpoint: '/api/chat',
+          body: {
+            message: trimmed,
+            history,
+            documents: selectedDocs || [],
+            session_id: String(chatId),
+          },
+          onChunk: (chunk, full) => updateLastMessage(chatId, full),
+        });
       }
     } catch (err) {
       console.error(err);
-      updateLastMessage((m) => (m.role === 'assistant' ? { ...m, content: 'Error: Terjadi kesalahan saat memproses pesan.' } : m));
-      setStreaming(false, chatId);
+      updateLastMessage(chatId, 'Error: ' + (err?.message || t('chat.errorGeneric')));
     } finally {
+      setStreaming(false, chatId);
       chatOp.finish(chatId);
     }
   };
 
   const handleFeedback = async (rating) => {
-    const chat = getCurrentChat();
+    const state = useChatStore.getState();
+    const chat = state.getCurrentChat();
     const currentChatId = chat?.id;
     if (!currentChatId) return;
+    const msgs = chat.messages || [];
+    const last = msgs[msgs.length - 1];
+    const msgId = last?.msgId ?? null;
     try {
-      await tutorAPI.sendFeedback(currentChatId, rating);
-      setMessageFeedback(rating);
+      await tutorAPI.feedback({ rating, message_id: msgId });
+      state.setMessageFeedback(currentChatId, msgId, rating);
     } catch {
       toast.error(t('chat.feedbackError'));
     }
   };
 
   const generateAndSaveNote = async () => {
-    const chat = getCurrentChat();
+    const state = useChatStore.getState();
+    const chat = state.getCurrentChat();
     const currentChatId = chat?.id;
     if (!currentChatId) return;
     if (isNoteSavingRef.current) return;
@@ -142,9 +121,9 @@ export function useChatMessaging() {
     const noteType = chat.tutorEnabled ? 'tutor' : 'chat';
     notebookOp.start(currentChatId);
     try {
-      const response = await notesAPI.generateNote(currentChatId, noteType);
+      const response = await notesAPI.generate({ chat_id: currentChatId, type: noteType });
       const noteId = response?.note_id;
-      setTutorBadge(true);
+      state.setTutorBadge(true);
       setNoteToast({ message: t('chat.noteSaved'), note_id: noteId });
       setTimeout(() => setNoteToast(null), 3000);
     } catch (error) {

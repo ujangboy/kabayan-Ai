@@ -15,9 +15,14 @@ export default function MessageBubble({ message, isLast, tutorMode, onFeedback }
 
   if (isUser) {
     return (
-      <div className="flex justify-end">
-        <div className="max-w-[80%] rounded-lg rounded-br-sm bg-primary text-primary-foreground px-4 py-2.5 text-base leading-relaxed whitespace-pre-wrap">
-          {message.content}
+      <div className="flex justify-end group">
+        <div className="relative max-w-[80%]">
+          <div className="rounded-lg rounded-br-sm bg-primary text-primary-foreground px-4 py-2.5 text-base leading-relaxed whitespace-pre-wrap">
+            {message.content}
+          </div>
+          <div className="absolute -bottom-6 right-0 flex items-center">
+            <CopyButton text={message.content} className="opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity duration-150 sm:opacity-0" />
+          </div>
         </div>
       </div>
     );
@@ -40,9 +45,11 @@ export default function MessageBubble({ message, isLast, tutorMode, onFeedback }
               <Icon name={ICONS.learning.bookOpen} size={12} /> {t('chat.noteSavedBadge')}
             </div>
           )}
-          <div className="rounded-lg rounded-tl-sm bg-base border border-border px-4 py-2.5 text-base leading-relaxed">
+          <div className="rounded-lg rounded-tl-sm bg-base border border-strong px-4 py-2.5 text-base leading-relaxed">
             {message.content === '' ? (
               <TypingIndicator />
+            ) : message.content.startsWith('Error:') ? (
+              <span className="text-danger whitespace-pre-wrap">{message.content.slice(6)}</span>
             ) : isAssistant ? (
               <MathMarkdown>{message.content}</MathMarkdown>
             ) : (

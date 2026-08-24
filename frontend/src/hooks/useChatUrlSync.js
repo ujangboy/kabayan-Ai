@@ -6,21 +6,15 @@ import { streamChat } from '@/services/tutorStream';
 export function useChatUrlSync() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const {
-    chats,
-    currentChatId,
-    createChat,
-    setCurrentChat,
-    setChatTutor,
-    addMessage,
-    setStreaming,
-    updateLastMessage,
-  } = useChatStore();
+  const currentChatId = useChatStore((s) => s.currentChatId);
   const tutorHandledRef = useRef(false);
 
   useEffect(() => {
     const tutorParam = searchParams.get('tutor');
     if (tutorParam) navigate('/chat', { replace: true });
+
+    const state = useChatStore.getState();
+    const { chats, currentChatId, createChat, setCurrentChat, setChatTutor, addMessage, setStreaming, updateLastMessage } = state;
 
     if (!currentChatId) {
       const firstChat = chats[0];
@@ -34,10 +28,9 @@ export function useChatUrlSync() {
     if (tutorParam && !tutorHandledRef.current) {
       tutorHandledRef.current = true;
       (async () => {
-        const newId = await createChat();
-        const id = newId ?? currentChatId;
+        const id = await createChat();
         if (!id) return;
-        setChatTutor(id, true, tutorParam);
+        setChatTutor(id, { tutorEnabled: true, tutorSubject: tutorParam });
         setCurrentChat(id);
         const newMsg = {
           id: `temp-${Date.now()}`,
@@ -45,40 +38,41 @@ export function useChatUrlSync() {
           content: `Halo Tutor, saya butuh bantuan untuk materi ${tutorParam}.`,
           created_at: new Date().toISOString(),
         };
-        addMessage(newMsg);
         const assistantPlaceholder = {
           id: `temp-${Date.now()}-a`,
           role: 'assistant',
           content: '',
           created_at: new Date().toISOString(),
         };
-        addMessage(assistantPlaceholder);
+        addMessage(id, newMsg);
+        addMessage(id, assistantPlaceholder);
         setStreaming(true, id);
         try {
-          const res = await streamChat(id, newMsg.content, (partial) => {
-            updateLastMessage((m) => (m.role === 'assistant' ? { ...m, content: partial } : m));
+          const chat = useChatStore.getState().getCurrentChat();
+          const history = (chat?.messages || []).map((m) => ({ role: m.role, content: m.content }));
+          await streamChat({
+            chatId: id,
+            endpoint: '/api/tutor/chat',
+            body: {
+              message: newMsg.content,
+              history,
+              session_id: String(id),
+              mata_kuliah: tutorParam,
+              student_level: 'intermediate',
+              rag_docs: [],
+            },
+            onChunk: (chunk, full) => {
+              let clean = full;
+              if (full.startsWith('\x00TYPE:')) {
+                const end = full.indexOf('\x00', 1);
+                if (end !== -1) clean = full.slice(end + 1);
+              }
+              updateLastMessage(id, clean);
+            },
           });
-          if (!res.ok) {
-            let msg = 'Gagal memproses permintaan.';
-            try {
-              const body = await res.json();
-              if (body?.detail) msg = body.detail;
-            } catch {}
-            updateLastMessage((m) => (m.role === 'assistant' ? { ...m, content: `Error: ${msg}` } : m));
-            return;
-          }
-          let acc = '';
-          const reader = res.body.getReader();
-          const decoder = new TextDecoder();
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            acc += decoder.decode(value, { stream: true });
-            updateLastMessage((m) => (m.role === 'assistant' ? { ...m, content: acc } : m));
-          }
         } catch (err) {
           console.error(err);
-          updateLastMessage((m) => (m.role === 'assistant' ? { ...m, content: 'Error: Terjadi kesalahan saat memproses pesan.' } : m));
+          updateLastMessage(id, 'Error: Terjadi kesalahan saat memproses pesan.');
         } finally {
           setStreaming(false, id);
         }
