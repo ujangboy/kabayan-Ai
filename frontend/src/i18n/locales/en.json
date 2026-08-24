@@ -88,7 +88,11 @@
     "insertMath": "Insert formula",
     "mathPrompt": "Enter LaTeX formula",
     "undo": "Undo",
-    "redo": "Redo"
+    "redo": "Redo",
+    "copyCode": "Copy code",
+    "copyTableExcel": "Copy as Excel",
+    "copyTableMarkdown": "Copy Markdown",
+    "copied": "Copied"
   },
   "quizProgress": {
     "questionOf": "{{current}} of {{total}}"
@@ -226,7 +230,27 @@
     "history": "History",
     "searchPlaceholder": "Search conversations...",
     "noteEmpty": "No messages yet to save to Notebook.",
-    "normalMode": "Normal Chat Mode"
+    "normalMode": "Normal Chat Mode",
+    "delete": "Delete",
+    "pin": "Pin",
+    "untitled": "Untitled",
+    "noChats": "No chats yet",
+    "noChatsDesc": "Start a new conversation with the new chat button.",
+    "tutorMode": "Tutor Mode",
+    "tutorModeOn": "Tutor Mode",
+    "tutorModeOff": "Normal Mode",
+    "toggleTutor": "Toggle Tutor Mode",
+    "tutorBadge": "Tutor Mode Active",
+    "tutorBadgeHint": "Tutor active for this session",
+    "tokenEstimateHint": "Estimated tokens sent to the model (limit 8000 tokens/min for openai/gpt-oss-20b). Reduce selected docs or start a new chat if near the limit.",
+    "like": "Like",
+    "dislike": "Dislike",
+    "errorGeneric": "An error occurred while processing your message.",
+    "noteSaved": "Saved to Notebook",
+    "noteWaiting": "Waiting for AI response...",
+    "noteError": "Failed to save note.",
+    "feedbackError": "Failed to send feedback.",
+    "noteSavedBadge": "Saved to Notebook"
   },
   "materi": {
     "pageTitle": "Study Materials",
@@ -379,8 +403,11 @@
     "selectMaterialFirst": "Please select at least one material.",
     "saving": "Saving...",
     "manualModalTitle": "Create Manual Flashcard",
+    "manualModalDesc": "Fill in the question and answer to create a manual study card.",
     "questionFrontLabel": "Question (Front)",
+    "questionPlaceholder": "Example: What is Photosynthesis?",
     "answerBackLabel": "Answer (Back)",
+    "answerPlaceholder": "Example: The process by which plants convert sunlight into energy.",
     "fillAllFields": "Please fill in all fields.",
     "reviewHistoryTitle": "Review History — {{subjectName}}",
     "noCardsInDeck": "No cards in this deck.",

@@ -88,7 +88,11 @@
     "insertMath": "Sisipkan rumus",
     "mathPrompt": "Ketik rumus LaTeX",
     "undo": "Urungkan",
-    "redo": "Ulangi"
+    "redo": "Ulangi",
+    "copyCode": "Salin kode",
+    "copyTableExcel": "Salin sebagai Excel",
+    "copyTableMarkdown": "Salin Markdown",
+    "copied": "Tersalin"
   },
   "quizProgress": {
     "questionOf": "{{current}} dari {{total}}"
@@ -226,7 +230,27 @@
     "history": "Riwayat",
     "searchPlaceholder": "Cari percakapan...",
     "noteEmpty": "Belum ada pesan untuk disimpan ke Notebook.",
-    "normalMode": "Mode Chat Biasa"
+    "normalMode": "Mode Chat Biasa",
+    "delete": "Hapus",
+    "pin": "Sematkan",
+    "untitled": "Tanpa Judul",
+    "noChats": "Belum ada chat",
+    "noChatsDesc": "Mulai percakapan baru dengan menekan tombol chat baru.",
+    "tutorMode": "Mode Tutor",
+    "tutorModeOn": "Mode Tutor",
+    "tutorModeOff": "Mode Biasa",
+    "toggleTutor": "Aktifkan/nonaktifkan Mode Tutor",
+    "tutorBadge": "Mode Tutor Aktif",
+    "tutorBadgeHint": "Tutor aktif untuk sesi ini",
+    "tokenEstimateHint": "Estimasi token yang dikirim ke model (batas 8000 token/menit untuk openai/gpt-oss-20b). Kurangi dokumen terpilih atau mulai chat baru jika mendekati batas.",
+    "like": "Suka",
+    "dislike": "Tidak suka",
+    "errorGeneric": "Terjadi kesalahan saat memproses pesan.",
+    "noteSaved": "Tersimpan ke Notebook",
+    "noteWaiting": "Menunggu respons AI...",
+    "noteError": "Gagal menyimpan catatan.",
+    "feedbackError": "Gagal mengirim feedback.",
+    "noteSavedBadge": "Tersimpan ke Notebook"
   },
   "materi": {
     "pageTitle": "Materi Belajar",
@@ -379,8 +403,11 @@
     "selectMaterialFirst": "Pilih minimal satu materi.",
     "saving": "Menyimpan...",
     "manualModalTitle": "Buat Flashcard Manual",
+    "manualModalDesc": "Isi pertanyaan dan jawaban untuk membuat kartu belajar manual.",
     "questionFrontLabel": "Pertanyaan (Depan)",
+    "questionPlaceholder": "Contoh: Apa itu Photosynthesis?",
     "answerBackLabel": "Jawaban (Belakang)",
+    "answerPlaceholder": "Contoh: Proses tanaman mengubah cahaya matahari menjadi energi.",
     "fillAllFields": "Isi semua kolom terlebih dahulu.",
     "reviewHistoryTitle": "Riwayat Review — {{subjectName}}",
     "noCardsInDeck": "Tidak ada kartu dalam deck ini.",
