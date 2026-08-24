@@ -4,6 +4,7 @@ import { ICONS } from '@/lib/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { springWave, springLift } from '@/lib/motion';
 
 import { materiAPI, sessionsAPI, subjectAPI } from '@/services/api';
 import { cn, formatDate, formatTimeOnly } from '@/utils';
@@ -107,9 +108,16 @@ function SubjectCard({ subject, onSelectSubject, onStartConfig, onDelete, t, ton
    const materialCount = subjectMaterials.length;
    const progress = Math.min(100, subject.best_score ?? 0);
 
-   return (
-     <div className="card-base card-hoverable flex flex-col justify-between gap-4">
-       {/* Header — badge inisial + nama + aksi */}
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        whileHover={{ y: -3 }}
+        whileTap={{ scale: 0.98 }}
+        transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1], ...springLift }}
+        className="card-base card-hoverable flex flex-col justify-between gap-4"
+      >
+        {/* Header — badge inisial + nama + aksi */}
        <div className="flex items-start gap-3">
          <SubjectBadge name={subject.name} tone={tone} />
          <div className="flex-1 min-w-0">
@@ -190,13 +198,13 @@ function SubjectCard({ subject, onSelectSubject, onStartConfig, onDelete, t, ton
          <button onClick={() => onSelectSubject(subject.id)} className="flex-1 px-3 py-2 rounded-lg border border-strong bg-wash text-text text-xs font-medium hover:border-primary/40 hover:bg-wash transition-colors">
            <Icon name={ICONS.learning.history} size={12} className="inline mr-1 -mt-0.5" /> {t('exam.history.history')}
          </button>
-         <button onClick={() => onStartConfig(subject.id)} className="flex-1 px-3 py-2 rounded-lg bg-primary text-white text-xs font-medium hover:opacity-90 transition-opacity">
-           <Icon name={ICONS.ui.bolt} size={12} className="inline mr-1 -mt-0.5" /> {t('exam.history.simulation')}
-         </button>
-       </div>
-     </div>
-   );
-}
+          <button onClick={() => onStartConfig(subject.id)} className="flex-1 px-3 py-2 rounded-lg bg-primary text-white text-xs font-medium hover:opacity-90 transition-opacity">
+            <Icon name={ICONS.ui.bolt} size={12} className="inline mr-1 -mt-0.5" /> {t('exam.history.simulation')}
+          </button>
+        </div>
+      </motion.div>
+    );
+  }
 
 export default function HistoryView({ subjectId, subjects, onSelectSubject, onStartConfig, onRetry, onResume, detailId, setDetailId, pendingPlanTab, setPendingPlanTab }) {
   const { t } = useTranslation();
@@ -302,17 +310,23 @@ export default function HistoryView({ subjectId, subjects, onSelectSubject, onSt
         <div className="flex flex-wrap gap-2">
           {['all','uts','uas','quiz','latihan_harian','custom'].map(type => (
             <button key={type} onClick={() => setTypeFilter(type)}
-              className={cn('px-3 py-1 rounded-lg text-xs font-medium border transition-all',
-                typeFilter === type ? 'bg-primary text-white border-primary' : 'bg-card text-text border-border hover:border-primary/40')}>
-               {type === 'all' ? t('exam.history.all') : type.toUpperCase().replace('_',' ')}
+              className={cn('relative overflow-hidden px-3 py-1 rounded-lg text-xs font-medium border transition-all',
+                typeFilter === type ? 'border-primary text-primary-light' : 'bg-card text-text border-border hover:border-primary/40')}>
+              {typeFilter === type && (
+                <motion.span layoutId="history-type-indicator" transition={springWave} className="absolute inset-0 bg-primary/10 rounded-lg" />
+              )}
+              <span className="relative">{type === 'all' ? t('exam.history.all') : type.toUpperCase().replace('_',' ')}</span>
             </button>
           ))}
           <div className="w-px bg-border mx-1" />
           {[['all',t('exam.history.all')],['mastered',t('exam.history.mastered')],['completed',t('exam.history.completed')],['sedang_belajar',t('exam.history.studying')]].map(([v, l]) => (
             <button key={v} onClick={() => setStatusFilter(v)}
-              className={cn('px-3 py-1 rounded-lg text-xs font-medium border transition-all',
-                statusFilter === v ? 'bg-primary text-white border-primary' : 'bg-card text-text border-border hover:border-primary/40')}>
-              {l}
+              className={cn('relative overflow-hidden px-3 py-1 rounded-lg text-xs font-medium border transition-all',
+                statusFilter === v ? 'border-primary text-primary-light' : 'bg-card text-text border-border hover:border-primary/40')}>
+              {statusFilter === v && (
+                <motion.span layoutId="history-status-indicator" transition={springWave} className="absolute inset-0 bg-primary/10 rounded-lg" />
+              )}
+              <span className="relative">{l}</span>
             </button>
           ))}
           <div className="w-px bg-border mx-1" />
@@ -335,8 +349,8 @@ export default function HistoryView({ subjectId, subjects, onSelectSubject, onSt
             { label:'Mastered',       value: sessions.filter(s=>s.status==='mastered').length, icon: ICONS.learning.certificate,  color:'text-success' },
             { label:'Rata-rata Nilai',value: Math.round(sessions.reduce((a,s)=>a+(s.best_score||0),0)/sessions.length)||0, icon: ICONS.learning.barChart, color:'text-warning' },
             { label:'Total Attempt',  value: sessions.reduce((a,s)=>a+(s.attempt_count||0),0), icon: ICONS.actions.replay, color:'text-accent-blue' },
-          ].map(({ label, value, icon, color }) => (
-            <div key={label} className="card-base p-4 flex items-center gap-3">
+           ].map(({ label, value, icon, color }) => (
+            <motion.div key={label} whileHover={{ y: -3 }} transition={springLift} className="card-base p-4 flex items-center gap-3 hover:border-primary/40">
               <div className={cn('w-9 h-9 rounded-xl bg-card border border-border flex items-center justify-center shrink-0', color)}>
                 <Icon name={icon} size={15} />
               </div>
@@ -344,7 +358,7 @@ export default function HistoryView({ subjectId, subjects, onSelectSubject, onSt
                 <p className="text-xl font-bold text-text">{value}</p>
                 <p className="text-xs text-text-muted">{label}</p>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       )}
@@ -394,13 +408,15 @@ function HistoryCard({ session: s, onDetail, onDelete, onRetry, t }) {
   const badge   = getBadge(s.best_score || 0);
   const gradeC  = getGradeColor(s.grade);
 
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      className={cn('card-base p-5 flex flex-col border-l-4', meta.border, meta.bg)}
-    >
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        whileHover={{ y: -3 }}
+        transition={springLift}
+        className={cn('card-base p-5 flex flex-col border-l-4 hover:border-primary/40', meta.border, meta.bg)}
+      >
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 mb-1 flex-wrap">

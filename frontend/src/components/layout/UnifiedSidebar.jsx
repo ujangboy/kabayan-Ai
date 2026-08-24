@@ -294,7 +294,7 @@ function SidebarContent({ collapsed, onNavigate }) {
       {/* Logo + toggle selalu di atas. Expanded: logo kiri + toggle kanan.
           Collapsed/rail: logo disembunyi, toggle bentangkan menempati posisi logo di atas
           (tidak ditumpuk di bawah logo). */}
-      <div className={cn('flex h-16 shrink-0 items-center', collapsed ? 'justify-center px-0' : 'justify-between px-4')}>
+      <div className={cn('flex h-16 shrink-0 items-center', collapsed ? 'justify-center px-2' : 'justify-between px-4')}>
         {!collapsed && (
           <div className="flex items-center gap-2.5">
             <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary shadow-card">
@@ -330,7 +330,7 @@ function SidebarContent({ collapsed, onNavigate }) {
       <div className="my-2 h-px bg-border" />
 
       {/* Nav utama — single root scrollbar, no nested scroll */}
-      <nav className="sidebar-scroll flex-1 min-h-0 space-y-1 overflow-y-auto overflow-x-hidden px-3">
+      <nav className="sidebar-scroll flex-1 min-h-0 space-y-1 overflow-y-auto px-3">
         {NAV.map(renderTopItem)}
       </nav>
 

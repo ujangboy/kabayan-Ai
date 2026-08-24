@@ -26,7 +26,7 @@ export function NoteCard({
       className={cn(
         'group relative overflow-hidden rounded-xl border transition-colors duration-200',
         isSelected
-          ? 'border-primary/20'
+          ? 'border-primary/40 ring-1 ring-primary/30 bg-primary/5'
           : 'border-transparent hover:border-border hover:bg-card/70'
       )}
     >
@@ -85,15 +85,15 @@ export function NoteCard({
 
       {/* Hover actions */}
       <div className="absolute right-1.5 top-2 hidden group-hover:flex items-center gap-0.5">
-        <Tooltip label={t('notebook.rename')}>
-          <button
-            onClick={(e) => { e.stopPropagation(); onStartRename?.(note); }}
-            aria-label={t('notebook.rename')}
-            className="p-1.5 rounded-md text-text-muted hover:text-primary transition-colors"
-          >
-            <Icon name={ICONS.actions.editNote} size={14} />
-          </button>
-        </Tooltip>
+          <Tooltip label={t('notebook.rename')}>
+            <button
+              onClick={(e) => { e.stopPropagation(); onStartRename?.(note); }}
+              aria-label={t('notebook.rename')}
+              className="p-1.5 rounded-md text-text-muted hover:text-primary transition-colors"
+            >
+              <Icon name={ICONS.actions.edit} size={14} />
+            </button>
+          </Tooltip>
         <Tooltip label={note.is_pinned ? t('notebook.unpin') : t('notebook.pin')}>
           <button
             onClick={(e) => { e.stopPropagation(); onPin(); }}

@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 import { examAPI } from '@/services/api';
 import { cn } from '@/utils';
+import { springLift } from '@/lib/motion';
 import { Chip, SectionHeader, StarRating } from './shared';
 
 export default function DashboardView({ subjectId, subjects, analysis, onAnalysisDone, onStartConfig }) {
@@ -71,17 +72,17 @@ export default function DashboardView({ subjectId, subjects, analysis, onAnalysi
           { label: t('exam.dashboard.statTopic'), value: overview.total_topics ?? 0,  icon: ICONS.learning.target,     color:'text-primary' },
           { label: t('exam.dashboard.statNotes'), value: stats.note_count ?? 0,       icon: ICONS.learning.bookmarks, color:'text-success' },
           { label: t('exam.dashboard.statEstHours'), value: `${overview.estimated_study_hours ?? 0}j`, icon: ICONS.learning.clock, color:'text-warning' },
-        ].map(({ label, value, icon, color }) => (
-          <div key={label} className="card-base p-4 flex items-center gap-3">
-            <div className={`w-9 h-9 rounded-xl bg-card border border-border flex items-center justify-center shrink-0 ${color}`}>
-              <Icon name={icon} size={16} />
-            </div>
-            <div>
-              <p className="text-xl font-bold text-text">{value}</p>
-              <p className="text-xs text-text-muted">{label}</p>
-            </div>
-          </div>
-        ))}
+         ].map(({ label, value, icon, color }) => (
+           <motion.div key={label} whileHover={{ y: -3 }} transition={springLift} className="card-base p-4 flex items-center gap-3 hover:border-primary/40">
+             <div className={`w-9 h-9 rounded-xl bg-card border border-border flex items-center justify-center shrink-0 ${color}`}>
+               <Icon name={icon} size={16} />
+             </div>
+             <div>
+               <p className="text-xl font-bold text-text">{value}</p>
+               <p className="text-xs text-text-muted">{label}</p>
+             </div>
+           </motion.div>
+         ))}
       </div>
 
       {/* Summary + Complexity */}
@@ -103,7 +104,7 @@ export default function DashboardView({ subjectId, subjects, analysis, onAnalysi
         <SectionHeader icon={ICONS.learning.target} title={t('exam.dashboard.topicPriority')} subtitle={t('exam.dashboard.topicPrioritySubtitle')} />
         <div className="space-y-3">
           {topic_priority.slice(0, 8).map((tp, i) => (
-            <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-background hover:bg-card/60 transition-colors">
+             <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-background border border-transparent hover:border-primary/30 hover:bg-card/60 transition-colors">
               <span className="text-xs font-bold text-text-muted w-5 mt-0.5">{i+1}</span>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
@@ -129,10 +130,10 @@ export default function DashboardView({ subjectId, subjects, analysis, onAnalysi
           <div className="space-y-2">
             {knowledge_map.map((node, i) => (
               <div key={i}>
-                <button
-                  onClick={() => setExpandedNode(expandedNode === i ? null : i)}
-                  className="w-full flex items-center gap-2 p-3 rounded-xl bg-background hover:bg-card/60 transition-colors text-left"
-                >
+                 <button
+                   onClick={() => setExpandedNode(expandedNode === i ? null : i)}
+                   className="w-full flex items-center gap-2 p-3 rounded-xl bg-background border border-transparent hover:border-primary/30 hover:bg-card/60 transition-colors text-left"
+                 >
                   <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                     <Icon name={ICONS.learning.bookOpen} size={13} className="text-primary" />
                   </div>
