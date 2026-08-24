@@ -6,7 +6,7 @@ import { useMutation } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { notesAPI } from '@/services/api';
-import NoteEditor from '@/components/NoteEditor';
+import NoteEditor, { VerticalToolbar } from '@/components/NoteEditor';
 import { Tooltip , Icon } from '@/components/ui';
 import { formatDate, formatDateTime } from '@/utils';
 import { cn } from '@/utils';
@@ -16,8 +16,18 @@ export function NoteView({ note, onBack, onSave, onPin, onDelete }) {
   const [title, setTitle] = useState(note.title || '');
   const [showMenu, setShowMenu] = useState(false);
   const [saveStatus, setSaveStatus] = useState('saved');
+  const [mode, setMode] = useState('edit');
+  const [editorRef, setEditorRef] = useState(null);
   const titleRef = useRef(null);
   const saveTimerRef = useRef(null);
+
+  const autoResizeTitle = () => {
+    const el = titleRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
+  };
+  useEffect(() => { autoResizeTitle(); }, [title]);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -52,10 +62,19 @@ export function NoteView({ note, onBack, onSave, onPin, onDelete }) {
     }, 300);
   }, [onSave]);
 
+  // Sisipkan rumus dari rail vertikal (menggunakan instance editor Tiptap).
+  const handleInsertMathFromRail = useCallback(() => {
+    if (!editorRef) return;
+    const latex = prompt(t('noteEditor.mathPrompt'), 'E = mc^2');
+    if (latex !== null && latex.trim()) {
+      editorRef.chain().focus().insertMathInline(latex.trim()).run();
+    }
+  }, [editorRef, t]);
+
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-base">
       {/* Minimal header */}
-      <div className="flex items-center justify-between px-4 py-2 divider-gradient-b relative shrink-0">
+      <div className="flex items-center justify-between px-3 py-1.5 border-b border-strong/50 relative shrink-0">
         <div className="flex items-center gap-2">
           <button
             onClick={onBack}
@@ -122,7 +141,7 @@ export function NoteView({ note, onBack, onSave, onPin, onDelete }) {
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: -4 }}
                     transition={{ duration: 0.15, ease: [0.32, 0.72, 0, 1] }}
-                    className="absolute right-0 top-full mt-1 z-40 bg-card border border-border rounded-xl shadow-xl py-1 min-w-[140px] origin-top-right"
+                    className="absolute right-0 top-full mt-1 z-40 bg-popover border border-strong rounded-xl shadow-xl py-1 min-w-[140px] origin-top-right"
                   >
                     <button
                       onClick={() => { onDelete(); setShowMenu(false); }}
@@ -138,38 +157,57 @@ export function NoteView({ note, onBack, onSave, onPin, onDelete }) {
         </div>
       </div>
 
-      {/* Title */}
-      <div className="px-8 md:px-16 lg:px-24 pt-6 pb-2 shrink-0">
-        <input
-          ref={titleRef}
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          onBlur={handleTitleBlur}
-          onKeyDown={handleTitleKeyDown}
-          className="w-full text-2xl font-bold text-text bg-transparent outline-none placeholder:text-text-muted/40"
-          placeholder={t('notebook.noteTitlePlaceholder')}
-        />
-        <div className="flex items-center gap-2 mt-1.5 text-2xs text-text-muted/60">
-          {note.subject && (
-            <span className="flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary/60" />
-              {note.subject.name}
-            </span>
-          )}
-          {note.subject && <span>·</span>}
-          <span title={formatDateTime(note.created_at)}>{formatDate(note.created_at)}</span>
-        </div>
-      </div>
+      {/* Paper — Samsung Notes style sheet (kertas) + rail vertikal kanan (di luar kertas) */}
+      <div className="flex-1 min-h-0 p-3 flex gap-3 justify-center">
+        <div className="w-full max-w-[860px] h-full bg-surface border border-border rounded-xl shadow-card flex flex-col overflow-hidden">
+          {/* Title */}
+          <div className="w-full px-4 sm:px-6 lg:px-8 pt-8 pb-4 shrink-0">
+            <textarea
+              ref={titleRef}
+              rows={1}
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              onInput={autoResizeTitle}
+              onBlur={handleTitleBlur}
+              onKeyDown={handleTitleKeyDown}
+              className="w-full text-[28px] font-medium tracking-headline text-text bg-transparent outline-none resize-none overflow-y-auto break-words whitespace-pre-wrap leading-tight placeholder:text-text-muted/40 min-h-[36px] max-h-[120px]"
+              placeholder={t('notebook.noteTitlePlaceholder')}
+            />
+            <div className="flex items-center gap-2 mt-1.5 text-2xs text-text-muted/60">
+              {note.subject && (
+                <span className="flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary/60" />
+                  {note.subject.name}
+                </span>
+              )}
+              {note.subject && <span>·</span>}
+              <span title={formatDateTime(note.created_at)}>{formatDate(note.created_at)}</span>
+            </div>
+          </div>
 
-      {/* Editor */}
-      <div className="flex-1 overflow-hidden">
-        <NoteEditor
-          key={note.id}
-          noteId={note.id}
-          content={note.content}
-          onSave={handleContentSave}
-          defaultMode="edit"
-        />
+          {/* Editor */}
+          <div className="flex-1 min-h-0 overflow-hidden">
+            <NoteEditor
+              key={note.id}
+              noteId={note.id}
+              content={note.content}
+              onSave={handleContentSave}
+              defaultMode="edit"
+              mode={mode}
+              onModeChange={setMode}
+              onEditorReady={setEditorRef}
+            />
+          </div>
+        </div>
+
+        {/* Rail vertikal kanan — hanya desktop, di luar kertas */}
+        {mode === 'edit' && editorRef && (
+          <VerticalToolbar
+            editor={editorRef}
+            onPreview={() => setMode('view')}
+            onInsertMath={handleInsertMathFromRail}
+          />
+        )}
       </div>
     </div>
   );
