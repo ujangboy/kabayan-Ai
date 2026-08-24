@@ -137,7 +137,7 @@ export default function QuizPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center shadow-btn-primary shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-btn-primary shrink-0">
               <Icon name={ICONS.ui.help} size={20} className="text-white" />
             </div>
             <div>
@@ -205,7 +205,7 @@ export default function QuizPage() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.05 }}
-                  className="bg-slate-900/70 border border-slate-800 hover:border-purple-500/50 rounded-2xl p-5 flex flex-col justify-between gap-3 transition-all shadow-md"
+                  className="bg-slate-900/70 border border-slate-800 hover:border-white/[0.16] rounded-2xl p-5 flex flex-col justify-between gap-3 transition-all shadow-md"
                 >
                   {/* Header — badge + title + badges + aksi */}
                   <div className="flex items-start justify-between gap-2">
@@ -272,7 +272,7 @@ export default function QuizPage() {
                   <div className="space-y-2">
                     <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
                       <motion.div
-                        className="h-full rounded-full bg-gradient-primary"
+                        className="h-full rounded-full bg-primary"
                         initial={{ width: 0 }}
                         animate={{ width: `${qProgress}%` }}
                         transition={{ duration: 0.4, ease: [0.32, 0.72, 0, 1] }}

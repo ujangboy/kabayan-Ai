@@ -38,7 +38,7 @@ export default function SettingsPage() {
       {/* Header */}
       <div className="shrink-0 px-6 md:px-8 py-6 border-b border-slate-800/60">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shrink-0 shadow-md">
+          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shrink-0">
             <Icon name={ICONS.nav.settings} size={18} className="text-white" />
           </div>
           <div>
@@ -62,7 +62,7 @@ export default function SettingsPage() {
                   className={cn(
                     'flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all duration-150 shrink-0 md:shrink',
                     isActive
-                      ? 'bg-violet-600 text-white shadow-md shadow-violet-600/20'
+                      ? 'bg-primary text-white'
                       : 'text-slate-400 hover:text-white hover:bg-slate-800'
                   )}
                 >
@@ -77,7 +77,7 @@ export default function SettingsPage() {
         {/* Right: content panel clean bordered slate-800/60 */}
         <div className="flex-1 min-w-0 overflow-y-auto bg-slate-950">
           <div className="p-6 md:p-8">
-            <div className="rounded-2xl border border-slate-800/60 bg-slate-900/50 backdrop-blur-sm p-6 md:p-7">
+            <div className="rounded-2xl border border-white/[0.08] bg-surface-2 p-6 md:p-7">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={active}

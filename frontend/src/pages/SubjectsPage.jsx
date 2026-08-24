@@ -120,7 +120,7 @@ export default function SubjectsPage() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.05 }}
-                    className="bg-slate-900/70 border border-slate-800 hover:border-purple-500/50 rounded-2xl p-5 flex flex-col justify-between gap-4 transition-all shadow-md group h-full"
+                    className="bg-slate-900/70 border border-slate-800 hover:border-white/[0.16] rounded-2xl p-5 flex flex-col justify-between gap-4 transition-all shadow-md group h-full"
                   >
                     {/* Header — badge inisial + nama + aksi */}
                     <div className="flex items-start gap-3">
@@ -166,7 +166,7 @@ export default function SubjectsPage() {
                     <div className="space-y-2">
                       <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
                         <motion.div
-                          className="h-full rounded-full bg-gradient-primary"
+                          className="h-full rounded-full bg-primary"
                           initial={{ width: 0 }}
                           animate={{ width: `${progress}%` }}
                           transition={{ duration: 0.4, ease: [0.32, 0.72, 0, 1] }}

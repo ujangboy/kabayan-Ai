@@ -70,7 +70,7 @@ export default function ConfigView({ subjectId, analysis, onDone }) {
           return (
             <button key={lbl} onClick={() => set(field, opt)}
               className={cn('px-3 py-1.5 rounded-lg text-xs font-medium border transition-all',
-                active ? 'bg-primary text-white border-primary shadow-glow' : 'bg-card text-text border-border hover:border-primary/40')}>
+                active ? 'bg-primary text-white border-primary' : 'bg-card text-text border-border hover:border-primary/40')}>
               {lbl}
             </button>
           );

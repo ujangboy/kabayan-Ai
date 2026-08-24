@@ -187,7 +187,7 @@ function ConfirmDialog({ state, onClose }) {
             <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 ${
               state.danger
                 ? 'bg-danger/15 text-danger'
-                : 'bg-gradient-primary text-white shadow-btn-primary'
+                : 'bg-primary text-white shadow-btn-primary'
             }`}>
               {state.danger
                 ? <Icon name={ICONS.status.warning} size={20} />

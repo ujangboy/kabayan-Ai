@@ -70,7 +70,7 @@ export function UploadModal({ open, onClose, subjects, onSuccess }) {
             className="cursor-pointer rounded-xl border-2 border-dashed border-border p-8 flex flex-col items-center justify-center text-center transition-colors hover:border-primary/50"
             onClick={() => fileInputRef.current?.click()}
           >
-            <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-primary/15">
+            <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/15">
               <Icon name={ICONS.actions.upload} size={24} className="text-primary-light" />
             </div>
             <p className="text-base font-medium text-text">{file ? file.name : t('materi.uploadDropzone')}</p>

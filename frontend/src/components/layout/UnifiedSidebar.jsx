@@ -194,7 +194,7 @@ function SidebarContent({ collapsed, onNavigate }) {
         {active && (
           <motion.span
             layoutId="nav-active-indicator"
-            className="absolute left-0 top-0 bottom-0 my-auto h-6 w-[3px] rounded-full bg-gradient-primary"
+            className="absolute left-0 top-0 bottom-0 my-auto h-6 w-[3px] rounded-full bg-primary"
             transition={{ type: 'spring', stiffness: 400, damping: 32 }}
           />
         )}
@@ -290,15 +290,15 @@ function SidebarContent({ collapsed, onNavigate }) {
   const flyoutLabelKey = flyoutGroup ? NAV.find((n) => n.group === flyoutGroup)?.labelKey : null;
 
   return (
-    <div className="flex h-full flex-col bg-sidebar/80 backdrop-blur-[16px] divider-gradient-r">
+    <div className="flex h-full flex-col bg-sidebar divider-gradient-r">
       {/* Logo + toggle selalu di atas. Expanded: logo kiri + toggle kanan.
           Collapsed/rail: logo disembunyi, toggle bentangkan menempati posisi logo di atas
           (tidak ditumpuk di bawah logo). */}
       <div className={cn('flex h-16 shrink-0 items-center', collapsed ? 'justify-center px-0' : 'justify-between px-4')}>
         {!collapsed && (
           <div className="flex items-center gap-2.5">
-            <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-primary shadow-btn-primary">
-              <span className="absolute inset-0 rounded-xl bg-gradient-primary opacity-50 blur-md" />
+            <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary shadow-btn-primary">
+              <span className="absolute inset-0 rounded-xl bg-primary opacity-50 blur-md" />
               <Icon name={ICONS.communication.bot} size={20} className="relative text-white" />
             </div>
             <span className="text-base font-semibold text-text">Kabayan AI</span>

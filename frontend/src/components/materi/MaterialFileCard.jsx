@@ -37,7 +37,7 @@ export function MaterialFileCard({ material: m, index, showSubject, isRagActive,
         transition: { delay: Math.min(index * 0.04, 0.4), duration: 0.25 },
       }}
       exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
-      className="card-base group relative flex flex-col gap-3 hover:shadow-glass-lg hover:border-purple-500/40 hover:bg-slate-800/70 transition-[box-shadow,border-color,background-color] duration-300"
+      className="card-base card-hoverable group relative flex flex-col gap-3"
     >
       {/* Top: icon + name + delete */}
       <div className="flex items-start gap-3">
@@ -77,7 +77,7 @@ export function MaterialFileCard({ material: m, index, showSubject, isRagActive,
           <div className="space-y-1">
             <div className="w-full h-1 bg-border rounded-full overflow-hidden">
               <div
-                className={`h-full transition-all duration-700 ${m.status === 'Pending' ? 'bg-text-muted' : 'bg-gradient-primary'}`}
+                className={`h-full transition-all duration-700 ${m.status === 'Pending' ? 'bg-text-muted' : 'bg-primary'}`}
                 style={{ width: `${Math.max(m.progress || 0, 4)}%` }}
               />
             </div>
@@ -119,7 +119,7 @@ export function MaterialFileCard({ material: m, index, showSubject, isRagActive,
             <span
               aria-hidden="true"
               className="h-4 w-7 rounded-full bg-border relative transition-colors cursor-pointer
-                peer-checked:bg-gradient-primary
+                peer-checked:bg-primary
                 peer-focus-visible:ring-2 peer-focus-visible:ring-primary/50
                 peer-disabled:opacity-30 peer-disabled:cursor-not-allowed
                 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:w-3 after:h-3 after:rounded-full after:bg-white

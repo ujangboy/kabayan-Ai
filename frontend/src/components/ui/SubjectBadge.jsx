@@ -4,7 +4,7 @@ import { cn } from '@/utils';
 // sehingga nama yang sama selalu dapat warna sama (konsisten antar halaman),
 // dan nama berbeda dapat warna yang berbeda.
 const PALETTE = [
-  'bg-violet-500/15 text-violet-300 border-violet-500/30',
+  'bg-primary/10 text-primary-light border-primary/30',
   'bg-sky-500/15 text-sky-300 border-sky-500/30',
   'bg-teal-500/15 text-teal-300 border-teal-500/30',
   'bg-pink-500/15 text-pink-300 border-pink-500/30',

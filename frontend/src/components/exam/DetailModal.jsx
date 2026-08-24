@@ -480,7 +480,7 @@ function InlinePractice({ questions, topic, onComplete, onClose, onRetryTopic })
                           setRetryingTopic(null);
                         }
                       }}
-                      className="shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-lg bg-gradient-primary text-white text-3xs font-bold hover:brightness-110 transition-all disabled:opacity-40"
+                      className="shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-lg bg-primary text-white text-3xs font-bold hover:bg-primary-hover transition-colors disabled:opacity-40"
                     >
                       {retryingTopic === weakTopic
                         ? <><Icon name={ICONS.status.loading} size={9} className="animate-spin" /> Memuat...</>
@@ -841,8 +841,8 @@ function StudyPlanTab({ plan, sessionId, onToggle, onPlanSaved,
                               setLoadingItemId(null);
                             }
                           }}
-                          className="text-3xs px-2 py-1 rounded bg-gradient-primary text-white font-bold
-                                     hover:brightness-110 transition-all shrink-0 shadow-sm disabled:opacity-50 flex items-center gap-1">
+                          className="text-3xs px-2 py-1 rounded bg-primary text-white font-bold
+                                     hover:bg-primary-hover transition-colors shrink-0 disabled:opacity-50 flex items-center gap-1">
                           {loadingItemId === item.id
                             ? <><Icon name={ICONS.status.loading} size={9} className="animate-spin" /> Memuat...</>
                             : <><Icon name={ICONS.actions.forward} size={9} /> Mulai Latihan</>}

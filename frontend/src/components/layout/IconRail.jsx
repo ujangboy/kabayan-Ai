@@ -41,8 +41,8 @@ export default function IconRail() {
     <aside className="flex h-screen w-14 flex-col items-center bg-rail py-3 relative z-20 shrink-0 divider-gradient-r gap-1">
       {/* Logo + slide bar toggle nav menu (hanya di halaman dengan context sidebar) */}
       <div className="flex flex-col items-center gap-1.5 mb-2">
-        <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-primary shadow-btn-primary">
-          <span className="absolute inset-0 rounded-xl bg-gradient-primary opacity-50 blur-md" />
+        <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary shadow-btn-primary">
+          <span className="absolute inset-0 rounded-xl bg-primary opacity-50 blur-md" />
           <Icon name={ICONS.communication.bot} size={20} className="relative text-white" />
         </div>
         {hasContextSidebar && (
@@ -82,7 +82,7 @@ export default function IconRail() {
                 {active && (
                   <motion.span
                     layoutId="nav-active-indicator"
-                    className="absolute left-0 top-0 bottom-0 my-auto h-6 w-[3px] rounded-full bg-gradient-primary"
+                    className="absolute left-0 top-0 bottom-0 my-auto h-6 w-[3px] rounded-full bg-primary"
                     transition={{ type: 'spring', stiffness: 400, damping: 32 }}
                   />
                 )}
@@ -108,7 +108,7 @@ export default function IconRail() {
           {location.pathname.startsWith('/settings') && (
             <motion.span
               layoutId="nav-active-indicator"
-              className="absolute left-0 top-0 bottom-0 my-auto h-6 w-[3px] rounded-full bg-gradient-primary"
+              className="absolute left-0 top-0 bottom-0 my-auto h-6 w-[3px] rounded-full bg-primary"
               transition={{ type: 'spring', stiffness: 400, damping: 32 }}
             />
           )}

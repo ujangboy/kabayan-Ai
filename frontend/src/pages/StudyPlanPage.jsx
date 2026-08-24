@@ -90,9 +90,9 @@ export default function StudyPlanPage() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: 'spring', stiffness: 350, damping: 30 }}
-            className="flex w-full max-w-[560px] flex-col items-center gap-6 rounded-2xl border border-slate-800 bg-slate-900/50 backdrop-blur-md p-8 md:p-10 shadow-glass text-center"
+            className="flex w-full max-w-[560px] flex-col items-center gap-6 rounded-2xl border border-white/[0.08] bg-surface-2 p-8 md:p-10 text-center"
           >
-            <div className="flex h-20 w-20 items-center justify-center rounded-[20px] bg-gradient-to-br from-violet-500/20 to-indigo-500/20 border border-violet-500/20 text-violet-300 shadow-glow-sm">
+            <div className="flex h-20 w-20 items-center justify-center rounded-[20px] bg-primary/10 border border-primary/20 text-primary-light">
               <Icon name={ICONS.learning.calendarCheck} size={36} />
             </div>
 
@@ -104,7 +104,7 @@ export default function StudyPlanPage() {
             <ol className="w-full max-w-[420px] divide-y divide-white/[0.06] rounded-xl border border-white/[0.06] bg-white/[0.02] px-2 text-left">
               {[1, 2, 3].map((n) => (
                 <li key={n} className="flex items-center gap-4 py-3.5 px-2">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-violet-500/15 border border-violet-500/20 text-sm font-bold text-violet-300">{n}</span>
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 border border-primary/20 text-sm font-bold text-primary-light">{n}</span>
                   <span className="text-sm text-text-secondary">{t(`studyPlanPage.empty.step${n}`)}</span>
                 </li>
               ))}
@@ -114,7 +114,7 @@ export default function StudyPlanPage() {
               <Button
                 onClick={() => navigate('/exam-analyzer')}
                 size="lg"
-                className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 min-w-[200px] bg-gradient-primary hover:brightness-110"
+                className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 min-w-[200px] bg-primary hover:bg-primary-hover"
               >
                 <Icon name={ICONS.nav.exam} size={18} />
                 {t('studyPlanPage.empty.ctaPrimary', 'Kerjakan Ujian Simulasi')}
@@ -123,7 +123,7 @@ export default function StudyPlanPage() {
                 variant="secondary"
                 size="lg"
                 onClick={() => navigate('/materi')}
-                className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 min-w-[160px] border-slate-700 bg-slate-800/60 hover:bg-slate-800 hover:border-violet-500/30"
+                className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 min-w-[160px] border-slate-700 bg-slate-800/60 hover:bg-slate-800 hover:border-primary/30"
               >
                 <Icon name={ICONS.files.document} size={16} className="text-text-secondary" />
                 {t('studyPlanPage.empty.ctaSecondary', 'Lihat Materi')}
@@ -269,7 +269,7 @@ export default function StudyPlanPage() {
               initial={{ width: 0 }}
               animate={{ width: `${progress}%` }}
               transition={{ duration: 0.6 }}
-              className={`h-full rounded-full ${progress >= 100 ? 'bg-gradient-to-r from-success to-accent-teal' : 'bg-gradient-primary'}`}
+              className={`h-full rounded-full ${progress >= 100 ? 'bg-success' : 'bg-primary'}`}
             />
           </div>
           {(plan.priority_actions || []).length > 0 && (

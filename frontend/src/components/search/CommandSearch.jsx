@@ -111,7 +111,7 @@ export default function CommandSearch() {
         className="glass-elevated w-full max-w-lg overflow-hidden relative"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-purple-500/60 via-purple-500/20 to-transparent" />
+        <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-primary/60 via-primary/20 to-transparent" />
         {/* Search Input */}
         <div className="flex items-center gap-3 px-4 py-3 divider-gradient-b relative">
           <Icon name={ICONS.actions.search} size={16} className="text-text-secondary shrink-0" />
@@ -161,7 +161,7 @@ export default function CommandSearch() {
                     >
                       <div className={cn(
                         'w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors',
-                        isActive ? 'bg-gradient-primary' : 'bg-primary/10 group-hover:bg-gradient-primary'
+                        isActive ? 'bg-primary' : 'bg-primary/10 group-hover:bg-primary'
                       )}>
                         <item.icon size={15} className={isActive ? 'text-white' : 'text-primary transition-colors group-hover:text-white'} />
                       </div>

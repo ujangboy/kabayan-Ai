@@ -127,7 +127,7 @@ function MateriSidebar() {
   const subjects = data?.subjects || [];
 
   return (
-    <aside className="flex h-full flex-col w-60 bg-surface/80 backdrop-blur-md divider-gradient-r relative shrink-0">
+    <aside className="flex h-full flex-col w-60 bg-surface divider-gradient-r relative shrink-0">
       <SidebarHeader
         icon={ICONS.files.document}
         title={t('nav.materi')}
@@ -172,7 +172,7 @@ function SubjectsSidebar() {
   const subjects = data?.subjects || [];
 
   return (
-    <aside className="flex h-full flex-col w-60 bg-surface/80 backdrop-blur-md divider-gradient-r relative shrink-0">
+    <aside className="flex h-full flex-col w-60 bg-surface divider-gradient-r relative shrink-0">
       <SidebarHeader
         icon={ICONS.files.folder}
         title={t('nav.subjects')}
@@ -225,7 +225,7 @@ function FlashcardSidebar() {
   });
 
   return (
-    <aside className="flex h-full flex-col w-60 bg-surface/80 backdrop-blur-md divider-gradient-r relative shrink-0">
+    <aside className="flex h-full flex-col w-60 bg-surface divider-gradient-r relative shrink-0">
       <SidebarHeader icon={ICONS.nav.flashcard} title={t('nav.flashcard')} />
       <div className="flex-1 overflow-y-auto sidebar-scroll px-3 space-y-1">
         {decks.map((d) => (

@@ -26,7 +26,7 @@ export default function BatchFlashcardCard({ group, onStart, onReview, onHistory
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-slate-900/70 border border-slate-800 hover:border-purple-500/50 rounded-2xl p-5 flex flex-col justify-between gap-3 transition-all shadow-md"
+      className="bg-slate-900/70 border border-slate-800 hover:border-white/[0.16] rounded-2xl p-5 flex flex-col justify-between gap-3 transition-all shadow-md"
     >
       {/* Header — badge inisial + nama + aksi */}
       <div className="flex items-start justify-between gap-2">
@@ -102,7 +102,7 @@ export default function BatchFlashcardCard({ group, onStart, onReview, onHistory
       {/* Footer — progress bar + timestamp */}
       <div className="space-y-2">
         <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
-          <div className="h-full rounded-full bg-gradient-primary transition-all" style={{ width: `${progress}%` }} />
+          <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${progress}%` }} />
         </div>
         <div className="flex items-center justify-between text-3xs text-text-muted">
           {createdAt ? (

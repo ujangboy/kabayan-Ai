@@ -15,7 +15,7 @@ export default function ProgressCard({ progress }) {
   const { t } = useTranslation();
   if (!progress) {
     return (
-      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="bg-slate-900/60 backdrop-blur-md border border-slate-800 rounded-2xl p-5">
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="card-base">
         <div className="flex items-center gap-2 mb-3">
           <Icon name={ICONS.learning.streak} size={16} className="text-warning" />
           <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('studyProgress.title')}</h2>

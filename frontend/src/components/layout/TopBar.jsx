@@ -49,7 +49,7 @@ export default function TopBar() {
   const [notifOn, setNotifOn] = useState(true);
 
   return (
-    <header className="divider-gradient-b relative z-10 flex h-14 shrink-0 items-center gap-3 bg-surface/80 px-4 backdrop-blur-md">
+    <header className="divider-gradient-b relative z-10 flex h-14 shrink-0 items-center gap-3 bg-surface px-4">
       {/* Mobile sidebar toggle (drawer) — UnifiedSidebar drawer */}
       <button
         onClick={toggleSidebar}
@@ -170,7 +170,7 @@ export default function TopBar() {
       {/* Profile */}
       <button
         onClick={() => navigate('/settings')}
-        className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-primary text-sm font-semibold text-white shadow-btn-primary transition-all hover:brightness-110"
+        className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-sm font-semibold text-white shadow-btn-primary transition-colors hover:bg-primary-hover"
         title={profile?.name || profile?.username || 'User'}
       >
         {initial}

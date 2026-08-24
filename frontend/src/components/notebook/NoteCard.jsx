@@ -20,7 +20,7 @@ export function NoteCard({ note, isSelected, onSelect, onPin, onDelete }) {
       className={cn(
         'group relative rounded-xl transition-all duration-200',
         isSelected
-          ? 'bg-gradient-primary-soft ring-1 ring-primary/30'
+          ? 'bg-primary-soft ring-1 ring-primary/30'
           : 'hover:bg-card/80'
       )}
     >

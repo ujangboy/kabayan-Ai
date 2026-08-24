@@ -136,7 +136,7 @@ export default function InlinePlanPractice({ item, practiceState, onClose, onSub
         </span>
       </div>
       <div className="h-1.5 bg-border rounded-full mb-4 overflow-hidden">
-        <div className="h-full bg-gradient-primary rounded-full transition-all duration-300" style={{ width: `${((idx + 1) / total) * 100}%` }} />
+        <div className="h-full bg-primary rounded-full transition-all duration-300" style={{ width: `${((idx + 1) / total) * 100}%` }} />
       </div>
 
       <AnimatePresence mode="wait" initial={false}>
@@ -268,7 +268,7 @@ export function StudyPlanItem({
               <button
                 disabled={isPracticeOpen}
                 onClick={() => onOpenPractice(item)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-primary text-white text-2xs font-bold hover:brightness-110 transition-all disabled:opacity-40"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-white text-2xs font-bold hover:bg-primary-hover transition-colors disabled:opacity-40"
               >
                 <Icon name={ICONS.media.play} size={11} /> Latihan Quiz
               </button>

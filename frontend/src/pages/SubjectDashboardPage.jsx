@@ -20,8 +20,8 @@ import MaterialsTable from '@/components/dashboard/MaterialsTable';
 
 const ACTIVITY_META = (t) => ({
   quiz:      { icon: ICONS.ui.help, label: t('subjectDashboard.activityQuiz'),      cls: 'bg-teal-500/10 text-teal-400 border-teal-500/20' },
-  ujian:     { icon: ICONS.learning.trophy,     label: t('subjectDashboard.activityExam'),      cls: 'bg-violet-600/10 text-violet-300 border-violet-600/20' },
-  flashcard: { icon: ICONS.nav.flashcard, label: t('subjectDashboard.activityFlashcard'), cls: 'bg-fuchsia-500/10 text-fuchsia-300 border-fuchsia-500/20' },
+  ujian:     { icon: ICONS.learning.trophy,     label: t('subjectDashboard.activityExam'),      cls: 'bg-primary/10 text-primary-light border-primary/20' },
+  flashcard: { icon: ICONS.nav.flashcard, label: t('subjectDashboard.activityFlashcard'), cls: 'bg-accent-blue/10 text-accent-blue border-accent-blue/20' },
   materi:    { icon: ICONS.files.document,   label: t('subjectDashboard.activityMaterial'),  cls: 'bg-sky-500/10 text-sky-300 border-sky-500/20' },
 });
 
@@ -37,9 +37,9 @@ function QueryErrorCard({ title }) {
 function MetricBar({ subject, masteryPct, t }) {
   const items = [
     { icon: ICONS.files.document, label: t('subjectDashboard.statMaterials'), value: subject.total_materials, color: 'text-sky-400', bg: 'bg-sky-500/10' },
-    { icon: ICONS.nav.flashcard, label: t('subjectDashboard.statFlashcards'), value: subject.total_flashcards, color: 'text-fuchsia-400', bg: 'bg-fuchsia-500/10' },
+    { icon: ICONS.nav.flashcard, label: t('subjectDashboard.statFlashcards'), value: subject.total_flashcards, color: 'text-accent-blue', bg: 'bg-accent-blue/10' },
     { icon: ICONS.learning.trophy, label: t('subjectDashboard.statAvgScore'), value: subject.avg_score, suffix: subject.avg_score != null ? '/100' : '', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-    { icon: ICONS.learning.progress, label: t('subjectDashboard.statMastery', 'Progress'), value: masteryPct, suffix: masteryPct != null ? '%' : '', color: 'text-violet-300', bg: 'bg-violet-600/10' },
+    { icon: ICONS.learning.progress, label: t('subjectDashboard.statMastery', 'Progress'), value: masteryPct, suffix: masteryPct != null ? '%' : '', color: 'text-primary-light', bg: 'bg-primary/10' },
   ];
   return (
     <div className="flex h-14 rounded-xl border border-slate-800 bg-slate-900 divide-x divide-slate-800 overflow-hidden">
@@ -168,7 +168,7 @@ export default function SubjectDashboardPage() {
             <BackButton fallback="/subjects" label={t('back.label', { name: t('nav.subjects') })} />
             <div className="flex-1 min-w-[200px]">
               <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shrink-0 shadow-md">
+                <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shrink-0">
                   <Icon name={ICONS.learning.progress} size={18} className="text-white" />
                 </div>
                 <div className="min-w-0">
@@ -180,7 +180,7 @@ export default function SubjectDashboardPage() {
                       </span>
                     )}
                     {subject.lecturer && (
-                      <span className="text-2xs px-2 py-0.5 rounded-full bg-violet-600/15 border border-violet-600/20 text-violet-300">
+                      <span className="text-2xs px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-primary-light">
                         {t('subjectDashboard.headerLecturer', { name: subject.lecturer })}
                       </span>
                     )}
@@ -211,7 +211,7 @@ export default function SubjectDashboardPage() {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => navigate(to)}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-slate-800 border border-slate-700 text-xs font-medium text-slate-200 hover:bg-slate-700 hover:border-violet-600/30 transition-colors"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-slate-800 border border-slate-700 text-xs font-medium text-slate-200 hover:bg-slate-700 hover:border-primary/30 transition-colors"
               >
                 <Icon name={icon} size={13} /> {label}
               </motion.button>
@@ -239,9 +239,9 @@ export default function SubjectDashboardPage() {
                     onClick={() => setActiveTab(tab.key)}
                     className={`relative flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium rounded-t-lg transition-colors ${activeTab === tab.key ? 'text-white bg-slate-800' : 'text-slate-400 hover:text-white hover:bg-slate-800/50'}`}
                   >
-                    <Icon name={tab.icon} size={14} className={activeTab === tab.key ? 'text-violet-300' : 'text-slate-500'} />
+                    <Icon name={tab.icon} size={14} className={activeTab === tab.key ? 'text-primary-light' : 'text-slate-500'} />
                     {tab.label}
-                    {activeTab === tab.key && <motion.span layoutId="subject-tab-indicator" className="absolute inset-x-2 -bottom-px h-0.5 bg-violet-600 rounded-full" />}
+                    {activeTab === tab.key && <motion.span layoutId="subject-tab-indicator" className="absolute inset-x-2 -bottom-px h-0.5 bg-primary rounded-full" />}
                   </button>
                 ))}
               </div>
@@ -257,7 +257,7 @@ export default function SubjectDashboardPage() {
                       {hasScores ? (
                         <div className="rounded-xl border border-slate-800 bg-slate-950 p-4">
                           <div className="flex items-center gap-2 mb-3">
-                            <Icon name={ICONS.learning.progress} size={14} className="text-violet-400" />
+                            <Icon name={ICONS.learning.progress} size={14} className="text-primary-light" />
                             <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{t('subjectDashboard.scoreHistoryTitle')}</h3>
                           </div>
                           <ScoreChart history={scoreHistory} />

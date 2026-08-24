@@ -25,7 +25,7 @@ export default function StorageMeter() {
       </div>
       <div className="h-1.5 bg-card rounded-full overflow-hidden mb-1.5">
         <motion.div
-          className="h-full bg-gradient-primary rounded-full"
+          className="h-full bg-primary rounded-full"
           initial={{ width: 0 }}
           animate={{ width: `${pct}%` }}
           transition={{ duration: 0.6, ease: [0.32, 0.72, 0, 1] }}

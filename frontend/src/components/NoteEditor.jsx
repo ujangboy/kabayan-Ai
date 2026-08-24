@@ -120,7 +120,7 @@ function ToolBtn({ onClick, active, disabled, title, children, className: cls })
           'rounded-md transition-all select-none flex items-center justify-center shrink-0',
           'w-7 h-7 p-1.5',
           active
-            ? 'bg-violet-600/20 text-violet-300 border border-violet-600/30'
+            ? 'bg-primary/10 text-primary-light border border-primary/30'
             : 'text-slate-400 hover:text-white hover:bg-slate-800',
           disabled && 'opacity-25 cursor-not-allowed pointer-events-none',
           cls
@@ -497,7 +497,7 @@ function FloatingToolbar({ editor, editorMode }) {
             active={showColors}
             title={t('noteEditor.textColor')}
           >
-            <div className="w-3 h-3 rounded-full bg-gradient-to-br from-primary-light via-warning to-accent-blue ring-1 ring-white/20" />
+            <div className="w-3 h-3 rounded-full bg-warning ring-1 ring-white/20" />
           </ToolBtn>
           {showColors && (
             <div
