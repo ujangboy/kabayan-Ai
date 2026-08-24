@@ -104,7 +104,7 @@ export default function InlinePlanPractice({ item, practiceState, onClose, onSub
                 )}
                 <span className="text-text-muted">Soal {i + 1}</span>
                 <span className="text-text-secondary truncate flex-1">{question.topic}</span>
-                {isCorrect === false && <span className="text-danger text-[10px]">Jawaban: {question.answer}</span>}
+                {isCorrect === false && <span className="text-danger text-3xs">Jawaban: {question.answer}</span>}
               </div>
             );
           })}
@@ -147,7 +147,7 @@ export default function InlinePlanPractice({ item, practiceState, onClose, onSub
           exit={{ opacity: 0, x: -16 }}
           transition={{ duration: 0.2, ease: [0.32, 0.72, 0, 1] }}
         >
-          <h4 className="text-sm font-medium text-text mb-4 leading-relaxed">
+          <h4 className="text-base font-medium text-text mb-4 leading-relaxed">
             <MathMarkdown>{q.question}</MathMarkdown>
           </h4>
 
@@ -160,7 +160,7 @@ export default function InlinePlanPractice({ item, practiceState, onClose, onSub
                   <button
                     key={i}
                     onClick={() => selectAnswer(key)}
-                    className={`w-full text-left px-3 py-2.5 rounded-lg border text-sm transition-all ${isSelected ? 'bg-primary/10 border-primary text-primary-light font-medium' : 'bg-card border-border text-text hover:border-primary/50'}`}
+                    className={`w-full text-left px-3 py-2.5 rounded-lg border text-base transition-all ${isSelected ? 'bg-primary/10 border-primary text-primary-light font-medium' : 'bg-card border-border text-text hover:border-primary/50'}`}
                   >
                     <MathMarkdown>{opt}</MathMarkdown>
                   </button>
@@ -232,20 +232,20 @@ export function StudyPlanItem({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1 flex-wrap">
             <span className="text-xs font-semibold text-text-muted">{dateLabel}</span>
-            {item.time_slot && <span className="text-[10px] text-text-muted">{item.time_slot}</span>}
-            <span className={`text-[10px] px-1.5 py-0.5 rounded border ${meta.cls}`}>{meta.label}</span>
+            {item.time_slot && <span className="text-3xs text-text-muted">{item.time_slot}</span>}
+            <span className={`text-3xs px-1.5 py-0.5 rounded border ${meta.cls}`}>{meta.label}</span>
             {item.duration_minutes && (
-              <span className="text-[10px] text-text-muted flex items-center gap-0.5">
+              <span className="text-3xs text-text-muted flex items-center gap-0.5">
                 <Icon name={ICONS.learning.clock} size={9} /> {item.duration_minutes}m
               </span>
             )}
           </div>
-          <p className={`text-sm font-medium text-text ${item.completed ? 'line-through opacity-60' : ''}`}>{item.topic}</p>
+          <p className={`text-base font-medium text-text ${item.completed ? 'line-through opacity-60' : ''}`}>{item.topic}</p>
           {item.activity && <p className="text-xs text-text-secondary mt-0.5">{item.activity}</p>}
 
           {/* Latest practice result */}
           {latestResult && (
-            <div className="mt-2 flex items-center gap-3 text-[11px]">
+            <div className="mt-2 flex items-center gap-3 text-2xs">
               {latestResult.practice_type === 'quiz' ? (
                 <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-warning/10 border border-warning/20">
                   <Icon name={ICONS.learning.trophy} size={11} className="text-warning" />
@@ -268,7 +268,7 @@ export function StudyPlanItem({
               <button
                 disabled={isPracticeOpen}
                 onClick={() => onOpenPractice(item)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-primary text-white text-[11px] font-bold hover:brightness-110 transition-all disabled:opacity-40"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-primary text-white text-2xs font-bold hover:brightness-110 transition-all disabled:opacity-40"
               >
                 <Icon name={ICONS.media.play} size={11} /> Latihan Quiz
               </button>
@@ -277,7 +277,7 @@ export function StudyPlanItem({
               <button
                 disabled={generating}
                 onClick={() => onGenerateSummary(item)}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-colors disabled:opacity-50 border ${
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-2xs font-semibold transition-colors disabled:opacity-50 border ${
                   summary
                     ? 'border-success/40 text-success hover:bg-success/10'
                     : 'border-accent-blue/40 text-accent-blue hover:bg-accent-blue/10'
@@ -295,7 +295,7 @@ export function StudyPlanItem({
             {subjectId && !item.completed && (
               <button
                 onClick={() => onAskTutor(item)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-accent-blue/40 text-accent-blue text-[11px] font-semibold hover:bg-accent-blue/10 transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-accent-blue/40 text-accent-blue text-2xs font-semibold hover:bg-accent-blue/10 transition-colors"
               >
                 <Icon name={ICONS.communication.chat} size={11} /> Tanya Tutor
               </button>

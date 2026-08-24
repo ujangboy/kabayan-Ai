@@ -143,7 +143,7 @@ export default function DashboardPage() {
                   <Icon name={icon} size={17} />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-text">{label}</p>
+                  <p className="text-base font-semibold text-text">{label}</p>
                   <p className="text-xs text-text-muted mt-0.5">{desc}</p>
                 </div>
               </motion.button>
@@ -220,7 +220,7 @@ export default function DashboardPage() {
                         </td>
                         <td className="px-4 py-2.5 text-text-muted text-xs">{m.subject?.name || '—'}</td>
                         <td className="px-4 py-2.5">
-                          <span className={`badge text-[10px] ${m.status === 'Ready' ? 'badge-success' : m.status === 'Failed' ? 'badge-danger' : 'badge-warning'}`}>
+                          <span className={`badge text-3xs ${m.status === 'Ready' ? 'badge-success' : m.status === 'Failed' ? 'badge-danger' : 'badge-warning'}`}>
                             {m.status}
                           </span>
                         </td>
@@ -259,7 +259,7 @@ export default function DashboardPage() {
                       <tr key={q.id} className="tr-divider last:border-0 hover:bg-card-hover/50 transition-colors">
                         <td className="px-4 py-2.5">
                           <span className="text-text font-medium text-xs truncate max-w-[150px] block">{q.title}</span>
-                          <span className="text-text-muted text-[10px]">{q.subject?.name || '—'}</span>
+                          <span className="text-text-muted text-3xs">{q.subject?.name || '—'}</span>
                         </td>
                         <td className="px-4 py-2.5 text-right">
                           {q.score !== null && q.score !== undefined ? (
@@ -267,10 +267,10 @@ export default function DashboardPage() {
                               {q.score}
                             </span>
                           ) : (
-                            <span className="text-[10px] text-text-muted">{t('dashboard.notPlayed')}</span>
+                            <span className="text-3xs text-text-muted">{t('dashboard.notPlayed')}</span>
                           )}
                         </td>
-                        <td className="px-4 py-2.5 text-text-muted text-[10px]">{formatDate(q.created_at)}</td>
+                        <td className="px-4 py-2.5 text-text-muted text-3xs">{formatDate(q.created_at)}</td>
                       </tr>
                     ))}
                   </tbody>

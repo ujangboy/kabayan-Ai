@@ -8,7 +8,7 @@ import ChatHeader from '@/components/chat/ChatHeader';
 import ChatMessageList from '@/components/chat/ChatMessageList';
 import ChatNoteToast from '@/components/chat/ChatNoteToast';
 import ChatComposer from '@/components/chat/ChatComposer';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { ICONS } from '@/lib/icons';
 import { Icon } from '@/components/ui';
 
@@ -35,35 +35,34 @@ export default function ChatPage() {
 
   return (
     <div className="flex h-full overflow-hidden bg-slate-950">
-      <AnimatePresence initial={false}>
-        {!historyCollapsed && (
-          <motion.div
-            key="chat-history"
-            initial={{ width: 0, opacity: 0 }}
-            animate={{ width: 256, opacity: 1 }}
-            exit={{ width: 0, opacity: 0 }}
-            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-            className="shrink-0 overflow-hidden border-r border-slate-800"
-          >
-            <div className="w-64 h-full">
-              <ChatSidebar />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Panel riwayat selalu ter-mount — animate width saja agar
+          expand/collapse tidak pernah gagal (tanpa remount AnimatePresence). */}
+      <motion.div
+        initial={false}
+        animate={{ width: historyCollapsed ? 0 : 256, opacity: historyCollapsed ? 0 : 1 }}
+        transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
+        className="shrink-0 overflow-hidden border-r border-slate-700/60 bg-slate-900 shadow-[4px_0_24px_rgba(0,0,0,0.25)]"
+        style={{ willChange: 'width' }}
+      >
+        <div className="w-64 h-full">
+          <ChatSidebar />
+        </div>
+      </motion.div>
 
       <div className="flex-1 flex flex-col min-w-0 relative overflow-hidden bg-slate-950">
-        {/* Top bar with PanelLeft toggle */}
-        <div className="shrink-0 flex items-center gap-2 px-3 py-2 border-b border-slate-800 bg-slate-900/50 backdrop-blur-sm">
+        {/* Top bar with PanelLeft toggle — selalu terlihat, sangat kontras */}
+        <div className="shrink-0 flex items-center gap-2 px-3 py-2 border-b border-slate-700/60 bg-slate-900/80 backdrop-blur-sm">
           <button
             onClick={() => setHistoryCollapsed(v => !v)}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-800 border border-slate-600 text-slate-100 hover:text-white hover:bg-slate-700 hover:border-slate-500 transition-colors text-xs font-medium shadow-sm"
             title={historyCollapsed ? 'Tampilkan riwayat' : 'Sembunyikan riwayat'}
             aria-label="Toggle history"
+            aria-expanded={!historyCollapsed}
           >
-            <Icon name={historyCollapsed ? ICONS.actions.panelLeft : ICONS.actions.panelLeftClose} size={18} />
+            <Icon name={historyCollapsed ? ICONS.actions.panelLeft : ICONS.actions.panelLeftClose} size={16} />
+            <span className="hidden sm:inline">{historyCollapsed ? 'Tampilkan' : 'Sembunyikan'} Riwayat</span>
           </button>
-          <div className="h-4 w-px bg-slate-800 mx-1" />
+          <div className="h-4 w-px bg-slate-700 mx-1 hidden sm:block" />
           <ChatHeader chat={chat} isCurrentChatStreaming={isCurrentChatStreaming} />
         </div>
 

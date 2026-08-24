@@ -8,8 +8,11 @@ export default {
         base: "#0E1520",
         background: "#0E1520",
         rail: "#0B111B",
+        // PRD palette (Apple/Google-grade dark depth)
+        appbase: "#0B0D13",
+        sidebar: "#11141D",
+        "surface-2": "#171B26",
         surface: "rgba(18, 26, 39, 0.72)",
-        sidebar: "rgba(18, 26, 39, 0.72)",
         card: "rgba(255, 255, 255, 0.05)",
         "card-hover": "rgba(255, 255, 255, 0.09)",
         border: "rgba(255, 255, 255, 0.08)",
@@ -49,6 +52,25 @@ export default {
       fontFamily: {
         sans: ["Inter", "system-ui", "sans-serif"],
         mono: ["JetBrains Mono", "ui-monospace", "monospace"],
+      },
+      // Gemini scale — explicit agar tidak drift (Inter fallback Google Sans Text)
+      // body default 16px/1.55, composer 18px, metadata 13px, label 11px
+      fontSize: {
+        xs: ["12px", { lineHeight: "16px" }], // caption
+        sm: ["14px", { lineHeight: "20px" }], // chip / secondary (was body)
+        base: ["16px", { lineHeight: "24.8px" }], // Gemini answer body 16/1.55 (was 14px)
+        lg: ["18px", { lineHeight: "25.2px" }], // composer 18/1.4 + section-header 18
+        xl: ["20px", { lineHeight: "26px" }], // heading 20/1.3
+        "2xl": ["24px", { lineHeight: "32px" }],
+        "3xl": ["28px", { lineHeight: "33.6px" }], // greeting 28/1.2
+        "4xl": ["36px", { lineHeight: "40px" }],
+        "5xl": ["48px", { lineHeight: "1" }],
+        "6xl": ["60px", { lineHeight: "1" }],
+        "7xl": ["72px", { lineHeight: "1" }],
+        // Gemini micro tokens
+        "2xs": ["11px", { lineHeight: "13.2px" }], // label-upper
+        "3xs": ["10px", { lineHeight: "14px" }], // legacy micro (migrasi ke xs)
+        meta: ["13px", { lineHeight: "16.9px" }], // metadata
       },
       borderRadius: {
         card: "12px",

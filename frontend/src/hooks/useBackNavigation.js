@@ -73,7 +73,31 @@ export function useBackNavigation({ fallback = '/dashboard' } = {}) {
   const back = useCallback(() => navigate(destination), [destination, navigate]);
   const canGoBack = useMemo(() => destination !== fallback, [destination, fallback]);
 
-  return { back, canGoBack };
+  return { back, canGoBack, destination };
+}
+
+/**
+ * getRouteLabel — human-readable label untuk route tujuan back (PRD §2.C).
+ * Dipakai PageHeaderBack untuk `Kembali ke {{name}}`.
+ * Fallback ke dashboard bila tidak dikenali.
+ */
+export function getRouteLabel(destination, t) {
+  if (!destination) return t ? t('nav.dashboard') : 'Dashboard';
+  const segs = destination.split('?')[0].split('/').filter(Boolean);
+  const first = segs[0] || 'dashboard';
+  const map = {
+    dashboard: t ? t('nav.dashboard') : 'Dashboard',
+    chat: t ? t('nav.chat') : 'Chat',
+    subjects: t ? t('nav.subjects') : 'Mata Pelajaran',
+    materi: t ? t('nav.materi') : 'Materi',
+    notebook: t ? t('nav.notebook') : 'Notebook',
+    flashcard: t ? t('nav.flashcard') : 'Flashcard',
+    quiz: t ? t('nav.quiz') : 'Quiz',
+    'exam-analyzer': t ? t('nav.exam') : 'Exam Analyzer',
+    'study-plan': t ? t('nav.studyPlan') : 'Study Plan',
+    settings: t ? t('nav.settings') : 'Settings',
+  };
+  return map[first] || (t ? t('nav.dashboard') : 'Dashboard');
 }
 
 /**

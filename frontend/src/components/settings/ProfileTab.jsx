@@ -113,7 +113,7 @@ export default function ProfileTab() {
               </button>
             )}
           </div>
-          <span className="text-[11px] text-text-muted">{t('settings.profile.photoHint')}</span>
+          <span className="text-2xs text-text-muted">{t('settings.profile.photoHint')}</span>
         </div>
         <input
           ref={fileRef}
@@ -126,7 +126,7 @@ export default function ProfileTab() {
 
       {/* Display name */}
       <div>
-        <label className="block text-sm font-medium text-text mb-1.5">
+        <label className="block text-base font-medium text-text mb-1.5">
           {t('settings.profile.displayName')}
         </label>
         <input
@@ -135,7 +135,7 @@ export default function ProfileTab() {
           onChange={(e) => setName(e.target.value)}
           placeholder={t('settings.profile.displayNamePlaceholder')}
           maxLength={120}
-          className="w-full px-3 py-2 bg-card border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary transition-colors"
+          className="w-full px-3 py-2 bg-card border border-border rounded-lg text-base text-text focus:outline-none focus:border-primary transition-colors"
         />
       </div>
 

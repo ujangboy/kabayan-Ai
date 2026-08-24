@@ -118,7 +118,7 @@ export default function ChatComposer({ onSend, isStreaming, onStop, tutorMode })
               onKeyDown={handleKeyDown}
               rows={1}
               placeholder={tutorMode ? t('chat.inputPlaceholderTutor', 'Tanya topik apapun ke tutor AI...') : t('chat.inputPlaceholderNormal', 'Ketik pesanmu...')}
-              className="w-full resize-none bg-transparent px-2 py-2 text-sm leading-6 text-white placeholder:text-slate-500 focus:outline-none max-h-[144px] overflow-y-hidden"
+              className="w-full resize-none bg-transparent px-2 py-2 text-base leading-6 text-white placeholder:text-slate-500 focus:outline-none max-h-[144px] overflow-y-hidden"
               style={{ minHeight: '40px' }}
             />
             {/* Sparkles/Bot AI Tutor toggle inside bar */}

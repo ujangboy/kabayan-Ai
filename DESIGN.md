@@ -38,9 +38,11 @@ colors:
   overlay: "#000000"
 
 typography:
+  # Skala diadaptasi dari Gemini (Google Sans → Inter fallback)
+  # Reference: awesome-ios-design-md/ gemini — body 16pt/1.55, heading 20pt, chip 14pt
   display-xl:
     fontFamily: Inter
-    fontSize: 40px
+    fontSize: 40px # hero kabayan (Gemini greeting 28pt ≈ 37px — kabayan sedikit lebih besar untuk dark premium)
     fontWeight: 700
     lineHeight: 1.1
     letterSpacing: -0.02em
@@ -50,40 +52,85 @@ typography:
     fontWeight: 700
     lineHeight: 1.15
     letterSpacing: -0.015em
+  greeting:
+    fontFamily: Inter
+    fontSize: 28px # Gemini Greeting Hero 28pt/500
+    fontWeight: 500
+    lineHeight: 1.2
+    letterSpacing: -0.02em
+  screen-title:
+    fontFamily: Inter
+    fontSize: 22px # Gemini Screen Title 22pt/500
+    fontWeight: 500
+    lineHeight: 1.25
+    letterSpacing: -0.01em
+  section-header:
+    fontFamily: Inter
+    fontSize: 18px # Gemini Section Header 18pt/500
+    fontWeight: 500
+    lineHeight: 1.3
+    letterSpacing: 0em
   heading:
     fontFamily: Inter
-    fontSize: 20px
-    fontWeight: 600
+    fontSize: 20px # Gemini Answer Heading 20pt/500 (was 600 → Gemini 500)
+    fontWeight: 500
     lineHeight: 1.3
-    letterSpacing: -0.01em
+    letterSpacing: 0em
   subhead:
     fontFamily: Inter
-    fontSize: 16px
-    fontWeight: 600
-    lineHeight: 1.4
+    fontSize: 17px # Gemini Answer Subheading 17pt/500
+    fontWeight: 500
+    lineHeight: 1.35
+    letterSpacing: 0em
+  answer-body:
+    fontFamily: Inter
+    fontSize: 16px # Gemini Answer Body / User Turn / List Item / Prompt Input 16pt/400
+    fontWeight: 400
+    lineHeight: 1.55
   body-lg:
     fontFamily: Inter
-    fontSize: 16px
+    fontSize: 16px # alias answer-body
     fontWeight: 400
-    lineHeight: 1.6
+    lineHeight: 1.55
   body:
     fontFamily: Inter
-    fontSize: 14px
+    fontSize: 16px # NAIK dari 14px → 16px (Gemini body), line-height 1.6 → 1.55
     fontWeight: 400
-    lineHeight: 1.6
+    lineHeight: 1.55
+  body-sm:
+    fontFamily: Inter
+    fontSize: 14px # Gemini Suggestion Chip 14pt/500 & Code 14pt — untuk secondary
+    fontWeight: 400
+    lineHeight: 1.4
   caption:
     fontFamily: Inter
     fontSize: 12px
     fontWeight: 400
     lineHeight: 1.4
-  button:
+  metadata:
     fontFamily: Inter
-    fontSize: 14px
+    fontSize: 13px # Gemini Metadata 13pt/400
+    fontWeight: 400
+    lineHeight: 1.3
+  label-upper:
+    fontFamily: Inter
+    fontSize: 11px # Gemini Label UPPER 11pt/500 + 0.6pt tracking
     fontWeight: 500
     lineHeight: 1.2
+    letterSpacing: 0.05em
+  button:
+    fontFamily: Inter
+    fontSize: 15px # Gemini Button 15pt/500 (was 14px)
+    fontWeight: 500
+    lineHeight: 1.0
+  composer:
+    fontFamily: Inter
+    fontSize: 18px # Gemini composer actual 18px (commit fc3f539)
+    fontWeight: 400
+    lineHeight: 1.4
   mono:
     fontFamily: "JetBrains Mono"
-    fontSize: 13px
+    fontSize: 14px # Gemini Code 14pt (was 13px)
     fontWeight: 400
     lineHeight: 1.5
 
@@ -212,12 +259,13 @@ glow ungu diperbolehkan pada elemen primer (CTA, focus ring, active state).
   chart/visualisasi data & badge status, BUKAN chrome (button/nav/text).
 - **Overlay**: `black/60` + `backdrop-blur` untuk scrim modal.
 
-## 3. Typography
-- Font: **Inter** (body/display) + **JetBrains Mono** (code).
-- Display & heading pakai **negative letter-spacing** (-0.01em s/d -0.02em).
-- Hierarchy: display-xl (40/700) untuk hero, heading (20/600) untuk judul
-  kartu/bagian, body (14/400) default, caption (12) untuk meta.
+## 3. Typography (Gemini scale — Inter fallback for Google Sans)
+- Font: **Inter** (body/display, fallback Google Sans / Google Sans Text) + **JetBrains Mono** (code, fallback Roboto Mono).
+- Skala Gemini: greeting 28/500 → screen-title 22/500 → section-header 18/500 → heading 20/500 → subhead 17/500 → **body 16/400/1.55** (was 14/1.6, naik +2px) → chip/code 14 → metadata 13 → label-upper 11/500/0.05em.
+- Display & greeting pakai **negative letter-spacing** (-0.02em); heading/body `0em` (Gemini body 0 tracking).
+- Hierarchy: body 16 adalah default prose/chat/composer (composer 18px aktual `gemini.google.com`), `text-sm` (14px) sekarang untuk secondary/chip, `text-xs` (12px) caption, `11px` untuk label UPPER, `13px` metadata.
 - Jangan hardcode string UI — selalu lewat `i18n` (`t()`).
+- Ref: `awesome-ios-design-md` Gemini spec + `just-marketing/prompt-area@fc3f539` (composer 18px, pill 16px).
 
 ## 4. Components
 Semua di `src/components/ui/`:

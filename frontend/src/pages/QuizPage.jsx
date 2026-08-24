@@ -142,7 +142,7 @@ export default function QuizPage() {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-text">{t('quiz.title')}</h1>
-              <p className="text-text-secondary text-sm mt-1">{t('quiz.subtitle')}</p>
+              <p className="text-text-secondary text-base mt-1">{t('quiz.subtitle')}</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -212,20 +212,20 @@ export default function QuizPage() {
                     <div className="flex items-start gap-3 min-w-0">
                       <SubjectBadge name={quiz.subject?.name || quiz.title} tone={idx} size="sm" />
                       <div className="flex-1 min-w-0">
-                        <p className="text-[10px] font-semibold text-accent-blue uppercase tracking-wider truncate">
+                        <p className="text-3xs font-semibold text-accent-blue uppercase tracking-wider truncate">
                           {quiz.subject?.name || t('quiz.genericSubject')}
                         </p>
-                        <h3 className="font-semibold text-text text-sm line-clamp-2">
+                        <h3 className="font-semibold text-text text-base line-clamp-2">
                           {quiz.title || `Quiz #${quiz.id}`}
                         </h3>
                         <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                           {quiz.question_type && (
-                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-white/[0.04] border border-white/[0.08] text-text-secondary shrink-0">
+                            <span className="text-2xs px-1.5 py-0.5 rounded bg-white/[0.04] border border-white/[0.08] text-text-secondary shrink-0">
                               {QTYPE_LABEL[quiz.question_type] ? t(QTYPE_LABEL[quiz.question_type]) : quiz.question_type}
                             </span>
                           )}
                           {quiz.difficulty && DIFFICULTY_BADGE[quiz.difficulty] && (
-                            <span className={`text-[9px] px-1.5 py-0.5 rounded border shrink-0 font-medium ${DIFFICULTY_BADGE[quiz.difficulty].cls}`}>
+                            <span className={`text-2xs px-1.5 py-0.5 rounded border shrink-0 font-medium ${DIFFICULTY_BADGE[quiz.difficulty].cls}`}>
                               {t(DIFFICULTY_BADGE[quiz.difficulty].label)}
                             </span>
                           )}
@@ -248,8 +248,8 @@ export default function QuizPage() {
                     {stats.map(({ icon, value, label, color }) => (
                       <div key={label} className="rounded-lg bg-white/[0.03] border border-white/[0.06] py-2 px-1 text-center">
                         <Icon name={icon} size={12} className={`mx-auto mb-0.5 ${color}`} />
-                        <p className="text-sm font-bold text-text leading-tight truncate">{value}</p>
-                        <p className="text-[9px] text-text-muted uppercase tracking-wide truncate">{label}</p>
+                        <p className="text-base font-bold text-text leading-tight truncate">{value}</p>
+                        <p className="text-2xs text-text-muted uppercase tracking-wide truncate">{label}</p>
                       </div>
                     ))}
                   </div>
@@ -258,12 +258,12 @@ export default function QuizPage() {
                   {(quiz.material_names || []).length > 0 && (
                     <div className="flex gap-1 flex-wrap">
                       {(quiz.material_names || []).slice(0, 3).map((name, i) => (
-                        <span key={i} className="inline-flex items-center gap-0.5 text-[10px] px-2 py-0.5 rounded bg-accent-blue/10 text-accent-blue border border-accent-blue/20 truncate max-w-[220px]">
+                        <span key={i} className="inline-flex items-center gap-0.5 text-3xs px-2 py-0.5 rounded bg-accent-blue/10 text-accent-blue border border-accent-blue/20 truncate max-w-[220px]">
                           <Icon name={ICONS.files.document} size={8} className="shrink-0" />{name}
                         </span>
                       ))}
                       {(quiz.material_names || []).length > 3 && (
-                        <span className="text-[10px] text-text-muted">{t('quiz.moreMaterials', { count: quiz.material_names.length - 3 })}</span>
+                        <span className="text-3xs text-text-muted">{t('quiz.moreMaterials', { count: quiz.material_names.length - 3 })}</span>
                       )}
                     </div>
                   )}
@@ -278,7 +278,7 @@ export default function QuizPage() {
                         transition={{ duration: 0.4, ease: [0.32, 0.72, 0, 1] }}
                       />
                     </div>
-                    <div className="flex items-center justify-between text-[10px] text-text-muted">
+                    <div className="flex items-center justify-between text-3xs text-text-muted">
                       {quiz.created_at ? (
                         <div className="flex items-center gap-3">
                           <span className="flex items-center gap-1"><Icon name={ICONS.learning.calendar} size={9} />{formatDate(quiz.created_at)}</span>

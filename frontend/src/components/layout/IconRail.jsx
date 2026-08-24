@@ -10,7 +10,13 @@ export default function IconRail() {
   const { t } = useTranslation();
   const lastSubjectId = useUiStore((s) => s.lastSubjectId);
   const setSearchOpen = useAppStore((s) => s.setSearchOpen);
+  const contextCollapsed = useAppStore((s) => s.contextSidebarCollapsed);
+  const toggleContextSidebar = useAppStore((s) => s.toggleContextSidebar);
   const location = useLocation();
+
+  const hasContextSidebar = ['/materi', '/subjects', '/flashcard'].some((p) =>
+    location.pathname.startsWith(p)
+  );
 
   const NAV = [
     { to: '/dashboard', icon: ICONS.nav.dashboard, label: t('nav.dashboard') },
@@ -33,10 +39,24 @@ export default function IconRail() {
 
   return (
     <aside className="flex h-screen w-14 flex-col items-center bg-rail py-3 relative z-20 shrink-0 divider-gradient-r gap-1">
-      {/* Logo */}
-      <div className="relative mb-3 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-primary shadow-btn-primary">
-        <span className="absolute inset-0 rounded-xl bg-gradient-primary opacity-50 blur-md" />
-        <Icon name={ICONS.communication.bot} size={20} className="relative text-white" />
+      {/* Logo + slide bar toggle nav menu (hanya di halaman dengan context sidebar) */}
+      <div className="flex flex-col items-center gap-1.5 mb-2">
+        <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-primary shadow-btn-primary">
+          <span className="absolute inset-0 rounded-xl bg-gradient-primary opacity-50 blur-md" />
+          <Icon name={ICONS.communication.bot} size={20} className="relative text-white" />
+        </div>
+        {hasContextSidebar && (
+          <Tooltip label={contextCollapsed ? t('common.expand', 'Tampilkan sidebar') : t('common.collapse', 'Sembunyikan sidebar')} side="right">
+            <button
+              onClick={toggleContextSidebar}
+              aria-label={contextCollapsed ? t('common.expand', 'Tampilkan sidebar') : t('common.collapse', 'Sembunyikan sidebar')}
+              aria-expanded={!contextCollapsed}
+              className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-800 border border-slate-600 text-slate-200 hover:bg-slate-700 hover:text-white hover:border-slate-500 transition-all duration-200 shadow-sm"
+            >
+              <Icon name={contextCollapsed ? ICONS.actions.panelLeft : ICONS.actions.panelLeftClose} size={14} />
+            </button>
+          </Tooltip>
+        )}
       </div>
 
       {/* Search trigger */}

@@ -206,7 +206,7 @@ export default function DataTab() {
 
       {/* Material status */}
       <div className="card-base p-5">
-        <h3 className="text-sm font-semibold text-text mb-3">{t('settings.data.materials')}</h3>
+        <h3 className="text-base font-semibold text-text mb-3">{t('settings.data.materials')}</h3>
         <div className="flex gap-6 text-xs">
           <span className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-success inline-block" />
@@ -225,7 +225,7 @@ export default function DataTab() {
 
       {/* Materials list */}
       <div className="card-base p-5">
-        <h3 className="text-sm font-semibold text-text mb-3">
+        <h3 className="text-base font-semibold text-text mb-3">
           {t('settings.data.materials')} ({materials.length} {t('settings.data.items')})
         </h3>
         {materials.length === 0 ? (
@@ -253,7 +253,7 @@ export default function DataTab() {
                     <td className="py-2 pr-3 text-text-secondary">{m.subject?.name || '—'}</td>
                     <td className="py-2 pr-3 text-text-secondary">{m.material_type || '—'}</td>
                     <td className="py-2 pr-3">
-                      <span className={cn('px-1.5 py-0.5 rounded border text-[10px] font-medium',
+                      <span className={cn('px-1.5 py-0.5 rounded border text-3xs font-medium',
                         STATUS_BADGE[m.status] || 'bg-card border-border text-text-secondary')}>
                         {m.status}
                       </span>
@@ -288,7 +288,7 @@ export default function DataTab() {
 
       {/* Backup / Export */}
       <div className="card-base p-5">
-        <h3 className="text-sm font-semibold text-text mb-1 flex items-center gap-2">
+        <h3 className="text-base font-semibold text-text mb-1 flex items-center gap-2">
           <Icon name={ICONS.ui.archive} size={15} className="text-primary" />
           {t('settings.data.backupTitle')}
         </h3>
@@ -307,10 +307,10 @@ export default function DataTab() {
           {backupMutation.isPending ? t('settings.data.backupCreating') : t('settings.data.backupCreate')}
         </button>
 
-        <p className="text-[10px] text-text-muted mt-2 leading-relaxed">{t('settings.data.backupNote')}</p>
+        <p className="text-3xs text-text-muted mt-2 leading-relaxed">{t('settings.data.backupNote')}</p>
 
         <div className="mt-4">
-          <p className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider mb-2">
+          <p className="text-3xs font-semibold text-text-secondary uppercase tracking-wider mb-2">
             {t('settings.data.backupRecent')}
           </p>
           {(!backups?.backups || backups.backups.length === 0) ? (
@@ -321,7 +321,7 @@ export default function DataTab() {
                 <div key={b.filename} className="flex items-center justify-between gap-2 bg-background border border-border/60 rounded-lg px-3 py-2">
                   <div className="min-w-0">
                     <p className="text-xs text-text truncate" title={b.filename}>{b.filename}</p>
-                    <p className="text-[10px] text-text-muted">
+                    <p className="text-3xs text-text-muted">
                       {b.created_at} · {formatBytes(b.size)}
                     </p>
                   </div>
@@ -344,7 +344,7 @@ export default function DataTab() {
       {/* Trash (Sampah) */}
       <div className="card-base p-5">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-semibold text-text flex items-center gap-2">
+          <h3 className="text-base font-semibold text-text flex items-center gap-2">
             <Icon name={ICONS.actions.delete} size={15} className="text-danger" />
             {t('settings.data.trash')} ({trashData?.items?.length || 0})
           </h3>
@@ -380,7 +380,7 @@ export default function DataTab() {
                       {item.original_filename}
                     </td>
                     <td className="py-2 pr-3 text-text-secondary">
-                      <span className={cn('px-1.5 py-0.5 rounded border text-[10px] font-medium',
+                      <span className={cn('px-1.5 py-0.5 rounded border text-3xs font-medium',
                         item.material_id ? 'bg-warning/15 text-warning border-warning/30' : 'bg-card border-border text-text-secondary')}>
                         {item.material_id ? t('settings.data.trashFromMaterial') : t('settings.data.trashOrphan')}
                       </span>
@@ -421,7 +421,7 @@ export default function DataTab() {
 
       {/* Storage */}
       <div className="card-base p-5">
-        <h3 className="text-sm font-semibold text-text mb-3 flex items-center gap-2">
+        <h3 className="text-base font-semibold text-text mb-3 flex items-center gap-2">
           <Icon name={ICONS.ui.storage} size={15} className="text-primary" />
           {t('settings.data.storage')}
         </h3>

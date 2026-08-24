@@ -77,7 +77,7 @@ export default function GenerateAIModal({ open, subjects, onClose, onSuccess }) 
               <option key={s.id} value={s.id}>{s.name}</option>
             ))}
           </Select>
-          <p className="text-[10px] text-text-muted mt-1">
+          <p className="text-3xs text-text-muted mt-1">
             {t('flashcard.materialReadyHint')}
           </p>
         </div>
@@ -105,7 +105,7 @@ export default function GenerateAIModal({ open, subjects, onClose, onSuccess }) 
               </button>
             ))}
           </div>
-          <p className="text-[10px] text-text-muted mt-1">{t('flashcard.generatePerDeckHint')}</p>
+          <p className="text-3xs text-text-muted mt-1">{t('flashcard.generatePerDeckHint')}</p>
         </div>
         {isGenerating && (
           <div className="flex items-center gap-2 text-sm text-primary py-1">

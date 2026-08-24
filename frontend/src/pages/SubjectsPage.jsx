@@ -58,7 +58,7 @@ export default function SubjectsPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-text">{t('subjects.title')}</h1>
-            <p className="text-text-secondary text-sm mt-1">{t('subjects.subtitle')}</p>
+            <p className="text-text-secondary text-base mt-1">{t('subjects.subtitle')}</p>
           </div>
           <div className="flex items-center gap-2">
             <Select
@@ -156,8 +156,8 @@ export default function SubjectsPage() {
                       {meta.map(({ icon, value, label, color }) => (
                         <div key={label} className="rounded-lg bg-white/[0.03] border border-white/[0.06] py-2 px-1 text-center">
                           <Icon name={icon} size={12} className={`mx-auto mb-0.5 ${color}`} />
-                          <p className="text-sm font-bold text-text leading-tight">{value}</p>
-                          <p className="text-[9px] text-text-muted uppercase tracking-wide">{label}</p>
+                          <p className="text-base font-bold text-text leading-tight">{value}</p>
+                          <p className="text-2xs text-text-muted uppercase tracking-wide">{label}</p>
                         </div>
                       ))}
                     </div>
@@ -172,7 +172,7 @@ export default function SubjectsPage() {
                           transition={{ duration: 0.4, ease: [0.32, 0.72, 0, 1] }}
                         />
                       </div>
-                      <div className="flex items-center justify-between text-[10px] text-text-muted">
+                      <div className="flex items-center justify-between text-3xs text-text-muted">
                         {s.created_at ? (
                           <div className="flex items-center gap-3">
                             <span className="flex items-center gap-1"><Icon name={ICONS.learning.calendar} size={9} />{formatDate(s.created_at)}</span>

@@ -9,6 +9,8 @@ export const Input = forwardRef(({ className, error = false, ...props }, ref) =>
     ref={ref}
     className={cn(
       base,
+      // Fallback explicit color jika .input-base ter-override
+      'text-text',
       error && 'border-danger/60 focus:border-danger/60 focus:ring-danger/30',
       className
     )}
@@ -34,9 +36,14 @@ Textarea.displayName = 'Textarea';
 export const Select = forwardRef(({ className, error = false, children, ...props }, ref) => (
   <select
     ref={ref}
+    style={{ colorScheme: 'dark' }}
     className={cn(
       base,
-      'cursor-pointer',
+      // Override keras agar teks selalu terang di bg gelap — fix screenshot: text gelap di bg gelap
+      'cursor-pointer pr-9 text-text placeholder:text-text-secondary',
+      'bg-slate-800/90 border-slate-600/60',
+      'focus:bg-slate-800 focus:border-primary/60',
+      'disabled:opacity-60 disabled:cursor-not-allowed',
       error && 'border-danger/60',
       className
     )}

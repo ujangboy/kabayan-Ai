@@ -116,7 +116,7 @@ export function GenerateQuizModal({ open, onClose, subjects, onSuccess }) {
               </button>
             ))}
           </div>
-          <p className="text-[10px] text-text-muted mt-1">{t(DIFFICULTIES.find(d => d.value === difficulty)?.desc)}</p>
+          <p className="text-3xs text-text-muted mt-1">{t(DIFFICULTIES.find(d => d.value === difficulty)?.desc)}</p>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
@@ -143,7 +143,7 @@ export function GenerateQuizModal({ open, onClose, subjects, onSuccess }) {
           </div>
         </div>
         {Number(essayCount) > 0 && (
-          <p className="text-[10px] text-text-muted">
+          <p className="text-3xs text-text-muted">
             Soal essay tidak dinilai otomatis — tujuannya untuk latihan menulis jawaban.
           </p>
         )}

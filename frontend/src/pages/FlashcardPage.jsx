@@ -140,7 +140,7 @@ export default function FlashcardPage() {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-text">{t('flashcard.pageTitle')}</h1>
-              <p className="text-text-secondary text-sm mt-1">{t('flashcard.pageSubtitle')}</p>
+              <p className="text-text-secondary text-base mt-1">{t('flashcard.pageSubtitle')}</p>
             </div>
           </div>
           <div className="flex items-center gap-3 flex-wrap">
@@ -184,7 +184,7 @@ export default function FlashcardPage() {
                 <option key={s.id} value={String(s.id)}>{s.name}</option>
               ))}
             </Select>
-            <span className="text-xs text-text-muted">
+            <span className="text-xs text-text-secondary font-medium">
               {t('flashcard.showingCount', { shown: filteredGroups.length, total: groups.length })}
             </span>
           </div>

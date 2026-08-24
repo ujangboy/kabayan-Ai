@@ -70,11 +70,11 @@ export default function ReviewView({ sessionData, evalData }) {
                     isCorrect === false ? 'bg-danger'   : 'bg-border')}>
                     {isCorrect === true  ? <Icon name={ICONS.status.success} size={14} className="text-white" /> :
                      isCorrect === false ? <Icon name={ICONS.status.error}     size={14} className="text-white" /> :
-                                          <span className="text-[10px] font-bold text-text">?</span>}
+                                          <span className="text-3xs font-bold text-text">?</span>}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs text-text-muted mb-0.5">Soal {i+1} · {q.topic} · {q.type}</p>
-                    <div className="text-sm text-text font-medium line-clamp-2">
+                    <div className="text-base text-text font-medium line-clamp-2">
                       <MathMarkdown>{q.question}</MathMarkdown>
                     </div>
                   </div>

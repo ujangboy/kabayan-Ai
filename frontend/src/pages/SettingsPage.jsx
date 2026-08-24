@@ -50,7 +50,7 @@ export default function SettingsPage() {
 
       {/* Two-Column Layout */}
       <div className="flex-1 flex flex-col md:flex-row min-h-0 overflow-hidden">
-        {/* Left: vertical mini sidebar w-64 */}
+        {/* Left: vertical mini sidebar w-64 — statis, tanpa slide */}
         <aside className="w-full md:w-64 shrink-0 border-b md:border-b-0 md:border-r border-slate-800/60 bg-slate-900/30 p-3 md:p-4 overflow-y-auto">
           <nav className="flex md:flex-col gap-1.5 overflow-x-auto md:overflow-visible pb-1 md:pb-0">
             {TABS.map(({ key, icon, labelKey }) => {

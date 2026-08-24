@@ -98,7 +98,7 @@ export default function StudyPlanPage() {
 
             <div className="space-y-2">
               <h2 className="text-xl font-bold tracking-tight text-text md:text-2xl">{t('studyPlanPage.empty.title')}</h2>
-              <p className="mx-auto max-w-md text-sm leading-relaxed text-text-secondary">{t('studyPlanPage.empty.desc')}</p>
+              <p className="mx-auto max-w-md text-base leading-relaxed text-text-secondary">{t('studyPlanPage.empty.desc')}</p>
             </div>
 
             <ol className="w-full max-w-[420px] divide-y divide-white/[0.06] rounded-xl border border-white/[0.06] bg-white/[0.02] px-2 text-left">
@@ -249,7 +249,7 @@ export default function StudyPlanPage() {
         {plan.motivational_message && (
           <div className="p-4 rounded-xl bg-primary/5 border border-primary/15 flex items-start gap-3">
             <Icon name={ICONS.learning.certificate} size={18} className="text-primary mt-0.5 shrink-0" />
-            <p className="text-sm text-text">{plan.motivational_message}</p>
+            <p className="text-base text-text">{plan.motivational_message}</p>
           </div>
         )}
 
@@ -277,7 +277,7 @@ export default function StudyPlanPage() {
               <p className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-1">Aksi Prioritas</p>
               {(plan.priority_actions || []).map((a, i) => (
                 <p key={i} className="text-xs text-text flex items-start gap-2">
-                  <span className="w-4 h-4 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[9px] font-bold shrink-0 mt-0.5">{i + 1}</span>
+                  <span className="w-4 h-4 rounded-full bg-primary/10 text-primary flex items-center justify-center text-2xs font-bold shrink-0 mt-0.5">{i + 1}</span>
                   {a}
                 </p>
               ))}

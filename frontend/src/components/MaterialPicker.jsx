@@ -72,12 +72,12 @@ export default function MaterialPicker({ subjectId, selectedMaterialIds, onSelec
               onSelectionChange(materials.filter(m => m.status === 'Ready').map(m => String(m.id)));
             }
           }}
-          className="text-[10px] font-medium text-primary hover:text-primary-focus transition-colors"
+          className="text-3xs font-medium text-primary hover:text-primary-focus transition-colors"
         >
           {selectedMaterialIds.length > 0 ? t('materialPicker.cancelSelection') : t('materialPicker.selectAll')}
         </button>
       </div>
-      <p className="text-[10px] text-text-muted mb-2">{t('materialPicker.hint')}</p>
+      <p className="text-3xs text-text-muted mb-2">{t('materialPicker.hint')}</p>
       <div className="max-h-40 overflow-y-auto space-y-1.5 rounded-xl bg-background border border-border p-2">
         {materials.map((m) => {
           const isReady = m.status === 'Ready';
@@ -106,7 +106,7 @@ export default function MaterialPicker({ subjectId, selectedMaterialIds, onSelec
               <div className="flex flex-col overflow-hidden">
                 <span className="text-xs text-text truncate">{m.filename}</span>
                 {!isReady && (
-                  <span className="text-[9px] text-warning mt-0.5">{m.status}</span>
+                  <span className="text-2xs text-warning mt-0.5">{m.status}</span>
                 )}
               </div>
             </label>
@@ -114,7 +114,7 @@ export default function MaterialPicker({ subjectId, selectedMaterialIds, onSelec
         })}
       </div>
       {selectedMaterialIds.length > 0 && (
-        <p className="text-[10px] text-text-muted mt-1">
+        <p className="text-3xs text-text-muted mt-1">
           {t('materialPicker.selectedCount', { count: selectedMaterialIds.length })}
         </p>
       )}

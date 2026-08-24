@@ -31,7 +31,7 @@ export default function StorageMeter() {
           transition={{ duration: 0.6, ease: [0.32, 0.72, 0, 1] }}
         />
       </div>
-      <div className="flex justify-between text-[10px] text-text-muted">
+      <div className="flex justify-between text-3xs text-text-muted">
         <span>{pct}%</span>
         <span>{formatBytes(used)} / {formatBytes(total)}</span>
       </div>

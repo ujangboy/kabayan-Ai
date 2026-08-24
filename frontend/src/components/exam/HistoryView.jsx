@@ -133,23 +133,23 @@ function SubjectCard({ subject, onSelectSubject, onStartConfig, onDelete, t, ton
        <div className="grid grid-cols-4 gap-1.5">
          <div className="rounded-lg bg-white/[0.03] border border-white/[0.06] py-2 px-1 text-center">
            <Icon name={ICONS.learning.trophy} size={12} className="mx-auto mb-0.5 text-warning" />
-           <p className="text-sm font-bold text-text leading-tight">{subject.best_score ?? '—'}</p>
-           <p className="text-[9px] text-text-muted uppercase tracking-wide">{t('exam.history.scoreLabel', 'Skor')}</p>
+           <p className="text-base font-bold text-text leading-tight">{subject.best_score ?? '—'}</p>
+           <p className="text-2xs text-text-muted uppercase tracking-wide">{t('exam.history.scoreLabel', 'Skor')}</p>
          </div>
          <div className="rounded-lg bg-white/[0.03] border border-white/[0.06] py-2 px-1 text-center">
            <Icon name={ICONS.ui.help} size={12} className="mx-auto mb-0.5 text-accent-teal" />
-           <p className="text-sm font-bold text-text leading-tight">{subject.total_quizzes ?? 0}</p>
-           <p className="text-[9px] text-text-muted uppercase tracking-wide">{t('exam.history.quizLabel', 'Quiz')}</p>
+           <p className="text-base font-bold text-text leading-tight">{subject.total_quizzes ?? 0}</p>
+           <p className="text-2xs text-text-muted uppercase tracking-wide">{t('exam.history.quizLabel', 'Quiz')}</p>
          </div>
          <div className="rounded-lg bg-white/[0.03] border border-white/[0.06] py-2 px-1 text-center">
            <Icon name={ICONS.nav.flashcard} size={12} className="mx-auto mb-0.5 text-accent-purple" />
-           <p className="text-sm font-bold text-text leading-tight">{subject.total_flashcards ?? 0}</p>
-           <p className="text-[9px] text-text-muted uppercase tracking-wide">{t('exam.history.cardLabel', 'Kartu')}</p>
+           <p className="text-base font-bold text-text leading-tight">{subject.total_flashcards ?? 0}</p>
+           <p className="text-2xs text-text-muted uppercase tracking-wide">{t('exam.history.cardLabel', 'Kartu')}</p>
          </div>
          <div className="rounded-lg bg-white/[0.03] border border-white/[0.06] py-2 px-1 text-center">
            <Icon name={ICONS.files.document} size={12} className="mx-auto mb-0.5 text-accent-blue" />
-           <p className="text-sm font-bold text-text leading-tight">{materialCount}</p>
-           <p className="text-[9px] text-text-muted uppercase tracking-wide">{t('exam.history.materialLabel', 'Materi')}</p>
+           <p className="text-base font-bold text-text leading-tight">{materialCount}</p>
+           <p className="text-2xs text-text-muted uppercase tracking-wide">{t('exam.history.materialLabel', 'Materi')}</p>
          </div>
        </div>
 
@@ -157,13 +157,13 @@ function SubjectCard({ subject, onSelectSubject, onStartConfig, onDelete, t, ton
        {subjectMaterials.length > 0 && (
          <div className="flex gap-1 flex-wrap">
            {subjectMaterials.slice(0, 3).map((m, i) => (
-             <span key={i} className="inline-flex items-center gap-0.5 text-[10px] px-2 py-0.5 rounded bg-accent-blue/10 text-accent-blue border border-accent-blue/20 truncate max-w-[200px]">
+             <span key={i} className="inline-flex items-center gap-0.5 text-3xs px-2 py-0.5 rounded bg-accent-blue/10 text-accent-blue border border-accent-blue/20 truncate max-w-[200px]">
                <Icon name={ICONS.files.document} size={8} className="shrink-0" />
                {m.filename || `Materi #${m.id}`}
              </span>
            ))}
            {subjectMaterials.length > 3 && (
-             <span className="text-[10px] text-text-muted self-center">+{subjectMaterials.length - 3} lagi</span>
+             <span className="text-3xs text-text-muted self-center">+{subjectMaterials.length - 3} lagi</span>
            )}
          </div>
        )}
@@ -173,7 +173,7 @@ function SubjectCard({ subject, onSelectSubject, onStartConfig, onDelete, t, ton
          <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
            <div className="h-full rounded-full bg-gradient-primary transition-all" style={{ width: `${progress}%` }} />
          </div>
-         <div className="flex items-center justify-between text-[10px] text-text-muted">
+         <div className="flex items-center justify-between text-3xs text-text-muted">
            <div className="flex items-center gap-3">
              {subject.created_at && (
                <>
@@ -288,7 +288,7 @@ export default function HistoryView({ subjectId, subjects, onSelectSubject, onSt
             <input
               value={search} onChange={e => setSearch(e.target.value)}
                placeholder={t('exam.history.searchPlaceholder')}
-              className="w-full pl-9 pr-3 py-2 bg-card border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary"
+              className="w-full pl-9 pr-3 py-2 bg-card border border-border rounded-lg text-base text-text focus:outline-none focus:border-primary"
             />
           </div>
           {search && (
@@ -414,18 +414,18 @@ function HistoryCard({ session: s, onDetail, onDelete, onRetry, t }) {
             <Chip label={meta.label} size="xs" color={meta.color} />
             {s.status === 'mastered' && <Icon name={ICONS.ui.star} size={11} className="text-warning fill-warning" />}
           </div>
-          <h3 className="font-bold text-text text-sm leading-snug line-clamp-2">{s.title}</h3>
+          <h3 className="font-bold text-text text-base leading-snug line-clamp-2">{s.title}</h3>
           <p className="text-xs text-text-muted mt-0.5">{s.subject_name}</p>
           {/* Nama materi yang digunakan */}
           {(s.material_names || []).length > 0 && (
             <div className="flex gap-1 flex-wrap mt-1.5">
               {(s.material_names || []).slice(0, 2).map((name, i) => (
-                <span key={i} className="inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded bg-accent-blue/10 text-accent-blue border border-accent-blue/20 truncate max-w-[120px]">
+                <span key={i} className="inline-flex items-center gap-0.5 text-3xs px-1.5 py-0.5 rounded bg-accent-blue/10 text-accent-blue border border-accent-blue/20 truncate max-w-[120px]">
                   <Icon name={ICONS.files.document} size={8} className="shrink-0" />{name}
                 </span>
               ))}
               {(s.material_names || []).length > 2 && (
-                <span className="text-[10px] text-text-muted">+{s.material_names.length - 2} {t('exam.history.moreMaterials')}</span>
+                <span className="text-3xs text-text-muted">+{s.material_names.length - 2} {t('exam.history.moreMaterials')}</span>
               )}
             </div>
           )}
@@ -479,7 +479,7 @@ function HistoryCard({ session: s, onDetail, onDelete, onRetry, t }) {
           end.setDate(end.getDate() + 6);
           const fmt = (d) => `${d.getDate()} ${MONTHS_ID[d.getMonth()]}`;
           return (
-            <span className="text-[10px] text-text-muted flex items-center gap-1">
+            <span className="text-3xs text-text-muted flex items-center gap-1">
               <Icon name={ICONS.learning.calendar} size={9}/> {fmt(start)} – {fmt(end)}
             </span>
           );

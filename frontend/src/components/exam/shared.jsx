@@ -75,7 +75,7 @@ export function Chip({ label, color = 'primary', size = 'sm' }) {
   };
   return (
     <span className={cn('border rounded-full font-medium', cls[color],
-      size === 'xs' ? 'text-[10px] px-1.5 py-0.5' : 'text-xs px-2 py-0.5')}>
+      size === 'xs' ? 'text-3xs px-1.5 py-0.5' : 'text-xs px-2 py-0.5')}>
       {label}
     </span>
   );
@@ -89,7 +89,7 @@ export function SectionHeader({ icon, title, subtitle, action }) {
           <Icon name={icon} size={15} className="text-primary" />
         </div>
         <div>
-          <h2 className="font-semibold text-text text-sm">{title}</h2>
+          <h2 className="font-semibold text-text text-base">{title}</h2>
           {subtitle && <p className="text-xs text-text-muted">{subtitle}</p>}
         </div>
       </div>

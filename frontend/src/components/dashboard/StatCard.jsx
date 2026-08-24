@@ -17,7 +17,7 @@ export default function StatCard({ icon, label, value, color = 'text-slate-200',
           {value != null ? value : '—'}
           {suffix && <span className="text-xs text-slate-400 font-normal ml-0.5">{suffix}</span>}
         </p>
-        <p className="text-[11px] text-slate-400 mt-0.5 truncate">{label}</p>
+        <p className="text-2xs text-slate-400 mt-0.5 truncate">{label}</p>
       </div>
     </motion.div>
   );

@@ -34,7 +34,7 @@ export default function FocusModeView({ activity, onExit, children }) {
       {/* Top bar — label aktivitas + tombol keluar (muncul saat hover/mouse bergerak) */}
       <div className="flex items-center gap-3 px-4 py-2.5 divider-gradient-b relative bg-card/60">
         <div className="min-w-0 flex-1 flex items-center gap-2">
-          <span className="badge badge-primary text-[10px] shrink-0">{t('focusMode.title')}</span>
+          <span className="badge badge-primary text-3xs shrink-0">{t('focusMode.title')}</span>
           <span className="text-xs font-semibold text-text truncate">
             {activity?.label || t('focusMode.activity')}
           </span>
@@ -51,7 +51,7 @@ export default function FocusModeView({ activity, onExit, children }) {
         </button>
       </div>
       <div className="flex-1 overflow-hidden flex flex-col min-h-0">{children}</div>
-      <p className="absolute bottom-2 right-3 text-[10px] text-text-muted select-none">{t('focusMode.exitHint')}</p>
+      <p className="absolute bottom-2 right-3 text-3xs text-text-muted select-none">{t('focusMode.exitHint')}</p>
     </div>
   );
 }

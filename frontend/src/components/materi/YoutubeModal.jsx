@@ -66,7 +66,7 @@ export function YoutubeModal({ open, onClose, subjects, onSuccess }) {
             onChange={(e) => setUrl(e.target.value)}
             placeholder="https://www.youtube.com/watch?v=... atau https://youtu.be/..."
           />
-          <p className="mt-1 text-[10px] text-text-muted">
+          <p className="mt-1 text-3xs text-text-muted">
             {t('materi.youtubeSubtitleInfo')}
             <br />
             {t('materi.youtubeSubtitleHelp')}

@@ -76,7 +76,7 @@ export default function MaterialsTable({ materials, subjectId, compact = false }
         <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-[11px] text-slate-500 uppercase tracking-wider border-b border-slate-800 bg-slate-950/50">
+            <tr className="text-2xs text-slate-500 uppercase tracking-wider border-b border-slate-800 bg-slate-950/50">
               <th className={`px-3 ${headerPy} text-left font-medium`}>#</th>
               <th className={`px-3 ${headerPy} text-left font-medium`}>{t('subjectDashboard.materialName', 'Nama')}</th>
               <th className={`px-3 ${headerPy} text-left font-medium`}>{t('subjectDashboard.materialType', 'Tipe')}</th>
@@ -108,7 +108,7 @@ export default function MaterialsTable({ materials, subjectId, compact = false }
                   </td>
                   <td className={`px-3 ${rowPy} text-slate-400 text-xs`}>{(m.filename || '').split('.').pop()?.toUpperCase() || m.material_type}</td>
                   <td className={`px-3 ${rowPy} text-right`}>
-                    <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border ${m.status === 'Ready' ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20' : m.status === 'Failed' ? 'bg-red-500/10 text-red-300 border-red-500/20' : 'bg-amber-500/10 text-amber-300 border-amber-500/20'}`}>
+                    <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-3xs font-medium border ${m.status === 'Ready' ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20' : m.status === 'Failed' ? 'bg-red-500/10 text-red-300 border-red-500/20' : 'bg-amber-500/10 text-amber-300 border-amber-500/20'}`}>
                       {m.status}
                     </span>
                   </td>

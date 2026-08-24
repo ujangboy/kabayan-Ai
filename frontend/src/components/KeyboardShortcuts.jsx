@@ -150,7 +150,7 @@ export default function KeyboardShortcuts() {
                     {item.keys.map((key, i) => (
                       <span key={key + i} className="flex items-center gap-1">
                         {i > 0 && <span className="text-text-muted">+</span>}
-                        <kbd className="rounded border border-border bg-background px-1.5 py-0.5 text-[10px] text-text">
+                        <kbd className="rounded border border-border bg-background px-1.5 py-0.5 text-3xs text-text">
                           {key}
                         </kbd>
                       </span>

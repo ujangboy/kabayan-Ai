@@ -33,8 +33,8 @@ export default function BatchFlashcardCard({ group, onStart, onReview, onHistory
         <div className="flex items-start gap-3 min-w-0">
           <SubjectBadge name={subject.name} tone={tone} size="sm" />
           <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-semibold text-accent-teal uppercase tracking-wider">{t('flashcard.subjectLabel')}</p>
-            <h3 className="font-semibold text-text text-sm truncate">{subject.name}</h3>
+            <p className="text-3xs font-semibold text-accent-teal uppercase tracking-wider">{t('flashcard.subjectLabel')}</p>
+            <h3 className="font-semibold text-text text-base truncate">{subject.name}</h3>
           </div>
         </div>
         <Tooltip label={t('flashcard.deleteAllCardsTitle')}>
@@ -74,7 +74,7 @@ export default function BatchFlashcardCard({ group, onStart, onReview, onHistory
 
       {dueCount > 0 && (
         <div className="flex items-center gap-1.5">
-          <span className="badge badge-warning text-[10px]">
+          <span className="badge badge-warning text-3xs">
             {t('flashcard.dueCount', { count: dueCount })}
           </span>
         </div>
@@ -83,12 +83,12 @@ export default function BatchFlashcardCard({ group, onStart, onReview, onHistory
       {allMaterialNames.length > 0 && (
         <div className="flex gap-1 flex-wrap">
           {allMaterialNames.slice(0, 3).map((name, i) => (
-            <span key={i} className="inline-flex items-center gap-0.5 text-[10px] px-2 py-0.5 rounded bg-accent-blue/10 text-accent-blue border border-accent-blue/20 truncate max-w-[220px]">
+            <span key={i} className="inline-flex items-center gap-0.5 text-3xs px-2 py-0.5 rounded bg-accent-blue/10 text-accent-blue border border-accent-blue/20 truncate max-w-[220px]">
               <Icon name={ICONS.files.document} size={8} className="shrink-0" />{name}
             </span>
           ))}
           {allMaterialNames.length > 3 && (
-            <span className="text-[10px] text-text-muted self-center">{t('flashcard.moreMaterials', { count: allMaterialNames.length - 3 })}</span>
+            <span className="text-3xs text-text-muted self-center">{t('flashcard.moreMaterials', { count: allMaterialNames.length - 3 })}</span>
           )}
         </div>
       )}
@@ -104,7 +104,7 @@ export default function BatchFlashcardCard({ group, onStart, onReview, onHistory
         <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
           <div className="h-full rounded-full bg-gradient-primary transition-all" style={{ width: `${progress}%` }} />
         </div>
-        <div className="flex items-center justify-between text-[10px] text-text-muted">
+        <div className="flex items-center justify-between text-3xs text-text-muted">
           {createdAt ? (
             <div className="flex items-center gap-3">
               <span className="flex items-center gap-1"><Icon name={ICONS.learning.calendar} size={9} />{formatDate(createdAt)}</span>
@@ -134,7 +134,7 @@ export default function BatchFlashcardCard({ group, onStart, onReview, onHistory
 
       <button
         onClick={onHistory}
-        className="w-full flex items-center justify-center gap-1 text-[11px] text-text-muted hover:text-accent-teal transition-colors py-1"
+        className="w-full flex items-center justify-center gap-1 text-2xs text-text-muted hover:text-accent-teal transition-colors py-1"
       >
         <Icon name={ICONS.learning.clock} size={11} /> {t('flashcard.reviewHistory')}
       </button>

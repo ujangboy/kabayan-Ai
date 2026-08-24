@@ -89,7 +89,7 @@ export default function DashboardView({ subjectId, subjects, analysis, onAnalysi
         <div className="card-base p-4 flex items-start gap-3">
           <Icon name={ICONS.status.info} size={15} className="text-primary mt-0.5 shrink-0" />
           <div>
-            <p className="text-sm text-text">{overview.summary}</p>
+            <p className="text-base text-text">{overview.summary}</p>
             <div className="mt-2">
               <Chip label={t('exam.dashboard.complexityLabel', { level: overview.complexity_level || '-' })}
                 color={overview.complexity_level === 'Tinggi' ? 'danger' : overview.complexity_level === 'Menengah' ? 'warning' : 'success'} />
@@ -107,7 +107,7 @@ export default function DashboardView({ subjectId, subjects, analysis, onAnalysi
               <span className="text-xs font-bold text-text-muted w-5 mt-0.5">{i+1}</span>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-semibold text-sm text-text">{tp.topic}</span>
+                  <span className="font-semibold text-base text-text">{tp.topic}</span>
                   <StarRating stars={tp.stars} />
                 </div>
                 <p className="text-xs text-text-muted mt-0.5">{tp.reason}</p>
@@ -136,7 +136,7 @@ export default function DashboardView({ subjectId, subjects, analysis, onAnalysi
                   <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                     <Icon name={ICONS.learning.bookOpen} size={13} className="text-primary" />
                   </div>
-                  <span className="font-semibold text-sm text-text flex-1">{node.node}</span>
+                  <span className="font-semibold text-base text-text flex-1">{node.node}</span>
                   <Icon name={ICONS.ui.chevronDown} size={14} className={cn('text-text-muted transition-transform', expandedNode === i && 'rotate-180')} />
                 </button>
                 <AnimatePresence>
@@ -176,7 +176,7 @@ export default function DashboardView({ subjectId, subjects, analysis, onAnalysi
               <div key={i} className="p-3 rounded-xl bg-danger/5 border border-danger/15">
                 <div className="flex items-center gap-2 mb-1">
                   <Icon name={ICONS.status.error} size={13} className="text-danger shrink-0" />
-                  <span className="font-semibold text-sm text-text">{w.topic}</span>
+                  <span className="font-semibold text-base text-text">{w.topic}</span>
                 </div>
                 <p className="text-xs text-text-secondary ml-5">{w.reason}</p>
                 {w.suggestion && (

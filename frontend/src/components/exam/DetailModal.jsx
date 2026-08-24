@@ -178,13 +178,13 @@ function OverviewTab({ data }) {
               const h = Math.max(8, ((a.score||0)/100)*64);
               return (
                 <div key={a.id} className="flex flex-col items-center gap-1 flex-1">
-                  <span className="text-[10px] font-bold text-text">{a.score}</span>
+                  <span className="text-3xs font-bold text-text">{a.score}</span>
                   <div className="w-full rounded-t-md bg-primary/20 relative overflow-hidden"
                     style={{ height: `${h}px` }}>
                     <div className="absolute bottom-0 left-0 right-0 bg-primary rounded-t-md"
                       style={{ height: `${h}px` }} />
                   </div>
-                  <span className="text-[9px] text-text-muted">#{i+1}</span>
+                  <span className="text-2xs text-text-muted">#{i+1}</span>
                 </div>
               );
             })}
@@ -279,8 +279,8 @@ function ReviewTab({ attempt }) {
                 {r.is_correct ? <Icon name={ICONS.status.success} size={13} className="text-white" /> : <Icon name={ICONS.status.error} size={13} className="text-white" />}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[10px] text-text-muted mb-0.5">{r.topic} · {r.question_type} · {r.difficulty}</p>
-                <div className="text-sm text-text line-clamp-2">
+                <p className="text-3xs text-text-muted mb-0.5">{r.topic} · {r.question_type} · {r.difficulty}</p>
+                <div className="text-base text-text line-clamp-2">
                   <MathMarkdown>{r.question_text}</MathMarkdown>
                 </div>
               </div>
@@ -294,14 +294,14 @@ function ReviewTab({ attempt }) {
                   <div className="px-4 pb-4 space-y-2 border-t border-border/40 pt-3">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
                       <div className="p-2 rounded-lg bg-background">
-                         <p className="text-[10px] text-text-muted mb-0.5">{t('exam.detail.yourAnswer')}</p>
+                         <p className="text-3xs text-text-muted mb-0.5">{t('exam.detail.yourAnswer')}</p>
                         <div className={cn('font-medium text-sm', r.is_correct ? 'text-success' : 'text-danger')}>
                           <MathMarkdown>{r.user_answer || '(Tidak dijawab)'}</MathMarkdown>
                         </div>
                       </div>
                       {!r.is_correct && (
                         <div className="p-2 rounded-lg bg-success/5 border border-success/15">
-                           <p className="text-[10px] text-text-muted mb-0.5">{t('exam.detail.correctAnswer')}</p>
+                           <p className="text-3xs text-text-muted mb-0.5">{t('exam.detail.correctAnswer')}</p>
                           <div className="font-medium text-sm text-success">
                             <MathMarkdown>{r.correct_answer}</MathMarkdown>
                           </div>
@@ -324,9 +324,9 @@ function ReviewTab({ attempt }) {
                         <MathMarkdown>{expl.text}</MathMarkdown>
                       </div>
                     )}
-                       {expl?.error && <p className="text-[10px] text-danger">{t('exam.detail.explanationError')}</p>}
+                       {expl?.error && <p className="text-3xs text-danger">{t('exam.detail.explanationError')}</p>}
 
-                    <div className="flex items-center gap-3 text-[10px] text-text-muted flex-wrap">
+                    <div className="flex items-center gap-3 text-3xs text-text-muted flex-wrap">
                       {r.material_ref && <span className="flex items-center gap-1"><Icon name={ICONS.files.document} size={10}/>{r.material_ref}</span>}
                       {r.tips && <span className="flex items-center gap-1 text-primary"><Icon name={ICONS.learning.lightbulb} size={10}/>{r.tips}</span>}
                       {!r.ai_explanation && !expl?.text && (
@@ -447,7 +447,7 @@ function InlinePractice({ questions, topic, onComplete, onClose, onRetryTopic })
                   : <Icon name={ICONS.status.error} size={11} className="text-danger shrink-0" />}
                  <span className="text-text-muted">{t('exam.detail.question')} {i + 1}</span>
                 <span className="text-text-secondary truncate flex-1">{question.topic}</span>
-                 {!isCorrect && <span className="text-danger text-[10px]">{t('exam.detail.answer')}: {question.answer}</span>}
+                 {!isCorrect && <span className="text-danger text-3xs">{t('exam.detail.answer')}: {question.answer}</span>}
               </div>
             );
           })}
@@ -480,7 +480,7 @@ function InlinePractice({ questions, topic, onComplete, onClose, onRetryTopic })
                           setRetryingTopic(null);
                         }
                       }}
-                      className="shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-lg bg-gradient-primary text-white text-[10px] font-bold hover:brightness-110 transition-all disabled:opacity-40"
+                      className="shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-lg bg-gradient-primary text-white text-3xs font-bold hover:brightness-110 transition-all disabled:opacity-40"
                     >
                       {retryingTopic === weakTopic
                         ? <><Icon name={ICONS.status.loading} size={9} className="animate-spin" /> Memuat...</>
@@ -542,9 +542,9 @@ function InlinePractice({ questions, topic, onComplete, onClose, onRetryTopic })
           {q.difficulty && <Chip label={q.difficulty} size="xs" color={q.difficulty === 'sulit' ? 'danger' : q.difficulty === 'menengah' ? 'warning' : 'success'} />}
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-[10px] text-success flex items-center gap-0.5"><Icon name={ICONS.status.success} size={10} />{correctCount}</span>
-          <span className="text-[10px] text-danger flex items-center gap-0.5"><Icon name={ICONS.status.error} size={10} />{wrongCount}</span>
-          <button type="button" onClick={onClose} className="text-[10px] text-text-muted hover:text-text">Tutup</button>
+          <span className="text-3xs text-success flex items-center gap-0.5"><Icon name={ICONS.status.success} size={10} />{correctCount}</span>
+          <span className="text-3xs text-danger flex items-center gap-0.5"><Icon name={ICONS.status.error} size={10} />{wrongCount}</span>
+          <button type="button" onClick={onClose} className="text-3xs text-text-muted hover:text-text">Tutup</button>
         </div>
       </div>
 
@@ -558,7 +558,7 @@ function InlinePractice({ questions, topic, onComplete, onClose, onRetryTopic })
           transition={{ duration: 0.2, ease: [0.32, 0.72, 0, 1] }}
           className="space-y-3"
         >
-          <div className="text-sm text-text">
+          <div className="text-base text-text">
             <MathMarkdown>{q.question}</MathMarkdown>
           </div>
 
@@ -616,7 +616,7 @@ function InlinePractice({ questions, topic, onComplete, onClose, onRetryTopic })
 
           {/* Explanation */}
           <div className="border-t border-border/50 pt-2">
-            <p className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider mb-1 flex items-center gap-1"><Icon name={ICONS.actions.edit} size={10} /> Penjelasan</p>
+            <p className="text-3xs font-semibold text-text-secondary uppercase tracking-wider mb-1 flex items-center gap-1"><Icon name={ICONS.actions.edit} size={10} /> Penjelasan</p>
             {fetchingExpl ? (
               <p className="text-text-muted flex items-center gap-1"><Icon name={ICONS.status.loading} size={10} className="animate-spin" /> Memuat penjelasan...</p>
             ) : explanations[String(q.id)] ? (
@@ -736,7 +736,7 @@ function StudyPlanTab({ plan, sessionId, onToggle, onPlanSaved,
         {dateSaving && <Icon name={ICONS.status.loading} size={12} className="animate-spin text-primary" />}
         <button
           onClick={() => navigate(`/study-plan?session_id=${sessionId}`)}
-          className="ml-auto inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-primary/30 text-primary text-[11px] font-semibold hover:bg-primary/10 transition-colors"
+          className="ml-auto inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-primary/30 text-primary text-2xs font-semibold hover:bg-primary/10 transition-colors"
         >
           <Icon name={ICONS.actions.externalLink} size={11} /> Buka Halaman Penuh
         </button>
@@ -756,7 +756,7 @@ function StudyPlanTab({ plan, sessionId, onToggle, onPlanSaved,
       {plan.motivational_message && (
         <div className="p-3 rounded-xl bg-primary/5 border border-primary/15 flex items-start gap-2">
           <Icon name={ICONS.learning.certificate} size={14} className="text-primary mt-0.5 shrink-0" />
-          <p className="text-sm text-text">{plan.motivational_message}</p>
+          <p className="text-base text-text">{plan.motivational_message}</p>
         </div>
       )}
 
@@ -776,7 +776,7 @@ function StudyPlanTab({ plan, sessionId, onToggle, onPlanSaved,
           <p className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">Aksi Prioritas</p>
           {(plan.priority_actions || []).map((a, i) => (
             <p key={i} className="text-xs text-text flex items-start gap-1.5 py-1">
-              <span className="w-4 h-4 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[9px] font-bold shrink-0 mt-0.5">{i+1}</span>
+              <span className="w-4 h-4 rounded-full bg-primary/10 text-primary flex items-center justify-center text-2xs font-bold shrink-0 mt-0.5">{i+1}</span>
               {a}
             </p>
           ))}
@@ -802,23 +802,23 @@ function StudyPlanTab({ plan, sessionId, onToggle, onPlanSaved,
                   <div className="flex items-center gap-2 mb-0.5">
                     <span className="text-xs font-semibold text-text-muted">{dateLabel}</span>
                     {item.time_slot && (
-                      <span className="text-[10px] text-text-muted">{item.time_slot}</span>
+                      <span className="text-3xs text-text-muted">{item.time_slot}</span>
                     )}
                     <Chip label={item.activity_type || 'review'} size="xs"
                       color={typeColor[item.activity_type] || 'blue'} />
                     {item.duration_minutes && (
-                      <span className="text-[10px] text-text-muted flex items-center gap-0.5">
+                      <span className="text-3xs text-text-muted flex items-center gap-0.5">
                         <Icon name={ICONS.learning.clock} size={9} />{item.duration_minutes}m
                       </span>
                     )}
                   </div>
-                  <p className={cn("text-sm font-medium text-text", item.completed && "line-through")}>
+                  <p className={cn("text-base font-medium text-text", item.completed && "line-through")}>
                     {item.topic}
                   </p>
                   {item.activity && <p className="text-xs text-text-secondary">{item.activity}</p>}
                   {item.resources && !inPractice && (
                     <div className="flex items-center gap-2 mt-0.5">
-                      <p className="text-[10px] text-primary flex items-center gap-0.5">
+                      <p className="text-3xs text-primary flex items-center gap-0.5">
                         <Icon name={ICONS.learning.lightbulb} size={9}/>{item.resources}
                       </p>
                       {item.resources.includes('soal latihan') && !item.completed && (
@@ -841,7 +841,7 @@ function StudyPlanTab({ plan, sessionId, onToggle, onPlanSaved,
                               setLoadingItemId(null);
                             }
                           }}
-                          className="text-[10px] px-2 py-1 rounded bg-gradient-primary text-white font-bold
+                          className="text-3xs px-2 py-1 rounded bg-gradient-primary text-white font-bold
                                      hover:brightness-110 transition-all shrink-0 shadow-sm disabled:opacity-50 flex items-center gap-1">
                           {loadingItemId === item.id
                             ? <><Icon name={ICONS.status.loading} size={9} className="animate-spin" /> Memuat...</>
@@ -853,7 +853,7 @@ function StudyPlanTab({ plan, sessionId, onToggle, onPlanSaved,
                 </div>
                 {!inPractice && !item.completed && (
                   <button type="button" onClick={() => onToggle(item.id)}
-                    className="text-[10px] px-2 py-0.5 rounded border border-border text-text-muted
+                    className="text-3xs px-2 py-0.5 rounded border border-border text-text-muted
                                hover:border-warning/40 hover:text-warning transition-colors shrink-0">
                     Lewati
                   </button>

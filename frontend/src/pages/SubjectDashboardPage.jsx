@@ -51,9 +51,9 @@ function MetricBar({ subject, masteryPct, t }) {
           <div className="min-w-0">
             <p className="text-sm font-semibold leading-none text-white truncate">
               {it.value != null ? it.value : '—'}
-              {it.suffix && <span className="text-[11px] font-normal text-slate-400 ml-0.5">{it.suffix}</span>}
+              {it.suffix && <span className="text-2xs font-normal text-slate-400 ml-0.5">{it.suffix}</span>}
             </p>
-            <p className="text-[11px] leading-none text-slate-400 truncate mt-0.5">{it.label}</p>
+            <p className="text-2xs leading-none text-slate-400 truncate mt-0.5">{it.label}</p>
           </div>
         </div>
       ))}
@@ -175,12 +175,12 @@ export default function SubjectDashboardPage() {
                   <h1 className="text-xl font-semibold tracking-tight text-white truncate">{subject.name}</h1>
                   <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                     {subject.semester && (
-                      <span className="text-[11px] px-2 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300">
+                      <span className="text-2xs px-2 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300">
                         {subject.semester}
                       </span>
                     )}
                     {subject.lecturer && (
-                      <span className="text-[11px] px-2 py-0.5 rounded-full bg-violet-600/15 border border-violet-600/20 text-violet-300">
+                      <span className="text-2xs px-2 py-0.5 rounded-full bg-violet-600/15 border border-violet-600/20 text-violet-300">
                         {t('subjectDashboard.headerLecturer', { name: subject.lecturer })}
                       </span>
                     )}
@@ -285,9 +285,9 @@ export default function SubjectDashboardPage() {
                                   </div>
                                   <div className="min-w-0 flex-1">
                                     <p className="text-xs font-medium text-white truncate" title={a.label}>{a.label}</p>
-                                    <p className="text-[11px] text-slate-500">{formatDate(a.date)}{a.score != null ? ` • ${a.score}` : ''}</p>
+                                    <p className="text-2xs text-slate-500">{formatDate(a.date)}{a.score != null ? ` • ${a.score}` : ''}</p>
                                   </div>
-                                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-400 shrink-0">{meta.label}</span>
+                                  <span className="text-3xs px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-400 shrink-0">{meta.label}</span>
                                 </div>
                               );
                             })}

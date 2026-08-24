@@ -55,7 +55,7 @@ export default function ChatEmptyState({ onPromptSelect }) {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1, duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-          className="mt-1.5 text-sm leading-relaxed text-slate-400 max-w-md"
+          className="mt-1.5 text-base leading-relaxed text-slate-400 max-w-md"
         >
           Pilih topik cepat di bawah atau tanyakan apa pun.
         </motion.p>

@@ -3,8 +3,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { ICONS } from '@/lib/icons';
 import { Icon } from '@/components/ui';
 import { motion, AnimatePresence, MotionConfig } from 'framer-motion';
-import IconRail from '@/components/layout/IconRail';
-import ContextSidebar from '@/components/layout/ContextSidebar';
+import UnifiedSidebar from '@/components/layout/UnifiedSidebar';
 import TopBar from '@/components/layout/TopBar';
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
 import CommandSearch from '@/components/search/CommandSearch';
@@ -65,13 +64,7 @@ export default function AppLayout() {
   const focusActivity = useFocusStore((s) => s.focusActivity);
   const exitFocus = useFocusStore((s) => s.exitFocus);
 
-  // Hanya tampilkan context sidebar pada route yang membutuhkannya.
-  // Chat & Notebook punya sidebar internal sendiri (hindari sidebar ganda).
-  const hasContextSidebar = ['/materi', '/subjects', '/flashcard'].some((p) =>
-    location.pathname.startsWith(p)
-  );
-
-  // Tutup drawer mobile saat pindah halaman (termasuk ke halaman tanpa sidebar).
+  // Tutup drawer mobile (UnifiedSidebar) saat pindah halaman.
   useEffect(() => {
     setSidebarOpen(false);
   }, [location.pathname, setSidebarOpen]);
@@ -123,8 +116,7 @@ export default function AppLayout() {
     <MotionConfig reducedMotion="user">
       <div className="flex h-screen overflow-hidden bg-background">
         <BackgroundProcessSync />
-        <IconRail />
-        {hasContextSidebar && <ContextSidebar />}
+        <UnifiedSidebar />
         <main className="flex-1 overflow-hidden flex flex-col min-w-0">
           <TopBar />
           <Breadcrumbs />

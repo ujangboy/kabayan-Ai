@@ -17,6 +17,7 @@ export default function ContextSidebar() {
   const location = useLocation();
   const sidebarOpen = useAppStore((s) => s.sidebarOpen);
   const setSidebarOpen = useAppStore((s) => s.setSidebarOpen);
+  const contextCollapsed = useAppStore((s) => s.contextSidebarCollapsed);
 
   const [isMobile, setIsMobile] = useState(() => {
     if (typeof window === 'undefined' || !window.matchMedia) return false;
@@ -64,8 +65,16 @@ export default function ContextSidebar() {
 
   return (
     <>
-      {/* Desktop: sidebar statis */}
-      <div className="hidden lg:block h-screen">{content}</div>
+      {/* Desktop: sidebar collapsible dengan slide (motion width) */}
+      <motion.div
+        initial={false}
+        animate={{ width: contextCollapsed ? 0 : 240, opacity: contextCollapsed ? 0 : 1 }}
+        transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
+        className="hidden lg:flex h-screen shrink-0 overflow-hidden border-r border-slate-700/60 bg-surface/80 shadow-[4px_0_24px_rgba(0,0,0,0.20)]"
+        style={{ willChange: 'width' }}
+      >
+        <div className="w-60 h-full shrink-0">{content}</div>
+      </motion.div>
 
       {/* Mobile/tablet: drawer slide-over */}
       <AnimatePresence>
@@ -101,7 +110,7 @@ function SidebarHeader({ icon, title, action }) {
     <div className="flex items-center justify-between px-4 py-4 shrink-0">
       <div className="flex items-center gap-2">
         <Icon name={icon} size={16} className="text-primary-light" />
-        <h2 className="text-sm font-semibold text-text">{title}</h2>
+        <h2 className="text-base font-semibold text-text">{title}</h2>
       </div>
       {action}
     </div>

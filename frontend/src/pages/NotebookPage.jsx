@@ -21,7 +21,9 @@ export default function NotebookPage() {
   const [isCreating, setIsCreating] = useState(false);
   const [showGeneratePanel, setShowGeneratePanel] = useState(false);
   const [noteSearch, setNoteSearch] = useState('');
-  const [showList, setShowList] = useState(true);
+  const [showList, setShowList] = useState(() =>
+    typeof window === 'undefined' ? true : window.innerWidth >= 768
+  );
   const createMutexRef = useRef(false);
   // Refs to avoid stale closures in callbacks
   const rawNotesRef = useRef([]);
@@ -187,47 +189,44 @@ export default function NotebookPage() {
   return (
     <div className="flex h-full overflow-hidden bg-slate-950">
 
-      {/* ═══ Sidebar — collapsible with Toggle List ═══ */}
-      <AnimatePresence initial={false}>
-        {showList && (
-          <motion.div
-            key="note-list"
-            initial={{ width: 0, opacity: 0 }}
-            animate={{ width: 288, opacity: 1 }}
-            exit={{ width: 0, opacity: 0 }}
-            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-            className="shrink-0 overflow-hidden border-r border-slate-800 hidden md:flex"
-          >
-            <div className="w-72 h-full">
-              <NotebookSidebar
-                isLoading={isLoading}
-                notes={notes}
-                filteredNotes={filteredNotes}
-                pinnedNotes={pinnedNotes}
-                unpinnedNotes={unpinnedNotes}
-                selectedNote={selectedNote}
-                noteSearch={noteSearch}
-                setNoteSearch={setNoteSearch}
-                isCreating={isCreating}
-                onCreateNote={handleCreateNote}
-                onShowGenerate={() => setShowGeneratePanel(true)}
-                onSelectNote={(n) => setSelectedNote(n)}
-                onPin={(id) => pinMutation.mutate(id)}
-                onDelete={handleDelete}
-                onClearAll={handleClearAll}
-              />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* ═══ Sidebar — collapsible with Toggle List ═══
+          Panel selalu ter-mount; animate width 0↔288 agar expand tidak
+          pernah gagal (tanpa remount AnimatePresence). */}
+      <motion.div
+        initial={false}
+        animate={{ width: showList ? 288 : 0, opacity: showList ? 1 : 0 }}
+        transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
+        className="shrink-0 overflow-hidden border-r border-slate-700/60 bg-slate-900 shadow-[4px_0_24px_rgba(0,0,0,0.25)]"
+        style={{ willChange: 'width' }}
+      >
+        <div className="w-72 h-full">
+          <NotebookSidebar
+            isLoading={isLoading}
+            notes={notes}
+            filteredNotes={filteredNotes}
+            pinnedNotes={pinnedNotes}
+            unpinnedNotes={unpinnedNotes}
+            selectedNote={selectedNote}
+            noteSearch={noteSearch}
+            setNoteSearch={setNoteSearch}
+            isCreating={isCreating}
+            onCreateNote={handleCreateNote}
+            onShowGenerate={() => setShowGeneratePanel(true)}
+            onSelectNote={(n) => setSelectedNote(n)}
+            onPin={(id) => pinMutation.mutate(id)}
+            onDelete={handleDelete}
+            onClearAll={handleClearAll}
+          />
+        </div>
+      </motion.div>
 
       {/* ═══ Main content — max space when list hidden ═══ */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-slate-950">
-        {/* Toggle List bar — hidden when sidebar visible on desktop, always visible on mobile */}
-        <div className="shrink-0 flex items-center gap-2 px-3 py-2 border-b border-slate-800 bg-slate-900/50 backdrop-blur-sm">
+        {/* Toggle List bar — selalu terlihat */}
+        <div className="shrink-0 flex items-center gap-2 px-3 py-2 border-b border-slate-700/60 bg-slate-900/80 backdrop-blur-sm">
           <button
             onClick={() => setShowList(v => !v)}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-300 hover:text-white hover:bg-slate-700 text-xs font-medium transition-colors"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-800 border border-slate-600 text-slate-100 hover:text-white hover:bg-slate-700 text-xs font-medium transition-colors"
             title={showList ? 'Sembunyikan daftar' : 'Tampilkan daftar'}
           >
             <span className="w-3.5 h-3.5 flex items-center justify-center">

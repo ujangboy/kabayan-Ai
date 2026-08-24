@@ -48,12 +48,12 @@ export default function ReviewHistoryModal({ open, group, onClose }) {
         return (
           <div key={card.id} className="rounded-xl border border-border bg-background p-3">
             <div className="flex items-start justify-between gap-3">
-              <MathMarkdown className="text-sm font-medium text-text">{card.question}</MathMarkdown>
-              <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${card.mastered ? 'border-success/30 bg-success/5 text-success' : 'border-border text-text-muted'}`}>
+              <MathMarkdown className="text-base font-medium text-text">{card.question}</MathMarkdown>
+              <span className={`shrink-0 rounded-full border px-2 py-0.5 text-3xs font-semibold ${card.mastered ? 'border-success/30 bg-success/5 text-success' : 'border-border text-text-muted'}`}>
                 {card.mastered ? t('flashcard.mastered') : t('flashcard.processing')}
               </span>
             </div>
-            <div className="mt-2 flex items-center gap-3 text-[11px] text-text-muted">
+            <div className="mt-2 flex items-center gap-3 text-2xs text-text-muted">
               <span>Direview: <b className="text-text">{card.times_seen || 0}×</b></span>
               {card.last_reviewed && <span>Terakhir: {formatDateTime(card.last_reviewed)}</span>}
             </div>

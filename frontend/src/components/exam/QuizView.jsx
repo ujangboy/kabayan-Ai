@@ -162,7 +162,7 @@ export default function QuizView({ sessionData, clockStart, onDone }) {
                 value={userAnswer}
                 onChange={e => selectAnswer(e.target.value)}
                 placeholder={t('exam.quiz.answerPlaceholder', { type: q.type === 'calculation' ? 'perhitungan' : q.type === 'essay' ? 'esai' : 'kamu' })}
-                className="w-full px-4 py-3 bg-background border border-border rounded-xl text-sm text-text focus:outline-none focus:border-primary resize-none"
+                className="w-full px-4 py-3 bg-background border border-border rounded-xl text-base text-text focus:outline-none focus:border-primary resize-none"
               />
             )}
           </motion.div>
@@ -182,7 +182,7 @@ export default function QuizView({ sessionData, clockStart, onDone }) {
           <div className="flex gap-1">
             {questions.map((_, i) => (
               <button key={i} onClick={() => setIdx(i)}
-                className={cn('w-6 h-6 rounded-md text-[10px] font-medium transition-all',
+                className={cn('w-6 h-6 rounded-md text-3xs font-medium transition-all',
                   i === idx ? 'bg-primary text-white' :
                   answers[String(questions[i].id)] ? 'bg-success/20 text-success border border-success/30' :
                   'bg-card text-text-muted border border-border hover:border-primary/40')}>

@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { Icon, Tooltip } from '@/components/ui';
 import { ICONS } from '@/lib/icons';
 import { cn } from '@/utils';
-import { useAppStore } from '@/store';
+import { useAppStore, useUiStore } from '@/store';
 import { subjectAPI, flashcardAPI, sessionsAPI } from '@/services/api';
 import { useSwipeGesture } from '@/hooks/useSwipeGesture';
 import StorageMeter from './StorageMeter';
@@ -116,15 +116,21 @@ function SidebarContent({ collapsed, onNavigate }) {
     });
   })();
 
+  // Store filter untuk penanda aktif yang persist setelah URL dibersihkan (MateriPage & ExamAnalyzerPage clear query)
+  const subjectFilterMateri = useUiStore((s) => s.subjectFilterMateri);
+  const subjectFilterExam = useUiStore((s) => s.subjectFilterExam);
+
   const submenuItems = (group) => {
     if (group === 'subjects') {
       return subjectList.map((s) => ({ key: `s-${s.id}`, label: s.name, to: `/subjects/${s.id}`, icon: ICONS.files.folder, active: location.pathname === `/subjects/${s.id}` }));
     }
     if (group === 'materi') {
-      return subjectList.map((s) => ({ key: `m-${s.id}`, label: s.name, to: `/materi?subject_id=${s.id}`, icon: ICONS.files.folder, active: new URLSearchParams(location.search).get('subject_id') === String(s.id) }));
+      const urlSid = new URLSearchParams(location.search).get('subject_id');
+      return subjectList.map((s) => ({ key: `m-${s.id}`, label: s.name, to: `/materi?subject_id=${s.id}`, icon: ICONS.files.folder, active: urlSid === String(s.id) || (location.pathname.startsWith('/materi') && subjectFilterMateri === String(s.id)) }));
     }
     if (group === 'exam') {
-      return subjectList.map((s) => ({ key: `ex-${s.id}`, label: s.name, to: `/exam-analyzer?subject_id=${s.id}`, icon: ICONS.files.folder, active: new URLSearchParams(location.search).get('subject_id') === String(s.id) && location.pathname === '/exam-analyzer' }));
+      const urlSid = new URLSearchParams(location.search).get('subject_id');
+      return subjectList.map((s) => ({ key: `ex-${s.id}`, label: s.name, to: `/exam-analyzer?subject_id=${s.id}`, icon: ICONS.files.folder, active: urlSid === String(s.id) || (location.pathname === '/exam-analyzer' && subjectFilterExam === String(s.id)) }));
     }
     if (group === 'flashcard') {
       return decks.map((d) => ({ key: `f-${d.batch_id}`, label: d.subject?.name || t('flashcard.defaultName'), to: `/flashcard?deck_id=${d.batch_id}`, icon: ICONS.nav.flashcard, active: new URLSearchParams(location.search).get('deck_id') === d.batch_id }));
@@ -295,7 +301,7 @@ function SidebarContent({ collapsed, onNavigate }) {
               <span className="absolute inset-0 rounded-xl bg-gradient-primary opacity-50 blur-md" />
               <Icon name={ICONS.communication.bot} size={20} className="relative text-white" />
             </div>
-            <span className="text-sm font-semibold text-text">Kabayan AI</span>
+            <span className="text-base font-semibold text-text">Kabayan AI</span>
           </div>
         )}
         <button
@@ -358,8 +364,8 @@ function SidebarContent({ collapsed, onNavigate }) {
           >
             <div className="px-3.5 py-3 border-b border-white/[0.06] flex items-center gap-2">
               <Icon name={NAV.find((n) => n.group === flyoutGroup)?.icon || ICONS.files.folder} size={16} className="text-primary-light shrink-0" />
-              <span className="text-sm font-semibold text-text truncate">{flyoutLabelKey ? t(flyoutLabelKey) : ''}</span>
-              <span className="ml-auto text-[11px] text-text-muted">{activeFlyoutItems.length}</span>
+              <span className="text-base font-semibold text-text truncate">{flyoutLabelKey ? t(flyoutLabelKey) : ''}</span>
+              <span className="ml-auto text-2xs text-text-muted">{activeFlyoutItems.length}</span>
             </div>
             <div className="p-2 max-h-[320px] overflow-y-auto sidebar-scroll">
               {activeFlyoutItems.length === 0 ? (

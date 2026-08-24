@@ -3,7 +3,7 @@
  *
  * Attribute diletakkan pada mark textStyle sehingga hasil render menjadi
  * inline style `font-size` pada <span> / elemen target.
- * 14px = default (attribute null → tidak render style, jatuh ke CSS default).
+ * 16px = default Gemini body (attribute null → tidak render style, jatuh ke CSS default .note-editor-content 16px).
  */
 import { Extension } from '@tiptap/core';
 

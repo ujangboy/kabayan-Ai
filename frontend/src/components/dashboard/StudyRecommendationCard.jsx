@@ -27,7 +27,7 @@ export default function StudyRecommendationCard({ route, subjectId }) {
         <div className="text-center py-6">
           <Icon name={ICONS.ui.bolt} size={30} className="mx-auto mb-3 text-primary/40" />
           <p className="text-xs font-semibold text-text mb-1">{t('studyRoute.emptyTitle', 'Rekomendasi belajar AI')}</p>
-          <p className="text-[11px] text-text-muted max-w-[240px] mx-auto">
+          <p className="text-2xs text-text-muted max-w-[240px] mx-auto">
             {t('studyRoute.empty', 'Kerjakan quiz atau latihan dulu — AI akan menyusun rute belajar terbaik untukmu.')}
           </p>
         </div>
@@ -71,10 +71,10 @@ export default function StudyRecommendationCard({ route, subjectId }) {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-semibold text-text">{m.label}</span>
-                    <span className="badge badge-warning text-[9px]">{tierLabel(rec.tier)}</span>
-                    {isPrimary && <span className="badge badge-success text-[9px]">{t('studyRoute.recommended')}</span>}
+                    <span className="badge badge-warning text-2xs">{tierLabel(rec.tier)}</span>
+                    {isPrimary && <span className="badge badge-success text-2xs">{t('studyRoute.recommended')}</span>}
                   </div>
-                  <p className="text-[10px] text-text-muted mt-0.5 line-clamp-2">{rec.reason}</p>
+                  <p className="text-3xs text-text-muted mt-0.5 line-clamp-2">{rec.reason}</p>
                 </div>
               </button>
               <Tooltip label={t('focusMode.start')}>
@@ -91,7 +91,7 @@ export default function StudyRecommendationCard({ route, subjectId }) {
         })}
       </div>
       {primary && (
-        <p className="text-[10px] text-text-muted mt-3 bg-background border border-border/50 rounded-lg p-2">
+        <p className="text-3xs text-text-muted mt-3 bg-background border border-border/50 rounded-lg p-2">
           {t('studyRoute.primaryNote', { label: primary.modality_label, n: primary.resources.flashcards_total ?? 0, q: primary.resources.quizzes_total ?? 0 })}
         </p>
       )}

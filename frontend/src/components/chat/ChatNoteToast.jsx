@@ -16,7 +16,7 @@ export default function ChatNoteToast({ noteToast }) {
           className="absolute bottom-24 right-4 z-50 flex items-center gap-3 rounded-xl border border-border bg-surface px-4 py-3 shadow-lg"
         >
           <Icon name={ICONS.files.notes} size={18} className="text-primary" />
-          <span className="text-sm text-text">{noteToast.message}</span>
+          <span className="text-base text-text">{noteToast.message}</span>
           {noteToast.note_id && (
             <button onClick={() => navigate('/notes')} className="text-sm font-medium text-primary hover:underline">
               Lihat

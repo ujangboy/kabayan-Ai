@@ -73,7 +73,7 @@ export function UploadModal({ open, onClose, subjects, onSuccess }) {
             <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-primary/15">
               <Icon name={ICONS.actions.upload} size={24} className="text-primary-light" />
             </div>
-            <p className="text-sm font-medium text-text">{file ? file.name : t('materi.uploadDropzone')}</p>
+            <p className="text-base font-medium text-text">{file ? file.name : t('materi.uploadDropzone')}</p>
             <p className="mt-1 text-xs text-text-muted">{t('materi.uploadMaxSize')}</p>
             <input
               type="file"

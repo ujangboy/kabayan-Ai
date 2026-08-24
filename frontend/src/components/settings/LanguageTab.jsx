@@ -67,7 +67,7 @@ export default function LanguageTab() {
                   : 'border-border hover:border-primary/40'
               )}
             >
-              <span className="text-sm font-medium text-text">{t(key)}</span>
+              <span className="text-base font-medium text-text">{t(key)}</span>
               {active && <Icon name={ICONS.status.check} size={16} className="text-primary" />}
             </button>
           );

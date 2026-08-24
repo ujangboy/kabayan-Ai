@@ -166,7 +166,7 @@ export default function CommandSearch() {
                         <item.icon size={15} className={isActive ? 'text-white' : 'text-primary transition-colors group-hover:text-white'} />
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-text">{item.label}</p>
+                        <p className="text-base font-medium text-text">{item.label}</p>
                         <p className="text-xs text-text-muted">{item.desc}</p>
                       </div>
                     </button>
@@ -178,10 +178,10 @@ export default function CommandSearch() {
         </div>
 
         {/* Footer */}
-        <div className="px-4 py-2.5 border-t border-border flex items-center gap-3 text-[11px] text-text-muted">
-          <span><kbd className="bg-background border border-border px-1.5 py-0.5 rounded text-[10px]">↑↓</kbd> {t('commandSearch.navHint')}</span>
-          <span><kbd className="bg-background border border-border px-1.5 py-0.5 rounded text-[10px]">↵</kbd> {t('commandSearch.openHint')}</span>
-          <span><kbd className="bg-background border border-border px-1.5 py-0.5 rounded text-[10px]">Esc</kbd> {t('commandSearch.closeHint')}</span>
+        <div className="px-4 py-2.5 border-t border-border flex items-center gap-3 text-2xs text-text-muted">
+          <span><kbd className="bg-background border border-border px-1.5 py-0.5 rounded text-3xs">↑↓</kbd> {t('commandSearch.navHint')}</span>
+          <span><kbd className="bg-background border border-border px-1.5 py-0.5 rounded text-3xs">↵</kbd> {t('commandSearch.openHint')}</span>
+          <span><kbd className="bg-background border border-border px-1.5 py-0.5 rounded text-3xs">Esc</kbd> {t('commandSearch.closeHint')}</span>
         </div>
       </motion.div>
     </motion.div>

@@ -25,10 +25,10 @@ export function NotebookSidebar({
   const { t } = useTranslation();
 
   return (
-    <div className="w-72 divider-gradient-r relative bg-gradient-to-b from-sidebar to-background backdrop-blur-md flex flex-col shrink-0 hidden md:flex">
+    <div className="w-72 divider-gradient-r relative bg-gradient-to-b from-sidebar to-background backdrop-blur-md flex flex-col shrink-0">
       {/* Sidebar header */}
       <div className="px-4 pt-4 pb-3 flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-text">{t('notebook.notes')}</h2>
+        <h2 className="text-base font-semibold text-text">{t('notebook.notes')}</h2>
         <div className="flex items-center gap-1">
           <Tooltip label={t('notebook.generateWithAi')}>
             <button
@@ -114,7 +114,7 @@ export function NotebookSidebar({
           <>
             {pinnedNotes.length > 0 && (
               <div>
-                <p className="px-2 pt-2 pb-1 text-[10px] font-medium text-text-muted/60 uppercase tracking-wider select-none">
+                <p className="px-2 pt-2 pb-1 text-3xs font-medium text-text-muted/60 uppercase tracking-wider select-none">
                   {t('notebook.pinned')}
                 </p>
                 {pinnedNotes.map(n => (
@@ -132,7 +132,7 @@ export function NotebookSidebar({
             {unpinnedNotes.length > 0 && (
               <div>
                 {pinnedNotes.length > 0 && (
-                  <p className="px-2 pt-3 pb-1 text-[10px] font-medium text-text-muted/60 uppercase tracking-wider select-none">
+                  <p className="px-2 pt-3 pb-1 text-3xs font-medium text-text-muted/60 uppercase tracking-wider select-none">
                     {t('notebook.notes')}
                   </p>
                 )}
@@ -157,7 +157,7 @@ export function NotebookSidebar({
         <div className="p-3 border-t border-border">
           <button
             onClick={onClearAll}
-            className="w-full text-[11px] text-text-muted hover:text-danger transition-colors py-1.5 rounded-lg hover:bg-danger/5"
+            className="w-full text-2xs text-text-muted hover:text-danger transition-colors py-1.5 rounded-lg hover:bg-danger/5"
           >
             {t('notebook.deleteAll')}
           </button>

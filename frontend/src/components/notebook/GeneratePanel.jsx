@@ -99,7 +99,7 @@ export function GeneratePanel({ subjects, onClose, onNoteCreated }) {
         <div className="flex items-center justify-between px-5 py-4 divider-gradient-b relative shrink-0">
           <div className="flex items-center gap-2">
             <Icon name={ICONS.learning.sparkles} size={18} className="text-primary" />
-            <h3 className="font-semibold text-text text-sm">{t('notebook.generateWithAi')}</h3>
+            <h3 className="font-semibold text-text text-base">{t('notebook.generateWithAi')}</h3>
           </div>
           <button
             onClick={onClose}

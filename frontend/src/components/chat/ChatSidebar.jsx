@@ -116,7 +116,7 @@ export default function ChatSidebar() {
     <aside className="w-64 h-full shrink-0 border-r border-slate-800 bg-slate-900 flex flex-col overflow-hidden">
       <div className="p-4 border-b border-slate-800">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-semibold text-text">{t('chat.history')}</h2>
+          <h2 className="text-base font-semibold text-text">{t('chat.history')}</h2>
           <div className="flex items-center gap-1">
             <Tooltip label={t('chat.newChat')}>
               <button
@@ -151,7 +151,7 @@ export default function ChatSidebar() {
         {filteredChats.length === 0 && <EmptyState title={t('chat.noChats')} description={t('chat.noChatsDesc')} compact />}
         {groups.map((key) => (
           <div key={key}>
-            <div className="px-2 py-1 text-[11px] font-medium uppercase tracking-wide text-text-muted">{key}</div>
+            <div className="px-2 py-1 text-2xs font-medium uppercase tracking-wide text-text-muted">{key}</div>
             <div className="space-y-1">
               {map[key].map((c) => (
                 <div
@@ -179,11 +179,11 @@ export default function ChatSidebar() {
                             setEditingTitle('');
                           }
                         }}
-                        className="w-full text-sm bg-base border border-border rounded px-1 py-0.5 text-text focus:outline-none"
+                        className="w-full text-base bg-base border border-border rounded px-1 py-0.5 text-text focus:outline-none"
                       />
                     ) : (
                       <div className="flex items-center gap-1.5">
-                        <span className="truncate text-sm text-text">{c.title || t('chat.untitled')}</span>
+                        <span className="truncate text-base text-text">{c.title || t('chat.untitled')}</span>
                         {c.pinned && <Icon name={ICONS.actions.pin} size={12} className="text-warning shrink-0" />}
                       </div>
                     )}

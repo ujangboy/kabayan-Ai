@@ -21,7 +21,7 @@ export default function ExamHeader({ view, subjectId, subjects, canCreate, onBac
             <Icon name={ICONS.learning.brain} size={22} className="text-primary" />
             {t('exam.title')}
             <span
-              className="badge badge-success text-[10px]"
+              className="badge badge-success text-3xs"
               title={t('exam.adaptiveBadgeHint')}
             >
               <Icon name={ICONS.ui.bolt} size={9} className="inline mr-0.5" />

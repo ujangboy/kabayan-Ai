@@ -19,7 +19,7 @@ export default function FlashcardCard({ currentCard, isFlipped, onFlip }) {
         <div className="absolute inset-0 backface-hidden card-base flex flex-col items-center justify-center p-8 text-center border-t-2 border-t-primary/70 shadow-xl">
           <span className="text-xs font-semibold text-text-secondary uppercase tracking-widest mb-4">{t('flashcard.question')}</span>
           <MathMarkdown className="text-xl font-bold text-text leading-snug text-center">{currentCard.question}</MathMarkdown>
-          <p className="absolute bottom-4 text-[11px] text-text-muted">{t('flashcard.clickToSeeAnswer')}</p>
+          <p className="absolute bottom-4 text-2xs text-text-muted">{t('flashcard.clickToSeeAnswer')}</p>
         </div>
         {/* Back */}
         <div

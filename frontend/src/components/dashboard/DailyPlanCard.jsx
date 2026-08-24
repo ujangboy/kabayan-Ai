@@ -78,7 +78,7 @@ export default function DailyPlanCard({ subjectId }) {
           <button
             key={m}
             onClick={() => setFreeMinutes(m)}
-            className={`text-[10px] px-2.5 py-1 rounded-lg border transition-colors ${
+            className={`text-3xs px-2.5 py-1 rounded-lg border transition-colors ${
               freeMinutes === m
                 ? 'border-primary/50 bg-primary/10 text-primary font-semibold'
                 : 'border-border text-text-secondary hover:border-primary/30'
@@ -109,7 +109,7 @@ export default function DailyPlanCard({ subjectId }) {
                   transition={{ duration: 0.5, ease: [0.32, 0.72, 0, 1] }}
                 />
               </div>
-              <span className="text-[10px] text-text-muted shrink-0">
+              <span className="text-3xs text-text-muted shrink-0">
                 {t('studyPlan.doneCount', { done: doneCount, total: items.length })}
               </span>
             </div>
@@ -145,9 +145,9 @@ export default function DailyPlanCard({ subjectId }) {
                     <p className={`text-xs font-semibold text-text truncate ${isDone ? 'line-through' : ''}`}>
                       {m.label}{item.topic ? ` · ${item.topic}` : ''}
                     </p>
-                    <p className="text-[10px] text-text-muted mt-0.5 line-clamp-2">{item.reason}</p>
+                    <p className="text-3xs text-text-muted mt-0.5 line-clamp-2">{item.reason}</p>
                   </div>
-                  <span className="text-[10px] text-text-muted shrink-0">
+                  <span className="text-3xs text-text-muted shrink-0">
                     {item.duration_minutes} {t('studyPlan.minutesShort')}
                   </span>
                 </button>
@@ -164,7 +164,7 @@ export default function DailyPlanCard({ subjectId }) {
             );
           })}
           {plan?.best_hour != null && (
-            <p className="text-[10px] text-text-muted pt-1">
+            <p className="text-3xs text-text-muted pt-1">
               <Icon name={ICONS.learning.clock} size={10} className="inline mr-1" />
               {t('studyPlan.bestHour', { hour: String(plan.best_hour).padStart(2, '0') })}
             </p>

@@ -160,6 +160,8 @@ export const useAppStore = create(
   persist(
     (set) => ({
       sidebarOpen: true,
+      collapsed: false,
+      contextSidebarCollapsed: false,
       searchOpen: false,
       shortcutsOpen: false,
       lastRoute: null,
@@ -187,6 +189,10 @@ export const useAppStore = create(
       clearPendingOperations: () => set({ pendingOperations: new Set() }),
       toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
       setSidebarOpen: (v) => set({ sidebarOpen: v }),
+      setCollapsed: (v) => set({ collapsed: !!v }),
+      toggleCollapsed: () => set((s) => ({ collapsed: !s.collapsed })),
+      toggleContextSidebar: () => set((s) => ({ contextSidebarCollapsed: !s.contextSidebarCollapsed })),
+      setContextSidebarCollapsed: (v) => set({ contextSidebarCollapsed: !!v }),
       setSearchOpen: (v) => set({ searchOpen: v }),
       setShortcutsOpen: (v) => set({ shortcutsOpen: v }),
       setLastRoute: (route) => set({ lastRoute: route }),
@@ -197,6 +203,8 @@ export const useAppStore = create(
       // tidak boleh disimpan karena Set/timing-sensitive.
       partialize: (state) => ({
         sidebarOpen: state.sidebarOpen,
+        collapsed: state.collapsed,
+        contextSidebarCollapsed: state.contextSidebarCollapsed,
         lastRoute: state.lastRoute,
       }),
     }

@@ -217,7 +217,7 @@ function FontSizeDropdown({ editor, floating = false }) {
         title={t('noteEditor.fontSize')}
         className={cn(
           'rounded-lg transition-all select-none flex items-center justify-center gap-0.5 font-medium',
-          floating ? 'w-7 h-6 text-[10px]' : 'w-9 h-7 text-[11px]',
+          floating ? 'w-7 h-6 text-3xs' : 'w-9 h-7 text-2xs',
           open
             ? 'bg-primary/20 text-primary'
             : 'text-text-muted hover:text-text hover:bg-white/8'
@@ -519,7 +519,7 @@ function FloatingToolbar({ editor, editorMode }) {
                 type="button"
                 onClick={clearColor}
                 title={t('noteEditor.clearColor')}
-                className="w-5 h-5 rounded-full border-2 border-dashed border-white/20 flex items-center justify-center text-[8px] text-white/40 hover:border-white/50 hover:text-white/70 transition-all"
+                className="w-5 h-5 rounded-full border-2 border-dashed border-white/20 flex items-center justify-center text-2xs text-white/40 hover:border-white/50 hover:text-white/70 transition-all"
               >
                 <Icon name={ICONS.actions.close} size={9} />
               </button>

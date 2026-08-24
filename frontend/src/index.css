@@ -17,16 +17,34 @@
     color-scheme: dark;
   }
 
-  /* Native dropdown (option) — dark theme agar teks terbaca.
-     Tanpa ini browser memakai warna default putih saat list terbuka. */
+  /* Native dropdown — paksa dark agar teks terang terbaca.
+     Screenshot menunjukkan select tertutup teks gelap di bg gelap
+     → override keras dengan bg solid + teks terang. */
+  select {
+    color: #EDF1F7 !important;
+    background-color: rgba(30, 41, 59, 0.9) !important;
+    -webkit-text-fill-color: #EDF1F7;
+  }
   select option {
-    background-color: #0B111B;
-    color: #E2E8F0;
+    background-color: #1A2332 !important;
+    color: #E2E8F0 !important;
   }
   select option:hover,
-  select option:checked {
-    background-color: rgba(124, 58, 237, 0.25);
-    color: #FFFFFF;
+  select option:checked,
+  select option:focus {
+    background-color: rgba(124, 58, 237, 0.35) !important;
+    color: #FFFFFF !important;
+  }
+  /* Custom arrow untuk select appearance-none — DESIGN.md: hairline + violet focus */
+  select.input-base {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238C97A9' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 14px;
+    padding-right: 2.25rem !important;
+  }
+  select.input-base:focus {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23A78BFA' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   }
 
   input,
@@ -47,7 +65,8 @@
                       linear-gradient(160deg, #0B111B 0%, #0E1520 45%, #0B1423 100%);
     background-attachment: fixed;
     color: #EDF1F7;
-    line-height: 1.6;
+    font-size: 16px; /* Gemini body 16px/400 */
+    line-height: 1.55; /* Gemini answer body 1.55 (was 1.6) */
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -206,22 +225,22 @@
   }
 
   .btn-primary {
-    @apply inline-flex items-center gap-2 px-4 py-2 rounded-btn bg-gradient-primary text-white text-sm font-medium
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-btn bg-gradient-primary text-white text-[15px] font-medium
            hover:shadow-glow-primary hover:brightness-110 active:scale-95 transition-all duration-200 cursor-pointer select-none;
   }
 
   .btn-ghost {
-    @apply inline-flex items-center gap-2 px-4 py-2 rounded-btn text-text-secondary text-sm font-medium
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-btn text-text-secondary text-[15px] font-medium
            hover:bg-white/[0.06] hover:text-text active:scale-95 transition-all duration-200 cursor-pointer select-none;
   }
 
   .btn-danger {
-    @apply inline-flex items-center gap-2 px-4 py-2 rounded-btn bg-danger/10 text-danger border border-danger/20 text-sm font-medium
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-btn bg-danger/10 text-danger border border-danger/20 text-[15px] font-medium
            hover:bg-danger/20 hover:shadow-[0_0_16px_rgba(239,68,68,0.15)] active:scale-95 transition-all duration-200 cursor-pointer select-none;
   }
 
   .input-base {
-    @apply w-full px-4 py-2.5 rounded-input bg-white/[0.04] border border-white/[0.08] text-text text-sm placeholder:text-text-muted
+    @apply w-full px-4 py-2.5 rounded-input bg-white/[0.06] border border-white/[0.15] text-text text-base placeholder:text-text-secondary
            focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/30 focus:shadow-glow-sm transition-all duration-200;
   }
 
@@ -237,21 +256,21 @@
     @apply transition-all duration-300 hover:shadow-glass-lg hover:-translate-y-0.5 hover:border-purple-500/40 hover:bg-slate-800/70;
   }
 
-  /* Prose overrides for markdown — AI response typography */
+  /* Prose overrides for markdown — AI response typography (Gemini 16/1.55) */
   .prose-dark {
     font-family: 'Inter', -apple-system, sans-serif;
-    font-size: 0.95rem;
-    line-height: 1.65;
+    font-size: 1rem; /* 16px Gemini Answer Body */
+    line-height: 1.55; /* Gemini 1.55 (was 1.65) */
     color: #e2e8f0;
   }
 
-  /* Headings */
+  /* Headings — Gemini Answer Heading 20/500, Subheading 17/500 */
   .prose-dark h1,
   .prose-dark h2,
   .prose-dark h3,
   .prose-dark h4 {
     color: #ffffff;
-    font-weight: 700;
+    font-weight: 500; /* Gemini 500 (was 700) */
     margin-top: 1.75rem;
     margin-bottom: 0.75rem;
     line-height: 1.3;
@@ -260,14 +279,15 @@
   .prose-dark > h1:first-child,
   .prose-dark > h2:first-child,
   .prose-dark > h3:first-child { margin-top: 0.25rem; }
-  .prose-dark h1 { font-size: 1.25rem; }
-  .prose-dark h2 { font-size: 1.1rem; }
-  .prose-dark h3 { font-size: 1rem; }
+  .prose-dark h1 { font-size: 1.25rem; } /* 20px Answer Heading */
+  .prose-dark h2 { font-size: 1.0625rem; } /* 17px Answer Subheading (was 1.1rem) */
+  .prose-dark h3 { font-size: 1rem; } /* 16px */
+  .prose-dark h4 { font-size: 0.875rem; } /* 14px chip/body-sm */
 
-  /* Paragraphs */
+  /* Paragraphs — Gemini list 1.5, body 1.55 */
   .prose-dark p {
     color: #e2e8f0;
-    line-height: 1.65;
+    line-height: 1.55;
     margin-bottom: 1.25rem;
   }
   .prose-dark p:last-child { margin-bottom: 0; }
@@ -286,7 +306,7 @@
   .prose-dark li {
     color: #e2e8f0;
     margin-bottom: 0.5rem;
-    line-height: 1.65;
+    line-height: 1.5; /* Gemini List Item 1.5 */
   }
   .prose-dark li:last-child { margin-bottom: 0; }
 
@@ -371,14 +391,14 @@
   .prose-dark a { color: #8B5CF6; text-decoration: underline; }
   .prose-dark a:hover { color: #A78BFA; }
 
-  /* Tables — modern dark design */
+  /* Tables — modern dark design (Gemini metadata 13px → 0.875rem) */
   .prose-dark table {
     width: 100%;
     border-collapse: collapse;
     border-radius: 8px;
     overflow: hidden;
     margin-bottom: 1.25rem;
-    font-size: 0.9rem;
+    font-size: 0.875rem; /* 14px (was 0.9rem/14.4px) */
   }
   .prose-dark thead {
     background: #232A3D;
@@ -430,11 +450,11 @@
   .backface-hidden { backface-visibility: hidden; }
 }
 
-/* ── Tiptap NoteEditor content styles ──────────────────────────────────── */
+/* ── Tiptap NoteEditor content styles — Gemini body 16/1.55 ───────────── */
 .note-editor-content {
   font-family: 'Inter', sans-serif;
-  font-size: 14px;
-  line-height: 1.7;
+  font-size: 16px; /* was 14px → Gemini Answer Body 16px */
+  line-height: 1.55; /* was 1.7 → Gemini 1.55 */
   color: #e2e8f0;
 }
 
@@ -445,9 +465,9 @@
 .note-editor-content h2[style*="font-size"] { font-size: inherit; }
 .note-editor-content h3[style*="font-size"] { font-size: inherit; }
 
-.note-editor-content h1 { font-size: 1.5rem; font-weight: 700; color: #fff; margin: 1.5rem 0 0.75rem; }
-.note-editor-content h2 { font-size: 1.2rem; font-weight: 700; color: #fff; margin: 1.25rem 0 0.6rem; }
-.note-editor-content h3 { font-size: 1rem;   font-weight: 600; color: #fff; margin: 1rem 0 0.5rem; }
+.note-editor-content h1 { font-size: 1.75rem; font-weight: 500; color: #fff; margin: 1.5rem 0 0.75rem; } /* 28px Gemini greeting */
+.note-editor-content h2 { font-size: 1.25rem; font-weight: 500; color: #fff; margin: 1.25rem 0 0.6rem; } /* 20px Gemini heading */
+.note-editor-content h3 { font-size: 1.0625rem; font-weight: 500; color: #fff; margin: 1rem 0 0.5rem; } /* 17px Gemini subhead */
 
 .note-editor-content p { margin-bottom: 0.85rem; }
 .note-editor-content p:last-child { margin-bottom: 0; }

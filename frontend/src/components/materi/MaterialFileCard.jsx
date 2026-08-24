@@ -45,10 +45,10 @@ export function MaterialFileCard({ material: m, index, showSubject, isRagActive,
           <FileTypeIcon type={m.material_type} className={`text-xl ${iconColor}`} />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-text font-medium text-sm leading-tight truncate" title={m.filename}>{m.filename}</p>
-          <p className="text-[10px] text-text-muted uppercase tracking-wider mt-0.5">{m.material_type}</p>
+          <p className="text-text font-medium text-base leading-tight truncate" title={m.filename}>{m.filename}</p>
+          <p className="text-3xs text-text-muted uppercase tracking-wider mt-0.5">{m.material_type}</p>
           {showSubject && (m.subject?.name) && (
-            <p className="text-[11px] text-text-secondary mt-1 truncate" title={m.subject.name}>
+            <p className="text-2xs text-text-secondary mt-1 truncate" title={m.subject.name}>
               <Icon name={ICONS.files.folder} size={10} className="inline text-amber mr-1" />{m.subject.name}
             </p>
           )}
@@ -71,7 +71,7 @@ export function MaterialFileCard({ material: m, index, showSubject, isRagActive,
                 title={m.status === 'Failed' && m.failure_reason ? m.failure_reason : ''}>
             {m.status}
           </span>
-          <span className="text-[10px] text-text-muted">{formatDate(m.upload_date)}</span>
+          <span className="text-3xs text-text-muted">{formatDate(m.upload_date)}</span>
         </div>
         {(m.status === 'Pending' || m.status === 'Processing') && (
           <div className="space-y-1">
@@ -82,7 +82,7 @@ export function MaterialFileCard({ material: m, index, showSubject, isRagActive,
               />
             </div>
             <div className="flex items-center gap-1">
-              <div className="text-[10px] text-text-muted leading-tight truncate flex-1" title={m.stage || t('materi.waitingForProcess')}>
+              <div className="text-3xs text-text-muted leading-tight truncate flex-1" title={m.stage || t('materi.waitingForProcess')}>
                 {m.status === 'Pending' ? t('materi.waitingInQueue') : (m.stage || t('materi.processing'))}
               </div>
               <Tooltip label={t('materi.cancelProcessing')}>
@@ -98,7 +98,7 @@ export function MaterialFileCard({ material: m, index, showSubject, isRagActive,
           </div>
         )}
         {m.status === 'Failed' && m.failure_reason && (
-          <div className="text-[10px] text-danger leading-tight break-words" title={m.failure_reason}>
+          <div className="text-3xs text-danger leading-tight break-words" title={m.failure_reason}>
             {m.failure_reason}
           </div>
         )}
@@ -106,7 +106,7 @@ export function MaterialFileCard({ material: m, index, showSubject, isRagActive,
 
       {/* RAG toggle */}
       <div className="mt-auto pt-2 border-t border-border/50 flex items-center justify-between">
-        <span className="text-[11px] text-text-muted">{t('materi.enableAsRagSource')}</span>
+        <span className="text-2xs text-text-muted">{t('materi.enableAsRagSource')}</span>
         <Tooltip label={m.status !== 'Ready' ? t('materi.notReady', { status: m.status }) : t('materi.enableAsRagSource')}>
           <label className="inline-flex items-center">
             <input

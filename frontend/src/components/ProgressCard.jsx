@@ -23,7 +23,7 @@ export default function ProgressCard({ progress }) {
         <div className="text-center py-6">
           <Icon name={ICONS.learning.streak} size={30} className="mx-auto mb-3 text-warning/40" />
           <p className="text-xs font-semibold text-text mb-1">{t('studyProgress.emptyTitle', 'Mulai bangun streak belajarmu')}</p>
-          <p className="text-[11px] text-text-muted max-w-[240px] mx-auto">
+          <p className="text-2xs text-text-muted max-w-[240px] mx-auto">
             {t('studyProgress.empty', 'Kerjakan quiz, flashcard, atau simulasi ujian untuk mengisi data konsistensi.')}
           </p>
         </div>
@@ -59,21 +59,21 @@ export default function ProgressCard({ progress }) {
               <p className="text-xl font-bold text-warning flex items-center justify-center gap-1">
                 <Icon name={ICONS.learning.streak} size={16} className="shrink-0" />{streak.current_streak_days ?? 0}
               </p>
-              <p className="text-[10px] text-text-secondary mt-0.5">{t('studyProgress.streakCurrent')}</p>
+              <p className="text-3xs text-text-secondary mt-0.5">{t('studyProgress.streakCurrent')}</p>
             </div>
             <div className="bg-black/25 border border-white/[0.06] rounded-xl p-3 text-center">
               <p className="text-xl font-bold text-text">{streak.longest_streak_days ?? 0}</p>
-              <p className="text-[10px] text-text-secondary mt-0.5">{t('studyProgress.streakLongest')}</p>
+              <p className="text-3xs text-text-secondary mt-0.5">{t('studyProgress.streakLongest')}</p>
             </div>
             <div className="bg-black/25 border border-white/[0.06] rounded-xl p-3 text-center">
               <p className="text-xl font-bold text-text">{streak.total_active_days ?? 0}</p>
-              <p className="text-[10px] text-text-secondary mt-0.5">{t('studyProgress.activeDays')}</p>
+              <p className="text-3xs text-text-secondary mt-0.5">{t('studyProgress.activeDays')}</p>
             </div>
           </div>
 
           {/* 14-day activity bars */}
           <div>
-            <p className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider mb-2">{t('studyProgress.windowTitle')}</p>
+            <p className="text-3xs font-semibold text-text-secondary uppercase tracking-wider mb-2">{t('studyProgress.windowTitle')}</p>
             <div className="flex items-end gap-1 h-14">
               {windowDays.map((d) => (
                 <div key={d.date} className="flex-1 flex flex-col items-center justify-end gap-1" title={`${d.date}`}>
@@ -84,27 +84,27 @@ export default function ProgressCard({ progress }) {
                 </div>
               ))}
             </div>
-            <p className="text-[9px] text-text-muted mt-1">{t('studyProgress.windowHint')}</p>
+            <p className="text-2xs text-text-muted mt-1">{t('studyProgress.windowHint')}</p>
           </div>
 
           {/* Mastery trend */}
           <div className="bg-black/25 border border-white/[0.06] rounded-xl p-3">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider flex items-center gap-1">
+              <p className="text-3xs font-semibold text-text-secondary uppercase tracking-wider flex items-center gap-1">
                 <Icon name={ICONS.learning.trophy} size={11} /> {t('studyProgress.trendTitle')}
               </p>
               {trend.direction && dirMeta && (
-                <span className={`badge text-[9px] ${dirMeta.cls}`}>
+                <span className={`badge text-2xs ${dirMeta.cls}`}>
                   <Icon name={dirMeta.icon} size={9} className="inline mr-0.5" />{dirMeta.label}
                 </span>
               )}
             </div>
             {series.length < 2 ? (
-              <p className="text-[11px] text-text-muted">{t('studyProgress.trendNeedData')}</p>
+              <p className="text-2xs text-text-muted">{t('studyProgress.trendNeedData')}</p>
             ) : (
               <TrendMiniChart series={series} />
             )}
-            <div className="flex items-center justify-between mt-1.5 text-[10px] text-text-muted">
+            <div className="flex items-center justify-between mt-1.5 text-3xs text-text-muted">
               <span>{series.length > 0 ? `${series.length} ${t('studyProgress.sessions')}` : ''}</span>
               {trend.last_session_avg != null && (
                 <span>{t('studyProgress.lastSession', { avg: trend.last_session_avg })}</span>
@@ -113,7 +113,7 @@ export default function ProgressCard({ progress }) {
           </div>
 
           {streak.last_active_date && (
-            <p className="text-[10px] text-text-muted">
+            <p className="text-3xs text-text-muted">
               {t('studyProgress.lastActive', { date: streak.last_active_date })}
             </p>
           )}
@@ -149,7 +149,7 @@ function TrendMiniChart({ series }) {
         ))}
       </svg>
       {hover != null && (
-        <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-slate-800/95 backdrop-blur-sm border border-white/10 rounded-lg px-2 py-1 text-[10px] text-text shadow-lg whitespace-nowrap">
+        <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-slate-800/95 backdrop-blur-sm border border-white/10 rounded-lg px-2 py-1 text-3xs text-text shadow-lg whitespace-nowrap">
           {t('studyProgress.trendTooltip', { session: series[hover].session, avg: series[hover].avg_accuracy, topics: series[hover].topics_measured })}
         </div>
       )}

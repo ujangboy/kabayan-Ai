@@ -37,7 +37,7 @@ export default function FlashcardReviewCard({
           <div className="absolute inset-0 backface-hidden card-base flex flex-col items-center justify-center p-8 text-center border-t-2 border-t-accent-purple/70 shadow-2xl shadow-primary/20">
             <span className="text-xs font-semibold text-text-secondary uppercase tracking-widest mb-4">{t('flashcard.question')}</span>
             <MathMarkdown className="text-xl font-bold text-text leading-snug text-center">{currentCard.question}</MathMarkdown>
-            <p className="absolute bottom-4 text-[11px] text-text-muted">{t('flashcard.clickToSeeAnswer')}</p>
+            <p className="absolute bottom-4 text-2xs text-text-muted">{t('flashcard.clickToSeeAnswer')}</p>
           </div>
           {/* Back */}
           <div
@@ -87,7 +87,7 @@ export default function FlashcardReviewCard({
             className="mt-6 w-full max-w-xl"
           >
             <div className={`flex items-center justify-between rounded-xl px-4 py-2.5 mb-3 border ${meta.color}`}>
-              <span className="text-sm font-semibold text-text">{meta.label}</span>
+              <span className="text-base font-semibold text-text">{meta.label}</span>
               <button
                 onClick={onSkipAutoAdvance}
                 className="text-xs text-text-muted hover:text-text transition-colors ml-4 shrink-0"

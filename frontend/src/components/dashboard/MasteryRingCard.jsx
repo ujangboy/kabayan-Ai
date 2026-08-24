@@ -31,7 +31,7 @@ export default function MasteryRingCard({ subject }) {
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <span className="text-2xl font-bold text-text">{bestScore != null ? bestScore : '—'}</span>
-            <span className="text-[10px] text-text-muted">{t('subjectDashboard.bestTargetLabel')}</span>
+            <span className="text-3xs text-text-muted">{t('subjectDashboard.bestTargetLabel')}</span>
           </div>
         </div>
         <div className="space-y-2 text-sm">

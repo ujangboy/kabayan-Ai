@@ -23,6 +23,8 @@ export default function TopBar() {
   const setSearchOpen = useAppStore((s) => s.setSearchOpen);
   const setShortcutsOpen = useAppStore((s) => s.setShortcutsOpen);
   const toggleSidebar = useAppStore((s) => s.toggleSidebar);
+  const collapsed = useAppStore((s) => s.collapsed);
+  const toggleCollapsed = useAppStore((s) => s.toggleCollapsed);
   const queryClient = useQueryClient();
 
   const { data: profile } = useQuery({
@@ -48,13 +50,25 @@ export default function TopBar() {
 
   return (
     <header className="divider-gradient-b relative z-10 flex h-14 shrink-0 items-center gap-3 bg-surface/80 px-4 backdrop-blur-md">
-      {/* Mobile sidebar toggle */}
+      {/* Mobile sidebar toggle (drawer) — UnifiedSidebar drawer */}
       <button
         onClick={toggleSidebar}
         className="lg:hidden flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-text-secondary transition-colors hover:bg-card hover:text-text"
         title={t('common.menu')}
       >
         <Icon name={ICONS.actions.menu} size={20} />
+      </button>
+
+      {/* Desktop: toggle UnifiedSidebar (smart nav) — klik muncul nama nav */}
+      <button
+        onClick={toggleCollapsed}
+        className="hidden lg:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-800 border border-slate-600 text-slate-100 hover:text-white hover:bg-slate-700 hover:border-slate-500 transition-colors text-xs font-medium shadow-sm shrink-0"
+        title={collapsed ? t('sidebar.expand', 'Tampilkan sidebar') : t('sidebar.collapse', 'Sembunyikan sidebar')}
+        aria-label="Toggle sidebar"
+        aria-expanded={!collapsed}
+      >
+        <Icon name={collapsed ? ICONS.actions.menuOpen : ICONS.actions.menu} size={16} />
+        <span className="hidden xl:inline">{collapsed ? t('sidebar.expand', 'Tampilkan') : t('sidebar.collapse', 'Sembunyikan')}</span>
       </button>
 
       {/* Search */}
@@ -64,7 +78,7 @@ export default function TopBar() {
       >
         <Icon name={ICONS.actions.search} size={15} />
         <span className="flex-1 text-left">{t('common.search')}</span>
-        <kbd className="hidden sm:inline rounded border border-border bg-background px-1.5 py-0.5 text-[10px]">⌘K</kbd>
+        <kbd className="hidden sm:inline rounded border border-border bg-background px-1.5 py-0.5 text-3xs">⌘K</kbd>
       </button>
 
       <div className="flex-1" />

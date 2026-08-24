@@ -31,7 +31,7 @@ export default function TopicProgressCard({ topicProgress }) {
           {hasMore && (
             <button
               onClick={() => setShowAll(!showAll)}
-              className="text-[10px] text-primary hover:text-primary/80 flex items-center gap-1 transition-colors"
+              className="text-3xs text-primary hover:text-primary/80 flex items-center gap-1 transition-colors"
             >
               {showAll ? t('common.showLess', 'Sedikit') : t('common.showAll', 'Semua topik')}
               {showAll ? <Icon name={ICONS.ui.chevronUp} size={12} /> : <Icon name={ICONS.ui.chevronDown} size={12} />}
@@ -52,14 +52,14 @@ export default function TopicProgressCard({ topicProgress }) {
               <div key={tp.topic} className="flex items-center justify-between py-2.5 first:pt-0 last:pb-0">
                 <span className="text-xs font-medium text-text truncate mr-2">{tp.topic}</span>
                 <div className="flex items-center gap-2 shrink-0">
-                  <span className="text-[10px] text-text-secondary font-mono">{tp.accuracy}%</span>
-                  <span className={`badge text-[9px] ${meta.cls}`}>{meta.label}</span>
+                  <span className="text-3xs text-text-secondary font-mono">{tp.accuracy}%</span>
+                  <span className={`badge text-2xs ${meta.cls}`}>{meta.label}</span>
                 </div>
               </div>
             );
           })}
           {!showAll && hasMore && (
-            <p className="text-[10px] text-text-muted text-center pt-2">
+            <p className="text-3xs text-text-muted text-center pt-2">
               +{topicProgress.length - INITIAL_LIMIT} {t('subjectDashboard.moreTopics', 'topik lainnya')}
             </p>
           )}

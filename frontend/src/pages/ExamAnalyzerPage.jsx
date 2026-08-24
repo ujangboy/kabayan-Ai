@@ -48,7 +48,7 @@ export default function ExamAnalyzerPage() {
   const [configOpen, setConfigOpen]       = useState(false);
   const [blueprintModal, setBlueprintModal] = useState(null);
 
-  // ── Mount: restore saved state + pick up URL params ──
+  // ── Mount: restore saved state + pick up URL params (sekali saat mount) ──
   useEffect(() => {
     const params = new URLSearchParams(location.search);
 
@@ -71,9 +71,7 @@ export default function ExamAnalyzerPage() {
       return;
     }
 
-    // 2) subject_id from URL (dashboard quick actions)
-    const sid = params.get('subject_id');
-    if (sid) setSubjectId(sid);
+    // 2) subject_id ditangani oleh effect reaktif di bawah (watch location.search) — tidak perlu di sini
 
     // 3) Restore persisted page state
     const saved = restore();
@@ -97,9 +95,18 @@ export default function ExamAnalyzerPage() {
       }
     }
 
-    if (location.search) navigate('/exam-analyzer', { replace: true });
     setRestored(true);
   }, []);
+
+  // ── Reaktif terhadap klik smart nav Ujian Simulasi (UnifiedSidebar flyout/inline) ──
+  // MateriPage & FlashcardPage sudah watch location.search; ExamAnalyzer sebelumnya pakai [] sehingga klik kedua dst. tidak update.
+  useEffect(() => {
+    const sid = new URLSearchParams(location.search).get('subject_id');
+    if (!sid) return;
+    setSubjectId(sid);
+    // Bersihkan URL tanpa reload (seperti MateriPage)
+    navigate('/exam-analyzer', { replace: true });
+  }, [location.search]);
 
   // ── Persist state on every change ──
   useEffect(() => {

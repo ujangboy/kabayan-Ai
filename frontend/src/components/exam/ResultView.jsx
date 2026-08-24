@@ -151,7 +151,7 @@ export default function ResultView({ evalData, onReview, onFinish, sessionId, on
             <div className="space-y-2">
               {strong_topics.map((topic, i) => (
                 <div key={i} className="flex items-center justify-between">
-                  <span className="text-sm text-text">{topic.topic}</span>
+                  <span className="text-base text-text">{topic.topic}</span>
                   <Chip label={topic.mastery} size="xs" color="success" />
                 </div>
               ))}
@@ -167,14 +167,14 @@ export default function ResultView({ evalData, onReview, onFinish, sessionId, on
               {weak_topics.map((topic, i) => (
                 <div key={i} className="flex items-start justify-between gap-2 p-2 rounded-lg bg-background/50 border border-border/50">
                   <div className="flex flex-col min-w-0">
-                    <span className="text-sm text-text font-medium">{topic.topic}</span>
+                    <span className="text-base text-text font-medium">{topic.topic}</span>
                     {topic.issue && <p className="text-xs text-text-muted mt-0.5">{topic.issue}</p>}
                     
                     {/* Contextual Ask Tutor for weak topic */}
                     {sessionId && (
                       <button
                         onClick={() => navigate(`/chat?tutor=1&exam=${sessionId}&subject=${encodeURIComponent(subjectName)}&topic=${encodeURIComponent(topic.topic)}`)}
-                        className="text-[11px] flex items-center gap-1.5 text-primary hover:text-primary-focus transition-colors mt-2"
+                        className="text-2xs flex items-center gap-1.5 text-primary hover:text-primary-focus transition-colors mt-2"
                       >
                         <Icon name={ICONS.communication.chat} size={11} /> {t('exam.result.askTutor')}
                       </button>
@@ -222,7 +222,7 @@ export default function ResultView({ evalData, onReview, onFinish, sessionId, on
             className="card-base p-5 border border-primary/20"
           >
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-text flex items-center gap-1.5">
+            <h3 className="text-base font-semibold text-text flex items-center gap-1.5">
               <Icon name={ICONS.learning.calendar} size={14} /> {t('exam.result.planPreviewTitle')}
             </h3>
             <button onClick={() => setPlanPreview(null)} className="text-xs text-text-muted hover:text-text">{t('common.close')}</button>
@@ -235,7 +235,7 @@ export default function ResultView({ evalData, onReview, onFinish, sessionId, on
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 mb-0.5">
                     <span className="font-medium text-text">{item.topic}</span>
-                    <span className="text-[10px] text-primary">{item.time_slot}</span>
+                    <span className="text-3xs text-primary">{item.time_slot}</span>
                   </div>
                   <p className="text-text-secondary">{item.activity}</p>
                   {item.resources && <p className="text-primary/80 mt-0.5">{item.resources}</p>}

@@ -64,7 +64,7 @@ export default function AiLimitTab() {
       </div>
 
       <div className="card-base p-4">
-        <h3 className="text-sm font-semibold text-text mb-3">{t('settings.aiLimit.breakdownTitle')}</h3>
+        <h3 className="text-base font-semibold text-text mb-3">{t('settings.aiLimit.breakdownTitle')}</h3>
         {features.length === 0 ? (
           <p className="text-xs text-text-muted">{t('settings.aiLimit.emptyBreakdown')}</p>
         ) : (

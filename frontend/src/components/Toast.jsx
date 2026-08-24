@@ -123,16 +123,16 @@ function ToastItem({ toast, onDismiss }) {
       exit={{ opacity: 0, y: 12, scale: 0.95, filter: 'blur(2px)' }}
       transition={{ duration: 0.35, ease: [0.32, 0.72, 0, 1] }}
       className={`pointer-events-auto flex items-start gap-3 pl-3.5 pr-2.5 py-3 rounded-2xl
-        glass ring-1 ${RING[toast.type] || RING.info} ${GLOW[toast.type] || GLOW.info} text-sm text-text`}
+        glass ring-1 ${RING[toast.type] || RING.info} ${GLOW[toast.type] || GLOW.info} text-base text-text`}
     >
       <span className="mt-0.5">
         <Icon name={TOAST_ICON_MAP[toast.type] || ICONS.status.info} size={17} className="shrink-0" />
       </span>
-      <p className="flex-1 leading-snug text-[13px]">{toast.message}</p>
+      <p className="flex-1 leading-snug text-meta">{toast.message}</p>
       {toast.action && (
         <button
           onClick={handleAction}
-          className="shrink-0 px-2.5 py-1 rounded-lg text-[12px] font-semibold text-primary-light
+          className="shrink-0 px-2.5 py-1 rounded-lg text-xs font-semibold text-primary-light
             bg-primary/10 hover:bg-primary/20 transition-colors"
         >
           {toast.action.label}
@@ -194,10 +194,10 @@ function ConfirmDialog({ state, onClose }) {
                 : <Icon name={ICONS.status.info} size={20} />}
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="text-sm font-semibold text-text mb-1">
+              <h3 className="text-base font-semibold text-text mb-1">
                 {state.title || t('toast.confirmTitle')}
               </h3>
-              <p className="text-[13px] text-text-secondary leading-relaxed">
+              <p className="text-meta text-text-secondary leading-relaxed">
                 {state.message}
               </p>
             </div>

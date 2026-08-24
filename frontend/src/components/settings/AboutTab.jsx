@@ -27,7 +27,7 @@ export default function AboutTab() {
         </div>
         <div>
           <h2 className="text-lg font-semibold text-text">{info.app_name || t('settings.about.appName')}</h2>
-          <span className="badge badge-primary text-[10px]">v{info.version || '—'}</span>
+          <span className="badge badge-primary text-3xs">v{info.version || '—'}</span>
         </div>
       </div>
 

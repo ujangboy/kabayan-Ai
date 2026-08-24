@@ -40,9 +40,9 @@ export default function DiagnosticCard({ diagnostic }) {
         </div>
         <div className="flex items-center gap-3">
           {readiness.avg_mastery != null && (
-            <span className="text-sm font-bold text-text">{readiness.avg_mastery}%</span>
+            <span className="text-base font-bold text-text">{readiness.avg_mastery}%</span>
           )}
-          <span className={`badge text-[9px] ${rdMeta.cls}`}>
+          <span className={`badge text-2xs ${rdMeta.cls}`}>
             <Icon name={rdMeta.icon} size={9} className="inline mr-1" />
             {readiness.label || t('studyDiagnostic.levelNoData')}
           </span>
@@ -62,7 +62,7 @@ export default function DiagnosticCard({ diagnostic }) {
             <div className="mt-4 space-y-4">
               {/* Coverage */}
               <div>
-                <div className="flex items-center justify-between text-[10px] text-text-muted mb-1">
+                <div className="flex items-center justify-between text-3xs text-text-muted mb-1">
                   <span>{t('studyDiagnostic.coverage', {
                     covered: overview.topics_covered ?? 0,
                     total: overview.topics_in_bank ?? 0,
@@ -77,7 +77,7 @@ export default function DiagnosticCard({ diagnostic }) {
               {/* Action items */}
               {actionItems.length > 0 && (
                 <div>
-                  <p className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider mb-2">{t('studyDiagnostic.actionsTitle')}</p>
+                  <p className="text-3xs font-semibold text-text-secondary uppercase tracking-wider mb-2">{t('studyDiagnostic.actionsTitle')}</p>
                   <div className="space-y-1.5">
                     {actionItems.slice(0, 3).map((item, i) => (
                       <button
@@ -85,8 +85,8 @@ export default function DiagnosticCard({ diagnostic }) {
                         onClick={() => navigate(item.to || '/flashcard')}
                         className="w-full flex items-center justify-between p-2 rounded-lg border border-border hover:border-primary/40 transition-colors cursor-pointer text-left"
                       >
-                        <span className="text-[11px] font-medium text-text truncate">{item.topic || item.modality}</span>
-                        <span className="text-[10px] text-primary shrink-0">{t('studyDiagnostic.start')}</span>
+                        <span className="text-2xs font-medium text-text truncate">{item.topic || item.modality}</span>
+                        <span className="text-3xs text-primary shrink-0">{t('studyDiagnostic.start')}</span>
                       </button>
                     ))}
                   </div>
@@ -96,15 +96,15 @@ export default function DiagnosticCard({ diagnostic }) {
               {/* Weak topics */}
               {weakTopics.length > 0 && (
                 <div>
-                  <p className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider mb-2">{t('studyDiagnostic.weakTitle')}</p>
+                  <p className="text-3xs font-semibold text-text-secondary uppercase tracking-wider mb-2">{t('studyDiagnostic.weakTitle')}</p>
                   <div className="space-y-1">
                     {weakTopics.slice(0, 5).map(d => (
                       <div key={d.topic} className="flex items-center justify-between gap-2 py-1.5">
-                        <span className="text-[11px] text-text truncate">{d.topic}</span>
+                        <span className="text-2xs text-text truncate">{d.topic}</span>
                         <div className="flex items-center gap-2 shrink-0">
                           {d.trend_direction === 'turun' && <Icon name={ICONS.learning.regress} size={10} className="text-danger" />}
                           {d.trend_direction === 'naik' && <Icon name={ICONS.learning.progress} size={10} className="text-success" />}
-                          <span className="text-[10px] font-semibold text-danger">{d.accuracy}%</span>
+                          <span className="text-3xs font-semibold text-danger">{d.accuracy}%</span>
                         </div>
                       </div>
                     ))}
@@ -115,10 +115,10 @@ export default function DiagnosticCard({ diagnostic }) {
               {/* Strong topics */}
               {strongTopics.length > 0 && (
                 <div>
-                  <p className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider mb-2">{t('studyDiagnostic.strongTitle')}</p>
+                  <p className="text-3xs font-semibold text-text-secondary uppercase tracking-wider mb-2">{t('studyDiagnostic.strongTitle')}</p>
                   <div className="flex flex-wrap gap-1.5">
                     {strongTopics.slice(0, 5).map(d => (
-                      <span key={d.topic} className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-success/10 border border-success/20 text-[9px] text-success">
+                      <span key={d.topic} className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-success/10 border border-success/20 text-2xs text-success">
                         <Icon name={ICONS.status.success} size={8} />
                         {d.topic} · {d.accuracy}%
                       </span>
@@ -130,10 +130,10 @@ export default function DiagnosticCard({ diagnostic }) {
               {/* Risk flags */}
               {riskFlags.length > 0 && (
                 <div>
-                  <p className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider mb-2">{t('studyDiagnostic.risksTitle')}</p>
+                  <p className="text-3xs font-semibold text-text-secondary uppercase tracking-wider mb-2">{t('studyDiagnostic.risksTitle')}</p>
                   <div className="space-y-1.5">
                     {riskFlags.slice(0, 2).map((f, i) => (
-                      <div key={i} className={`flex items-start gap-2 rounded-lg px-2.5 py-1.5 text-[10px] ${f.severity === 'tinggi' ? 'bg-danger/10 border border-danger/20 text-danger' : 'bg-warning/10 border border-warning/20 text-warning'}`}>
+                      <div key={i} className={`flex items-start gap-2 rounded-lg px-2.5 py-1.5 text-3xs ${f.severity === 'tinggi' ? 'bg-danger/10 border border-danger/20 text-danger' : 'bg-warning/10 border border-warning/20 text-warning'}`}>
                         <Icon name={ICONS.status.warning} size={10} className="shrink-0 mt-0.5" />
                         <span>{f.message}</span>
                       </div>
@@ -143,7 +143,7 @@ export default function DiagnosticCard({ diagnostic }) {
               )}
 
               {noDataTopics.length > 0 && (
-                <p className="text-[10px] text-text-muted">
+                <p className="text-3xs text-text-muted">
                   {t('studyDiagnostic.noDataTopics', { topics: noDataTopics.join(', ') })}
                 </p>
               )}

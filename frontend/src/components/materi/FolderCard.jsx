@@ -21,7 +21,7 @@ export function FolderCard({ active, name, count, onClick, tone, index = 0 }) {
       <div className="flex items-center justify-between">
         <SubjectBadge name={name} tone={tone} size="sm" />
         <span className={cn(
-          'text-[10px] font-medium px-2 py-0.5 rounded-full border',
+          'text-3xs font-medium px-2 py-0.5 rounded-full border',
           active
             ? 'text-primary-light bg-primary/15 border-primary/30'
             : 'text-text-muted bg-white/[0.04] border-white/[0.08]'
@@ -29,8 +29,8 @@ export function FolderCard({ active, name, count, onClick, tone, index = 0 }) {
           {count}
         </span>
       </div>
-      <p className={cn('text-sm font-semibold truncate', active ? 'text-primary-light' : 'text-text')} title={name}>{name}</p>
-      <p className="text-[10px] text-text-muted uppercase tracking-wide -mt-2">{t('materi.folderFiles', { count })}</p>
+      <p className={cn('text-base font-semibold truncate', active ? 'text-primary-light' : 'text-text')} title={name}>{name}</p>
+      <p className="text-3xs text-text-muted uppercase tracking-wide -mt-2">{t('materi.folderFiles', { count })}</p>
     </motion.button>
   );
 }

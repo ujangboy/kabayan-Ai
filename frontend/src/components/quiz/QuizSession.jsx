@@ -188,18 +188,18 @@ export function QuizSession({ quizId, onClose }) {
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <p className="text-sm font-semibold text-text-secondary">Soal {idx + 1}</p>
-                      <span className="text-[9px] px-1.5 py-0.5 rounded bg-card border border-border text-text-secondary">
+                      <span className="text-2xs px-1.5 py-0.5 rounded bg-card border border-border text-text-secondary">
                         {isEssay ? 'Essay (tidak dinilai otomatis)' : 'Pilihan Ganda'}
                       </span>
                     </div>
                     <MathMarkdown className="text-text font-medium mb-3">{q.question}</MathMarkdown>
 
-                    <div className="space-y-2 text-sm">
+                    <div className="space-y-2 text-base">
                       {isEssay ? (
                         <div>
                           <span className="text-text-secondary">Jawaban Anda: </span>
                           <div className="mt-1 p-3 bg-background rounded-lg border border-border">
-                            <MathMarkdown className="text-sm">{userAnswer || '(Tidak dijawab)'}</MathMarkdown>
+                            <MathMarkdown className="text-base">{userAnswer || '(Tidak dijawab)'}</MathMarkdown>
                           </div>
                         </div>
                       ) : (
@@ -221,7 +221,7 @@ export function QuizSession({ quizId, onClose }) {
                       {q.explanation && (
                         <div className="mt-2 p-3 bg-background rounded-lg border border-border">
                           <p className="text-xs font-semibold text-text-secondary mb-1">Penjelasan:</p>
-                          <MathMarkdown className="text-sm">{q.explanation}</MathMarkdown>
+                          <MathMarkdown className="text-base">{q.explanation}</MathMarkdown>
                         </div>
                       )}
                     </div>
@@ -307,7 +307,7 @@ export function QuizSession({ quizId, onClose }) {
             >
               <div className="flex items-center gap-2 mb-2">
                 {currentQ.qtype === 'essay' && (
-                  <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded bg-warning/15 text-warning border border-warning/30">
+                  <span className="inline-flex items-center gap-1 text-3xs px-2 py-0.5 rounded bg-warning/15 text-warning border border-warning/30">
                     <Icon name={ICONS.actions.edit} size={10} /> Essay
                   </span>
                 )}
@@ -321,7 +321,7 @@ export function QuizSession({ quizId, onClose }) {
                   onChange={(e) => handleEssayChange(e.target.value)}
                   rows={7}
                   placeholder="Tulis jawaban Anda di sini..."
-                  className="w-full px-4 py-3 bg-card border border-border rounded-xl text-sm text-text focus:outline-none focus:border-primary transition-colors resize-y"
+                  className="w-full px-4 py-3 bg-card border border-border rounded-xl text-base text-text focus:outline-none focus:border-primary transition-colors resize-y"
                 />
               ) : (
                 <div className="space-y-3">

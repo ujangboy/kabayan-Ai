@@ -75,7 +75,7 @@ export function NoteView({ note, onBack, onSave, onPin, onDelete }) {
         <div className="flex items-center gap-1.5">
           {/* Auto-save status */}
           <span className={cn(
-            'text-[10px] flex items-center gap-1 transition-colors px-2',
+            'text-3xs flex items-center gap-1 transition-colors px-2',
             saveStatus === 'saving' && 'text-warning',
             saveStatus === 'saved' && 'text-success/70',
           )}>
@@ -149,7 +149,7 @@ export function NoteView({ note, onBack, onSave, onPin, onDelete }) {
           className="w-full text-2xl font-bold text-text bg-transparent outline-none placeholder:text-text-muted/40"
           placeholder={t('notebook.noteTitlePlaceholder')}
         />
-        <div className="flex items-center gap-2 mt-1.5 text-[11px] text-text-muted/60">
+        <div className="flex items-center gap-2 mt-1.5 text-2xs text-text-muted/60">
           {note.subject && (
             <span className="flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-primary/60" />

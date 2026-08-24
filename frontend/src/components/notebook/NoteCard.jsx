@@ -38,11 +38,11 @@ export function NoteCard({ note, isSelected, onSelect, onPin, onDelete }) {
           </span>
         </div>
         {snippet && (
-          <p className="text-[11px] text-text-muted line-clamp-1 leading-relaxed mb-1">
+          <p className="text-2xs text-text-muted line-clamp-1 leading-relaxed mb-1">
             {snippet}
           </p>
         )}
-        <span className="text-[10px] text-text-muted/70">
+        <span className="text-3xs text-text-muted/70">
           {formatDate(note.created_at)}
         </span>
       </button>

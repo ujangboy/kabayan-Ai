@@ -49,7 +49,7 @@ export default function KnowledgeGraphCard({ graph }) {
           <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('studyGraph.title')}</h2>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 text-[10px] text-text-muted">
+          <div className="flex items-center gap-2 text-3xs text-text-muted">
             <span>{babCount} {t('studyGraph.babsShort', 'bab')}</span>
             <span>·</span>
             <span>{topicCount} {t('studyGraph.topicsShort', 'topik')}</span>
@@ -82,22 +82,22 @@ export default function KnowledgeGraphCard({ graph }) {
                       <span className="text-xs font-semibold text-text">{bab.label}</span>
                       <div className="flex items-center gap-2">
                         {bab.mastery != null && (
-                          <span className="text-[10px] text-text-secondary">
+                          <span className="text-3xs text-text-secondary">
                             {t('studyGraph.mastery')}: {bab.mastery}%
                           </span>
                         )}
-                        <span className="text-[10px] text-text-muted">{bab.topics_count} {t('studyGraph.topics')}</span>
+                        <span className="text-3xs text-text-muted">{bab.topics_count} {t('studyGraph.topics')}</span>
                       </div>
                     </div>
                     <div className="flex flex-wrap gap-1.5">
                       {childTopics.map(n => {
                         const sb = statusBadge(n);
                         return (
-                          <span key={n.id} className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg border border-border bg-card text-[10px]">
+                          <span key={n.id} className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg border border-border bg-card text-3xs">
                             <span className="font-medium text-text">{n.label}</span>
                             {n.mastery != null && <span className="text-text-muted">{n.mastery}%</span>}
                             {n.in_latest_blueprint && <Icon name={ICONS.learning.sparkles} size={10} className="text-warning" />}
-                            {sb && <span className={`badge text-[9px] ${sb.cls}`}>{sb.label}</span>}
+                            {sb && <span className={`badge text-2xs ${sb.cls}`}>{sb.label}</span>}
                           </span>
                         );
                       })}
@@ -108,7 +108,7 @@ export default function KnowledgeGraphCard({ graph }) {
                           .filter(n => (n.concepts || []).length > 0)
                           .slice(0, 3)
                           .map(n => (
-                            <p key={n.id} className="text-[10px] text-text-muted leading-relaxed">
+                            <p key={n.id} className="text-3xs text-text-muted leading-relaxed">
                               <span className="font-semibold text-text-secondary">{n.label}:</span> {n.concepts.join(' · ')}
                             </p>
                           ))}
@@ -125,10 +125,10 @@ export default function KnowledgeGraphCard({ graph }) {
                     {ungrouped.map(n => {
                       const sb = statusBadge(n);
                       return (
-                        <span key={n.id} className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg border border-border bg-card text-[10px]">
+                        <span key={n.id} className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg border border-border bg-card text-3xs">
                           <span className="font-medium text-text">{n.label}</span>
                           {n.mastery != null && <span className="text-text-muted">{n.mastery}%</span>}
-                          {sb && <span className={`badge text-[9px] ${sb.cls}`}>{sb.label}</span>}
+                          {sb && <span className={`badge text-2xs ${sb.cls}`}>{sb.label}</span>}
                         </span>
                       );
                     })}
@@ -141,7 +141,7 @@ export default function KnowledgeGraphCard({ graph }) {
                   <p className="text-xs font-semibold text-text mb-2">{t('studyGraph.dependencies')}</p>
                   <div className="flex flex-wrap gap-1.5">
                     {dependencies.map((e, i) => (
-                      <span key={i} className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-card border border-border text-[10px] text-text-secondary">
+                      <span key={i} className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-card border border-border text-3xs text-text-secondary">
                         {e.source} <Icon name={ICONS.actions.forward} size={10} className="text-text-muted" /> {e.target}
                         <span className="text-text-muted">×{e.weight}</span>
                       </span>
