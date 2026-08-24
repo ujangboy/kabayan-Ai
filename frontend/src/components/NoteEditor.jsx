@@ -220,7 +220,7 @@ function FontSizeDropdown({ editor, floating = false }) {
           floating ? 'w-7 h-6 text-3xs' : 'w-9 h-7 text-2xs',
           open
             ? 'bg-primary/20 text-primary'
-            : 'text-text-muted hover:text-text hover:bg-white/8'
+            : 'text-text-muted hover:text-text hover:bg-wash'
         )}
       >
         {label}
@@ -252,7 +252,7 @@ function FontSizeDropdown({ editor, floating = false }) {
                   'px-2.5 py-1 rounded-md text-left transition-colors',
                   size === label
                     ? 'bg-primary/15 text-primary font-semibold'
-                    : 'text-text hover:bg-white/8'
+                    : 'text-text hover:bg-wash'
                 )}
                 style={{ fontSize: Math.max(size * 0.8, 9) }}
               >
@@ -445,7 +445,7 @@ function FloatingToolbar({ editor, editorMode }) {
       <div className="flex items-center gap-px px-2 py-1.5 bg-card/95 backdrop-blur-xl border border-strong rounded-lg shadow-[0_8px_32px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.05)]">
         {/* ── Font size ── */}
         <FontSizeDropdown editor={editor} floating />
-        <div className="w-px h-5 bg-white/10 mx-1 shrink-0" />
+        <div className="w-px h-5 bg-border mx-1 shrink-0" />
 
         {/* ── Text formatting ── */}
         <ToolBtn className="!w-6 !h-6" onClick={() => editor.chain().focus().toggleBold().run()} active={ia('bold')} title={t('noteEditor.bold')}>
@@ -461,7 +461,7 @@ function FloatingToolbar({ editor, editorMode }) {
           <Icon name={ICONS.editor.strikethrough} size={12} />
         </ToolBtn>
 
-        <div className="w-px h-5 bg-white/10 mx-1 shrink-0" />
+        <div className="w-px h-5 bg-border mx-1 shrink-0" />
 
         {/* ── Alignment ── */}
         <ToolBtn className="!w-6 !h-6" onClick={() => editor.chain().focus().setTextAlign('left').run()} active={ia({ textAlign: 'left' })} title={t('noteEditor.left')}>
@@ -474,7 +474,7 @@ function FloatingToolbar({ editor, editorMode }) {
           <Icon name={ICONS.editor.alignRight} size={12} />
         </ToolBtn>
 
-        <div className="w-px h-5 bg-white/10 mx-1 shrink-0" />
+        <div className="w-px h-5 bg-border mx-1 shrink-0" />
 
         {/* ── Lists ── */}
         <ToolBtn className="!w-6 !h-6" onClick={() => editor.chain().focus().toggleBulletList().run()} active={ia('bulletList')} title={t('noteEditor.bulletList')}>
@@ -487,7 +487,7 @@ function FloatingToolbar({ editor, editorMode }) {
           <Icon name={ICONS.editor.listChecks} size={12} />
         </ToolBtn>
 
-        <div className="w-px h-5 bg-white/10 mx-1 shrink-0" />
+        <div className="w-px h-5 bg-border mx-1 shrink-0" />
 
         {/* ── Colors ── */}
         <div className="relative">
@@ -510,16 +510,16 @@ function FloatingToolbar({ editor, editorMode }) {
                   type="button"
                   onClick={() => applyColor(color)}
                   title={t('noteEditor.' + labelKey)}
-                  className="w-5 h-5 rounded-full border-2 border-transparent hover:border-white/60 hover:scale-125 transition-all duration-150 shadow-md"
+                  className="w-5 h-5 rounded-full border-2 border-transparent border-strong hover:scale-125 transition-all duration-150 shadow-md"
                   style={{ backgroundColor: color }}
                 />
               ))}
-              <div className="w-px h-4 bg-white/10 mx-0.5" />
+              <div className="w-px h-4 bg-border mx-0.5" />
               <button
                 type="button"
                 onClick={clearColor}
                 title={t('noteEditor.clearColor')}
-                className="w-5 h-5 rounded-full border-2 border-dashed border-strong flex items-center justify-center text-2xs text-white/40 hover:border-white/50 hover:text-white/70 transition-all"
+                className="w-5 h-5 rounded-full border-2 border-dashed border-strong flex items-center justify-center text-2xs text-text-muted hover:border-strong hover:text-text-secondary transition-all"
               >
                 <Icon name={ICONS.actions.close} size={9} />
               </button>
