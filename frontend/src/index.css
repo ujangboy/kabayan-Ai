@@ -40,8 +40,8 @@
     --bg-subtle: 24 24 27;
     --bg-surface: 19 19 22;
     --popover: 28 28 31;
-    --border-subtle: var(--border-subtle);
-    --border-strong: rgba(255, 255, 255, 0.16);
+    --border-subtle: rgba(255, 255, 255, 0.05);
+    --border-strong: rgba(255, 255, 255, 0.10);
     --text-primary: #fafafa;
     --text-secondary: #a1a1aa;
     --text-muted: #71717a;
@@ -63,11 +63,11 @@
   /* Native dropdown ikut tema via color-scheme */
   select {
     color: var(--text-primary) !important;
-    background-color: var(--bg-surface) !important;
+    background-color: rgb(var(--bg-surface)) !important;
     -webkit-text-fill-color: var(--text-primary);
   }
   select option {
-    background-color: var(--popover) !important;
+    background-color: rgb(var(--popover)) !important;
     color: var(--text-primary) !important;
   }
   select option:hover,
@@ -128,7 +128,7 @@
 
   /* Focus ring — aksen tunggal */
   *:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid rgb(var(--accent));
     outline-offset: 2px;
     border-radius: 6px;
   }
@@ -213,12 +213,12 @@
   }
 
   .glass {
-    background: var(--bg-surface);
+    background: rgb(var(--bg-surface));
     border: 1px solid var(--border-subtle);
   }
 
   .glass-light {
-    background: var(--bg-surface);
+    background: rgb(var(--bg-surface));
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid var(--border-subtle);
@@ -351,7 +351,7 @@
   /* Inline code */
   .prose-dark code {
     background: var(--code-bg);
-    color: var(--accent-light);
+    color: rgb(var(--accent-light));
     padding: 0.15em 0.45em;
     border-radius: 5px;
     font-size: 0.875em;
@@ -376,7 +376,7 @@
 
   /* Blockquote */
   .prose-dark blockquote {
-    border-left: 3px solid var(--accent);
+    border-left: 3px solid rgb(var(--accent));
     padding-left: 1rem;
     margin: 1.25rem 0;
     color: var(--text-secondary);
@@ -420,14 +420,14 @@
   /* KaTeX symbol colors in dark mode */
   .prose-dark .katex { color: var(--text-primary); }
   .prose-dark .katex .mbin,
-  .prose-dark .katex .mrel { color: var(--accent-light); }
+  .prose-dark .katex .mrel { color: rgb(var(--accent-light)); }
   .prose-dark .katex .mopen,
   .prose-dark .katex .mclose { color: var(--text-secondary); }
 
   /* ──────────────────────────────────────────────────────────────────────── */
 
-  .prose-dark a { color: var(--accent-hover); text-decoration: underline; }
-  .prose-dark a:hover { color: var(--accent-light); }
+  .prose-dark a { color: rgb(var(--accent-hover)); text-decoration: underline; }
+  .prose-dark a:hover { color: rgb(var(--accent-light)); }
 
   /* Tables — modern dark design (Gemini metadata 13px → 0.875rem) */
   .prose-dark table {
@@ -439,7 +439,7 @@
     font-size: 0.875rem; /* 14px (was 0.9rem/14.4px) */
   }
   .prose-dark thead {
-    background: var(--bg-subtle);
+    background: rgb(var(--bg-subtle));
   }
   .prose-dark th {
     padding: 12px 16px;
@@ -544,7 +544,7 @@
 .note-editor-content ul[data-type="taskList"] li > label input[type="checkbox"] {
   width: 15px;
   height: 15px;
-  accent-color: var(--accent);
+  accent-color: rgb(var(--accent));
   border-radius: 3px;
   cursor: pointer;
 }
@@ -557,7 +557,7 @@
 /* Code */
 .note-editor-content code {
   background: var(--code-bg);
-  color: var(--accent-light);
+  color: rgb(var(--accent-light));
   padding: 0.15em 0.4em;
   border-radius: 5px;
   font-size: 0.875em;
@@ -575,7 +575,7 @@
 
 /* Blockquote */
 .note-editor-content blockquote {
-  border-left: 3px solid var(--accent);
+  border-left: 3px solid rgb(var(--accent));
   padding-left: 1rem;
   margin: 1rem 0;
   color: var(--text-secondary);
@@ -598,7 +598,7 @@
   min-width: 80px;
 }
 .note-editor-content th {
-  background: var(--bg-subtle);
+  background: rgb(var(--bg-subtle));
   color: var(--text-primary);
   font-weight: 600;
 }
@@ -611,7 +611,7 @@
   top: 0;
   bottom: -2px;
   width: 4px;
-  background: var(--accent);
+  background: rgb(var(--accent));
   cursor: col-resize;
 }
 .note-editor-content .resize-cursor { cursor: col-resize; }
@@ -638,7 +638,7 @@
 .note-editor-content .math-block-placeholder {
   font-family: 'KaTeX_Math', 'Times New Roman', serif;
   font-style: italic;
-  color: var(--accent-light);
+  color: rgb(var(--accent-light));
 }
 
 /* Floating toolbar animation */

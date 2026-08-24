@@ -74,7 +74,7 @@ export default function ChatComposer({ onSend, isStreaming, onStop, tutorMode })
             transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
             className="absolute bottom-full mb-3 left-0 right-0 origin-bottom z-10"
           >
-            <div className="rounded-lg border border-border bg-card shadow-modal p-2 grid grid-cols-2 gap-2">
+            <div className="rounded-2xl border border-border bg-popover shadow-modal p-2 flex flex-col gap-1 w-[280px]">
               {QUICK_PROMPTS.map((q) => (
                 <motion.button
                   key={q.label}
@@ -84,10 +84,10 @@ export default function ChatComposer({ onSend, isStreaming, onStop, tutorMode })
                     onSend(q.prompt);
                     setShowQuickPrompts(false);
                   }}
-                  className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-xs text-text hover:bg-card-hover transition-all duration-150 text-left group border border-transparent hover:border-border"
+                  className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-text hover:bg-card-hover transition-all duration-150 text-left group border border-transparent hover:border-border"
                 >
-                  <span className="w-7 h-7 rounded-lg bg-primary/10 text-primary-light flex items-center justify-center shrink-0 border border-primary/15">
-                    <Icon name={q.icon} size={14} />
+                  <span className="w-8 h-8 rounded-lg bg-primary/10 text-primary-light flex items-center justify-center shrink-0 border border-primary/15">
+                    <Icon name={q.icon} size={16} />
                   </span>
                   <span className="truncate font-medium">{q.label}</span>
                 </motion.button>
@@ -103,11 +103,27 @@ export default function ChatComposer({ onSend, isStreaming, onStop, tutorMode })
         'bg-card border-border',
         'focus-within:border-primary/40 focus-within:'
       )}>
+        {/* Quick Prompts Toggle (+) */}
+        <Tooltip label={t('chat.quickPrompts', 'Pintasan')}>
+          <button
+            onClick={() => setShowQuickPrompts((v) => !v)}
+            className={cn(
+              "flex h-8 w-8 items-center justify-center rounded-full transition-all duration-200 shrink-0 mb-1",
+              showQuickPrompts ? "bg-primary text-white" : "bg-card-hover text-text-secondary hover:text-text"
+            )}
+            aria-label={t('chat.quickPrompts', 'Pintasan')}
+          >
+            <motion.div animate={{ rotate: showQuickPrompts ? 45 : 0 }} transition={{ duration: 0.2 }}>
+              <Icon name={ICONS.actions.addOutline} size={20} />
+            </motion.div>
+          </button>
+        </Tooltip>
+
         {/* Paperclip attachment */}
         <Tooltip label={t('chat.attachFile', 'Lampiran')}>
           <button
             onClick={handleAttach}
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-card-hover text-text-secondary hover:text-text transition-all duration-150 shrink-0"
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-card-hover text-text-secondary hover:text-text transition-all duration-150 shrink-0 mb-1"
             aria-label={t('chat.attachFile', 'Lampiran')}
           >
             <Icon name={ICONS.communication.attach} size={16} />
@@ -130,21 +146,6 @@ export default function ChatComposer({ onSend, isStreaming, onStop, tutorMode })
             style={{ minHeight: '40px' }}
           />
 
-          {/* Sparkles toggle */}
-          <Tooltip label={tutorMode ? t('chat.tutorModeActive', 'Tutor Aktif') : t('chat.enableTutorMode', 'AI Tutor')}>
-            <motion.button
-              whileTap={{ scale: 0.92 }}
-              onClick={() => setShowQuickPrompts((v) => !v)}
-              className={cn(
-                'flex h-8 w-8 items-center justify-center rounded-full border shrink-0 transition-all duration-200 mb-1',
-                showQuickPrompts || tutorMode
-                  ? 'bg-primary border-primary text-white '
-                  : 'bg-card-hover border-border text-text-secondary hover:text-primary-light hover:border-primary/40'
-              )}
-            >
-              <Icon name={ICONS.learning.sparkles} size={14} />
-            </motion.button>
-          </Tooltip>
         </div>
 
         {/* Send / Stop button */}

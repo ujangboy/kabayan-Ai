@@ -92,7 +92,7 @@ export function NoteView({ note, onBack, onSave, onPin, onDelete }) {
                 note.is_pinned ? 'text-primary' : 'text-text-muted hover:text-primary'
               )}
             >
-              <Icon name={ICONS.actions.pin} size={15} />
+              <Icon name={ICONS.actions.pin} size={16} className="rotate-45" />
             </button>
           </Tooltip>
 

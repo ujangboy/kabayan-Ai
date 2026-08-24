@@ -117,12 +117,12 @@ function ToolBtn({ onClick, active, disabled, title, children, className: cls })
         disabled={disabled}
         title={title}
         className={cn(
-          'rounded-md transition-all select-none flex items-center justify-center shrink-0',
-          'w-7 h-7 p-1.5',
+          'rounded-lg transition-all select-none flex items-center justify-center shrink-0',
+          'w-8 h-8 p-1.5',
           active
-            ? 'bg-primary/10 text-primary-light border border-primary/30'
-            : 'text-text-secondary hover:text-white hover:bg-subtle',
-          disabled && 'opacity-25 cursor-not-allowed pointer-events-none',
+            ? 'bg-primary/15 text-primary-light border border-primary/20 shadow-sm'
+            : 'text-text-secondary hover:text-text hover:bg-card-hover border border-transparent',
+          disabled && 'opacity-30 cursor-not-allowed pointer-events-none',
           cls
         )}
       >
@@ -133,7 +133,7 @@ function ToolBtn({ onClick, active, disabled, title, children, className: cls })
 }
 
 function Sep() {
-  return <div className="w-px h-4 bg-wash-strong mx-1 shrink-0" />;
+  return <div className="w-px h-5 bg-border mx-1 shrink-0" />;
 }
 
 // ─── Font size dropdown (top toolbar + floating bubble) ───────────────────
@@ -216,11 +216,11 @@ function FontSizeDropdown({ editor, floating = false }) {
         onClick={() => setOpen(v => !v)}
         title={t('noteEditor.fontSize')}
         className={cn(
-          'rounded-lg transition-all select-none flex items-center justify-center gap-0.5 font-medium',
-          floating ? 'w-7 h-6 text-3xs' : 'w-9 h-7 text-2xs',
+          'rounded-lg transition-all select-none flex items-center justify-center gap-1 font-medium border border-transparent',
+          floating ? 'w-8 h-7 text-xs' : 'w-11 h-8 text-xs',
           open
-            ? 'bg-primary/20 text-primary'
-            : 'text-text-muted hover:text-text hover:bg-wash'
+            ? 'bg-primary/15 text-primary shadow-sm border-primary/20'
+            : 'text-text-secondary hover:text-text hover:bg-card-hover'
         )}
       >
         {label}
@@ -273,14 +273,14 @@ function Toolbar({ editor, onPreview, onInsertMath }) {
   const ia = (n, a) => editor.isActive(n, a);
 
   return (
-    <div className="flex flex-wrap items-center gap-1.5 px-3 py-2 bg-surface border-b border-border sticky top-0 z-10">
+    <div className="flex flex-nowrap items-center gap-1.5 px-4 py-2 bg-card border-b border-border sticky top-0 z-10 shadow-sm overflow-x-auto sidebar-scroll shrink-0">
       <button
         type="button"
         onClick={onPreview}
         title={t('noteEditor.readMode')}
-        className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-primary/15 text-primary border border-primary/30 transition-colors shrink-0 mr-1 hover:bg-primary/25"
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-primary/10 text-primary border border-primary/20 transition-all shrink-0 mr-2 hover:bg-primary hover:text-white shadow-sm"
       >
-        <Icon name={ICONS.ui.eye} size={12} /> {t('noteEditor.preview')}
+        <Icon name={ICONS.ui.eye} size={14} /> {t('noteEditor.preview')}
       </button>
 
       <Sep />

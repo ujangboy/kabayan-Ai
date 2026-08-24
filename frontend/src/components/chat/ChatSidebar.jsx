@@ -212,7 +212,7 @@ export default function ChatSidebar() {
                           onClick={(e) => { e.stopPropagation(); handleRename(c); }}
                           className="p-1 rounded-lg hover:bg-card-hover text-text-muted hover:text-text transition-colors"
                         >
-                          <Icon name={ICONS.actions.editNote} size={13} />
+                          <Icon name={ICONS.actions.edit} size={14} />
                         </button>
                       </Tooltip>
                       <Tooltip label={t('chat.pin')}>

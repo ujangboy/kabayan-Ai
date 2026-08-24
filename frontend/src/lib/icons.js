@@ -56,7 +56,7 @@ export const ICONS = {
     share: 'share',
     menu: 'menu',
     menuOpen: 'menu_open',
-    pin: 'pin',
+    pin: 'push_pin',
     externalLink: 'open_in_new',
     undo: 'undo',
     redo: 'redo',

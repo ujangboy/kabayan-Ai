@@ -13,9 +13,9 @@ import { setAppLanguage, STORAGE_KEY } from '@/i18n';
 import { cn } from '@/utils';
 
 const LANGS = [
-  { code: 'id', label: 'Indonesia', flag: '🇮🇩' },
-  { code: 'en', label: 'English', flag: '🇬🇧' },
-  { code: 'su', label: 'Sundanese', flag: '🌿' },
+  { code: 'id', label: 'Indonesia', short: 'ID' },
+  { code: 'en', label: 'English', short: 'EN' },
+  { code: 'su', label: 'Sundanese', short: 'SU' },
 ];
 
 export default function TopBar() {
@@ -62,18 +62,7 @@ export default function TopBar() {
         <Icon name={ICONS.actions.menu} size={20} />
       </button>
 
-      {/* Desktop: toggle collapse sidebar */}
-      <motion.button
-        whileTap={{ scale: 0.95 }}
-        onClick={toggleCollapsed}
-        className="hidden lg:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-card border border-border text-text-secondary hover:text-text hover:bg-card-hover hover:border-border transition-all duration-150 text-xs font-medium shrink-0"
-        title={collapsed ? t('sidebar.expand', 'Tampilkan sidebar') : t('sidebar.collapse', 'Sembunyikan sidebar')}
-        aria-label="Toggle sidebar"
-        aria-expanded={!collapsed}
-      >
-        <Icon name={collapsed ? ICONS.actions.menuOpen : ICONS.actions.menu} size={16} />
-        <span className="hidden xl:inline">{collapsed ? t('sidebar.expand', 'Tampilkan') : t('sidebar.collapse', 'Sembunyikan')}</span>
-      </motion.button>
+      {/* Desktop: toggle collapse sidebar (Removed because it's redundant with the sidebar logo toggle) */}
 
       {/* Search bar */}
       <button
@@ -102,7 +91,7 @@ export default function TopBar() {
           <DropdownMenu.Content
             sideOffset={8}
             align="end"
-            className="z-50 w-56 rounded-lg border border-border bg-card p-1.5 shadow-modal"
+            className="z-50 w-56 rounded-lg border border-border bg-popover p-1.5 shadow-modal"
           >
             <p className="px-3 py-1.5 text-2xs font-semibold uppercase tracking-wider text-text-muted">
               {t('settings.tabs.language')}
@@ -118,7 +107,7 @@ export default function TopBar() {
                     : 'text-text-secondary hover:bg-card-hover hover:text-text'
                 )}
               >
-                <span className="text-base">{l.flag}</span>
+                <span className="text-xs font-bold text-text-muted w-6 text-center">{l.short}</span>
                 <span className="flex-1">{l.label}</span>
                 {currentLang === l.code && <Icon name={ICONS.status.check} size={14} />}
               </DropdownMenu.Item>

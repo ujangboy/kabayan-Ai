@@ -76,8 +76,8 @@ export default function SettingsPage() {
 
         {/* Right: content panel clean bordered slate-800/60 */}
         <div className="flex-1 min-w-0 overflow-y-auto bg-base">
-          <div className="p-6 md:p-8">
-            <div className="rounded-lg border border-border bg-surface-2 p-6 md:p-7">
+          <div className="p-6 md:p-10 lg:p-12 max-w-7xl mx-auto">
+            <div className="rounded-lg border border-border bg-surface p-6 md:p-10 shadow-sm">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={active}
