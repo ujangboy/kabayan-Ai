@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -32,7 +32,7 @@
   select option:hover,
   select option:checked,
   select option:focus {
-    background-color: rgba(124, 58, 237, 0.35) !important;
+    background-color: rgba(20, 184, 166, 0.35) !important;
     color: #FFFFFF !important;
   }
   /* Custom arrow untuk select appearance-none — DESIGN.md: hairline + violet focus */
@@ -44,7 +44,7 @@
     padding-right: 2.25rem !important;
   }
   select.input-base:focus {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23A78BFA' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235EEAD4' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   }
 
   input,
@@ -59,11 +59,7 @@
 
   body {
     font-family: 'Inter', system-ui, sans-serif;
-    background-color: #0E1520;
-    background-image: radial-gradient(ellipse 80% 60% at 0% 0%, rgba(124, 58, 237, 0.12) 0%, transparent 60%),
-                      radial-gradient(ellipse 60% 50% at 100% 0%, rgba(41, 168, 223, 0.08) 0%, transparent 55%),
-                      linear-gradient(160deg, #0B111B 0%, #0E1520 45%, #0B1423 100%);
-    background-attachment: fixed;
+    background-color: #0E1520; /* solid — tanpa gradien dekoratif */
     color: #EDF1F7;
     font-size: 16px; /* Gemini body 16px/400 */
     line-height: 1.55; /* Gemini answer body 1.55 (was 1.6) */
@@ -89,14 +85,14 @@
 
   /* Focus ring */
   *:focus-visible {
-    outline: 2px solid #7C3AED;
+    outline: 2px solid #14B8A6;
     outline-offset: 2px;
     border-radius: 6px;
   }
 
   /* Selection */
   ::selection {
-    background: rgba(124, 58, 237, 0.35);
+    background: rgba(20, 184, 166, 0.35);
     color: #F1F5F9;
   }
 
@@ -313,7 +309,7 @@
   /* Inline code */
   .prose-dark code {
     background: #1E1E2E;
-    color: #c4b5fd;
+    color: #99F6E4;
     padding: 0.15em 0.45em;
     border-radius: 5px;
     font-size: 0.875em;
@@ -338,7 +334,7 @@
 
   /* Blockquote */
   .prose-dark blockquote {
-    border-left: 3px solid #7C3AED;
+    border-left: 3px solid #14B8A6;
     padding-left: 1rem;
     margin: 1.25rem 0;
     color: #94A3B8;
@@ -361,8 +357,8 @@
     text-align: center;
     margin: 1.25rem auto;
     padding: 0.9rem 1.5rem;
-    background: rgba(124, 58, 237, 0.06);
-    border: 1px solid rgba(124, 58, 237, 0.18);
+    background: rgba(20, 184, 166, 0.06);
+    border: 1px solid rgba(20, 184, 166, 0.18);
     border-radius: 10px;
     overflow-x: auto;
     max-width: 100%;
@@ -382,14 +378,14 @@
   /* KaTeX symbol colors in dark mode */
   .prose-dark .katex { color: #e2e8f0; }
   .prose-dark .katex .mbin,
-  .prose-dark .katex .mrel { color: #a5b4fc; }
+  .prose-dark .katex .mrel { color: #5EEAD4; }
   .prose-dark .katex .mopen,
   .prose-dark .katex .mclose { color: #94a3b8; }
 
   /* ──────────────────────────────────────────────────────────────────────── */
 
-  .prose-dark a { color: #8B5CF6; text-decoration: underline; }
-  .prose-dark a:hover { color: #A78BFA; }
+  .prose-dark a { color: #2DD4BF; text-decoration: underline; }
+  .prose-dark a:hover { color: #5EEAD4; }
 
   /* Tables — modern dark design (Gemini metadata 13px → 0.875rem) */
   .prose-dark table {
@@ -423,7 +419,7 @@
     border-bottom: none;
   }
   .prose-dark tbody tr:hover td {
-    background: rgba(124, 58, 237, 0.06);
+    background: rgba(20, 184, 166, 0.06);
     transition: background 0.15s;
   }
 
@@ -506,7 +502,7 @@
 .note-editor-content ul[data-type="taskList"] li > label input[type="checkbox"] {
   width: 15px;
   height: 15px;
-  accent-color: #7c3aed;
+  accent-color: #14b8a6;
   border-radius: 3px;
   cursor: pointer;
 }
@@ -519,7 +515,7 @@
 /* Code */
 .note-editor-content code {
   background: #1E1E2E;
-  color: #c4b5fd;
+  color: #99F6E4;
   padding: 0.15em 0.4em;
   border-radius: 5px;
   font-size: 0.875em;
@@ -537,7 +533,7 @@
 
 /* Blockquote */
 .note-editor-content blockquote {
-  border-left: 3px solid #7c3aed;
+  border-left: 3px solid #14b8a6;
   padding-left: 1rem;
   margin: 1rem 0;
   color: #94a3b8;
@@ -566,14 +562,14 @@
 }
 .note-editor-content td { color: #e2e8f0; }
 .note-editor-content tr:hover td { background: #1e293b66; }
-.note-editor-content .selectedCell { background: #7c3aed33; }
+.note-editor-content .selectedCell { background: #14b8a633; }
 .note-editor-content .columnResizeHandle {
   position: absolute;
   right: -2px;
   top: 0;
   bottom: -2px;
   width: 4px;
-  background: #7c3aed;
+  background: #14b8a6;
   cursor: col-resize;
 }
 .note-editor-content .resize-cursor { cursor: col-resize; }
@@ -587,7 +583,7 @@
 }
 .note-editor-content [data-math-inline]:hover,
 .note-editor-content [data-math-block]:hover {
-  background-color: rgba(124, 58, 237, 0.08);
+  background-color: rgba(20, 184, 166, 0.08);
 }
 .note-editor-content [data-math-block] {
   display: flex;
@@ -600,7 +596,7 @@
 .note-editor-content .math-block-placeholder {
   font-family: 'KaTeX_Math', 'Times New Roman', serif;
   font-style: italic;
-  color: #a5b4fc;
+  color: #5EEAD4;
 }
 
 /* Floating toolbar animation */

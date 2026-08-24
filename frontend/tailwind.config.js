@@ -23,10 +23,11 @@ export default {
           border: "rgba(255, 255, 255, 0.08)",
           borderStrong: "rgba(255, 255, 255, 0.14)",
         },
+        // Aksen tunggal terkalibrasi: teal #14B8A6 (satu-satunya warna brand)
         primary: {
-          DEFAULT: "#7C3AED",
-          hover: "#8B5CF6",
-          light: "#A78BFA",
+          DEFAULT: "#14B8A6",
+          hover: "#2DD4BF",
+          light: "#5EEAD4",
           foreground: "#FFFFFF",
         },
         text: {
@@ -39,12 +40,12 @@ export default {
         warning: "#F6B93B",
         info: "#29A8DF",
         orange: "#F97316",
-        violet: "#8B5CF6",
+        violet: "#14B8A6", // legacy token → dipetakan ke aksen teal (sweep bertahap)
         teal: "#10B981",
         amber: "#F6B93B",
         accent: {
           blue: "#29A8DF",
-          purple: "#8B5CF6",
+          purple: "#14B8A6", // legacy token → aksen teal
           teal: "#10B981",
           pink: "#EC4899",
         },
@@ -72,6 +73,10 @@ export default {
         "3xs": ["10px", { lineHeight: "14px" }], // legacy micro (migrasi ke xs)
         meta: ["13px", { lineHeight: "16.9px" }], // metadata
       },
+      letterSpacing: {
+        headline: "-0.02em",
+        subhead: "-0.015em",
+      },
       borderRadius: {
         card: "12px",
         btn: "8px",
@@ -81,20 +86,22 @@ export default {
       },
       boxShadow: {
         card: "0 2px 8px rgba(0,0,0,0.25)",
-        glow: "0 0 16px rgba(124,58,237,0.2)",
-        "glow-sm": "0 0 10px rgba(124,58,237,0.15)",
-        "btn-primary": "0 2px 8px rgba(124,58,237,0.35)",
+        glow: "0 0 16px rgba(20,184,166,0.18)",
+        "glow-sm": "0 0 10px rgba(20,184,166,0.12)",
+        "btn-primary": "0 1px 3px rgba(0,0,0,0.3)",
         modal: "0 20px 40px rgba(0,0,0,0.5)",
-        "card-hover": "0 4px 16px rgba(0,0,0,0.3), 0 0 0 1px rgba(139,92,246,0.15)",
-        glass: "0 8px 32px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.05)",
-        "glass-lg": "0 20px 50px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)",
-        "glow-primary": "0 0 24px rgba(124,58,237,0.25)",
+        "card-hover": "0 4px 16px rgba(0,0,0,0.3), 0 0 0 1px rgba(45,212,191,0.15)",
+        glass: "0 8px 24px rgba(0,0,0,0.35)",
+        "glass-lg": "0 16px 40px rgba(0,0,0,0.5)",
+        "glow-primary": "0 0 20px rgba(20,184,166,0.2)",
       },
       backgroundImage: {
-        "gradient-primary": "linear-gradient(135deg, #7C3AED 0%, #6366F1 100%)",
-        "gradient-primary-soft": "linear-gradient(135deg, rgba(124,58,237,0.15) 0%, rgba(99,102,241,0.15) 100%)",
-        "gradient-app": "radial-gradient(ellipse 80% 60% at 0% 0%, rgba(124,58,237,0.12) 0%, transparent 60%), radial-gradient(ellipse 60% 50% at 100% 0%, rgba(41,168,223,0.08) 0%, transparent 55%), linear-gradient(160deg, #0B111B 0%, #0E1520 45%, #0B1423 100%)",
-        "gradient-hero": "linear-gradient(135deg, rgba(124,58,237,0.6) 0%, rgba(99,102,241,0.4) 100%)",
+        // Solid accent — gradien dihapus; nilai flat agar semua pemakaian
+        // lama langsung jadi warna solid tanpa perlu sweep 35 file sekaligus.
+        "gradient-primary": "linear-gradient(135deg, #14B8A6 0%, #0D9488 100%)",
+        "gradient-primary-soft": "linear-gradient(135deg, rgba(20,184,166,0.14) 0%, rgba(13,148,136,0.14) 100%)",
+        "gradient-app": "#0E1520",
+        "gradient-hero": "linear-gradient(135deg, rgba(20,184,166,0.5) 0%, rgba(13,148,136,0.35) 100%)",
       },
       keyframes: {
         fadeIn: { from: { opacity: "0", transform: "translateY(8px)" }, to: { opacity: "1", transform: "translateY(0)" } },

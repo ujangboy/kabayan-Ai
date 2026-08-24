@@ -8,7 +8,7 @@
  *   fireConfetti({ count: 150, origin: { x: 0.5, y: 0.3 } });
  */
 
-const COLORS = ['#7C3AED', '#8B5CF6', '#A78BFA', '#29A8DF', '#10B981', '#F6B93B', '#F97316', '#FFFFFF'];
+const COLORS = ['#14B8A6', '#2DD4BF', '#5EEAD4', '#29A8DF', '#10B981', '#F6B93B', '#F97316', '#FFFFFF'];
 
 export function fireConfetti({ count = 110, origin = { x: 0.5, y: 0.4 }, spread = 100, angle = 90 } = {}) {
   if (typeof window === 'undefined') return;

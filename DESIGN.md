@@ -3,7 +3,7 @@ version: 1.0
 name: kabayan-agent-design-system
 description: >
   Design system untuk frontend kabayan_agent — asisten belajar berbasis AI.
-  Tema gelap (dark-first) dengan satu aksen ungu (violet #7C3AED) yang digunakan
+  Tema gelap (dark-first) dengan satu aksen teal (#14B8A6) yang digunakan
   hemat: brand mark, primary CTA, focus ring, dan link. Elevasi dibangun dari
   "surface ladder" (base → rail → surface → card → card-hover) dipadukan dengan
   hairline border, bukan drop-shadow tebal. Icon menggunakan Google Material
@@ -13,9 +13,9 @@ description: >
   (dark chrome, hairline depth, radius rapat), Cursor (sistem button/radius konsisten).
 
 colors:
-  primary: "#7C3AED"
-  primary-hover: "#8B5CF6"
-  primary-light: "#A78BFA"
+  primary: "#14B8A6"
+  primary-hover: "#2DD4BF"
+  primary-light: "#5EEAD4"
   on-primary: "#FFFFFF"
   base: "#0E1520"
   rail: "#0B111B"
@@ -32,7 +32,7 @@ colors:
   warning: "#F6B93B"
   info: "#29A8DF"
   accent-blue: "#29A8DF"
-  accent-purple: "#8B5CF6"
+  accent-purple: "#14B8A6"
   accent-teal: "#10B981"
   accent-pink: "#EC4899"
   overlay: "#000000"
@@ -155,7 +155,7 @@ spacing:
 components:
   button-primary:
     backgroundColor: "{colors.primary}"
-    backgroundImage: "linear-gradient(135deg, #7C3AED 0%, #6366F1 100%)"
+    background: "#14B8A6" (solid — gradien dihapus)
     textColor: "{colors.on-primary}"
     typography: "{typography.button}"
     rounded: "{rounded.btn}"
@@ -240,14 +240,14 @@ button/card/modal dari nol**.
 
 ## 1. Visual Theme & Atmosphere
 Aplikasi tutor AI dengan nuansa "premium dark, tenang, fokus belajar". Kanvas
-gelap dengan satu aksen violet yang dipakai hemat. Tidak ada tema terang.
-Kedalaman dibangun dari surface ladder + hairline, bukan shadow tebal. Sedikit
-glow ungu diperbolehkan pada elemen primer (CTA, focus ring, active state).
+gelap dengan satu aksen teal yang dipakai hemat. Tidak ada tema terang.
+Kedalaman dibangun dari surface ladder + hairline, bukan shadow tebal.
+Gradien dekoratif dan glow dihilangkan — warna selalu solid.
 
 ## 2. Color Palette & Roles
-- **Primary violet `#7C3AED`** — satu-satunya aksen kromatik. Dipakai pada:
+- **Primary teal `#14B8A6`** — satu-satunya aksen kromatik. Dipakai pada:
   brand mark (logo), primary CTA, focus ring, link, active nav indicator.
-  Hover `#8B5CF6`, light `#A78BFA`.
+  Hover `#2DD4BF`, light `#5EEAD4`.
 - **Surface ladder** (untuk hierarki/elevasi): `base #0E1520` (canvas) →
   `rail #0B111B` (nav rail) → `surface #121A27` (topbar/sidebar) →
   `card #1A2332` (kartu) → `card-hover #212D40` (hover).
@@ -271,7 +271,7 @@ glow ungu diperbolehkan pada elemen primer (CTA, focus ring, active state).
 Semua di `src/components/ui/`:
 - **Button** (`variant`: primary/secondary/ghost/danger/outline/link;
   `size`: sm/md/lg/icon; `loading`; `asChild` via Radix Slot). Radius `btn` 8px,
-  press `scale-[0.97]`, focus ring ungu. Submit button wajib `type="submit"`.
+  press `scale-[0.97]`, focus ring teal. Submit button wajib `type="submit"`.
 - **Card** (+ CardHeader/Title/Content/Footer). `bg-card border border-border
   rounded-card`. `hoverable` menambah shadow + `-translate-y-0.5`.
 - **Modal** (Radix Dialog + framer-motion): `open`, `onClose`, `title`,
@@ -338,7 +338,7 @@ Hindari shadow tebal di luar token (`shadow-modal` hanya untuk dialog).
 
 ## 9. Do's and Don'ts
 ### Do
-- Pakai violet HANYA sebagai aksen tunggal (brand/CTA/focus/link).
+- Pakai teal HANYA sebagai aksen tunggal (brand/CTA/focus/link). Tanpa gradien/glow.
 - Bangun elevasi dari surface ladder + hairline, bukan shadow tebal.
 - Gunakan komponen `ui/` yang sudah ada; teruskan prop via `className` + `cn()`.
 - Semua modal pakai `Modal`/`ConfirmDialog` (Radix) — jangan `fixed inset-0` manual.
@@ -388,7 +388,7 @@ Hindari shadow tebal di luar token (`shadow-modal` hanya untuk dialog).
   full settings tetap di IconRail bawah (nav.settings).
 
 ## 12. Agent Prompt Guide
-Warna cepat: violet `#7C3AED`, canvas `#0E1520`, card `#1A2332`, border `#263349`,
+Warna cepat: teal `#14B8A6`, canvas `#0E1520`, card `#1A2332`, border `#263349`,
 text `#EDF1F7`. Komponen: `import { Button, Card, Modal, Input, Badge } from '@/components/ui'`.
 Prompt contoh: "Buat kartu pakai `<Card hoverable>` dengan `<Button variant=primary>`,
 ikuti radius 12px & token warna di DESIGN.md."
