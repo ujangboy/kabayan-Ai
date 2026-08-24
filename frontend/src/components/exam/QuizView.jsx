@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 import { examAPI } from '@/services/api';
 import { cn } from '@/utils';
+import { springWave } from '@/lib/motion';
 import MathMarkdown from '@/components/MathMarkdown';
 import { Chip } from './shared';
 
@@ -145,10 +146,13 @@ export default function QuizView({ sessionData, clockStart, onDone }) {
                   const sel = userAnswer === key || userAnswer === opt;
                   return (
                     <button key={i} onClick={() => selectAnswer(key)}
-                      className={cn('w-full text-left p-3.5 rounded-xl border text-sm transition-all',
-                        sel ? 'bg-primary/10 border-primary text-primary'
+                      className={cn('relative w-full text-left p-3.5 rounded-xl border text-sm overflow-hidden transition-colors',
+                        sel ? 'border-primary text-primary font-medium'
                             : 'bg-card border-border text-text hover:border-primary/40')}>
-                      <MathMarkdown>{opt}</MathMarkdown>
+                      {sel && (
+                        <motion.span layoutId="quiz-opt-indicator" transition={springWave} className="absolute inset-0 bg-primary/10" />
+                      )}
+                      <span className="relative"><MathMarkdown>{opt}</MathMarkdown></span>
                     </button>
                   );
                 })}

@@ -6,6 +6,7 @@ import { subjectAPI, sessionsAPI } from '@/services/api';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useUiStore } from '@/store';
 import { cn } from '@/utils';
+import { springWave } from '@/lib/motion';
 import { usePageState } from '@/hooks/usePageState';
 import { VIEW, deriveBlueprintItems } from '@/components/exam/shared';
 import { Modal } from '@/components/ui';
@@ -262,7 +263,7 @@ export default function ExamAnalyzerPage() {
               >
                 {tab.label}
                 {view === tab.v && (
-                  <motion.span layoutId="exam-tab-indicator" className="absolute left-0 right-0 -bottom-px h-0.5 bg-primary" />
+                  <motion.span layoutId="exam-tab-indicator" transition={springWave} className="absolute left-0 right-0 -bottom-px h-0.5 bg-primary rounded-full" />
                 )}
               </button>
             ))}

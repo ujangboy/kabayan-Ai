@@ -29,8 +29,8 @@ export function NoteCard({
       )}
     >
       {isEditing ? (
-        <div className="pl-3 pr-12 py-2.5">
-          <div className="flex items-center gap-1.5 mb-0.5">
+        <div className="pl-3 pr-24 py-2.5">
+          <div className="flex items-center gap-1.5 mb-0.5 min-w-0">
             {note.is_pinned && (
               <Icon name={ICONS.actions.pin} size={14} fill={1} className="text-primary shrink-0" />
             )}
@@ -43,23 +43,23 @@ export function NoteCard({
                 if (e.key === 'Enter') onEditSubmit();
                 if (e.key === 'Escape') onEditCancel();
               }}
-              className="w-full text-sm font-medium text-text bg-background border border-primary/50 rounded-md px-1.5 py-0.5 focus:outline-none focus:ring-1 focus:ring-primary/40"
+              className="min-w-0 flex-1 text-sm font-medium text-text bg-background border border-primary/50 rounded-md px-1.5 py-0.5 focus:outline-none focus:ring-1 focus:ring-primary/40"
             />
           </div>
         </div>
       ) : (
         <button
           onClick={onSelect}
-          className="w-full text-left pl-3 pr-12 py-2.5"
+          className="w-full text-left pl-3 pr-24 py-2.5"
         >
-          <div className="flex items-center gap-1.5 mb-0.5">
+          <div className="flex items-center gap-1.5 mb-0.5 min-w-0">
             {note.is_pinned && (
               <Icon name={ICONS.actions.pin} size={14} fill={1} className="text-primary shrink-0" />
             )}
             <span className={cn(
-              'text-sm font-medium truncate',
+              'text-sm font-medium truncate min-w-0',
               isSelected ? 'text-primary-light' : 'text-text'
-            )}>
+            )} title={note.title || t('notebook.untitled')}>
               {note.title || t('notebook.untitled')}
             </span>
           </div>

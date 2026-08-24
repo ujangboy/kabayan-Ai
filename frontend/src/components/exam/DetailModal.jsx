@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 import { examAPI, sessionsAPI } from '@/services/api';
 import { cn } from '@/utils';
+import { springWave } from '@/lib/motion';
 import MathMarkdown from '@/components/MathMarkdown';
 import { Chip, ProgressBar, STATUS_META, getBadge, getGradeColor } from './shared';
 import { Tooltip, Modal , Icon } from '@/components/ui';
@@ -571,13 +572,16 @@ function InlinePractice({ questions, topic, onComplete, onClose, onRetryTopic })
             const isCorrectOpt = key === q.answer || opt.startsWith(q.answer + '.');
             return (
               <button type="button" key={i} onClick={() => selectAnswer(key)} disabled={showExpl}
-                className={cn('w-full text-left p-2.5 rounded-lg border text-xs transition-all',
+                className={cn('relative w-full text-left p-2.5 rounded-lg border text-xs overflow-hidden transition-colors',
                   showExpl && isCorrectOpt ? 'bg-success/10 border-success/30 text-success' :
                   showExpl && sel && !isCorrectOpt ? 'bg-danger/10 border-danger/30 text-danger' :
-                  sel ? 'bg-primary/10 border-primary text-primary' :
+                  sel ? 'border-primary text-primary font-medium' :
                   'bg-card border-border text-text hover:border-primary/40',
                   showExpl && 'cursor-default')}>
-                <MathMarkdown>{opt}</MathMarkdown>
+                {sel && !showExpl && (
+                  <motion.span layoutId="detail-opt-indicator" transition={springWave} className="absolute inset-0 bg-primary/10" />
+                )}
+                <span className="relative"><MathMarkdown>{opt}</MathMarkdown></span>
               </button>
             );
           })}

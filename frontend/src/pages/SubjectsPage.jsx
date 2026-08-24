@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ICONS } from '@/lib/icons';
+import { springLift } from '@/lib/motion';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
@@ -119,7 +120,8 @@ export default function SubjectsPage() {
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.05 }}
+                    whileHover={{ y: -3 }}
+                    transition={{ delay: idx * 0.05, ...springLift }}
                     className="card-base card-hoverable flex flex-col justify-between gap-4 group h-full"
                   >
                     {/* Header — badge inisial + nama + aksi */}

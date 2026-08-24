@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 
 import { SubjectBadge } from '@/components/ui';
 import { cn } from '@/utils';
+import { springLift } from '@/lib/motion';
 
 export function FolderCard({ active, name, count, onClick, tone, index = 0 }) {
   const { t } = useTranslation();
@@ -11,11 +12,13 @@ export function FolderCard({ active, name, count, onClick, tone, index = 0 }) {
       onClick={onClick}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: Math.min(index * 0.04, 0.3), duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
+      whileHover={{ y: -3 }}
+      whileTap={{ scale: 0.98 }}
+      transition={{ delay: Math.min(index * 0.04, 0.3), duration: 0.25, ease: [0.32, 0.72, 0, 1], ...springLift }}
       className={cn(
         'shrink-0 w-44 text-left rounded-lg border p-4 transition-all duration-200 group flex flex-col gap-3 cursor-pointer',
         'card-base',
-        'hover:-translate-y-0.5 hover:border-primary/40 hover:bg-wash',
+        'hover:border-primary/40 hover:bg-wash',
         active && 'border-primary/50 bg-popover'
       )}
     >

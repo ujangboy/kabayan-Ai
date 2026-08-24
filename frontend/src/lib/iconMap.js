@@ -42,6 +42,7 @@ import { PinW100, PinW200, PinW300, PinW400, PinW500, PinW600, PinW700, PinFillW
 import { OpenInNewW100, OpenInNewW200, OpenInNewW300, OpenInNewW400, OpenInNewW500, OpenInNewW600, OpenInNewW700, OpenInNewFillW100, OpenInNewFillW200, OpenInNewFillW300, OpenInNewFillW400, OpenInNewFillW500, OpenInNewFillW600, OpenInNewFillW700 } from '@material-symbols-svg/react/rounded/icons/open-in-new';
 import { UndoW100, UndoW200, UndoW300, UndoW400, UndoW500, UndoW600, UndoW700, UndoFillW100, UndoFillW200, UndoFillW300, UndoFillW400, UndoFillW500, UndoFillW600, UndoFillW700 } from '@material-symbols-svg/react/rounded/icons/undo';
 import { RedoW100, RedoW200, RedoW300, RedoW400, RedoW500, RedoW600, RedoW700, RedoFillW100, RedoFillW200, RedoFillW300, RedoFillW400, RedoFillW500, RedoFillW600, RedoFillW700 } from '@material-symbols-svg/react/rounded/icons/redo';
+import { ViewListW100, ViewListW200, ViewListW300, ViewListW400, ViewListW500, ViewListW600, ViewListW700, ViewListFillW100, ViewListFillW200, ViewListFillW300, ViewListFillW400, ViewListFillW500, ViewListFillW600, ViewListFillW700 } from '@material-symbols-svg/react/rounded/icons/view-list';
 import { CheckCircleW100, CheckCircleW200, CheckCircleW300, CheckCircleW400, CheckCircleW500, CheckCircleW600, CheckCircleW700, CheckCircleFillW100, CheckCircleFillW200, CheckCircleFillW300, CheckCircleFillW400, CheckCircleFillW500, CheckCircleFillW600, CheckCircleFillW700 } from '@material-symbols-svg/react/rounded/icons/check-circle';
 import { WarningW100, WarningW200, WarningW300, WarningW400, WarningW500, WarningW600, WarningW700, WarningFillW100, WarningFillW200, WarningFillW300, WarningFillW400, WarningFillW500, WarningFillW600, WarningFillW700 } from '@material-symbols-svg/react/rounded/icons/warning';
 import { ErrorW100, ErrorW200, ErrorW300, ErrorW400, ErrorW500, ErrorW600, ErrorW700, ErrorFillW100, ErrorFillW200, ErrorFillW300, ErrorFillW400, ErrorFillW500, ErrorFillW600, ErrorFillW700 } from '@material-symbols-svg/react/rounded/icons/error';
@@ -326,6 +327,10 @@ export const MATERIAL_ICONS = {
   'redo': {
     regular: { 100: RedoW100, 200: RedoW200, 300: RedoW300, 400: RedoW400, 500: RedoW500, 600: RedoW600, 700: RedoW700 },
     filled: { 100: RedoFillW100, 200: RedoFillW200, 300: RedoFillW300, 400: RedoFillW400, 500: RedoFillW500, 600: RedoFillW600, 700: RedoFillW700 },
+  },
+  'view_list': {
+    regular: { 100: ViewListW100, 200: ViewListW200, 300: ViewListW300, 400: ViewListW400, 500: ViewListW500, 600: ViewListW600, 700: ViewListW700 },
+    filled: { 100: ViewListFillW100, 200: ViewListFillW200, 300: ViewListFillW300, 400: ViewListFillW400, 500: ViewListFillW500, 600: ViewListFillW600, 700: ViewListFillW700 },
   },
   'check_circle': {
     regular: { 100: CheckCircleW100, 200: CheckCircleW200, 300: CheckCircleW300, 400: CheckCircleW400, 500: CheckCircleW500, 600: CheckCircleW600, 700: CheckCircleW700 },

@@ -7,6 +7,7 @@ import MathMarkdown from '@/components/MathMarkdown';
 import { extractErrorMessage } from '@/utils/errors';
 import { useToast } from '@/components/Toast';
 import { usePageState } from '@/hooks/usePageState';
+import { springWave } from '@/lib/motion';
 import { Button, Textarea , Icon } from '@/components/ui';
 import { TYPE_META, formatItemDate } from './shared';
 
@@ -160,9 +161,12 @@ export default function InlinePlanPractice({ item, practiceState, onClose, onSub
                   <button
                     key={i}
                     onClick={() => selectAnswer(key)}
-                    className={`w-full text-left px-3 py-2.5 rounded-lg border text-base transition-all ${isSelected ? 'bg-primary/10 border-primary text-primary-light font-medium' : 'bg-card border-border text-text hover:border-primary/50'}`}
+                    className={`relative w-full text-left px-3 py-2.5 rounded-lg border text-base overflow-hidden transition-colors ${isSelected ? 'border-primary text-primary-light font-medium' : 'bg-card border-border text-text hover:border-primary/50'}`}
                   >
-                    <MathMarkdown>{opt}</MathMarkdown>
+                    {isSelected && (
+                      <motion.span layoutId="plan-opt-indicator" transition={springWave} className="absolute inset-0 bg-primary/10" />
+                    )}
+                    <span className="relative"><MathMarkdown>{opt}</MathMarkdown></span>
                   </button>
                 );
               })}
