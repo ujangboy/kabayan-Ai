@@ -1,19 +1,64 @@
 import { cn } from '@/utils';
 import { Icon } from './Icon';
+import { motion } from 'framer-motion';
 
-export function EmptyState({ icon, title, description, action, className }) {
+export function EmptyState({ icon, title, description, action, className, compact = false }) {
   return (
-    <div className={cn('flex flex-col items-center justify-center text-center px-6 py-12', className)}>
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+      className={cn(
+        'flex flex-col items-center justify-center text-center',
+        compact ? 'px-4 py-8' : 'px-6 py-14',
+        className
+      )}
+    >
       {icon && (
-        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary-light">
-          <Icon name={icon} size={26} />
-        </div>
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.06, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+          className="relative mb-5"
+        >
+          {/* Subtle glow backdrop */}
+          <div className="absolute inset-0 rounded-2xl bg-primary opacity-15 blur-lg scale-110" />
+          <div className={cn(
+            'relative flex items-center justify-center rounded-2xl bg-primary/10 text-primary-light border border-primary/15',
+            compact ? 'h-12 w-12' : 'h-16 w-16'
+          )}>
+            <Icon name={icon} size={compact ? 22 : 28} />
+          </div>
+        </motion.div>
       )}
-      <h3 className="text-base font-semibold text-text">{title}</h3>
+      <motion.h3
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1, duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+        className={cn('font-semibold text-text', compact ? 'text-sm' : 'text-base')}
+      >
+        {title}
+      </motion.h3>
       {description && (
-        <p className="mt-1 max-w-sm text-sm text-text-muted">{description}</p>
+        <motion.p
+          initial={{ opacity: 0, y: 5 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.14, duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+          className="mt-1.5 max-w-xs text-sm text-text-muted"
+        >
+          {description}
+        </motion.p>
       )}
-      {action && <div className="mt-5">{action}</div>}
-    </div>
+      {action && (
+        <motion.div
+          initial={{ opacity: 0, y: 5 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.18, duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+          className="mt-5"
+        >
+          {action}
+        </motion.div>
+      )}
+    </motion.div>
   );
 }

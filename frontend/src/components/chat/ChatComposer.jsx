@@ -14,7 +14,7 @@ const QUICK_PROMPTS = [
   { icon: ICONS.learning.brain, label: 'Quiz cepat', prompt: 'Berikan kuis cepat 5 pertanyaan untuk menguji pemahaman saya.' },
 ];
 
-const MAX_TEXTAREA_HEIGHT = 144; // ~6 baris sebelum scrollbar internal aktif
+const MAX_TEXTAREA_HEIGHT = 144;
 
 export default function ChatComposer({ onSend, isStreaming, onStop, tutorMode }) {
   const { t } = useTranslation();
@@ -52,7 +52,6 @@ export default function ChatComposer({ onSend, isStreaming, onStop, tutorMode })
   };
 
   const handleAttach = () => {
-    // Attachment belum terhubung ke backend — tampilkan info ringan, jangan crash
     if (fileInputRef.current) fileInputRef.current.click();
     else toast.info('Fitur lampiran segera hadir');
   };
@@ -65,98 +64,122 @@ export default function ChatComposer({ onSend, isStreaming, onStop, tutorMode })
 
   return (
     <div className="w-full relative">
-        <AnimatePresence>
-          {showQuickPrompts && (
-            <motion.div
-              initial={{ opacity: 0, y: 8, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 8, scale: 0.98 }}
-              transition={{ duration: 0.18, ease: [0.32, 0.72, 0, 1] }}
-              className="absolute bottom-full mb-3 left-0 right-0 origin-bottom z-10"
-            >
-              <div className="rounded-2xl border border-slate-700 bg-slate-900 shadow-xl p-2 grid grid-cols-2 gap-2">
-                {QUICK_PROMPTS.map((q) => (
-                  <button
-                    key={q.label}
-                    onClick={() => {
-                      onSend(q.prompt);
-                      setShowQuickPrompts(false);
-                    }}
-                    className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs text-slate-200 hover:bg-slate-800 transition-colors text-left group"
-                  >
-                    <span className="w-6 h-6 rounded-lg bg-primary/10 text-primary-light flex items-center justify-center shrink-0">
-                      <Icon name={q.icon} size={13} />
-                    </span>
-                    <span className="truncate">{q.label}</span>
-                  </button>
-                ))}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+      {/* Quick prompts panel */}
+      <AnimatePresence>
+        {showQuickPrompts && (
+          <motion.div
+            initial={{ opacity: 0, y: 10, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.97 }}
+            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="absolute bottom-full mb-3 left-0 right-0 origin-bottom z-10"
+          >
+            <div className="rounded-2xl border border-border bg-card shadow-glass-lg p-2 grid grid-cols-2 gap-2">
+              {QUICK_PROMPTS.map((q) => (
+                <motion.button
+                  key={q.label}
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => {
+                    onSend(q.prompt);
+                    setShowQuickPrompts(false);
+                  }}
+                  className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-xs text-text hover:bg-card-hover transition-all duration-150 text-left group border border-transparent hover:border-border/60"
+                >
+                  <span className="w-7 h-7 rounded-lg bg-primary/10 text-primary-light flex items-center justify-center shrink-0 border border-primary/15">
+                    <Icon name={q.icon} size={14} />
+                  </span>
+                  <span className="truncate font-medium">{q.label}</span>
+                </motion.button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-        {/* Floating capsule — bottom-6 shadow-2xl border-slate-800/80 */}
-        <div className="flex items-end gap-2 rounded-2xl bg-slate-900 border border-slate-800/80 shadow-2xl px-2.5 py-2">
-          {/* Left: Paperclip attachment */}
-          <Tooltip label={t('chat.attachFile', 'Lampiran')}>
-            <button
-              onClick={handleAttach}
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors shrink-0"
-              aria-label={t('chat.attachFile', 'Lampiran')}
+      {/* Main composer box */}
+      <div className={cn(
+        'flex items-end gap-2 rounded-2xl border shadow-glass px-2.5 py-2 transition-all duration-200',
+        'bg-card border-border',
+        'focus-within:border-primary/40 focus-within:shadow-glow-sm'
+      )}>
+        {/* Paperclip attachment */}
+        <Tooltip label={t('chat.attachFile', 'Lampiran')}>
+          <button
+            onClick={handleAttach}
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-card-hover text-text-secondary hover:text-text transition-all duration-150 shrink-0"
+            aria-label={t('chat.attachFile', 'Lampiran')}
+          >
+            <Icon name={ICONS.communication.attach} size={16} />
+          </button>
+        </Tooltip>
+        <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileChange} />
+
+        {/* Auto-growing textarea */}
+        <div className="flex-1 min-w-0 flex items-end gap-1.5">
+          <textarea
+            ref={textareaRef}
+            value={input}
+            onChange={autoResize}
+            onKeyDown={handleKeyDown}
+            rows={1}
+            placeholder={tutorMode
+              ? t('chat.inputPlaceholderTutor', 'Tanya topik apapun ke tutor AI...')
+              : t('chat.inputPlaceholderNormal', 'Ketik pesanmu...')}
+            className="w-full resize-none bg-transparent px-2 py-2 text-base leading-6 text-text placeholder:text-text-muted focus:outline-none max-h-[144px] overflow-y-hidden"
+            style={{ minHeight: '40px' }}
+          />
+
+          {/* Sparkles toggle */}
+          <Tooltip label={tutorMode ? t('chat.tutorModeActive', 'Tutor Aktif') : t('chat.enableTutorMode', 'AI Tutor')}>
+            <motion.button
+              whileTap={{ scale: 0.92 }}
+              onClick={() => setShowQuickPrompts((v) => !v)}
+              className={cn(
+                'flex h-8 w-8 items-center justify-center rounded-full border shrink-0 transition-all duration-200 mb-1',
+                showQuickPrompts || tutorMode
+                  ? 'bg-primary border-primary text-white shadow-glow-sm'
+                  : 'bg-card-hover border-border text-text-secondary hover:text-primary-light hover:border-primary/40'
+              )}
             >
-              <Icon name={ICONS.communication.attach} size={16} />
-            </button>
+              <Icon name={ICONS.learning.sparkles} size={14} />
+            </motion.button>
           </Tooltip>
-          <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileChange} />
+        </div>
 
-          {/* Center: auto-growing textarea */}
-          <div className="flex-1 min-w-0 flex items-end gap-1.5">
-            <textarea
-              ref={textareaRef}
-              value={input}
-              onChange={autoResize}
-              onKeyDown={handleKeyDown}
-              rows={1}
-              placeholder={tutorMode ? t('chat.inputPlaceholderTutor', 'Tanya topik apapun ke tutor AI...') : t('chat.inputPlaceholderNormal', 'Ketik pesanmu...')}
-              className="w-full resize-none bg-transparent px-2 py-2 text-base leading-6 text-white placeholder:text-slate-500 focus:outline-none max-h-[144px] overflow-y-hidden"
-              style={{ minHeight: '40px' }}
-            />
-            {/* Sparkles/Bot AI Tutor toggle inside bar */}
-            <Tooltip label={tutorMode ? t('chat.tutorModeActive', 'Tutor Aktif') : t('chat.enableTutorMode', 'AI Tutor')}>
-              <button
-                onClick={() => setShowQuickPrompts((v) => !v)}
-                className={cn(
-                  'flex h-8 w-8 items-center justify-center rounded-full border shrink-0 transition-colors mb-1',
-                  showQuickPrompts || tutorMode
-                    ? 'bg-primary border-primary text-white'
-                    : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white hover:bg-slate-700'
-                )}
-              >
-                <Icon name={ICONS.learning.sparkles} size={14} />
-              </button>
-            </Tooltip>
-          </div>
-
-          {/* Right: Send circular */}
+        {/* Send / Stop button */}
+        <AnimatePresence mode="wait">
           {isStreaming ? (
-            <button
+            <motion.button
+              key="stop"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ duration: 0.15 }}
               onClick={onStop}
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-red-600 text-white hover:bg-red-700 transition-colors shrink-0 mb-1"
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-danger text-white hover:bg-danger/80 transition-all duration-150 shrink-0 mb-1"
               aria-label="Stop"
             >
               <Icon name={ICONS.ui.square} size={14} />
-            </button>
+            </motion.button>
           ) : (
-            <button
+            <motion.button
+              key="send"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ duration: 0.15 }}
               onClick={handleSend}
               disabled={!input.trim()}
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white hover:bg-primary-hover disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0 mb-1"
+              whileTap={{ scale: 0.9 }}
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white hover:bg-primary-hover disabled:opacity-35 disabled:cursor-not-allowed transition-all duration-150 shrink-0 mb-1 shadow-btn-primary"
               aria-label="Send"
             >
               <Icon name={ICONS.actions.send} size={14} className="ml-px" />
-            </button>
+            </motion.button>
           )}
-        </div>
+        </AnimatePresence>
       </div>
+    </div>
   );
 }

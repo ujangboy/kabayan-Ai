@@ -30,60 +30,71 @@ export default function ChatEmptyState({ onPromptSelect }) {
   return (
     <div className="flex-1 flex flex-col items-center justify-center px-4 py-8 md:py-10">
       <div className="w-full max-w-xl mx-auto flex flex-col items-center text-center">
-        {/* Card Hero ringkas — w-12 h-12 gradient */}
+
+        {/* Logo hero */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.92, y: 6 }}
+          initial={{ opacity: 0, scale: 0.85, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-          className={cn(
-            'w-12 h-12 rounded-xl flex items-center justify-center text-white mb-4 shadow-md relative overflow-hidden',
-            'bg-primary'
-          )}
+          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+          className="relative mb-5"
         >
-          <Icon name={ICONS.communication.bot} size={22} className="relative" />
+          {/* Glow ring */}
+          <div className="absolute inset-0 rounded-2xl bg-primary opacity-20 blur-xl scale-110" />
+          <div className={cn(
+            'relative w-14 h-14 rounded-2xl flex items-center justify-center text-white',
+            'bg-primary shadow-glow-primary'
+          )}>
+            <Icon name={ICONS.communication.bot} size={26} className="relative" />
+          </div>
         </motion.div>
 
+        {/* Heading */}
         <motion.h1
-          initial={{ opacity: 0, y: 8 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.06, duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-          className="text-xl font-semibold tracking-tight leading-snug text-white max-w-md"
+          transition={{ delay: 0.08, duration: 0.38, ease: [0.16, 1, 0.3, 1] }}
+          className="text-xl font-semibold tracking-tight leading-snug text-text max-w-sm"
         >
           Ada materi yang ingin kita pelajari hari ini?
         </motion.h1>
+
         <motion.p
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1, duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-          className="mt-1.5 text-base leading-relaxed text-slate-400 max-w-md"
+          transition={{ delay: 0.13, duration: 0.38, ease: [0.16, 1, 0.3, 1] }}
+          className="mt-1.5 text-sm leading-relaxed text-text-secondary max-w-sm"
         >
-          Pilih topik cepat di bawah atau tanyakan apa pun.
+          Pilih topik cepat di bawah atau tanyakan apa pun kepada Kabayan AI.
         </motion.p>
 
-        {/* Quick prompt cards — compact p-3.5, text-xs/sm, 2 kolom */}
+        {/* Quick prompt cards */}
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.16, duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-          className="mt-6 w-full grid grid-cols-2 gap-2.5 text-left"
+          transition={{ delay: 0.18, duration: 0.38, ease: [0.16, 1, 0.3, 1] }}
+          className="mt-7 w-full grid grid-cols-2 gap-2.5 text-left"
         >
           {PROMPT_CARDS.map((card, idx) => (
             <motion.button
               key={card.title}
-              initial={{ opacity: 0, y: 6 }}
+              initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 + idx * 0.05, duration: 0.28 }}
+              transition={{ delay: 0.22 + idx * 0.06, duration: 0.3 }}
+              whileHover={{ scale: 1.015, y: -1 }}
+              whileTap={{ scale: 0.97 }}
               onClick={() => onPromptSelect?.(card.prompt)}
               className={cn(
-                'group flex items-center gap-2.5 rounded-xl border bg-slate-900 border-slate-800 p-3.5 text-left',
-                'hover:bg-slate-800 hover:border-primary/30 transition-[background-color,border-color] duration-150 ease-out'
+                'group flex items-center gap-2.5 rounded-xl border p-3.5 text-left',
+                'bg-card border-border',
+                'hover:bg-card-hover hover:border-border/80 hover:shadow-card',
+                'transition-all duration-200 ease-out'
               )}
             >
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary-light border border-primary/20">
-                <Icon name={card.icon} size={14} />
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary-light border border-primary/15 transition-colors group-hover:bg-primary/15">
+                <Icon name={card.icon} size={15} />
               </span>
               <span className="flex-1 min-w-0">
-                <span className="block text-xs font-medium leading-tight text-slate-200 group-hover:text-white line-clamp-2">
+                <span className="block text-xs font-medium leading-tight text-text group-hover:text-text line-clamp-2">
                   {card.title}
                 </span>
               </span>

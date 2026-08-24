@@ -42,16 +42,17 @@ const item = {
 
 function StatCard({ icon, label, value, tone, loading }) {
   return (
-    <motion.div variants={item} className="card-base card-hoverable relative overflow-hidden flex items-center gap-4 p-4">
-      <div className="absolute top-0 left-0 w-full h-0.5 bg-primary opacity-70" />
-      <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${STAT_TONES[tone]}`}>
-        <Icon name={icon} size={18} />
+    <motion.div variants={item} className="card-base card-hoverable relative overflow-hidden flex items-center gap-4 p-5">
+      {/* Colored top strip per tone */}
+      <div className={`absolute top-0 left-0 right-0 h-[2px] ${STAT_TONES[tone].split(' ')[0].replace('bg-', 'bg-').replace('/10', '/60')}`} />
+      <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 border ${STAT_TONES[tone]}`}>
+        <Icon name={icon} size={20} />
       </div>
       <div>
-        <div className="text-2xl font-bold text-text">
-            {loading ? <Skeleton className="inline-block h-6 w-8" /> : (value ?? 0)}
+        <div className="text-2xl font-bold text-text tracking-tight">
+          {loading ? <Skeleton className="inline-block h-7 w-10 rounded-lg" /> : (value ?? 0)}
         </div>
-        <p className="text-xs text-text-secondary">{label}</p>
+        <p className="text-xs text-text-secondary mt-0.5">{label}</p>
       </div>
     </motion.div>
   );
@@ -199,28 +200,33 @@ export default function DashboardPage() {
               </button>
             </div>
             <div className="card-base overflow-hidden p-0">
-                {isLoading ? (
-                  <div className="p-6 space-y-3">
-                    {[1,2,3].map(i => (
-                      <Skeleton key={i} className="h-4 w-full" />
-                    ))}
-                  </div>
-                ) : recentMaterials.length === 0 ? (
+              {isLoading ? (
+                <div className="p-5 space-y-3">
+                  {[1,2,3].map(i => <Skeleton key={i} className="h-4 w-full rounded-lg" />)}
+                </div>
+              ) : recentMaterials.length === 0 ? (
                 <div className="p-6 text-center text-xs text-text-muted">{t('dashboard.noMaterials')}</div>
               ) : (
                 <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="px-4 py-2.5 text-left text-xs font-medium text-text-muted">File</th>
+                      <th className="px-4 py-2.5 text-left text-xs font-medium text-text-muted">Mata Pelajaran</th>
+                      <th className="px-4 py-2.5 text-left text-xs font-medium text-text-muted">Status</th>
+                    </tr>
+                  </thead>
                   <tbody>
                     {recentMaterials.map((m) => (
-                      <tr key={m.id} className="tr-divider last:border-0 hover:bg-card-hover/50 transition-colors">
+                      <tr key={m.id} className="tr-divider last:border-0 hover:bg-card-hover/60 transition-colors">
                         <td className="px-4 py-2.5">
                           <div className="flex items-center gap-2">
-                             <FileTypeIcon type={m.material_type} className="text-base text-text-muted" />
+                            <FileTypeIcon type={m.material_type} className="text-base text-text-muted shrink-0" />
                             <span className="text-text font-medium truncate max-w-[130px] text-xs">{m.filename}</span>
                           </div>
                         </td>
-                        <td className="px-4 py-2.5 text-text-muted text-xs">{m.subject?.name || '—'}</td>
+                        <td className="px-4 py-2.5 text-text-secondary text-xs">{m.subject?.name || '—'}</td>
                         <td className="px-4 py-2.5">
-                          <span className={`badge text-3xs ${m.status === 'Ready' ? 'badge-success' : m.status === 'Failed' ? 'badge-danger' : 'badge-warning'}`}>
+                          <span className={`badge text-xs ${m.status === 'Ready' ? 'badge-success' : m.status === 'Failed' ? 'badge-danger' : 'badge-warning'}`}>
                             {m.status}
                           </span>
                         </td>
@@ -244,19 +250,24 @@ export default function DashboardPage() {
               </button>
             </div>
             <div className="card-base overflow-hidden p-0">
-                {isLoading ? (
-                  <div className="p-6 space-y-3">
-                    {[1,2,3].map(i => (
-                      <Skeleton key={i} className="h-4 w-full" />
-                    ))}
-                  </div>
-                ) : recentQuizzes.length === 0 ? (
+              {isLoading ? (
+                <div className="p-5 space-y-3">
+                  {[1,2,3].map(i => <Skeleton key={i} className="h-4 w-full rounded-lg" />)}
+                </div>
+              ) : recentQuizzes.length === 0 ? (
                 <div className="p-6 text-center text-xs text-text-muted">{t('dashboard.noQuizzes')}</div>
               ) : (
                 <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="px-4 py-2.5 text-left text-xs font-medium text-text-muted">Judul Quiz</th>
+                      <th className="px-4 py-2.5 text-right text-xs font-medium text-text-muted">Skor</th>
+                      <th className="px-4 py-2.5 text-right text-xs font-medium text-text-muted">Tanggal</th>
+                    </tr>
+                  </thead>
                   <tbody>
                     {recentQuizzes.map((q) => (
-                      <tr key={q.id} className="tr-divider last:border-0 hover:bg-card-hover/50 transition-colors">
+                      <tr key={q.id} className="tr-divider last:border-0 hover:bg-card-hover/60 transition-colors">
                         <td className="px-4 py-2.5">
                           <span className="text-text font-medium text-xs truncate max-w-[150px] block">{q.title}</span>
                           <span className="text-text-muted text-3xs">{q.subject?.name || '—'}</span>
@@ -270,7 +281,7 @@ export default function DashboardPage() {
                             <span className="text-3xs text-text-muted">{t('dashboard.notPlayed')}</span>
                           )}
                         </td>
-                        <td className="px-4 py-2.5 text-text-muted text-3xs">{formatDate(q.created_at)}</td>
+                        <td className="px-4 py-2.5 text-text-muted text-3xs text-right">{formatDate(q.created_at)}</td>
                       </tr>
                     ))}
                   </tbody>

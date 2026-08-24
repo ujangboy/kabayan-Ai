@@ -215,7 +215,7 @@ function SidebarContent({ collapsed, onNavigate }) {
           <button
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleGroup(item.group); }}
             aria-label={groupOpen ? t('sidebar.collapse') : t('sidebar.expand')}
-            className="absolute right-1 flex h-8 w-8 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-white/[0.06] hover:text-text"
+            className="absolute right-1 flex h-8 w-8 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-card-hover hover:text-text"
           >
             <motion.span animate={{ rotate: groupOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
               <Icon name={ICONS.actions.expand} size={16} />
@@ -308,7 +308,7 @@ function SidebarContent({ collapsed, onNavigate }) {
           onClick={toggleCollapsed}
           aria-label={collapsed ? t('sidebar.expand') : t('sidebar.collapse')}
           title={collapsed ? t('sidebar.expand') : t('sidebar.collapse')}
-          className={cn('flex items-center justify-center rounded-xl text-text-secondary transition-colors hover:bg-white/[0.06] hover:text-text', collapsed ? 'h-10 w-10' : 'h-9 w-9')}
+          className={cn('flex items-center justify-center rounded-xl text-text-secondary transition-colors hover:bg-card hover:text-text', collapsed ? 'h-10 w-10' : 'h-9 w-9')}
         >
           <Icon name={collapsed ? ICONS.actions.menuOpen : ICONS.actions.menu} size={18} />
         </button>
@@ -360,9 +360,9 @@ function SidebarContent({ collapsed, onNavigate }) {
               top: Math.max(12, Math.min(flyoutRect.top - 8, typeof window !== 'undefined' ? window.innerHeight - 340 : flyoutRect.top)),
               zIndex: 60,
             }}
-            className="w-[240px] rounded-2xl border border-white/10 bg-slate-900/95 backdrop-blur-xl shadow-glass-lg overflow-hidden"
+            className="w-[240px] rounded-2xl border border-border bg-card/95 backdrop-blur-xl shadow-glass-lg overflow-hidden"
           >
-            <div className="px-3.5 py-3 border-b border-white/[0.06] flex items-center gap-2">
+            <div className="px-3.5 py-3 border-b border-border flex items-center gap-2">
               <Icon name={NAV.find((n) => n.group === flyoutGroup)?.icon || ICONS.files.folder} size={16} className="text-primary-light shrink-0" />
               <span className="text-base font-semibold text-text truncate">{flyoutLabelKey ? t(flyoutLabelKey) : ''}</span>
               <span className="ml-auto text-2xs text-text-muted">{activeFlyoutItems.length}</span>
@@ -380,7 +380,7 @@ function SidebarContent({ collapsed, onNavigate }) {
                         'group/item flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm transition-all duration-150',
                         sub.active
                           ? 'bg-primary/15 text-primary-light'
-                          : 'text-text-secondary hover:bg-white/[0.06] hover:text-text hover:translate-x-[1px]'
+                          : 'text-text-secondary hover:bg-card hover:text-text hover:translate-x-[1px]'
                       )}
                     >
                       <Icon name={sub.icon} size={14} className={cn('shrink-0 transition-colors', sub.active ? 'text-primary-light' : 'text-text-muted group-hover/item:text-text-secondary')} />
@@ -395,7 +395,7 @@ function SidebarContent({ collapsed, onNavigate }) {
       </AnimatePresence>
 
       {/* Bottom sticky area — pengaturan + storage meter */}
-      <div className="shrink-0 mt-auto border-t border-white/[0.06] bg-sidebar/95 backdrop-blur-md">
+      <div className="shrink-0 mt-auto border-t border-border bg-sidebar/95 backdrop-blur-md">
         <div className="px-3 pt-2 pb-1">
           {collapsed ? (
             <Tooltip label={t('nav.settings')} side="right">
