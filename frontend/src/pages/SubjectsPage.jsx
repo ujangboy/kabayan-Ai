@@ -59,7 +59,7 @@ export default function SubjectsPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-text">{t('subjects.title')}</h1>
-            <p className="text-text-secondary text-base mt-1">{t('subjects.subtitle')}</p>
+            <p className="text-text-secondary text-sm mt-1">{t('subjects.subtitle')}</p>
           </div>
           <div className="flex items-center gap-2">
             <Select
@@ -155,7 +155,7 @@ export default function SubjectsPage() {
                     {/* Body — grid mini metrik */}
                     <div className="grid grid-cols-4 gap-1.5">
                       {meta.map(({ icon, value, label, color }) => (
-                        <div key={label} className="rounded-lg bg-wash border border-border py-2 px-1 text-center">
+                        <div key={label} className="rounded-lg bg-base border border-border py-2 px-1 text-center">
                           <Icon name={icon} size={12} className={`mx-auto mb-0.5 ${color}`} />
                           <p className="text-base font-bold text-text leading-tight">{value}</p>
                           <p className="text-2xs text-text-muted uppercase tracking-wide">{label}</p>

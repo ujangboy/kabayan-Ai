@@ -1,4 +1,70 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+/* ── Monaspace Neon (self-hosted, dari ~/Downloads/monaspace-neon.zip) ──
+   Menjadi satu-satunya font global: UI, output AI, NoteEditor, dan code.
+   Ligatur "liga"/"calt" aktif untuk efek neon coding di semua teks. */
+@font-face {
+  font-family: 'Monaspace Neon';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/monaspace-neon/monaspace-neon-latin-400-normal.woff2') format('woff2'),
+       url('/fonts/monaspace-neon/monaspace-neon-latin-400-normal.woff') format('woff');
+}
+@font-face {
+  font-family: 'Monaspace Neon';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/monaspace-neon/monaspace-neon-latin-400-italic.woff2') format('woff2'),
+       url('/fonts/monaspace-neon/monaspace-neon-latin-400-italic.woff') format('woff');
+}
+@font-face {
+  font-family: 'Monaspace Neon';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/monaspace-neon/monaspace-neon-latin-500-normal.woff2') format('woff2'),
+       url('/fonts/monaspace-neon/monaspace-neon-latin-500-normal.woff') format('woff');
+}
+@font-face {
+  font-family: 'Monaspace Neon';
+  font-style: italic;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/monaspace-neon/monaspace-neon-latin-500-italic.woff2') format('woff2'),
+       url('/fonts/monaspace-neon/monaspace-neon-latin-500-italic.woff') format('woff');
+}
+@font-face {
+  font-family: 'Monaspace Neon';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/monaspace-neon/monaspace-neon-latin-600-normal.woff2') format('woff2'),
+       url('/fonts/monaspace-neon/monaspace-neon-latin-600-normal.woff') format('woff');
+}
+@font-face {
+  font-family: 'Monaspace Neon';
+  font-style: italic;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/monaspace-neon/monaspace-neon-latin-600-italic.woff2') format('woff2'),
+       url('/fonts/monaspace-neon/monaspace-neon-latin-600-italic.woff') format('woff');
+}
+@font-face {
+  font-family: 'Monaspace Neon';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/monaspace-neon/monaspace-neon-latin-700-normal.woff2') format('woff2'),
+       url('/fonts/monaspace-neon/monaspace-neon-latin-700-normal.woff') format('woff');
+}
+@font-face {
+  font-family: 'Monaspace Neon';
+  font-style: italic;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/monaspace-neon/monaspace-neon-latin-700-italic.woff2') format('woff2'),
+       url('/fonts/monaspace-neon/monaspace-neon-latin-700-italic.woff') format('woff');
+}
 
 @tailwind base;
 @tailwind components;
@@ -99,11 +165,14 @@
   }
 
   body {
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'Monaspace Neon', ui-monospace, monospace;
+    font-feature-settings: "liga" 1, "calt" 1;
+    font-variant-ligatures: normal;
+    letter-spacing: -0.01em;
     background-color: rgb(var(--bg-base));
     color: var(--text-primary);
-    font-size: 16px;
-    line-height: 1.55;
+    font-size: 15px;
+    line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     /* Prevent layout shift on scrollbar appear */
@@ -253,7 +322,7 @@
   }
 
   .sidebar-item {
-    @apply flex items-center gap-3 px-3 py-2.5 rounded-[10px] text-sm font-medium text-text-secondary transition-all duration-200 cursor-pointer;
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium text-text-secondary transition-all duration-200 cursor-pointer;
   }
 
   /* Collapsed: icon saja, lebih besar dan centered */
@@ -270,22 +339,22 @@
   }
 
   .btn-primary {
-    @apply inline-flex items-center gap-2 px-4 py-2 rounded-btn bg-primary text-white text-[15px] font-medium
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-btn bg-primary text-white text-sm font-medium
            hover:bg-primary-hover active:scale-[0.98] transition-[background-color,transform] duration-150 ease-out cursor-pointer select-none;
   }
 
   .btn-ghost {
-    @apply inline-flex items-center gap-2 px-4 py-2 rounded-btn text-text-secondary text-[15px] font-medium
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-btn text-text-secondary text-sm font-medium
            hover:bg-wash hover:text-text active:scale-[0.98] transition-[background-color,color,transform] duration-150 ease-out cursor-pointer select-none;
   }
 
   .btn-danger {
-    @apply inline-flex items-center gap-2 px-4 py-2 rounded-btn bg-danger/10 text-danger border border-danger/20 text-[15px] font-medium
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-btn bg-danger/10 text-danger border border-danger/20 text-sm font-medium
            hover:bg-danger/20 active:scale-[0.98] transition-[background-color,transform] duration-150 ease-out cursor-pointer select-none;
   }
 
   .input-base {
-    @apply w-full px-4 py-2.5 rounded-input bg-subtle border border-strong text-text text-base placeholder:text-text-secondary
+    @apply w-full px-4 py-2.5 rounded-input bg-subtle border border-strong text-text text-sm placeholder:text-text-secondary
            focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/30 transition-[border-color,box-shadow] duration-150 ease-out;
   }
 
@@ -314,24 +383,30 @@
     @apply bg-primary/10 text-primary-light;
   }
 
-  /* Prose overrides for markdown — AI response typography (Gemini 16/1.55) */
+  /* Prose overrides for markdown — AI response typography */
   .prose-dark {
-    font-family: 'Inter', -apple-system, sans-serif;
-    font-size: 1rem; /* 16px Gemini Answer Body */
-    line-height: 1.55; /* Gemini 1.55 (was 1.65) */
+    font-family: 'Monaspace Neon', ui-monospace, monospace;
+    /* Ligatur dimatikan di body prose agar baca panjang lebih nyaman */
+    font-feature-settings: normal;
+    font-variant-ligatures: none;
+    font-size: 0.9375rem; /* 15px — kurangi lebar glyph mono di bubble */
+    line-height: 1.7;
+    letter-spacing: -0.01em;
     color: var(--text-primary);
+    max-width: 68ch; /* napas horizontal agar bubble tak melebar penuh */
   }
 
-  /* Headings — Gemini Answer Heading 20/500, Subheading 17/500 */
+  /* Headings — lebih kontras (600) biar pop di mono */
   .prose-dark h1,
   .prose-dark h2,
   .prose-dark h3,
   .prose-dark h4 {
     color: var(--text-primary);
-    font-weight: 500; /* Gemini 500 (was 700) */
-    margin-top: 1.75rem;
-    margin-bottom: 0.75rem;
+    font-weight: 600;
+    margin-top: 1.5rem;
+    margin-bottom: 0.625rem;
     line-height: 1.3;
+    letter-spacing: -0.02em;
   }
   /* First heading inside a message bubble has no top margin */
   .prose-dark > h1:first-child,
@@ -342,11 +417,11 @@
   .prose-dark h3 { font-size: 1rem; } /* 16px */
   .prose-dark h4 { font-size: 0.875rem; } /* 14px chip/body-sm */
 
-  /* Paragraphs — Gemini list 1.5, body 1.55 */
+  /* Paragraphs */
   .prose-dark p {
     color: var(--text-primary);
-    line-height: 1.55;
-    margin-bottom: 1.25rem;
+    line-height: 1.7;
+    margin-bottom: 1rem;
   }
   .prose-dark p:last-child { margin-bottom: 0; }
 
@@ -359,26 +434,28 @@
   .prose-dark [style*="color"] em { color: inherit; }
 
   /* Lists */
-  .prose-dark ul { list-style: disc; padding-left: 1.5rem; margin-bottom: 1.25rem; }
-  .prose-dark ol { list-style: decimal; padding-left: 1.5rem; margin-bottom: 1.25rem; }
+  .prose-dark ul { list-style: disc; padding-left: 1.5rem; margin-bottom: 1rem; }
+  .prose-dark ol { list-style: decimal; padding-left: 1.5rem; margin-bottom: 1rem; }
   .prose-dark li {
     color: var(--text-primary);
-    margin-bottom: 0.5rem;
-    line-height: 1.5; /* Gemini List Item 1.5 */
+    margin-bottom: 0.4rem;
+    line-height: 1.65;
   }
   .prose-dark li:last-child { margin-bottom: 0; }
 
-  /* Inline code */
+  /* Inline code — ligatur ON (efek neon coding) */
   .prose-dark code {
     background: var(--code-bg);
     color: rgb(var(--accent-light));
     padding: 0.15em 0.45em;
     border-radius: 5px;
     font-size: 0.875em;
-    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-family: 'Monaspace Neon', ui-monospace, monospace;
+    font-feature-settings: "liga" 1, "calt" 1;
+    font-variant-ligatures: normal;
   }
 
-  /* Code blocks */
+  /* Code blocks — ligatur ON (efek neon coding) */
   .prose-dark pre {
     background: var(--code-bg);
     border: 1px solid var(--border-subtle);
@@ -387,6 +464,8 @@
     overflow-x: auto;
     max-width: 100%;
     margin: 0;
+    font-feature-settings: "liga" 1, "calt" 1;
+    font-variant-ligatures: normal;
   }
   .prose-dark pre code {
     background: transparent;
@@ -516,9 +595,12 @@
 
 /* ── Tiptap NoteEditor content styles — Gemini body 16/1.55 ───────────── */
 .note-editor-content {
-  font-family: 'Inter', sans-serif;
-  font-size: 16px; /* was 14px → Gemini Answer Body 16px */
-  line-height: 1.55; /* was 1.7 → Gemini 1.55 */
+  font-family: 'Monaspace Neon', ui-monospace, monospace;
+  font-feature-settings: normal;
+  font-variant-ligatures: none;
+  letter-spacing: -0.01em;
+  font-size: 15px; /* 15px — lebih nyaman di mono */
+  line-height: 1.7;
   color: var(--text-primary);
 }
 
@@ -529,9 +611,9 @@
 .note-editor-content h2[style*="font-size"] { font-size: inherit; }
 .note-editor-content h3[style*="font-size"] { font-size: inherit; }
 
-.note-editor-content h1 { font-size: 1.75rem; font-weight: 500; color: var(--text-primary); margin: 1.5rem 0 0.75rem; } /* 28px Gemini greeting */
-.note-editor-content h2 { font-size: 1.25rem; font-weight: 500; color: var(--text-primary); margin: 1.25rem 0 0.6rem; } /* 20px Gemini heading */
-.note-editor-content h3 { font-size: 1.0625rem; font-weight: 500; color: var(--text-primary); margin: 1rem 0 0.5rem; } /* 17px Gemini subhead */
+.note-editor-content h1 { font-size: 1.75rem; font-weight: 600; color: var(--text-primary); margin: 1.5rem 0 0.75rem; letter-spacing: -0.02em; } /* 28px Gemini greeting */
+.note-editor-content h2 { font-size: 1.25rem; font-weight: 600; color: var(--text-primary); margin: 1.25rem 0 0.6rem; letter-spacing: -0.02em; } /* 20px Gemini heading */
+.note-editor-content h3 { font-size: 1.0625rem; font-weight: 600; color: var(--text-primary); margin: 1rem 0 0.5rem; letter-spacing: -0.02em; } /* 17px Gemini subhead */
 
 .note-editor-content p { margin-bottom: 0.85rem; }
 .note-editor-content p:last-child { margin-bottom: 0; }
@@ -580,15 +662,18 @@
 }
 .note-editor-content ul[data-type="taskList"] li > div { flex: 1; }
 
-/* Code */
+/* Code — ligatur ON */
 .note-editor-content code {
   background: var(--code-bg);
   color: rgb(var(--accent-light));
   padding: 0.15em 0.4em;
   border-radius: 5px;
   font-size: 0.875em;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Monaspace Neon', ui-monospace, monospace;
+  font-feature-settings: "liga" 1, "calt" 1;
+  font-variant-ligatures: normal;
 }
+
 .note-editor-content pre {
   background: var(--code-bg);
   border: 1px solid var(--border-subtle);

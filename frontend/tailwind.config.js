@@ -64,12 +64,13 @@ export default {
         amber: "#f59e0b",
       },
       fontFamily: {
-        sans: ["Inter", "system-ui", "sans-serif"],
-        mono: ["JetBrains Mono", "ui-monospace", "monospace"],
+        sans: ["Monaspace Neon", "ui-monospace", "monospace"],
+        mono: ["Monaspace Neon", "ui-monospace", "monospace"],
       },
-      fontSize: {
+       fontSize: {
         xs: ["12px", { lineHeight: "16px" }],
         sm: ["14px", { lineHeight: "20px" }],
+        "15": ["15px", { lineHeight: "22px" }],
         base: ["16px", { lineHeight: "24.8px" }],
         lg: ["18px", { lineHeight: "25.2px" }],
         xl: ["20px", { lineHeight: "26px" }],

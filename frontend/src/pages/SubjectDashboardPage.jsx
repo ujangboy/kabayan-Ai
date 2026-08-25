@@ -155,7 +155,7 @@ export default function SubjectDashboardPage() {
 
   return (
     <AnimatePresence mode="wait" initial={false}>
-      <motion.div key="main" {...fadeSlide} className="flex-1 overflow-y-auto p-6 md:p-8 bg-base">
+      <motion.div key="main" {...fadeSlide} className="flex-1 overflow-y-auto p-6 md:p-10 bg-base">
         <div className="w-full max-w-7xl mx-auto space-y-5">
 
         {/* Header compact */}

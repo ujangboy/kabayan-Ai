@@ -140,7 +140,7 @@ export default function FlashcardPage() {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-text">{t('flashcard.pageTitle')}</h1>
-              <p className="text-text-secondary text-base mt-1">{t('flashcard.pageSubtitle')}</p>
+              <p className="text-text-secondary text-sm mt-1">{t('flashcard.pageSubtitle')}</p>
             </div>
           </div>
           <div className="flex items-center gap-3 flex-wrap">

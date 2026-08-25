@@ -99,8 +99,8 @@ export default function ChatComposer({ onSend, isStreaming, onStop, tutorMode })
 
       {/* Main composer box */}
       <div className={cn(
-        'flex items-end gap-2 rounded-lg border shadow-card px-2.5 py-2 transition-all duration-200',
-        'bg-card border-border',
+        'flex items-end gap-2 rounded-2xl border shadow-card px-2.5 py-2 transition-all duration-200',
+        'bg-popover border-border',
         'focus-within:border-primary/40 focus-within:'
       )}>
         {/* Quick Prompts Toggle (+) */}
@@ -142,7 +142,7 @@ export default function ChatComposer({ onSend, isStreaming, onStop, tutorMode })
             placeholder={tutorMode
               ? t('chat.inputPlaceholderTutor', 'Tanya topik apapun ke tutor AI...')
               : t('chat.inputPlaceholderNormal', 'Ketik pesanmu...')}
-            className="w-full resize-none bg-transparent px-2 py-2 text-base leading-6 text-text placeholder:text-text-muted focus:outline-none max-h-[144px] overflow-y-hidden"
+            className="w-full resize-none bg-transparent px-2 py-2 text-[15px] leading-6 text-text placeholder:text-text-muted focus:outline-none max-h-[144px] overflow-y-hidden"
             style={{ minHeight: '40px' }}
           />
 

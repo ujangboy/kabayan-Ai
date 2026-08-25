@@ -92,13 +92,13 @@ export default function StudyPlanPage() {
             transition={{ type: 'spring', stiffness: 350, damping: 30 }}
             className="flex w-full max-w-[560px] flex-col items-center gap-6 rounded-lg border border-border bg-surface-2 p-8 md:p-10 text-center"
           >
-            <div className="flex h-20 w-20 items-center justify-center rounded-[20px] bg-primary/10 border border-primary/20 text-primary-light">
+            <div className="flex h-20 w-20 items-center justify-center rounded-xl bg-primary/10 border border-primary/20 text-primary-light">
               <Icon name={ICONS.learning.calendarCheck} size={36} />
             </div>
 
             <div className="space-y-2">
               <h2 className="text-xl font-bold tracking-tight text-text md:text-2xl">{t('studyPlanPage.empty.title')}</h2>
-              <p className="mx-auto max-w-md text-base leading-relaxed text-text-secondary">{t('studyPlanPage.empty.desc')}</p>
+              <p className="mx-auto max-w-md text-15 leading-relaxed text-text-secondary">{t('studyPlanPage.empty.desc')}</p>
             </div>
 
             <ol className="w-full max-w-[420px] divide-y divide-border rounded-xl border border-border bg-wash px-2 text-left">
@@ -249,7 +249,7 @@ export default function StudyPlanPage() {
         {plan.motivational_message && (
           <div className="p-4 rounded-xl bg-primary/5 border border-primary/15 flex items-start gap-3">
             <Icon name={ICONS.learning.certificate} size={18} className="text-primary mt-0.5 shrink-0" />
-            <p className="text-base text-text">{plan.motivational_message}</p>
+            <p className="text-15 text-text">{plan.motivational_message}</p>
           </div>
         )}
 

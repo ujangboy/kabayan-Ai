@@ -16,8 +16,8 @@ export default function MessageBubble({ message, isLast, tutorMode, onFeedback }
   if (isUser) {
     return (
       <div className="flex justify-end group">
-        <div className="relative max-w-[80%]">
-          <div className="rounded-lg rounded-br-sm bg-primary text-primary-foreground px-4 py-2.5 text-base leading-relaxed whitespace-pre-wrap">
+        <div className="relative max-w-[75%]">
+          <div className="rounded-2xl rounded-br-md bg-primary text-primary-foreground px-4 py-2.5 text-[15px] leading-relaxed shadow-sm whitespace-pre-wrap">
             {message.content}
           </div>
           <div className="absolute -bottom-6 right-0 flex items-center">
@@ -47,10 +47,10 @@ export default function MessageBubble({ message, isLast, tutorMode, onFeedback }
           )}
           <div
             className={cn(
-              'rounded-lg rounded-tl-sm text-base leading-relaxed transition-colors duration-200',
+              'rounded-2xl rounded-tl-md text-[15px] leading-relaxed transition-colors duration-200',
               message.content === ''
                 ? 'bg-transparent border-0 shadow-none px-1 py-1'
-                : 'bg-base border border-strong px-4 py-2.5'
+                : 'bg-surface border border-strong px-4 py-2.5 shadow-sm'
             )}
           >
             {message.content === '' ? (

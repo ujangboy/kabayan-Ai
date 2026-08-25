@@ -96,7 +96,7 @@ export default function DashboardPage() {
 
   return (
     <div className="flex-1 overflow-y-auto">
-      <div className="w-full px-6 md:px-10 py-6 md:py-8 space-y-10">
+      <div className="w-full p-6 md:p-10 space-y-6">
 
         {/* Greeting */}
         <motion.div
@@ -144,7 +144,7 @@ export default function DashboardPage() {
                   <Icon name={icon} size={17} />
                 </div>
                 <div>
-                  <p className="text-base font-semibold text-text">{label}</p>
+                  <p className="text-sm font-semibold text-text">{label}</p>
                   <p className="text-xs text-text-muted mt-0.5">{desc}</p>
                 </div>
               </motion.button>

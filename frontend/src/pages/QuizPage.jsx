@@ -168,7 +168,7 @@ export default function QuizPage() {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-text">{t('quiz.title')}</h1>
-              <p className="text-text-secondary text-base mt-1">{t('quiz.subtitle')}</p>
+              <p className="text-text-secondary text-sm mt-1">{t('quiz.subtitle')}</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -191,7 +191,7 @@ export default function QuizPage() {
               <input
                 value={search} onChange={(e) => setSearch(e.target.value)}
                 placeholder={t('common.search')}
-                className="w-full pl-9 pr-3 py-2 bg-card border border-border rounded-lg text-base text-text focus:outline-none focus:border-primary"
+                className="w-full pl-9 pr-3 py-2 bg-card border border-border rounded-lg text-sm text-text focus:outline-none focus:border-primary"
               />
             </div>
             {search && (
@@ -307,7 +307,7 @@ export default function QuizPage() {
                         <p className="text-3xs font-semibold text-accent-blue uppercase tracking-wider truncate">
                           {quiz.subject?.name || t('quiz.genericSubject')}
                         </p>
-                        <h3 className="font-semibold text-text text-base line-clamp-2">
+                        <h3 className="font-semibold text-text text-15 line-clamp-2">
                           {quiz.title || `Quiz #${quiz.id}`}
                         </h3>
                         <div className="flex items-center gap-1.5 mt-1 flex-wrap">
@@ -338,7 +338,7 @@ export default function QuizPage() {
                   {/* Body — grid mini metrik */}
                   <div className="grid grid-cols-4 gap-1.5">
                     {stats.map(({ icon, value, label, color }) => (
-                      <div key={label} className="rounded-lg bg-wash border border-border py-2 px-1 text-center">
+                      <div key={label} className="rounded-lg bg-base border border-border py-2 px-1 text-center">
                         <Icon name={icon} size={12} className={`mx-auto mb-0.5 ${color}`} />
                         <p className="text-base font-bold text-text leading-tight truncate">{value}</p>
                         <p className="text-2xs text-text-muted uppercase tracking-wide truncate">{label}</p>

@@ -132,7 +132,7 @@ export default function MateriPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-text">{t('materi.pageTitle')}</h1>
-            <p className="text-text-secondary text-base mt-1">{t('materi.pageSubtitle')}</p>
+            <p className="text-text-secondary text-sm mt-1">{t('materi.pageSubtitle')}</p>
             {activeCount > 0 && (
               <div className="mt-2 inline-flex items-center gap-2">
                 <span className="badge badge-primary text-2xs">{t('materi.ragActive', { count: activeCount })}</span>
