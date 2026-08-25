@@ -360,10 +360,6 @@ export function VerticalToolbar({ editor, onPreview, onInsertMath, className = '
         className
       )}
     >
-      <ToolBtn size="sm" onClick={onPreview} title={t('noteEditor.readMode')} tooltipSide="left">
-        <Icon name={ICONS.ui.eye} size={16} />
-      </ToolBtn>
-      <SepV />
       <FontSizeDropdown editor={editor} vertical />
       <SepV />
       <ToolBtn size="sm" onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} title={t('noteEditor.undo')} tooltipSide="left">
@@ -742,21 +738,6 @@ export default function NoteEditor({
 
       {/* ═══ FLOATING TOOLBAR — custom, pure React, no BubbleMenu ═══ */}
       <FloatingToolbar editor={editor} editorMode={activeMode} />
-
-      {/* ═══ Floating edit/preview button ═══ */}
-      <button
-        type="button"
-        onClick={handleToggle}
-        className={cn(
-          'fixed bottom-6 right-6 z-20',
-          'p-3 rounded-full shadow-xl',
-          'bg-primary text-white hover:bg-primary/90',
-          'transition-all hover:scale-105'
-        )}
-        title={activeMode === 'view' ? t('noteEditor.editNote') : t('noteEditor.preview')}
-      >
-        {activeMode === 'view' ? <Icon name={ICONS.actions.edit} size={18} /> : <Icon name={ICONS.ui.eye} size={18} />}
-      </button>
     </div>
   );
 }

@@ -91,7 +91,7 @@ export function NoteView({ note, onBack, onSave, onPin, onDelete }) {
           </button>
         </div>
 
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1">
           {/* Auto-save status */}
           <span className={cn(
             'text-3xs flex items-center gap-1 transition-colors px-2',
@@ -101,6 +101,20 @@ export function NoteView({ note, onBack, onSave, onPin, onDelete }) {
             {saveStatus === 'saving' && <><span className="animate-pulse">●</span> {t('notebook.saving')}</>}
             {saveStatus === 'saved' && <><Icon name={ICONS.actions.save} size={10} /> {t('notebook.saved')}</>}
           </span>
+
+          {/* Toggle mode: mata (preview) / edit — bersebelahan dengan Tersimpan */}
+          <Tooltip label={mode === 'view' ? t('noteEditor.editNote') : t('noteEditor.readMode')}>
+            <button
+              onClick={() => setMode((m) => (m === 'view' ? 'edit' : 'view'))}
+              aria-label={mode === 'view' ? t('notebook.edit') : t('notebook.preview')}
+              className={cn(
+                'p-1.5 rounded-lg transition-colors',
+                mode === 'view' ? 'text-primary' : 'text-text-muted hover:text-text'
+              )}
+            >
+              <Icon name={mode === 'view' ? ICONS.actions.edit : ICONS.ui.eye} size={15} />
+            </button>
+          </Tooltip>
 
           <Tooltip label={note.is_pinned ? t('notebook.unpin') : t('notebook.pin')}>
             <button
@@ -200,14 +214,20 @@ export function NoteView({ note, onBack, onSave, onPin, onDelete }) {
           </div>
         </div>
 
-        {/* Rail vertikal kanan — hanya desktop, di luar kertas */}
-        {mode === 'edit' && editorRef && (
-          <VerticalToolbar
-            editor={editorRef}
-            onPreview={() => setMode('view')}
-            onInsertMath={handleInsertMathFromRail}
-          />
-        )}
+        {/* Rail vertikal kanan — hanya desktop, di luar kertas.
+            Saat mode view, cadangkan lebar rail (spacer) agar kertas tidak
+            bergeser/"snap" saat toggle edit <-> view. */}
+        <div className="shrink-0">
+          {mode === 'edit' && editorRef ? (
+            <VerticalToolbar
+              editor={editorRef}
+              onPreview={() => setMode('view')}
+              onInsertMath={handleInsertMathFromRail}
+            />
+          ) : (
+            <div className="w-[46px] my-3 h-full" aria-hidden />
+          )}
+        </div>
       </div>
     </div>
   );
