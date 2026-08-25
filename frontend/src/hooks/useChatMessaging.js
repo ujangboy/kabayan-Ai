@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useChatStore } from '@/store';
 import { notesAPI, tutorAPI } from '@/services/api';
-import { streamChat } from '@/services/tutorStream';
+import { streamChat, parseStreamContent } from '@/services/tutorStream';
 import { usePendingOperation } from '@/hooks/usePendingOperation';
 import { useToast } from '@/components/Toast';
 
@@ -22,7 +22,7 @@ export function useChatMessaging() {
     const trimmed = text.trim();
     if (!trimmed || !chatId) return;
     const isTutor = !!chat?.tutorEnabled;
-    const { addMessage, updateLastMessage, setStreaming, selectedDocs } = state;
+    const { addMessage, updateLastMessage, patchLastMessage, setStreaming, selectedDocs } = state;
 
     const newMsg = {
       id: `temp-${Date.now()}`,
@@ -56,12 +56,9 @@ export function useChatMessaging() {
             rag_docs: selectedDocs || [],
           },
           onChunk: (chunk, full) => {
-            let clean = full;
-            if (full.startsWith('\x00TYPE:')) {
-              const end = full.indexOf('\x00', 1);
-              if (end !== -1) clean = full.slice(end + 1);
-            }
+            const { clean, msgId } = parseStreamContent(full);
             updateLastMessage(chatId, clean);
+            if (msgId) patchLastMessage(chatId, { msgId });
           },
         });
       } else {
@@ -74,7 +71,11 @@ export function useChatMessaging() {
             documents: selectedDocs || [],
             session_id: String(chatId),
           },
-          onChunk: (chunk, full) => updateLastMessage(chatId, full),
+          onChunk: (chunk, full) => {
+            const { clean, msgId } = parseStreamContent(full);
+            updateLastMessage(chatId, clean);
+            if (msgId) patchLastMessage(chatId, { msgId });
+          },
         });
       }
     } catch (err) {
@@ -94,10 +95,18 @@ export function useChatMessaging() {
     const msgs = chat.messages || [];
     const last = msgs[msgs.length - 1];
     const msgId = last?.msgId ?? null;
+    if (!msgId) {
+      console.warn('[feedback] skip: last assistant message has no msgId', last);
+      toast.info(t('chat.feedbackUnavailable') || 'Feedback hanya tersedia untuk respons terbaru. Coba kirim pesan baru lalu beri penilaian.');
+      return;
+    }
+    const ratingMap = { up: 'helpful', down: 'not_helpful' };
+    const mappedRating = ratingMap[rating] ?? 'somewhat';
     try {
-      await tutorAPI.feedback({ rating, message_id: msgId });
+      await tutorAPI.feedback({ rating: mappedRating, message_id: msgId });
       state.setMessageFeedback(currentChatId, msgId, rating);
-    } catch {
+    } catch (err) {
+      console.error('[feedback] failed', err?.response?.data || err);
       toast.error(t('chat.feedbackError'));
     }
   };

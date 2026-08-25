@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useChatStore } from '@/store';
-import { streamChat } from '@/services/tutorStream';
+import { streamChat, parseStreamContent } from '@/services/tutorStream';
 
 export function useChatUrlSync() {
   const [searchParams] = useSearchParams();
@@ -14,7 +14,7 @@ export function useChatUrlSync() {
     if (tutorParam) navigate('/chat', { replace: true });
 
     const state = useChatStore.getState();
-    const { chats, currentChatId, createChat, setCurrentChat, setChatTutor, addMessage, setStreaming, updateLastMessage } = state;
+    const { chats, currentChatId, createChat, setCurrentChat, setChatTutor, addMessage, setStreaming, updateLastMessage, patchLastMessage } = state;
 
     if (!currentChatId) {
       const firstChat = chats[0];
@@ -62,12 +62,9 @@ export function useChatUrlSync() {
               rag_docs: [],
             },
             onChunk: (chunk, full) => {
-              let clean = full;
-              if (full.startsWith('\x00TYPE:')) {
-                const end = full.indexOf('\x00', 1);
-                if (end !== -1) clean = full.slice(end + 1);
-              }
+              const { clean, msgId } = parseStreamContent(full);
               updateLastMessage(id, clean);
+              if (msgId) patchLastMessage(id, { msgId });
             },
           });
         } catch (err) {

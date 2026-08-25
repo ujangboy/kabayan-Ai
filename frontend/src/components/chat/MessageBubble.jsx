@@ -45,7 +45,14 @@ export default function MessageBubble({ message, isLast, tutorMode, onFeedback }
               <Icon name={ICONS.learning.bookOpen} size={12} /> {t('chat.noteSavedBadge')}
             </div>
           )}
-          <div className="rounded-lg rounded-tl-sm bg-base border border-strong px-4 py-2.5 text-base leading-relaxed">
+          <div
+            className={cn(
+              'rounded-lg rounded-tl-sm text-base leading-relaxed transition-colors duration-200',
+              message.content === ''
+                ? 'bg-transparent border-0 shadow-none px-1 py-1'
+                : 'bg-base border border-strong px-4 py-2.5'
+            )}
+          >
             {message.content === '' ? (
               <TypingIndicator />
             ) : message.content.startsWith('Error:') ? (
@@ -61,7 +68,7 @@ export default function MessageBubble({ message, isLast, tutorMode, onFeedback }
       {isAssistant && message.content !== '' && (
         <div className="flex items-center gap-2 pl-10">
           <CopyButton text={message.content} />
-          {isLast && onFeedback && <FeedbackButtons onFeedback={onFeedback} />}
+          {isLast && onFeedback && message.msgId && <FeedbackButtons onFeedback={onFeedback} />}
         </div>
       )}
     </div>

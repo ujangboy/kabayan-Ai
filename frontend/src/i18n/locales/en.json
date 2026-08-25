@@ -250,6 +250,7 @@
     "noteWaiting": "Waiting for AI response...",
     "noteError": "Failed to save note.",
     "feedbackError": "Failed to send feedback.",
+    "feedbackUnavailable": "Feedback is only available for the latest response. Send a new message, then rate it.",
     "noteSavedBadge": "Saved to Notebook"
   },
   "materi": {

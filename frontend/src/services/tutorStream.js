@@ -1,6 +1,30 @@
 // Stream controller per-chat sehingga beberapa sesi dapat streaming paralel.
 const controllers = new Map();
 
+// Lepas marker inline dari stream tutor: header "\x00TYPE:XXX\x00" di awal
+// dan metadata "\x00MSGID:n\x00" di akhir. Marker tidak boleh tampil di UI.
+export function parseStreamContent(full) {
+  let clean = full;
+  let type = null;
+  let msgId = null;
+
+  if (clean.startsWith('\x00TYPE:')) {
+    const end = clean.indexOf('\x00', 1);
+    if (end !== -1) {
+      type = clean.slice(6, end);
+      clean = clean.slice(end + 1);
+    }
+  }
+
+  const match = clean.match(/\x00MSGID:(\d+)\x00/);
+  if (match) {
+    msgId = Number(match[1]);
+    clean = clean.replace(/\x00MSGID:\d+\x00/g, '');
+  }
+
+  return { clean, type, msgId };
+}
+
 export function abortActiveStream(chatId) {
   const controller = controllers.get(chatId);
   if (controller) {

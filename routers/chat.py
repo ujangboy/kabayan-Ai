@@ -94,6 +94,7 @@ async def chat_endpoint(request: ChatRequest, db: Session = Depends(get_db)):
         # ── Stream wrapper: save assistant response after completion ─
         async def stream_and_persist():
             full = ""
+            saved_message_id = None
             try:
                 async for chunk in ai_service.achat_stream(hist_dicts, context, request.message):
                     full += chunk
@@ -101,10 +102,16 @@ async def chat_endpoint(request: ChatRequest, db: Session = Depends(get_db)):
             finally:
                 if chat_id and full:
                     try:
-                        chat_repository.add_message(db, chat_id, "assistant", full)
+                        msg = chat_repository.add_message(db, chat_id, "assistant", full)
                         db.commit()
+                        saved_message_id = msg.id
                     except Exception:
                         db.rollback()
+
+            # Trailing metadata: id pesan yang tersimpan agar client dapat
+            # mengirim feedback (sama seperti endpoint /api/tutor/chat).
+            if saved_message_id is not None:
+                yield f"\x00MSGID:{saved_message_id}\x00"
 
         headers = {"X-Chat-Id": str(chat_id)} if chat_id else {}
         return StreamingResponse(stream_and_persist(), media_type="text/plain", headers=headers)

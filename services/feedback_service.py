@@ -24,6 +24,9 @@ logger = logging.getLogger(__name__)
 VALID_RATINGS = ("helpful", "somewhat", "not_helpful")
 VALID_FLAGS = ("incorrect", "unclear", "irrelevant", "inappropriate")
 
+# Alias dari client lama agar tidak 400 (frontend mengirim up/down).
+RATING_ALIASES = {"up": "helpful", "down": "not_helpful", "like": "helpful"}
+
 
 class FeedbackService:
 
@@ -39,6 +42,7 @@ class FeedbackService:
         flag: Optional[str] = None,
     ) -> dict:
         """Simpan/update feedback untuk satu pesan tutor."""
+        rating = RATING_ALIASES.get(rating, rating)
         if rating not in VALID_RATINGS:
             raise ValueError(
                 f"Rating tidak valid: '{rating}'. Pilihan: helpful / somewhat / not_helpful."

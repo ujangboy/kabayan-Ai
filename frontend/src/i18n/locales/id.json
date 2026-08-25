@@ -250,6 +250,7 @@
     "noteWaiting": "Menunggu respons AI...",
     "noteError": "Gagal menyimpan catatan.",
     "feedbackError": "Gagal mengirim feedback.",
+    "feedbackUnavailable": "Feedback hanya tersedia untuk respons terbaru. Coba kirim pesan baru lalu beri penilaian.",
     "noteSavedBadge": "Tersimpan ke Notebook"
   },
   "materi": {

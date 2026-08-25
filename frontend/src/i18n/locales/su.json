@@ -239,6 +239,7 @@
     "noteWaiting": "Ngantosan réspon AI...",
     "noteError": "Gagal nyimpen catetan.",
     "feedbackError": "Gagal ngirim feedback.",
+    "feedbackUnavailable": "Feedback ngan sadia pikeun réspon panganyarna. Coba kirim pesen énggal, lajeng béré penilaian.",
     "noteSavedBadge": "Disimpen ka Notebook"
   },
   "materi": {
