@@ -158,11 +158,11 @@ export default function FlashcardPage() {
                 </button>
               );
             })()}
-            <button onClick={() => setIsAIModalOpen(true)} className="btn-primary text-xs">
-              <Icon name={ICONS.ui.bolt} size={14} /> {t('flashcard.generateAi')}
+            <button onClick={() => setIsAIModalOpen(true)} className="btn-primary">
+              {t('flashcard.generateAi')}
             </button>
-            <button onClick={() => setIsManualModalOpen(true)} className="btn-ghost border border-border text-xs">
-              <Icon name={ICONS.actions.addOutline} size={14} /> {t('flashcard.manual')}
+            <button onClick={() => setIsManualModalOpen(true)} className="btn-ghost border border-border">
+              {t('flashcard.manual')}
             </button>
             {allFlashcards.length > 0 && (
               <button onClick={handleClearAll} className="btn-ghost text-danger border border-danger/20 text-xs">
@@ -209,7 +209,7 @@ export default function FlashcardPage() {
                 title={t('flashcard.emptyState')}
                 action={
                   <button onClick={() => setIsAIModalOpen(true)} className="btn-primary text-sm">
-                    <Icon name={ICONS.ui.bolt} size={14} /> {t('flashcard.generateAi')}
+                    {t('flashcard.generateAi')}
                   </button>
                 }
               />

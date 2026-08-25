@@ -74,9 +74,8 @@ export default function SubjectsPage() {
             </Select>
             <button
               onClick={() => setIsModalOpen(true)}
-              className="btn-primary text-xs"
+              className="btn-primary"
             >
-              <Icon name={ICONS.actions.addOutline} size={14} />
               {t('subjects.addNew')}
             </button>
           </div>

@@ -172,8 +172,8 @@ export default function QuizPage() {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <button onClick={() => setIsGeneratorOpen(true)} className="btn-primary text-xs">
-              <Icon name={ICONS.ui.bolt} size={14} /> {t('quiz.generateButton')}
+            <button onClick={() => setIsGeneratorOpen(true)} className="btn-primary">
+              {t('quiz.generateButton')}
             </button>
             {allQuizzes.length > 0 && (
               <button onClick={handleClearAll} className="btn-ghost text-danger border border-danger/20 text-xs">
@@ -268,7 +268,7 @@ export default function QuizPage() {
                 title={selectedSubject ? t('quiz.emptyForSubject') : t('quiz.empty')}
                 action={
                   <button onClick={() => setIsGeneratorOpen(true)} className="btn-primary text-sm">
-                    <Icon name={ICONS.ui.bolt} size={14} /> {t('quiz.generateFirst')}
+                    {t('quiz.generateFirst')}
                   </button>
                 }
               />

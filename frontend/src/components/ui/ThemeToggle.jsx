@@ -33,10 +33,13 @@ export const ThemeToggle = forwardRef(function ThemeToggle({ className = '', ...
     <button
       ref={ref}
       type="button"
-      onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
-      className={`rounded-xl p-2 text-text-secondary transition-[background-color,color] duration-150 hover:bg-wash hover:text-text active:scale-[0.98] ${className}`}
-      aria-label={theme === 'dark' ? 'Ganti ke mode terang' : 'Ganti ke mode gelap'}
       {...props}
+      onClick={(e) => {
+        props.onClick?.(e);
+        setTheme((t) => (t === 'dark' ? 'light' : 'dark'));
+      }}
+      className={`relative z-[11] rounded-xl p-2 text-text-secondary transition-[background-color,color] duration-150 hover:bg-wash hover:text-text active:scale-[0.98] ${className}`}
+      aria-label={theme === 'dark' ? 'Ganti ke mode terang' : 'Ganti ke mode gelap'}
     >
       {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
     </button>

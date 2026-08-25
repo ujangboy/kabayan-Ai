@@ -186,6 +186,7 @@
     bottom: 0;
     height: 1px;
     background: linear-gradient(to right, var(--border-subtle), transparent 80%);
+    pointer-events: none;
   }
 
   /* Table-row divider: border-image gradient (safe on <tr>, no pseudo-element

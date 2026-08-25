@@ -33,8 +33,8 @@ export default function MessageBubble({ message, isLast, tutorMode, onFeedback }
       <div className="flex items-start gap-3">
         <div
           className={cn(
-            'w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0',
-            tutorMode ? 'bg-primary' : 'bg-accent'
+            'w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 shadow-sm ring-1 ring-black/10',
+            tutorMode ? 'bg-primary' : 'bg-orange'
           )}
         >
           {tutorMode ? 'T' : 'K'}
@@ -66,7 +66,7 @@ export default function MessageBubble({ message, isLast, tutorMode, onFeedback }
         </div>
       </div>
       {isAssistant && message.content !== '' && (
-        <div className="flex items-center gap-2 pl-10">
+        <div className="flex flex-wrap items-center gap-2 pl-10">
           <CopyButton text={message.content} />
           {isLast && onFeedback && message.msgId && <FeedbackButtons onFeedback={onFeedback} />}
         </div>

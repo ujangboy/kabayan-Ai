@@ -198,7 +198,7 @@ export default function DashboardView({ subjectId, subjects, analysis, onAnalysi
           {t('exam.dashboard.refreshAnalysis')}
         </button>
         <button onClick={onStartConfig} className="btn-primary text-xs">
-          <Icon name={ICONS.ui.bolt} size={13} /> {t('exam.dashboard.generateSimulation')}
+          {t('exam.dashboard.generateSimulation')}
         </button>
       </div>
       </motion.div>

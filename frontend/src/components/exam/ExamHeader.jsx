@@ -43,9 +43,9 @@ export default function ExamHeader({ view, subjectId, subjects, canCreate, onBac
           <button
             onClick={onCreate}
             disabled={!subjectId}
-            className="btn-primary text-xs disabled:opacity-40 disabled:cursor-not-allowed"
+            className="btn-primary disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            <Icon name={ICONS.ui.bolt} size={13} /> {t('exam.createSimulation')}
+            {t('exam.createSimulation')}
           </button>
         )}
       </div>

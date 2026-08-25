@@ -193,7 +193,6 @@ export default function MateriPage() {
               onClick={() => navigate('/subjects?new=1')}
               className="shrink-0 w-40 flex flex-col items-center justify-center gap-2 rounded-card border border-dashed border-border text-text-muted hover:text-primary-light hover:border-primary/40 transition-colors"
             >
-              <Icon name={ICONS.actions.addOutline} size={20} />
               <span className="text-xs font-medium">{t('subjects.addNew')}</span>
             </button>
           </div>
