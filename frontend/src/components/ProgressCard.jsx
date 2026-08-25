@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { cn } from '@/utils';
 import { Icon } from '@/components/ui/Icon';
+import { Tooltip } from '@/components/ui';
 import { ICONS } from '@/lib/icons';
 
 const DIRECTION_META = (t) => ({
@@ -76,12 +77,14 @@ export default function ProgressCard({ progress }) {
             <p className="text-3xs font-semibold text-text-secondary uppercase tracking-wider mb-2">{t('studyProgress.windowTitle')}</p>
             <div className="flex items-end gap-1 h-14">
               {windowDays.map((d) => (
-                <div key={d.date} className="flex-1 flex flex-col items-center justify-end gap-1" title={`${d.date}`}>
-                  <div
-                    className={`w-full rounded-sm transition-colors ${d.active ? 'bg-warning' : 'bg-wash-strong'}`}
-                    style={{ height: d.active ? '100%' : '22%' }}
-                  />
-                </div>
+                <Tooltip key={d.date} label={`${d.date}`}>
+                  <div className="flex-1 flex flex-col items-center justify-end gap-1">
+                    <div
+                      className={`w-full rounded-sm transition-colors ${d.active ? 'bg-warning' : 'bg-wash-strong'}`}
+                      style={{ height: d.active ? '100%' : '22%' }}
+                    />
+                  </div>
+                </Tooltip>
               ))}
             </div>
             <p className="text-2xs text-text-muted mt-1">{t('studyProgress.windowHint')}</p>

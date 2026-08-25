@@ -1,7 +1,7 @@
 import { Fragment } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ICONS } from '@/lib/icons';
-import { Icon } from '@/components/ui';
+import { Icon, Tooltip } from '@/components/ui';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
@@ -91,13 +91,14 @@ export default function Breadcrumbs({ maxItems = 4 }) {
           return (
             <Fragment key={`ellipsis-${i}`}>
               <Icon name={ICONS.ui.chevronRight} size={12} className="shrink-0 text-text-muted/50" />
-              <span
-                aria-hidden="true"
-                className="px-1 text-xs text-text-muted select-none"
-                title={t('breadcrumb.more')}
-              >
-                …
-              </span>
+              <Tooltip label={t('breadcrumb.more')}>
+                <span
+                  aria-hidden="true"
+                  className="px-1 text-xs text-text-muted select-none"
+                >
+                  …
+                </span>
+              </Tooltip>
             </Fragment>
           );
         }

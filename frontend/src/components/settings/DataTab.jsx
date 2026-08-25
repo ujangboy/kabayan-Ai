@@ -247,9 +247,11 @@ export default function DataTab() {
               <tbody>
                 {materials.map((m) => (
                   <tr key={m.id} className="tr-divider last:border-0">
-                    <td className="py-2 pr-3 text-text max-w-[220px] truncate" title={m.filename}>
-                      {m.filename}
-                    </td>
+                    <Tooltip label={m.filename}>
+                      <td className="py-2 pr-3 text-text max-w-[220px] truncate">
+                        {m.filename}
+                      </td>
+                    </Tooltip>
                     <td className="py-2 pr-3 text-text-secondary">{m.subject?.name || '—'}</td>
                     <td className="py-2 pr-3 text-text-secondary">{m.material_type || '—'}</td>
                     <td className="py-2 pr-3">
@@ -320,7 +322,9 @@ export default function DataTab() {
               {backups.backups.map((b) => (
                 <div key={b.filename} className="flex items-center justify-between gap-2 bg-background border border-border rounded-lg px-3 py-2">
                   <div className="min-w-0">
-                    <p className="text-xs text-text truncate" title={b.filename}>{b.filename}</p>
+                    <Tooltip label={b.filename}>
+                      <p className="text-xs text-text truncate">{b.filename}</p>
+                    </Tooltip>
                     <p className="text-3xs text-text-muted">
                       {b.created_at} · {formatBytes(b.size)}
                     </p>
@@ -376,9 +380,11 @@ export default function DataTab() {
               <tbody>
                 {trashData.items.map((item) => (
                   <tr key={item.id} className="tr-divider last:border-0">
-                    <td className="py-2 pr-3 text-text max-w-[220px] truncate" title={item.original_filename}>
-                      {item.original_filename}
-                    </td>
+                    <Tooltip label={item.original_filename}>
+                      <td className="py-2 pr-3 text-text max-w-[220px] truncate">
+                        {item.original_filename}
+                      </td>
+                    </Tooltip>
                     <td className="py-2 pr-3 text-text-secondary">
                       <span className={cn('px-1.5 py-0.5 rounded border text-3xs font-medium',
                         item.material_id ? 'bg-warning/15 text-warning border-warning/30' : 'bg-card border-border text-text-secondary')}>

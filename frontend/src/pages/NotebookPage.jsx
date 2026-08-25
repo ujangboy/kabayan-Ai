@@ -10,6 +10,7 @@ import { NotebookSidebar } from '@/components/notebook/NotebookSidebar';
 import { NoteView } from '@/components/notebook/NoteView';
 import { GeneratePanel } from '@/components/notebook/GeneratePanel';
 import { NotebookEmptyState } from '@/components/notebook/NotebookEmptyState';
+import { Tooltip } from '@/components/ui';
 
 export default function NotebookPage() {
   const { t } = useTranslation();
@@ -249,19 +250,20 @@ export default function NotebookPage() {
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-base">
         {/* Toggle List bar — selalu terlihat */}
         <div className="shrink-0 flex items-center gap-2 px-3 py-1.5 border-b border-strong/50 bg-base/80 backdrop-blur">
-          <button
-            onClick={() => setShowList(v => !v)}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-subtle border border-strong text-text hover:text-text hover:bg-wash-strong text-xs font-medium transition-colors"
-            title={showList ? 'Sembunyikan daftar' : 'Tampilkan daftar'}
-          >
-            <span className="w-3.5 h-3.5 flex items-center justify-center">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="shrink-0">
-                <rect x="3" y="3" width="18" height="18" rx="2" />
-                <path d="M9 3v18" />
-              </svg>
-            </span>
-            {showList ? 'Sembunyikan Daftar' : 'Tampilkan Daftar'}
-          </button>
+          <Tooltip label={showList ? 'Sembunyikan daftar' : 'Tampilkan daftar'}>
+            <button
+              onClick={() => setShowList(v => !v)}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-subtle border border-strong text-text hover:text-text hover:bg-wash-strong text-xs font-medium transition-colors"
+            >
+              <span className="w-3.5 h-3.5 flex items-center justify-center">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="shrink-0">
+                  <rect x="3" y="3" width="18" height="18" rx="2" />
+                  <path d="M9 3v18" />
+                </svg>
+              </span>
+              {showList ? 'Sembunyikan Daftar' : 'Tampilkan Daftar'}
+            </button>
+          </Tooltip>
           <span className="text-xs text-text-secondary hidden lg:inline">Notebook — Editor & Previewer</span>
         </div>
         <AnimatePresence mode="wait" initial={false}>

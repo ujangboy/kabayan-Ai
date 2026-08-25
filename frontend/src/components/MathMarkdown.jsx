@@ -19,7 +19,7 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import rehypeRaw from 'rehype-raw';
 import rehypeSanitize from 'rehype-sanitize';
-import { Icon } from '@/components/ui';
+import { Icon, Tooltip } from '@/components/ui';
 import { ICONS } from '@/lib/icons';
 import { copyText, tableToTSV, tableToMarkdown } from '@/utils/copyTable';
 import 'katex/dist/katex.min.css';
@@ -156,15 +156,17 @@ function CopyBar({ kind, getText, t }) {
       ? t('noteEditor.copyTableExcel')
       : t('noteEditor.copyTableMarkdown');
   return (
-    <button type="button" onClick={onClick} className="dom-copy-btn" title={label} aria-label={label}>
-      {kind !== 'code' && <span className="dom-copy-label">{kind === 'excel' ? 'Excel' : 'MD'}</span>}
-      {state === 'ok' ? (
-        <Icon name={ICONS.ui.check} size={13} />
-      ) : (
-        <Icon name={ICONS.ui.copy} size={13} />
-      )}
-      {state === 'ok' && <span className="dom-copy-label">{t('noteEditor.copied')}</span>}
-    </button>
+    <Tooltip label={label}>
+      <button type="button" onClick={onClick} className="dom-copy-btn" aria-label={label}>
+        {kind !== 'code' && <span className="dom-copy-label">{kind === 'excel' ? 'Excel' : 'MD'}</span>}
+        {state === 'ok' ? (
+          <Icon name={ICONS.ui.check} size={13} />
+        ) : (
+          <Icon name={ICONS.ui.copy} size={13} />
+        )}
+        {state === 'ok' && <span className="dom-copy-label">{t('noteEditor.copied')}</span>}
+      </button>
+    </Tooltip>
   );
 }
 

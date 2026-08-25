@@ -10,6 +10,7 @@ import MathMarkdown from '@/components/MathMarkdown';
 import QuizTimer from '@/components/quiz/QuizTimer';
 import QuizProgressBar from '@/components/quiz/QuizProgressBar';
 import { cn, fadeSlide } from '@/utils';
+import { springWave } from '@/lib/motion';
 import { formatDuration } from './shared';
 import { usePageState } from '@/hooks/usePageState';
 import { fireConfetti } from '@/utils/confetti';
@@ -331,13 +332,16 @@ export function QuizSession({ quizId, onClose }) {
                       <button
                         key={`${currentIdx}-${opt}`}
                         onClick={() => handleSelectOption(opt)}
-                        className={`w-full text-left p-4 rounded-xl border transition-all ${
+                        className={`relative w-full text-left p-4 rounded-xl border overflow-hidden transition-all ${
                           isSelected
                             ? 'bg-primary/10 border-primary text-primary'
                             : 'bg-card border-border text-text hover:border-primary/50'
                         }`}
                       >
-                        <MathMarkdown>{opt}</MathMarkdown>
+                        {isSelected && (
+                          <motion.span layoutId="quiz-session-opt-indicator" transition={springWave} className="absolute inset-0 bg-primary/10" />
+                        )}
+                        <span className="relative"><MathMarkdown>{opt}</MathMarkdown></span>
                       </button>
                     );
                   })}

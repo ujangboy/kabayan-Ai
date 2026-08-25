@@ -111,13 +111,12 @@ function getDomSelectionRange(editor) {
 // ─── Shared components ────────────────────────────────────────────────────
 function ToolBtn({ onClick, active, disabled, title, children, className: cls, size = 'md', tooltipSide = 'bottom' }) {
   return (
-    <Tooltip label={title} side={tooltipSide}>
-      <button
-        type="button"
-        onMouseDown={(e) => { e.preventDefault(); onClick(); }}
-        disabled={disabled}
-        title={title}
-        className={cn(
+      <Tooltip label={title} side={tooltipSide}>
+        <button
+          type="button"
+          onMouseDown={(e) => { e.preventDefault(); onClick(); }}
+          disabled={disabled}
+          className={cn(
           'rounded-lg transition-all select-none flex items-center justify-center shrink-0',
           size === 'sm' ? 'w-7 h-7 p-1' : 'w-8 h-8 p-1.5',
           active
@@ -215,24 +214,25 @@ function FontSizeDropdown({ editor, floating = false, vertical = false }) {
 
   return (
     <div ref={wrapRef} className="relative shrink-0">
-      <button
-        type="button"
-        onMouseDown={(e) => e.preventDefault()}
-        onClick={() => setOpen(v => !v)}
-        title={t('noteEditor.fontSize')}
-        className={cn(
-          'rounded-lg transition-all select-none flex items-center justify-center gap-1 font-medium border border-transparent',
-          vertical ? 'w-9 h-8 text-xs' : floating ? 'w-8 h-7 text-xs' : 'w-11 h-8 text-xs',
-          open
-            ? 'bg-primary/15 text-primary shadow-sm border-primary/20'
-            : 'text-text-secondary hover:text-text hover:bg-card-hover'
-        )}
-      >
-        {label}
-        <svg width="6" height="4" viewBox="0 0 6 4" className="opacity-70 shrink-0">
-          <path d="M0 0h6L3 4z" fill="currentColor" />
-        </svg>
-      </button>
+      <Tooltip label={t('noteEditor.fontSize')} side={vertical ? 'right' : floating ? 'top' : 'bottom'}>
+        <button
+          type="button"
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => setOpen(v => !v)}
+          className={cn(
+            'rounded-lg transition-all select-none flex items-center justify-center gap-1 font-medium border border-transparent',
+            vertical ? 'w-9 h-8 text-xs' : floating ? 'w-8 h-7 text-xs' : 'w-11 h-8 text-xs',
+            open
+              ? 'bg-primary/15 text-primary shadow-sm border-primary/20'
+              : 'text-text-secondary hover:text-text hover:bg-card-hover'
+          )}
+        >
+          {label}
+          <svg width="6" height="4" viewBox="0 0 6 4" className="opacity-70 shrink-0">
+            <path d="M0 0h6L3 4z" fill="currentColor" />
+          </svg>
+        </button>
+      </Tooltip>
 
       {open && (
         <>
@@ -281,14 +281,15 @@ function Toolbar({ editor, onPreview, onInsertMath, className = '' }) {
 
   return (
     <div className={cn('flex flex-nowrap items-center gap-1 px-3 py-1.5 bg-wash/40 border-b border-strong/50 sticky top-0 z-10 overflow-x-auto sidebar-scroll shrink-0', className)}>
-      <button
-        type="button"
-        onClick={onPreview}
-        title={t('noteEditor.readMode')}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-primary/10 text-primary border border-primary/20 transition-all shrink-0 mr-2 hover:bg-primary hover:text-white shadow-sm"
-      >
-        <Icon name={ICONS.ui.eye} size={14} /> {t('noteEditor.preview')}
-      </button>
+      <Tooltip label={t('noteEditor.readMode')}>
+        <button
+          type="button"
+          onClick={onPreview}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-primary/10 text-primary border border-primary/20 transition-all shrink-0 mr-2 hover:bg-primary hover:text-white shadow-sm"
+        >
+          <Icon name={ICONS.ui.eye} size={14} /> {t('noteEditor.preview')}
+        </button>
+      </Tooltip>
 
       <Sep />
       <FontSizeDropdown editor={editor} />
@@ -577,24 +578,25 @@ function FloatingToolbar({ editor, editorMode }) {
               onMouseDown={(e) => e.preventDefault()}
             >
               {COLOR_PALETTE.map(({ color, labelKey }) => (
-                <button
-                  key={color}
-                  type="button"
-                  onClick={() => applyColor(color)}
-                  title={t('noteEditor.' + labelKey)}
-                  className="w-5 h-5 rounded-full border-2 border-transparent border-strong hover:scale-125 transition-all duration-150 shadow-md"
-                  style={{ backgroundColor: color }}
-                />
+                <Tooltip key={color} label={t('noteEditor.' + labelKey)}>
+                  <button
+                    type="button"
+                    onClick={() => applyColor(color)}
+                    className="w-5 h-5 rounded-full border-2 border-transparent border-strong hover:scale-125 transition-all duration-150 shadow-md"
+                    style={{ backgroundColor: color }}
+                  />
+                </Tooltip>
               ))}
               <div className="w-px h-4 bg-border mx-0.5" />
-              <button
-                type="button"
-                onClick={clearColor}
-                title={t('noteEditor.clearColor')}
-                className="w-5 h-5 rounded-full border-2 border-dashed border-strong flex items-center justify-center text-2xs text-text-muted hover:border-strong hover:text-text-secondary transition-all"
-              >
-                <Icon name={ICONS.actions.close} size={9} />
-              </button>
+              <Tooltip label={t('noteEditor.clearColor')}>
+                <button
+                  type="button"
+                  onClick={clearColor}
+                  className="w-5 h-5 rounded-full border-2 border-dashed border-strong flex items-center justify-center text-2xs text-text-muted hover:border-strong hover:text-text transition-all"
+                >
+                  <Icon name={ICONS.actions.close} size={9} />
+                </button>
+              </Tooltip>
             </div>
           )}
         </div>
@@ -714,13 +716,14 @@ export default function NoteEditor({
           node view Tiptap -> menghindari flushSync + snap. */}
       {activeMode === 'view' && (
         <div className="flex-1 overflow-y-auto overscroll-contain sidebar-scroll">
-          <div
-            className="w-full max-w-[860px] mx-auto px-4 sm:px-6 lg:px-8 py-10 cursor-text min-h-full"
-            onDoubleClick={handleToggle}
-            title={t('noteEditor.doubleClickToEdit')}
-          >
+          <Tooltip label={t('noteEditor.doubleClickToEdit')}>
+            <div
+              className="w-full max-w-[860px] mx-auto px-4 sm:px-6 lg:px-8 py-10 cursor-text min-h-full"
+              onDoubleClick={handleToggle}
+            >
             <MathMarkdown>{content || ''}</MathMarkdown>
           </div>
+          </Tooltip>
         </div>
       )}
 

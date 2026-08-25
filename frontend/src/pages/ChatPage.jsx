@@ -10,7 +10,7 @@ import ChatNoteToast from '@/components/chat/ChatNoteToast';
 import ChatComposer from '@/components/chat/ChatComposer';
 import { motion } from 'framer-motion';
 import { ICONS } from '@/lib/icons';
-import { Icon } from '@/components/ui';
+import { Icon, Tooltip } from '@/components/ui';
 
 export default function ChatPage() {
   useChatUrlSync();
@@ -52,16 +52,17 @@ export default function ChatPage() {
       <div className="flex-1 flex flex-col min-w-0 relative overflow-hidden bg-background">
         {/* Top bar with PanelLeft toggle */}
         <div className="shrink-0 flex items-center gap-2 px-3 py-2 border-b border-strong bg-popover">
-          <button
-            onClick={() => setHistoryCollapsed(v => !v)}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-subtle border border-strong text-text hover:bg-wash-strong hover:border-strong transition-all duration-150 text-xs font-medium"
-            title={historyCollapsed ? 'Tampilkan riwayat' : 'Sembunyikan riwayat'}
-            aria-label="Toggle history"
-            aria-expanded={!historyCollapsed}
-          >
-            <Icon name={historyCollapsed ? ICONS.actions.panelLeft : ICONS.actions.panelLeftClose} size={16} />
-            <span className="hidden sm:inline">{historyCollapsed ? 'Tampilkan' : 'Sembunyikan'} Riwayat</span>
-          </button>
+          <Tooltip label={historyCollapsed ? 'Tampilkan riwayat' : 'Sembunyikan riwayat'}>
+            <button
+              onClick={() => setHistoryCollapsed(v => !v)}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-subtle border border-strong text-text hover:bg-wash-strong hover:border-strong transition-all duration-150 text-xs font-medium"
+              aria-label="Toggle history"
+              aria-expanded={!historyCollapsed}
+            >
+              <Icon name={historyCollapsed ? ICONS.actions.panelLeft : ICONS.actions.panelLeftClose} size={16} />
+              <span className="hidden sm:inline">{historyCollapsed ? 'Tampilkan' : 'Sembunyikan'} Riwayat</span>
+            </button>
+          </Tooltip>
           <div className="h-4 w-px bg-border mx-1 hidden sm:block" />
           <ChatHeader chat={chat} isCurrentChatStreaming={isCurrentChatStreaming} />
         </div>

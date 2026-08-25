@@ -195,7 +195,9 @@ export function NoteView({ note, onBack, onSave, onPin, onDelete }) {
                 </span>
               )}
               {note.subject && <span>·</span>}
-              <span title={formatDateTime(note.created_at)}>{formatDate(note.created_at)}</span>
+              <Tooltip label={formatDateTime(note.created_at)}>
+                <span>{formatDate(note.created_at)}</span>
+              </Tooltip>
             </div>
           </div>
 

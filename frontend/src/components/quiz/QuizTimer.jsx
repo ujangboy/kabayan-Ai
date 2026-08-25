@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ICONS } from '@/lib/icons';
-import { Icon } from '@/components/ui';
+import { Icon, Tooltip } from '@/components/ui';
 
 
 function formatTime(seconds) {
@@ -33,18 +33,19 @@ export default function QuizTimer({ totalSeconds, onTimeUp, isActive = true }) {
   const danger = remaining <= 15;
 
   return (
-    <span
-      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold border transition-colors ${
-        danger
-          ? 'bg-danger/15 text-danger border-danger/30 animate-pulse'
-          : warning
-            ? 'bg-warning/15 text-warning border-warning/30'
-            : 'bg-card text-text-secondary border-border'
-      }`}
-      title={t('quizTimer.remainingTime')}
-    >
-      <Icon name={ICONS.learning.timer} size={13} />
-      {formatTime(Math.max(0, remaining))}
-    </span>
+    <Tooltip label={t('quizTimer.remainingTime')}>
+      <span
+        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold border transition-colors ${
+          danger
+            ? 'bg-danger/15 text-danger border-danger/30 animate-pulse'
+            : warning
+              ? 'bg-warning/15 text-warning border-warning/30'
+              : 'bg-card text-text-secondary border-border'
+        }`}
+      >
+        <Icon name={ICONS.learning.timer} size={13} />
+        {formatTime(Math.max(0, remaining))}
+      </span>
+    </Tooltip>
   );
 }

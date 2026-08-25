@@ -35,7 +35,9 @@ export default function ChatHeader({ chat, isCurrentChatStreaming, onToggleHisto
   return (
     <header className="shrink-0 flex items-center justify-between gap-3 bg-transparent min-w-0 flex-1">
       <div className="min-w-0">
-        <h1 className="text-base font-semibold text-text line-clamp-2 break-words whitespace-normal leading-tight" title={chat?.title || t('chat.untitled')}>{chat?.title || t('chat.untitled')}</h1>
+        <Tooltip label={chat?.title || t('chat.untitled')}>
+          <h1 className="text-base font-semibold text-text line-clamp-2 break-words whitespace-normal leading-tight">{chat?.title || t('chat.untitled')}</h1>
+        </Tooltip>
         <p className="text-xs text-text-muted line-clamp-1 break-words whitespace-normal">
           {tutorMode
             ? `${t('chat.tutorMode')}${tutorSubject ? ' • ' + (subjects.find((s) => s.id === tutorSubject)?.name || tutorSubject) : ''}`
@@ -44,20 +46,21 @@ export default function ChatHeader({ chat, isCurrentChatStreaming, onToggleHisto
       </div>
       <div className="flex items-center gap-2 shrink-0">
         {/* Tutor mode toggle */}
-        <button
-          onClick={handleToggleTutor}
-          className={cn(
-            'inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium transition-colors border',
-            tutorMode
-              ? 'bg-primary text-white border-primary hover:bg-primary-hover'
-              : 'bg-subtle border-strong text-text-muted hover:text-text hover:border-strong'
-          )}
-          aria-pressed={tutorMode}
-          title={t('chat.toggleTutor')}
-        >
-          <Icon name={ICONS.communication.bot} size={13} />
-          {tutorMode ? t('chat.tutorModeOn') : t('chat.tutorModeOff')}
-        </button>
+        <Tooltip label={t('chat.toggleTutor')}>
+          <button
+            onClick={handleToggleTutor}
+            className={cn(
+              'inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium transition-colors border',
+              tutorMode
+                ? 'bg-primary text-white border-primary hover:bg-primary-hover'
+                : 'bg-subtle border-strong text-text-muted hover:text-text hover:border-strong'
+            )}
+            aria-pressed={tutorMode}
+          >
+            <Icon name={ICONS.communication.bot} size={13} />
+            {tutorMode ? t('chat.tutorModeOn') : t('chat.tutorModeOff')}
+          </button>
+        </Tooltip>
         {showTutorBadge && (
           <Tooltip label={t('chat.tutorBadgeHint')}>
             <button

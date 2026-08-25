@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { materiAPI } from '@/services/api';
+import { Tooltip } from '@/components/ui';
 
 export default function MaterialPicker({ subjectId, selectedMaterialIds, onSelectionChange }) {
   const { t } = useTranslation();
@@ -83,14 +84,14 @@ export default function MaterialPicker({ subjectId, selectedMaterialIds, onSelec
           const isReady = m.status === 'Ready';
           const checked = selectedMaterialIds.includes(String(m.id));
           return (
-            <label
-              key={m.id}
-              className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg transition-colors ${
-                !isReady ? 'opacity-60 cursor-not-allowed bg-card/50' : 
-                checked ? 'bg-primary/10 cursor-pointer' : 'hover:bg-card cursor-pointer'
-              }`}
-              title={!isReady ? t('materialPicker.notReadyTitle', { status: m.status }) : ''}
-            >
+            <Tooltip label={!isReady ? t('materialPicker.notReadyTitle', { status: m.status }) : ''}>
+              <label
+                key={m.id}
+                className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg transition-colors ${
+                  !isReady ? 'opacity-60 cursor-not-allowed bg-card/50' : 
+                  checked ? 'bg-primary/10 cursor-pointer' : 'hover:bg-card cursor-pointer'
+                }`}
+              >
               <input
                 type="checkbox"
                 checked={checked}
@@ -110,6 +111,7 @@ export default function MaterialPicker({ subjectId, selectedMaterialIds, onSelec
                 )}
               </div>
             </label>
+            </Tooltip>
           );
         })}
       </div>

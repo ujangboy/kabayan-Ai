@@ -41,7 +41,6 @@ export default function FocusModeView({ activity, onExit, children }) {
         </div>
         <button
           onClick={onExit}
-          title={t('focusMode.exit')}
           className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium text-text-secondary hover:bg-card hover:text-danger border border-border transition-all duration-300 cursor-pointer ${
             controlsVisible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
           }`}

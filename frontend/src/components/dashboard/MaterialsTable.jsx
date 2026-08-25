@@ -103,7 +103,9 @@ export default function MaterialsTable({ materials, subjectId, compact = false }
                   <td className={`px-3 ${rowPy}`}>
                     <div className="flex items-center gap-2.5">
                       <FileTypeIcon type={(m.filename || '').split('.').pop()?.toUpperCase() || m.material_type} className="text-base text-text-secondary" />
-                      <span className="text-sm text-text font-medium truncate max-w-[220px]" title={m.filename}>{m.filename}</span>
+                      <Tooltip label={m.filename}>
+                        <span className="text-sm text-text font-medium truncate max-w-[220px]">{m.filename}</span>
+                      </Tooltip>
                     </div>
                   </td>
                   <td className={`px-3 ${rowPy} text-text-secondary text-xs`}>{(m.filename || '').split('.').pop()?.toUpperCase() || m.material_type}</td>

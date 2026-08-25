@@ -65,12 +65,14 @@ export function NoteCard({
             {note.is_pinned && (
               <Icon name={ICONS.actions.pin} size={14} fill={1} className="text-warning shrink-0" />
             )}
-            <span className={cn(
-              'text-sm font-medium line-clamp-2 break-words whitespace-normal min-w-0 leading-snug',
-              isSelected ? 'text-primary-light' : 'text-text'
-            )} title={note.title || t('notebook.untitled')}>
-              {note.title || t('notebook.untitled')}
-            </span>
+            <Tooltip label={note.title || t('notebook.untitled')}>
+              <span className={cn(
+                'text-sm font-medium line-clamp-2 break-words whitespace-normal min-w-0 leading-snug',
+                isSelected ? 'text-primary-light' : 'text-text'
+              )}>
+                {note.title || t('notebook.untitled')}
+              </span>
+            </Tooltip>
           </div>
           {snippet && (
             <p className="text-2xs text-text-muted line-clamp-1 leading-relaxed mb-1">

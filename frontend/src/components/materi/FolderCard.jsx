@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 
-import { SubjectBadge } from '@/components/ui';
+import { SubjectBadge, Tooltip } from '@/components/ui';
 import { cn } from '@/utils';
 import { springLift } from '@/lib/motion';
 
@@ -33,7 +33,9 @@ export function FolderCard({ active, name, count, onClick, tone, index = 0 }) {
           {count}
         </span>
       </div>
-      <p className={cn('text-base font-semibold truncate', active ? 'text-primary-light' : 'text-text')} title={name}>{name}</p>
+      <Tooltip label={name}>
+        <p className={cn('text-base font-semibold truncate', active ? 'text-primary-light' : 'text-text')}>{name}</p>
+      </Tooltip>
       <p className="text-3xs text-text-muted uppercase tracking-wide -mt-2">{t('materi.folderFiles', { count })}</p>
     </motion.button>
   );

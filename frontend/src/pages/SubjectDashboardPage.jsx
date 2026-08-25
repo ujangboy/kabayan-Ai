@@ -284,7 +284,9 @@ export default function SubjectDashboardPage() {
                                     <Icon name={meta.icon} size={12} />
                                   </div>
                                   <div className="min-w-0 flex-1">
-                                    <p className="text-xs font-medium text-text truncate" title={a.label}>{a.label}</p>
+                                    <Tooltip label={a.label}>
+                                      <p className="text-xs font-medium text-text truncate">{a.label}</p>
+                                    </Tooltip>
                                     <p className="text-2xs text-text-secondary">{formatDate(a.date)}{a.score != null ? ` • ${a.score}` : ''}</p>
                                   </div>
                                   <span className="text-3xs px-1.5 py-0.5 rounded bg-subtle border border-border text-text-secondary shrink-0">{meta.label}</span>

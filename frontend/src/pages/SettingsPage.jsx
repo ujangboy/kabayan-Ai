@@ -56,7 +56,7 @@ export default function SettingsPage() {
             {TABS.map(({ key, icon, labelKey }) => {
               const isActive = active === key;
               return (
-                <button
+                <motion.button
                   key={key}
                   onClick={() => setActive(key)}
                   whileHover={{ x: 1 }}
@@ -79,7 +79,7 @@ export default function SettingsPage() {
                     <Icon name={icon} size={16} className={isActive ? 'text-white' : 'text-text-secondary'} />
                     <span>{t(labelKey)}</span>
                   </span>
-                </button>
+                </motion.button>
               );
             })}
           </nav>

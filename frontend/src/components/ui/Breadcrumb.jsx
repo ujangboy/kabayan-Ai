@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
-import { Icon } from '@/components/ui';
+import { Icon, Tooltip } from '@/components/ui';
 import { ICONS } from '@/lib/icons';
 import { cn } from '@/utils';
 
@@ -95,7 +95,6 @@ export default function Breadcrumb({ maxItems = 3 }) {
                   <button
                     className="shrink-0 rounded-md px-1 py-0.5 text-xs text-text-muted transition-colors hover:bg-card hover:text-text"
                     aria-label={t('breadcrumb.showAll')}
-                    title={t('breadcrumb.more')}
                   >
                     …
                   </button>
@@ -132,26 +131,28 @@ export default function Breadcrumb({ maxItems = 3 }) {
           <Fragment key={(crumb.to || 'x') + i}>
             <Icon name={ICONS.ui.chevronRight} size={12} className="shrink-0 text-text-muted/50" />
             {crumb.current ? (
-              <span
-                aria-current="page"
-                className="flex max-w-[140px] items-center gap-1.5 truncate rounded-md px-1.5 py-0.5 text-xs font-medium text-text"
-                title={crumb.label}
-              >
-                {icon}
-                <span className="truncate">{crumb.label}</span>
-              </span>
+                <Tooltip label={crumb.label}>
+                  <span
+                    aria-current="page"
+                    className="flex max-w-[140px] items-center gap-1.5 truncate rounded-md px-1.5 py-0.5 text-xs font-medium text-text"
+                  >
+                    {icon}
+                    <span className="truncate">{crumb.label}</span>
+                  </span>
+                </Tooltip>
             ) : (
-              <Link
-                to={crumb.to}
-                className={cn(
-                  'flex max-w-[140px] items-center gap-1.5 rounded-md px-1.5 py-0.5 text-xs text-text-secondary',
-                  'transition-colors hover:bg-card hover:text-text hover:underline'
-                )}
-                title={crumb.label}
-              >
-                {icon}
-                <span className="truncate">{crumb.label}</span>
-              </Link>
+                <Tooltip label={crumb.label}>
+                  <Link
+                    to={crumb.to}
+                    className={cn(
+                      'flex max-w-[140px] items-center gap-1.5 rounded-md px-1.5 py-0.5 text-xs text-text-secondary',
+                      'transition-colors hover:bg-card hover:text-text hover:underline'
+                    )}
+                  >
+                    {icon}
+                    <span className="truncate">{crumb.label}</span>
+                  </Link>
+                </Tooltip>
             )}
           </Fragment>
         );

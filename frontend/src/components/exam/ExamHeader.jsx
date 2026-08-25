@@ -20,13 +20,12 @@ export default function ExamHeader({ view, subjectId, subjects, canCreate, onBac
           <h1 className="text-2xl font-bold text-text flex items-center gap-2">
             <Icon name={ICONS.learning.brain} size={22} className="text-primary" />
             {t('exam.title')}
-            <span
-              className="badge badge-success text-3xs"
-              title={t('exam.adaptiveBadgeHint')}
-            >
-              <Icon name={ICONS.ui.bolt} size={9} className="inline mr-0.5" />
-              {t('exam.adaptiveBadge')}
-            </span>
+            <Tooltip label={t('exam.adaptiveBadgeHint')}>
+              <span className="badge badge-success text-3xs">
+                <Icon name={ICONS.ui.bolt} size={9} className="inline mr-0.5" />
+                {t('exam.adaptiveBadge')}
+              </span>
+            </Tooltip>
             <HelpTip label={t('help.exam')} />
           </h1>
           <p className="text-text-secondary text-sm mt-0.5">

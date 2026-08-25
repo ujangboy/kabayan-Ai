@@ -7,6 +7,7 @@ import { subjectAPI, flashcardAPI } from '@/services/api';
 import { useAppStore } from '@/store';
 import { useSwipeGesture } from '@/hooks/useSwipeGesture';
 import { Icon } from '@/components/ui/Icon';
+import { Tooltip } from '@/components/ui';
 import { ICONS } from '@/lib/icons';
 import StorageMeter from './StorageMeter';
 
@@ -132,13 +133,14 @@ function MateriSidebar() {
         icon={ICONS.files.document}
         title={t('nav.materi')}
         action={
-          <button
-            onClick={() => navigate('/materi?upload=1')}
-            className="p-1.5 rounded-xl text-primary-light hover:bg-wash transition-colors"
-            title={t('materi.upload')}
-          >
-            <Icon name={ICONS.actions.upload} size={16} />
-          </button>
+          <Tooltip label={t('materi.upload')}>
+            <button
+              onClick={() => navigate('/materi?upload=1')}
+              className="p-1.5 rounded-xl text-primary-light hover:bg-wash transition-colors"
+            >
+              <Icon name={ICONS.actions.upload} size={16} />
+            </button>
+          </Tooltip>
         }
       />
       <div className="flex-1 overflow-y-auto sidebar-scroll px-3 space-y-1">
@@ -177,13 +179,14 @@ function SubjectsSidebar() {
         icon={ICONS.files.folder}
         title={t('nav.subjects')}
         action={
-          <button
-            onClick={() => navigate('/subjects?new=1')}
-            className="p-1.5 rounded-xl text-primary-light hover:bg-wash transition-colors"
-            title={t('subjects.new')}
-          >
-            <Icon name={ICONS.actions.addOutline} size={16} />
-          </button>
+          <Tooltip label={t('subjects.new')}>
+            <button
+              onClick={() => navigate('/subjects?new=1')}
+              className="p-1.5 rounded-xl text-primary-light hover:bg-wash transition-colors"
+            >
+              <Icon name={ICONS.actions.addOutline} size={16} />
+            </button>
+          </Tooltip>
         }
       />
       <div className="flex-1 overflow-y-auto sidebar-scroll px-3 space-y-1">

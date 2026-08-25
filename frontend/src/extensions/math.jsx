@@ -8,6 +8,7 @@ import { Node, mergeAttributes } from '@tiptap/core';
 import { ReactNodeViewRenderer, NodeViewWrapper } from '@tiptap/react';
 import { useState, useCallback, useRef, useEffect } from 'react';
 import katex from 'katex';
+import { Tooltip } from '@/components/ui/Tooltip';
 
 // ─── KaTeX React renderer ────────────────────────────────────────────────
 function KaTeXNode({ node, updateAttributes }) {
@@ -69,12 +70,13 @@ function KaTeXNode({ node, updateAttributes }) {
       as={isBlock ? 'div' : 'span'}
       className={`${isBlock ? 'my-2 overflow-x-auto flex justify-center' : ''} cursor-pointer hover:bg-primary/5 rounded px-1 transition-colors`}
       onClick={() => { setDraft(latex); setIsEditing(true); }}
-      title="Klik untuk edit LaTeX"
     >
-      <NodeViewWrapper
-        as={isBlock ? 'div' : 'span'}
-        dangerouslySetInnerHTML={{ __html: html }}
-      />
+      <Tooltip label="Klik untuk edit LaTeX">
+        <NodeViewWrapper
+          as={isBlock ? 'div' : 'span'}
+          dangerouslySetInnerHTML={{ __html: html }}
+        />
+      </Tooltip>
     </NodeViewWrapper>
   );
 }

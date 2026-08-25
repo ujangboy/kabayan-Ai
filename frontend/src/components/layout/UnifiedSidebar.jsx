@@ -269,7 +269,9 @@ function SidebarContent({ collapsed, onNavigate }) {
                         )}
                       >
                         <Icon name={sub.icon} size={15} className={cn('shrink-0', sub.active ? 'text-primary-light' : 'text-warning')} />
-                        <span className="truncate" title={sub.label}>{sub.label}</span>
+                        <Tooltip label={sub.label}>
+                          <span className="truncate">{sub.label}</span>
+                        </Tooltip>
                       </button>
                     ))}
                     {submenuItems(item.group).length === 0 && (
@@ -303,14 +305,15 @@ function SidebarContent({ collapsed, onNavigate }) {
             <span className="text-base font-semibold text-text">Kabayan AI</span>
           </div>
         )}
-        <button
-          onClick={toggleCollapsed}
-          aria-label={collapsed ? t('sidebar.expand') : t('sidebar.collapse')}
-          title={collapsed ? t('sidebar.expand') : t('sidebar.collapse')}
-          className={cn('flex items-center justify-center rounded-xl text-text-secondary transition-colors hover:bg-card hover:text-text', collapsed ? 'h-10 w-10' : 'h-9 w-9')}
-        >
-          <Icon name={collapsed ? ICONS.actions.menuOpen : ICONS.actions.menu} size={18} />
-        </button>
+        <Tooltip label={collapsed ? t('sidebar.expand') : t('sidebar.collapse')} side="right">
+          <button
+            onClick={toggleCollapsed}
+            aria-label={collapsed ? t('sidebar.expand') : t('sidebar.collapse')}
+            className={cn('flex items-center justify-center rounded-xl text-text-secondary transition-colors hover:bg-card hover:text-text', collapsed ? 'h-10 w-10' : 'h-9 w-9')}
+          >
+            <Icon name={collapsed ? ICONS.actions.menuOpen : ICONS.actions.menu} size={18} />
+          </button>
+        </Tooltip>
       </div>
 
       {/* Search trigger */}
@@ -383,7 +386,9 @@ function SidebarContent({ collapsed, onNavigate }) {
                       )}
                     >
                       <Icon name={sub.icon} size={14} className={cn('shrink-0 transition-colors', sub.active ? 'text-primary-light' : 'text-text-muted group-hover/item:text-text-secondary')} />
-                      <span className="truncate max-w-[200px]" title={sub.label}>{sub.label}</span>
+                      <Tooltip label={sub.label}>
+                        <span className="truncate max-w-[200px]">{sub.label}</span>
+                      </Tooltip>
                     </button>
                   ))}
                 </div>
