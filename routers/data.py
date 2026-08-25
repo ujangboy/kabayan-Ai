@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from database import get_db
 import models
 import os
+import config
 from services.storage_cleanup_service import get_storage_usage
 from services.usage_service import get_usage
 from services.trash_service import get_trash_count
@@ -21,10 +22,17 @@ router = APIRouter()
 
 
 @router.get("/api/usage")
-async def usage_summary(db: Session = Depends(get_db)):
-    """Pemakaian Groq API per fitur + total (token estimasi & jumlah panggilan)."""
+async def usage_summary(period: str = Query("24h", pattern="^(24h|all)$"), db: Session = Depends(get_db)):
+    """Pemakaian Groq API per fitur + total (token estimasi & jumlah panggilan).
+
+    period:
+      - "24h" (default): total dalam 24 jam terakhir (sliding window).
+      - "all"         : akumulasi seumur hidup.
+    """
     try:
-        return JSONResponse(get_usage(db))
+        result = get_usage(db, period)
+        result["limit"] = config.GROQ_DAILY_LIMIT
+        return JSONResponse(result)
     except AppError:
         raise
     except Exception as exc:

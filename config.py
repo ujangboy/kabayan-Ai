@@ -52,6 +52,10 @@ BACKUPS_DIR = os.path.join(STORAGE_DIR, "backups")
 # Jangka waktu file di trash sebelum benar-benar dihapus (safety-net, D2)
 TRASH_RETENTION_DAYS = 7
 
+# Batas harian (sliding 24 jam) estimasi token Groq untuk fitur Limit AI.
+# Angka ini perkiraan (bukan kuota hard Groq); dipakai untuk progress bar UI.
+GROQ_DAILY_LIMIT = int(os.getenv("GROQ_DAILY_LIMIT", "8000"))
+
 # Ensure directories exist
 for path in [LANCEDB_DIR, TEXT_CACHE_DIR, UPLOADS_DIR, SESSION_DIR, TRASH_DIR, BACKUPS_DIR]:
     os.makedirs(path, exist_ok=True)

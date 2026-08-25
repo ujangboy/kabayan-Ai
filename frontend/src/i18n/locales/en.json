@@ -257,6 +257,8 @@
     "pageTitle": "Study Materials",
     "pageSubtitle": "Manage and organize all your study materials.",
     "ragActive": "{{count}} material(s) active as AI source",
+    "activeSection": "Active Materials ({{count}})",
+    "inactiveSection": "Other Materials ({{count}})",
     "importYoutube": "Import YouTube",
     "uploadMateri": "Upload Material",
     "filterAllSubjects": "All Subjects",
@@ -848,6 +850,9 @@
       "emptyBreakdown": "No AI usage recorded yet.",
       "tokensUnit": "tokens",
       "callsUnit": "calls",
+      "dailyTitle": "Daily Limit (last 24 hours)",
+      "window24h": "Sliding 24h since first usage",
+      "resetsIn": "Resets in {{time}}",
       "note": "Total AI tokens = accumulation of all Groq usage (chat, tutor, quiz, simulation exam, flashcard, notebook, etc.). Tokens are estimated from response length; not official billing."
     },
     "about": {
@@ -859,7 +864,9 @@
     },
     "quickSettings": "Quick Settings",
     "notifications": "Notifications",
-    "fullSettings": "Full Settings"
+    "fullSettings": "Full Settings",
+    "themeLight": "Light mode",
+    "themeDark": "Dark mode"
   },
   "studyRoute": {
     "title": "Study Recommendation",

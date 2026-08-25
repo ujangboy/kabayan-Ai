@@ -246,6 +246,8 @@
     "pageTitle": "Materi Diajar",
     "pageSubtitle": "Atur sareng kelola sadaya materi diajar anjeun.",
     "ragActive": "{{count}} materi aktip salaku sumber AI",
+    "activeSection": "Materi Aktip ({{count}})",
+    "inactiveSection": "Materi Lianna ({{count}})",
     "importYoutube": "Import YouTube",
     "uploadMateri": "Unggah Materi",
     "filterAllSubjects": "Sadaya Mata Pelajaran",
@@ -833,6 +835,9 @@
       "emptyBreakdown": "Can aya pamakéan AI anu kacatet.",
       "tokensUnit": "token",
       "callsUnit": "séépan",
+      "dailyTitle": "Wates Poéan (24 jam terakhir)",
+      "window24h": "Sliding 24 jam ti pamakéan kahiji",
+      "resetsIn": "Reset dina {{time}}",
       "note": "Total token AI = akumulasi sakabéh pamakéan Groq (chat, tutor, kuis, ujian simulasi, flashcard, catetan, jsb). Token diitung tina panjang waleran; sanés tagihan resmi."
     },
     "about": {
@@ -844,7 +849,9 @@
     },
     "quickSettings": "Pangaturan Gancang",
     "notifications": "Notifikasi",
-    "fullSettings": "Pangaturan Lengkap"
+    "fullSettings": "Pangaturan Lengkap",
+    "themeLight": "Mode terang",
+    "themeDark": "Mode gelap"
   },
   "studyRoute": {
     "title": "Rekomendasi Diajar",

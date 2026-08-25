@@ -15,6 +15,18 @@ from __future__ import annotations
 import logging
 from typing import AsyncIterator, Optional
 
+
+def _record_usage_safe(db: Session, feature: str, response_text: str | None) -> None:
+    """Catat usage lalu tutup session (untuk task background fire-and-forget)."""
+    try:
+        from services.usage_service import record_usage
+        record_usage(db, feature, response_text)
+    finally:
+        try:
+            db.close()
+        except Exception:
+            pass
+
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 from sqlalchemy.orm import Session
 
@@ -490,7 +502,11 @@ class TutorService:
         try:
             from services.usage_service import record_usage
             import asyncio as _asyncio
-            _asyncio.create_task(_asyncio.to_thread(record_usage, db, "tutor", full_response))
+            from database import SessionLocal
+            _rec_db = SessionLocal()
+            _asyncio.create_task(
+                _asyncio.to_thread(_record_usage_safe, _rec_db, "tutor", full_response)
+            )
         except Exception:
             pass  # pencatatan usage non-kritikal
 

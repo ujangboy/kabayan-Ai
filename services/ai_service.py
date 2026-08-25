@@ -342,7 +342,13 @@ class AIService:
             await asyncio.to_thread(
                 cache_service.set_cache, db, prompt_str, context, setting_hash, normalized_response
             )
-            await asyncio.to_thread(record_usage, db, "chat", full_response)
+            # Pakai session segar agar tidak mengandalkan db request yang mungkin
+            # sudah ditutup (record_usage aman-closed-session-proof via try/except).
+            rec_db = SessionLocal()
+            try:
+                await asyncio.to_thread(record_usage, rec_db, "chat", full_response)
+            finally:
+                rec_db.close()
         finally:
             db.close()
 

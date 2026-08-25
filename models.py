@@ -174,6 +174,21 @@ class Setting(Base):
     description = Column(Text)
 
 
+class UsageLog(Base):
+    """Log per-panggilan AI (Groq) untuk jendela pemakaian sliding 24 jam.
+
+    Berbeda dengan akumulasi `Setting` (`usage.*`) yang berlaku seumur hidup,
+    tabel ini mencatat tiap panggilan beserta timestamp sehingga `get_usage(period="24h")`
+    bisa menghitung total dalam 24 jam terakhir secara akurat.
+    """
+    __tablename__ = "usage_logs"
+    id = Column(Integer, primary_key=True, index=True)
+    feature = Column(String, index=True)        # capability: chat, tutor, quiz, ...
+    tokens = Column(Integer, default=0)
+    calls = Column(Integer, default=1)
+    created_at = Column(DateTime, default=utcnow, index=True)
+
+
 class TrashItem(Base):
     """Metadata file yang dipindah ke folder sampah — agar bisa di-restore.
 

@@ -257,6 +257,8 @@
     "pageTitle": "Materi Belajar",
     "pageSubtitle": "Kelola dan atur semua materi belajarmu.",
     "ragActive": "{{count}} materi aktif sebagai sumber AI",
+    "activeSection": "Materi Aktif ({{count}})",
+    "inactiveSection": "Materi Lainnya ({{count}})",
     "importYoutube": "Import YouTube",
     "uploadMateri": "Upload Materi",
     "filterAllSubjects": "Semua Mata Kuliah",
@@ -848,6 +850,9 @@
       "emptyBreakdown": "Belum ada pemakaian AI tercatat.",
       "tokensUnit": "token",
       "callsUnit": "call",
+      "dailyTitle": "Batas Harian (24 jam terakhir)",
+      "window24h": "Sliding 24 jam sejak pemakaian pertama",
+      "resetsIn": "Reset dalam {{time}}",
       "note": "Total token AI = akumulasi seluruh pemakaian Groq (chat, tutor, kuis, ujian simulasi, flashcard, notebook, dst). Token diperkirakan dari panjang respons; bukan penagihan resmi."
     },
     "about": {
@@ -859,7 +864,9 @@
     },
     "quickSettings": "Pengaturan Cepat",
     "notifications": "Notifikasi",
-    "fullSettings": "Pengaturan Lengkap"
+    "fullSettings": "Pengaturan Lengkap",
+    "themeLight": "Mode terang",
+    "themeDark": "Mode gelap"
   },
   "studyRoute": {
     "title": "Rekomendasi Belajar",

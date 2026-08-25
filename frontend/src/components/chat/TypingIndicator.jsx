@@ -7,7 +7,7 @@ export default function TypingIndicator() {
 
   return (
     <div
-      className="inline-grid grid-cols-3 gap-1.5 py-1"
+      className="inline-grid grid-cols-3 gap-1 py-1"
       aria-live="polite"
       aria-label="AI sedang mengetik"
     >
@@ -16,19 +16,19 @@ export default function TypingIndicator() {
         const c = idx % SIZE;
         const distBL = Math.abs(r - (SIZE - 1)) + Math.abs(c - 0);
         const distTR = Math.abs(r - 0) + Math.abs(c - (SIZE - 1));
-        const delay = Math.min(distBL, distTR) * 0.1;
+        const delay = Math.min(distBL, distTR) * 0.08;
 
         return (
           <motion.span
             key={idx}
-            className="w-2 h-2 rounded-full bg-primary/70"
+            className="w-1.5 h-1.5 rounded-full bg-primary/70"
             animate={
               shouldReduceMotion
                 ? { opacity: [0.4, 1, 0.4] }
-                : { y: [0, -5, 0], scale: [1, 1.15, 1], opacity: [0.6, 1, 0.6] }
+                : { y: [0, -3, 0], scale: [1, 1.1, 1], opacity: [0.6, 1, 0.6] }
             }
             transition={{
-              duration: shouldReduceMotion ? 1.2 : 0.75,
+              duration: shouldReduceMotion ? 1.2 : 0.65,
               repeat: Infinity,
               ease: 'easeInOut',
               delay,

@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { ICONS } from '@/lib/icons';
@@ -9,13 +10,32 @@ function formatNumber(n) {
   return (n ?? 0).toLocaleString('id-ID');
 }
 
+function useCountdown(resetsAt) {
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    if (!resetsAt) return undefined;
+    const id = setInterval(() => setNow(Date.now()), 30_000);
+    return () => clearInterval(id);
+  }, [resetsAt]);
+  if (!resetsAt) return null;
+  let secs = Math.max(0, new Date(resetsAt).getTime() - now);
+  if (Number.isNaN(secs)) return null;
+  const h = Math.floor(secs / 3_600_000);
+  secs %= 3_600_000;
+  const m = Math.floor(secs / 60_000);
+  secs %= 60_000;
+  const s = Math.floor(secs / 1000);
+  const pad = (x) => String(x).padStart(2, '0');
+  return `${h}j ${pad(m)}m ${pad(s)}d`;
+}
+
 export default function AiLimitTab() {
   const { t } = useTranslation();
 
   const { data: usage, isLoading: loadingUsage } = useQuery({
     queryKey: ['ai-usage'],
-    queryFn: () => dataAPI.usage().then((r) => r.data),
-    staleTime: 30_000,
+    queryFn: () => dataAPI.usage('24h').then((r) => r.data),
+    staleTime: 5_000,
   });
 
   const { data: stats, isLoading: loadingStats } = useQuery({
@@ -24,6 +44,8 @@ export default function AiLimitTab() {
     staleTime: 30_000,
   });
 
+  const resetsIn = useCountdown(usage?.resets_at);
+
   if (loadingUsage && loadingStats) {
     return <div className="text-text-muted text-sm py-10">{t('common.loading')}</div>;
   }
@@ -31,10 +53,34 @@ export default function AiLimitTab() {
   const u = usage || {};
   const s = stats || {};
 
+  const limit = u.limit || 8000;
+  const used = u.total_tokens || 0;
+  const pct = Math.min(100, Math.round((used / limit) * 100));
+
   const features = u.features || [];
 
   return (
     <div className="space-y-5 max-w-5xl">
+      {/* Progress harian sliding 24h */}
+      <div className="card-base p-4 space-y-2">
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-text-secondary">{t('settings.aiLimit.dailyTitle')}</span>
+          <span className="font-semibold text-text">
+            {formatNumber(used)} / {formatNumber(limit)} {t('settings.aiLimit.tokensUnit')}
+          </span>
+        </div>
+        <div className="w-full h-2.5 bg-border rounded-full overflow-hidden">
+          <div
+            className={`h-full rounded-full transition-[width] duration-500 ${pct >= 90 ? 'bg-danger' : 'bg-primary'}`}
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+        <div className="flex items-center justify-between text-xs text-text-muted">
+          <span>{t('settings.aiLimit.window24h')}</span>
+          {resetsIn != null && <span>{t('settings.aiLimit.resetsIn', { time: resetsIn })}</span>}
+        </div>
+      </div>
+
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         <div className="card-base p-4 flex flex-col gap-1">
           <Icon name={ICONS.ui.wallet} size={16} className="text-primary" />

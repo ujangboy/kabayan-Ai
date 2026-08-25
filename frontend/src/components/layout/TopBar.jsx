@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ICONS } from '@/lib/icons';
@@ -12,6 +12,7 @@ import { useAppStore } from '@/store';
 import { setAppLanguage, STORAGE_KEY } from '@/i18n';
 import { cn } from '@/utils';
 import { springWave } from '@/lib/motion';
+import { DEFAULT_AVATAR } from '@/components/settings/ProfileTab';
 
 const LANGS = [
   { code: 'id', label: 'Indonesia', short: 'ID' },
@@ -47,21 +48,34 @@ export default function TopBar() {
     langMutation.mutate(code);
   };
 
-  const displayName = profile?.name || profile?.username || 'User';
-  const initial = displayName.charAt(0).toUpperCase();
+  const [isDark, setIsDark] = useState(() =>
+    typeof document !== 'undefined' && document.documentElement.classList.contains('dark')
+  );
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setIsDark(document.documentElement.classList.contains('dark'));
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
+  }, []);
+
+  const displayName = profile?.display_name || profile?.name || profile?.username || 'User';
+  const photoPath = profile?.photo_path || DEFAULT_AVATAR;
   const [notifOn, setNotifOn] = useState(true);
 
   return (
     <header className="divider-gradient-b relative z-10 flex h-14 shrink-0 items-center gap-3 bg-surface px-4">
 
       {/* Mobile sidebar toggle */}
-      <button
-        onClick={toggleSidebar}
-        className="lg:hidden flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-text-secondary transition-all duration-150 hover:bg-card hover:text-text"
-        title={t('common.menu')}
-      >
-        <Icon name={ICONS.actions.menu} size={20} />
-      </button>
+      <Tooltip label={t('common.menu')} side="bottom">
+        <button
+          onClick={toggleSidebar}
+          className="lg:hidden flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-text-secondary transition-all duration-150 hover:bg-card hover:text-text"
+          aria-label={t('common.menu')}
+        >
+          <Icon name={ICONS.actions.menu} size={20} />
+        </button>
+      </Tooltip>
 
       {/* Desktop: toggle collapse sidebar (Removed because it's redundant with the sidebar logo toggle) */}
 
@@ -79,15 +93,14 @@ export default function TopBar() {
 
       {/* Quick settings dropdown */}
       <DropdownMenu.Root>
-        <DropdownMenu.Trigger asChild>
-          <button
+        <Tooltip label={t('settings.quickSettings')} side="bottom">
+          <DropdownMenu.Trigger
             className="flex h-9 w-9 items-center justify-center rounded-xl text-text-secondary transition-all duration-150 hover:bg-card hover:text-text"
-            title={t('settings.quickSettings')}
             aria-label={t('settings.quickSettings')}
           >
             <Icon name={ICONS.nav.settings} size={18} />
-          </button>
-        </DropdownMenu.Trigger>
+          </DropdownMenu.Trigger>
+        </Tooltip>
         <DropdownMenu.Portal>
           <DropdownMenu.Content
             sideOffset={8}
@@ -156,10 +169,12 @@ export default function TopBar() {
       </DropdownMenu.Root>
 
       {/* Theme toggle */}
-      <ThemeToggle />
+      <Tooltip label={isDark ? t('settings.themeLight') : t('settings.themeDark')} side="bottom">
+        <ThemeToggle />
+      </Tooltip>
 
       {/* Keyboard shortcuts */}
-      <Tooltip label={t('shortcuts.title')}>
+      <Tooltip label={t('shortcuts.title')} side="bottom">
         <button
           onClick={() => setShortcutsOpen(true)}
           className="rounded-xl p-2 text-text-secondary transition-all duration-150 hover:bg-card hover:text-text"
@@ -170,7 +185,7 @@ export default function TopBar() {
       </Tooltip>
 
       {/* Notifications bell */}
-      <Tooltip label={t('common.notifications')}>
+      <Tooltip label={t('common.notifications')} side="bottom">
         <button
           onClick={() => navigate('/settings?tab=data')}
           className="relative rounded-xl p-2 text-text-secondary transition-all duration-150 hover:bg-card hover:text-text"
@@ -181,16 +196,18 @@ export default function TopBar() {
       </Tooltip>
 
       {/* Profile avatar */}
-      <Tooltip label={displayName}>
+      <Tooltip label={displayName} side="bottom">
         <button
           onClick={() => navigate('/settings')}
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-sm font-semibold text-white shadow-card transition-all duration-150 hover:bg-primary-hover active:scale-[0.98]"
-          title={displayName}
+          className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-primary text-sm font-semibold text-white shadow-card transition-all duration-150 hover:bg-primary-hover active:scale-[0.98]"
+          aria-label={displayName}
         >
-          {profile?.avatar_url
-            ? <img src={profile.avatar_url} alt={displayName} className="w-full h-full rounded-full object-cover" />
-            : initial
-          }
+          <img
+            src={photoPath}
+            alt={displayName}
+            onError={(e) => { e.currentTarget.src = DEFAULT_AVATAR; }}
+            className="w-full h-full rounded-full object-cover"
+          />
         </button>
       </Tooltip>
     </header>

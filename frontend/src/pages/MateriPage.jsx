@@ -57,7 +57,19 @@ export default function MateriPage() {
   const filteredMaterials = subjectFilter
     ? materials.filter(m => String(m.subject_id ?? m.subject?.id) === subjectFilter)
     : materials;
+
   const { selectedDocs, setSelectedDocs } = useChatStore();
+
+  // Urutkan: materi aktif (RAG) di paling atas, lalu terbaru.
+  const isRagActive = (m) => selectedDocs.includes(`mat_${m.id}`) && m.status === 'Ready';
+  const sortedMaterials = [...filteredMaterials].sort((a, b) => {
+    const aA = isRagActive(a) ? 1 : 0;
+    const bA = isRagActive(b) ? 1 : 0;
+    if (aA !== bA) return bA - aA;
+    return new Date(b.upload_date || 0) - new Date(a.upload_date || 0);
+  });
+  const activeMats = sortedMaterials.filter(isRagActive);
+  const inactiveMats = sortedMaterials.filter((m) => !isRagActive(m));
 
   const activeSubject = sortedSubjects.find(s => String(s.id) === subjectFilter);
   const activeCount = selectedDocs.filter(docId => materials.some(m => `mat_${m.id}` === docId && m.status === 'Ready')).length;
@@ -151,7 +163,7 @@ export default function MateriPage() {
             <Icon name={ICONS.learning.grid} size={15} className="text-primary-light" />
             <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('nav.subjects')}</h2>
           </div>
-          <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1">
+          <div className="flex gap-3 overflow-x-auto py-1 -m-1 p-1">
             {/* All Materials folder */}
             <FolderCard
               active={!subjectFilter}
@@ -216,22 +228,61 @@ export default function MateriPage() {
             <EmptyState icon={ICONS.files.folder} title={t('materi.fileManagerEmpty')} />
           </div>
         ) : (
-          <motion.div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            <AnimatePresence mode="popLayout">
-              {filteredMaterials.map((m, idx) => (
-                <MaterialFileCard
-                  key={m.id}
-                  material={m}
-                  index={idx}
-                  showSubject={!subjectFilter}
-                  isRagActive={selectedDocs.includes(`mat_${m.id}`)}
-                  onToggleRag={() => m.status === 'Ready' && toggleSelection(m.id)}
-                  onDelete={() => handleDelete(m.id)}
-                  onCancel={() => handleCancelProcessing(m.id)}
-                />
-              ))}
-            </AnimatePresence>
-          </motion.div>
+          <div className="space-y-6">
+            {activeMats.length > 0 && (
+              <section className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Icon name={ICONS.status.check} size={15} className="text-primary-light" />
+                  <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">
+                    {t('materi.activeSection', { count: activeMats.length })}
+                  </h2>
+                </div>
+                <motion.div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  <AnimatePresence mode="popLayout">
+                    {activeMats.map((m, idx) => (
+                      <MaterialFileCard
+                        key={m.id}
+                        material={m}
+                        index={idx}
+                        showSubject={!subjectFilter}
+                        isRagActive={isRagActive(m)}
+                        onToggleRag={() => m.status === 'Ready' && toggleSelection(m.id)}
+                        onDelete={() => handleDelete(m.id)}
+                        onCancel={() => handleCancelProcessing(m.id)}
+                      />
+                    ))}
+                  </AnimatePresence>
+                </motion.div>
+              </section>
+            )}
+
+            {inactiveMats.length > 0 && (
+              <section className={activeMats.length > 0 ? 'space-y-3 border-t border-border/50 pt-5' : 'space-y-3'}>
+                <div className="flex items-center gap-2">
+                  <Icon name={ICONS.files.document} size={15} className="text-text-muted" />
+                  <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">
+                    {t('materi.inactiveSection', { count: inactiveMats.length })}
+                  </h2>
+                </div>
+                <motion.div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  <AnimatePresence mode="popLayout">
+                    {inactiveMats.map((m, idx) => (
+                      <MaterialFileCard
+                        key={m.id}
+                        material={m}
+                        index={idx}
+                        showSubject={!subjectFilter}
+                        isRagActive={isRagActive(m)}
+                        onToggleRag={() => m.status === 'Ready' && toggleSelection(m.id)}
+                        onDelete={() => handleDelete(m.id)}
+                        onCancel={() => handleCancelProcessing(m.id)}
+                      />
+                    ))}
+                  </AnimatePresence>
+                </motion.div>
+              </section>
+            )}
+          </div>
         )}
 
       </div>

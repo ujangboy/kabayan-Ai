@@ -243,7 +243,7 @@ export const dataAPI = {
   // ringkasan jumlah data per kategori + storage
   overview: () => api.get('/data/overview'),
   // pemakaian Groq API per fitur + total (limit AI)
-  usage: () => api.get('/usage'),
+  usage: (period = '24h') => api.get('/usage', { params: { period } }),
   // backup/export ZIP
   createBackup: () => api.post('/backup/create').then((r) => r.data),
   listBackups: () => api.get('/backup/list').then((r) => r.data),

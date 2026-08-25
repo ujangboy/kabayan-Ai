@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ICONS } from '@/lib/icons';
 import { Icon } from '@/components/ui';
@@ -7,7 +7,9 @@ import { useTranslation } from 'react-i18next';
 import { profileAPI } from '@/services/api';
 import { useToast } from '@/components/Toast';
 
-const DEFAULT_AVATAR = '/static/user_ghost.png.png';
+const DEFAULT_AVATAR = '/static/user_ghost.png';
+
+export { DEFAULT_AVATAR };
 
 export default function ProfileTab() {
   const { t } = useTranslation();
@@ -20,6 +22,11 @@ export default function ProfileTab() {
     queryKey: ['profile'],
     queryFn: () => profileAPI.get().then((r) => r.data),
   });
+
+  // Sinkronkan input dengan nilai profil (nama boleh dikosongkan).
+  useEffect(() => {
+    if (profile) setName(profile.display_name || '');
+  }, [profile?.display_name]);
 
   const saveMutation = useMutation({
     mutationFn: (payload) => profileAPI.update(payload),
@@ -43,7 +50,6 @@ export default function ProfileTab() {
     return <div className="text-text-muted text-sm py-10">{t('common.loading')}</div>;
   }
 
-  const currentName = profile?.display_name || '';
   const photoPath = profile?.photo_path || DEFAULT_AVATAR;
 
   const handlePhotoChange = (e) => {
@@ -54,7 +60,7 @@ export default function ProfileTab() {
 
   const handleSave = () => {
     saveMutation.mutate({
-      display_name: name || currentName,
+      display_name: name.trim(),
       language: profile?.language || 'id',
     });
   };
@@ -62,7 +68,7 @@ export default function ProfileTab() {
   const handleRemovePhoto = () => {
     // Hapus foto = set ke kosong; backend mengembalikan default saat render.
     saveMutation.mutate({
-      display_name: name || currentName,
+      display_name: name.trim(),
       language: profile?.language || 'id',
       remove_photo: true,
     });
@@ -81,7 +87,7 @@ export default function ProfileTab() {
           <img
             src={photoPath}
             alt={t('settings.profile.photo')}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover bg-surface"
             onError={(e) => { e.currentTarget.src = DEFAULT_AVATAR; }}
           />
           {photoMutation.isPending && (
@@ -131,7 +137,7 @@ export default function ProfileTab() {
         </label>
         <input
           type="text"
-          value={name || currentName}
+          value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder={t('settings.profile.displayNamePlaceholder')}
           maxLength={120}
