@@ -41,7 +41,7 @@ export function NoteCard({
         <div className="relative z-10 pl-3 pr-24 py-2.5">
           <div className="flex items-center gap-1.5 mb-0.5 min-w-0">
             {note.is_pinned && (
-              <Icon name={ICONS.actions.pin} size={14} fill={1} className="text-primary shrink-0" />
+              <Icon name={ICONS.actions.pin} size={14} fill={1} className="text-warning shrink-0" />
             )}
             <input
               autoFocus
@@ -63,7 +63,7 @@ export function NoteCard({
         >
           <div className="flex items-center gap-1.5 mb-0.5 min-w-0">
             {note.is_pinned && (
-              <Icon name={ICONS.actions.pin} size={14} fill={1} className="text-primary shrink-0" />
+              <Icon name={ICONS.actions.pin} size={14} fill={1} className="text-warning shrink-0" />
             )}
             <span className={cn(
               'text-sm font-medium line-clamp-2 break-words whitespace-normal min-w-0 leading-snug',
@@ -100,7 +100,7 @@ export function NoteCard({
             aria-label={note.is_pinned ? t('notebook.unpin') : t('notebook.pin')}
             className={cn(
               'p-1.5 rounded-md transition-colors',
-              note.is_pinned ? 'text-primary' : 'text-text-muted hover:text-primary'
+              note.is_pinned ? 'text-warning' : 'text-text-muted hover:text-warning'
             )}
           >
             <Icon name={ICONS.actions.pin} size={14} fill={note.is_pinned ? 1 : 0} />

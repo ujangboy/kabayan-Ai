@@ -108,7 +108,7 @@ export function NoteView({ note, onBack, onSave, onPin, onDelete }) {
               aria-label={note.is_pinned ? t('notebook.unpin') : t('notebook.pin')}
               className={cn(
                 'p-1.5 rounded-lg transition-colors',
-                note.is_pinned ? 'text-primary' : 'text-text-muted hover:text-primary'
+                note.is_pinned ? 'text-warning' : 'text-text-muted hover:text-warning'
               )}
             >
               <Icon name={ICONS.actions.pin} size={16} fill={note.is_pinned ? 1 : 0} />

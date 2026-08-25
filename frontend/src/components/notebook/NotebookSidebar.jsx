@@ -119,7 +119,7 @@ export function NotebookSidebar({
         ) : (
           <>
             {pinnedNotes.length > 0 && (
-              <div>
+              <div className="pb-2 mb-2 border-b border-border/50">
                 <p className="px-2 pt-2 pb-1 text-3xs font-medium text-text-muted/60 uppercase tracking-wider select-none">
                   {t('notebook.pinned')}
                 </p>
