@@ -93,14 +93,16 @@ export default function TopBar() {
 
       {/* Quick settings dropdown */}
       <DropdownMenu.Root>
-        <Tooltip label={t('settings.quickSettings')} side="bottom">
-          <DropdownMenu.Trigger
-            className="flex h-9 w-9 items-center justify-center rounded-xl text-text-secondary transition-all duration-150 hover:bg-card hover:text-text"
-            aria-label={t('settings.quickSettings')}
-          >
-            <Icon name={ICONS.nav.settings} size={18} />
-          </DropdownMenu.Trigger>
-        </Tooltip>
+        <DropdownMenu.Trigger asChild>
+          <Tooltip label={t('settings.quickSettings')} side="bottom">
+            <button
+              className="flex h-9 w-9 items-center justify-center rounded-xl text-text-secondary transition-all duration-150 hover:bg-card hover:text-text"
+              aria-label={t('settings.quickSettings')}
+            >
+              <Icon name={ICONS.nav.settings} size={18} />
+            </button>
+          </Tooltip>
+        </DropdownMenu.Trigger>
         <DropdownMenu.Portal>
           <DropdownMenu.Content
             sideOffset={8}
@@ -169,7 +171,7 @@ export default function TopBar() {
       </DropdownMenu.Root>
 
       {/* Theme toggle */}
-      <Tooltip label={isDark ? t('settings.themeLight') : t('settings.themeDark')} side="bottom">
+      <Tooltip label={isDark ? t('settings.themeSwitchToLight') : t('settings.themeSwitchToDark')} side="bottom">
         <ThemeToggle />
       </Tooltip>
 

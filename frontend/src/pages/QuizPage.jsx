@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ICONS } from '@/lib/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -6,12 +6,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 import { quizAPI, subjectAPI } from '@/services/api';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { formatDate, formatTimeOnly, fadeSlide } from '@/utils';
-import { Tooltip, EmptyState, Select, Skeleton, SubjectBadge , Icon } from '@/components/ui';
+import { formatDate, formatTimeOnly, fadeSlide, cn } from '@/utils';
+import { Tooltip, EmptyState, Skeleton, SubjectBadge , Icon } from '@/components/ui';
 import { useUiStore } from '@/store';
 import { usePageState } from '@/hooks/usePageState';
 import { useToast } from '@/components/Toast';
 import { formatDuration } from '@/components/quiz/shared';
+import { springWave, springLift } from '@/lib/motion';
 import { GenerateQuizModal } from '@/components/quiz/GenerateQuizModal';
 import { QuizSession } from '@/components/quiz/QuizSession';
 
@@ -36,6 +37,10 @@ export default function QuizPage() {
   const [isGeneratorOpen, setIsGeneratorOpen] = useState(false);
   const [activeQuizId, setActiveQuizId] = useState(null);
   const [sessionKey, setSessionKey] = useState(0);
+  const [search, setSearch] = useState('');
+  const [diffFilter, setDiffFilter] = useState('all');
+  const [typeFilter, setTypeFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('newest');
 
   // Restore active quiz + read subject_id from URL (re-run saat pindah param via sidebar)
   useEffect(() => {
@@ -66,6 +71,27 @@ export default function QuizPage() {
   const quizzes = selectedSubject
     ? allQuizzes.filter(q => q.subject?.id === Number(selectedSubject))
     : allQuizzes;
+
+  const filtered = useMemo(() => {
+    let list = [...quizzes];
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter(quiz =>
+        (quiz.title || '').toLowerCase().includes(q) ||
+        (quiz.subject?.name || '').toLowerCase().includes(q)
+      );
+    }
+    if (diffFilter !== 'all') list = list.filter(q => q.difficulty === diffFilter);
+    if (typeFilter !== 'all') list = list.filter(q => q.question_type === typeFilter);
+    list.sort((a, b) => {
+      if (sortBy === 'newest') return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+      if (sortBy === 'oldest') return new Date(a.created_at || 0) - new Date(b.created_at || 0);
+      if (sortBy === 'highest') return (b.score || 0) - (a.score || 0);
+      if (sortBy === 'lowest') return (a.score || 0) - (b.score || 0);
+      return 0;
+    });
+    return list;
+  }, [quizzes, search, diffFilter, typeFilter, sortBy]);
 
   const deleteMutation = useMutation({
     mutationFn: (id) => quizAPI.delete(id),
@@ -146,15 +172,6 @@ export default function QuizPage() {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <Select
-              value={selectedSubject}
-              onChange={(e) => setSubjectFilter('quiz', e.target.value)}
-            >
-              <option value="">{t('quiz.allSubjects')}</option>
-              {subjects.map(s => (
-                <option key={s.id} value={s.id}>{s.name}</option>
-              ))}
-            </Select>
             <button onClick={() => setIsGeneratorOpen(true)} className="btn-primary text-xs">
               <Icon name={ICONS.ui.bolt} size={14} /> {t('quiz.generateButton')}
             </button>
@@ -163,6 +180,72 @@ export default function QuizPage() {
                 {t('quiz.deleteAll')}
               </button>
             )}
+          </div>
+        </div>
+
+        {/* Filters + Search (pill chips bergelombang seperti Ujian Simulasi) */}
+        <div className="card-base p-4 space-y-3">
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Icon name={ICONS.actions.search} size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
+              <input
+                value={search} onChange={(e) => setSearch(e.target.value)}
+                placeholder={t('common.search')}
+                className="w-full pl-9 pr-3 py-2 bg-card border border-border rounded-lg text-base text-text focus:outline-none focus:border-primary"
+              />
+            </div>
+            {search && (
+              <Tooltip label={t('common.close', 'Tutup')}>
+                <button onClick={() => setSearch('')} aria-label={t('common.close', 'Tutup')} className="p-2 rounded-lg border border-border bg-card text-text-muted hover:text-text">
+                  <Icon name={ICONS.actions.close} size={14} />
+                </button>
+              </Tooltip>
+            )}
+          </div>
+
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-wrap gap-2">
+              {[{ v: '', l: t('quiz.allSubjects') }, ...subjects.map(s => ({ v: String(s.id), l: s.name }))].map(sub => (
+                <button key={sub.v || 'all'} onClick={() => setSubjectFilter('quiz', sub.v)} className={cn('relative overflow-hidden px-3 py-1 rounded-lg text-xs font-medium border transition-all',
+                  selectedSubject === sub.v ? 'border-primary text-primary-light' : 'bg-card text-text border-border hover:border-primary/40')}>
+                  {selectedSubject === sub.v && (
+                    <motion.span layoutId="quiz-subject-indicator" transition={springWave} className="absolute inset-0 bg-primary/10 rounded-lg" />
+                  )}
+                  <span className="relative">{sub.l}</span>
+                </button>
+              ))}
+            </div>
+            <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}
+              className="px-3 py-1 bg-card border border-border rounded-lg text-xs text-text focus:outline-none focus:border-primary">
+              <option value="newest">{t('exam.history.sortNewest')}</option>
+              <option value="oldest">{t('exam.history.sortOldest')}</option>
+              <option value="highest">{t('exam.history.sortHighest')}</option>
+              <option value="lowest">{t('exam.history.sortLowest')}</option>
+            </select>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-2xs font-semibold uppercase tracking-wider text-text-muted">{t('quiz.difficultyLabel', 'Kesulitan')}</span>
+            {['all', 'mudah', 'sedang', 'sulit'].map(d => (
+              <button key={d} onClick={() => setDiffFilter(d)} className={cn('relative overflow-hidden px-3 py-1 rounded-lg text-xs font-medium border transition-all',
+                diffFilter === d ? 'border-primary text-primary-light' : 'bg-card text-text border-border hover:border-primary/40')}>
+                {diffFilter === d && (
+                  <motion.span layoutId="quiz-difficulty-indicator" transition={springWave} className="absolute inset-0 bg-primary/10 rounded-lg" />
+                )}
+                <span className="relative">{d === 'all' ? t('common.all') : t(`quiz.${d}`)}</span>
+              </button>
+            ))}
+            <div className="w-px h-4 bg-border mx-1" />
+            <span className="text-2xs font-semibold uppercase tracking-wider text-text-muted">{t('quiz.difficultyLabel', 'Tipe')}</span>
+            {[['all', t('common.all')], ['mcq', t('quiz.qtypeMcq')], ['essay', t('quiz.qtypeEssay')], ['mixed', t('quiz.qtypeMixed')]].map(([v, l]) => (
+              <button key={v} onClick={() => setTypeFilter(v)} className={cn('relative overflow-hidden px-3 py-1 rounded-lg text-xs font-medium border transition-all',
+                typeFilter === v ? 'border-primary text-primary-light' : 'bg-card text-text border-border hover:border-primary/40')}>
+                {typeFilter === v && (
+                  <motion.span layoutId="quiz-type-indicator" transition={springWave} className="absolute inset-0 bg-primary/10 rounded-lg" />
+                )}
+                <span className="relative">{l}</span>
+              </button>
+            ))}
           </div>
         </div>
 
@@ -190,8 +273,15 @@ export default function QuizPage() {
                 }
               />
             </div>
+          ) : filtered.length === 0 ? (
+            <div className="col-span-full card-base">
+              <EmptyState
+                icon={ICONS.ui.search}
+                title={t('exam.history.noHistoryFilterDesc', 'Tidak ada hasil yang cocok dengan filter.')}
+              />
+            </div>
           ) : (
-            quizzes.map((quiz, idx) => {
+            filtered.map((quiz, idx) => {
               const qProgress = Math.min(100, quiz.score ?? 0);
               const stats = [
                 { icon: ICONS.ui.help, value: quiz.question_count || 0, label: t('quiz.questionCount', { count: 1 }), color: 'text-accent-teal' },
@@ -204,7 +294,9 @@ export default function QuizPage() {
                   key={quiz.id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.05 }}
+                  whileHover={{ y: -3 }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ delay: idx * 0.05, ...springLift }}
                   className="card-base card-hoverable flex flex-col justify-between gap-3"
                 >
                   {/* Header — badge + title + badges + aksi */}
@@ -272,9 +364,9 @@ export default function QuizPage() {
                   <div className="space-y-2">
                     <div className="h-1.5 rounded-full bg-wash overflow-hidden">
                       <motion.div
-                        className="h-full rounded-full bg-primary"
-                        initial={{ width: 0 }}
-                        animate={{ width: `${qProgress}%` }}
+                        className="h-full w-full rounded-full bg-primary origin-left"
+                        initial={{ scaleX: 0 }}
+                        animate={{ scaleX: qProgress / 100 }}
                         transition={{ duration: 0.4, ease: [0.32, 0.72, 0, 1] }}
                       />
                     </div>

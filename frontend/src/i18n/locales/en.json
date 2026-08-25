@@ -866,7 +866,9 @@
     "notifications": "Notifications",
     "fullSettings": "Full Settings",
     "themeLight": "Light mode",
-    "themeDark": "Dark mode"
+    "themeDark": "Dark mode",
+    "themeSwitchToLight": "Switch to light mode",
+    "themeSwitchToDark": "Switch to dark mode"
   },
   "studyRoute": {
     "title": "Study Recommendation",

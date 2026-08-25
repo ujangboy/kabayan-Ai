@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { forwardRef, useEffect, useState } from 'react';
 
 function SunIcon() {
   return (
@@ -17,7 +17,7 @@ function MoonIcon() {
   );
 }
 
-export function ThemeToggle({ className = '' }) {
+export const ThemeToggle = forwardRef(function ThemeToggle({ className = '', ...props }, ref) {
   const [theme, setTheme] = useState(() =>
     document.documentElement.classList.contains('dark') ? 'dark' : 'light'
   );
@@ -31,12 +31,14 @@ export function ThemeToggle({ className = '' }) {
 
   return (
     <button
+      ref={ref}
       type="button"
       onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
       className={`rounded-xl p-2 text-text-secondary transition-[background-color,color] duration-150 hover:bg-wash hover:text-text active:scale-[0.98] ${className}`}
-      aria-label={theme === 'dark' ? 'Mode terang' : 'Mode gelap'}
+      aria-label={theme === 'dark' ? 'Ganti ke mode terang' : 'Ganti ke mode gelap'}
+      {...props}
     >
       {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
     </button>
   );
-}
+});

@@ -851,7 +851,9 @@
     "notifications": "Notifikasi",
     "fullSettings": "Pangaturan Lengkap",
     "themeLight": "Mode terang",
-    "themeDark": "Mode gelap"
+    "themeDark": "Mode gelap",
+    "themeSwitchToLight": "Ganti ka mode terang",
+    "themeSwitchToDark": "Ganti ka mode gelap"
   },
   "studyRoute": {
     "title": "Rekomendasi Diajar",
