@@ -709,7 +709,9 @@ export default function NoteEditor({
   return (
     <div className="flex flex-col h-full min-h-0">
 
-      {/* ═══ VIEW MODE — bersih, tanpa toolbar, scroll terisolasi ═══ */}
+      {/* ═══ VIEW MODE — bersih, tanpa toolbar, scroll terisolasi ═══
+          EditorContent tetap di-mount (hidden) agar toggle tidak me-remount
+          node view Tiptap -> menghindari flushSync + snap. */}
       {activeMode === 'view' && (
         <div className="flex-1 overflow-y-auto overscroll-contain sidebar-scroll">
           <div
@@ -723,18 +725,18 @@ export default function NoteEditor({
       )}
 
       {/* ═══ EDIT MODE — Tiptap WYSIWYG, scroll terisolasi ═══
+          EditorContent selalu di-mount, disembunyikan via `hidden` saat view
+          (tanpa unmount) sehingga tidak memicu flushSync saat toggle.
           Toolbar horizontal hanya untuk <lg (rail vertikal di NoteView). */}
-      {activeMode === 'edit' && (
-        <>
-          <Toolbar editor={editor} onPreview={handleToggle} onInsertMath={handleInsertMath} className="lg:hidden" />
-          <div className="flex-1 overflow-y-auto overscroll-contain sidebar-scroll min-h-0">
-            <div className="w-full max-w-[860px] mx-auto px-4 sm:px-6 lg:px-8 py-10">
-              <EditorContent editor={editor} />
-            </div>
+      <div className={cn('flex flex-col h-full min-h-0', activeMode === 'view' && 'hidden')}>
+        <Toolbar editor={editor} onPreview={handleToggle} onInsertMath={handleInsertMath} className="lg:hidden" />
+        <div className="flex-1 overflow-y-auto overscroll-contain sidebar-scroll min-h-0">
+          <div className="w-full max-w-[860px] mx-auto px-4 sm:px-6 lg:px-8 py-10">
+            <EditorContent editor={editor} />
           </div>
-          <DomCopyEnhancer selector=".note-editor-content" />
-        </>
-      )}
+        </div>
+        <DomCopyEnhancer selector=".note-editor-content" />
+      </div>
 
       {/* ═══ FLOATING TOOLBAR — custom, pure React, no BubbleMenu ═══ */}
       <FloatingToolbar editor={editor} editorMode={activeMode} />
