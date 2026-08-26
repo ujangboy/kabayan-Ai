@@ -25,6 +25,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from database import get_db
+import database
 from repositories.chat_repository import chat_repository
 from services.tutor_service import tutor_service
 from services.faq_service import faq_service
@@ -115,7 +116,7 @@ async def tutor_chat(request: TutorChatRequest, db: Session = Depends(get_db)):
 
             try:
                 async for chunk in tutor_service.achat_stream(
-                    db=db,
+                    db=stream_db,
                     message=request.message,
                     history=hist_dicts,
                     mata_kuliah=request.mata_kuliah,
@@ -158,17 +159,19 @@ async def tutor_chat(request: TutorChatRequest, db: Session = Depends(get_db)):
                             type=detected_tier[0].lower(),
                             tokens_used=_estimate_tokens(full_response),
                         )
-                        db.add(msg)
-                        db.commit()
-                        db.refresh(msg)
+                        stream_db.add(msg)
+                        stream_db.commit()
+                        stream_db.refresh(msg)
                         saved_message_id = msg.id
                         try:
-                            record_message(db, tokens=_estimate_tokens(full_response))
+                            record_message(stream_db, tokens=_estimate_tokens(full_response))
                         except Exception as rec_exc:
                             logger.warning("Failed to record message stats: %s", rec_exc)
                     except Exception as persist_exc:
                         logger.warning("Failed to persist tutor message: %s", persist_exc)
-                        db.rollback()
+                        stream_db.rollback()
+                # Session khusus stream ditutup apa pun yang terjadi
+                stream_db.close()
 
             # Trailing metadata with the saved message id — emitted only when the
             # stream completed normally (client disconnect raises GeneratorExit
@@ -180,6 +183,11 @@ async def tutor_chat(request: TutorChatRequest, db: Session = Depends(get_db)):
             "X-Chat-Id": str(chat_id) if chat_id else "",
             "X-Tutor-Type": detected_tier[0],
         }
+        # Session khusus stream (bukan session request) agar koneksi pool tidak
+        # ditahan selama durasi stream LLM; session request dilepas sekarang.
+        # Akses runtime via modul — bisa di-patch test ke DB uji.
+        stream_db = database.SessionLocal()
+        db.close()
         return StreamingResponse(
             stream_and_persist(),
             media_type="text/plain",

@@ -47,6 +47,11 @@ def db_session(tmp_path, monkeypatch):
     import services.material_service as _material_service
     _material_service.SessionLocal = TestingSession
 
+    # Router streaming (chat/tutor) membuat session persist sendiri via
+    # database.SessionLocal() — arahkan juga ke DB uji.
+    import database as _database
+    monkeypatch.setattr(_database, "SessionLocal", TestingSession)
+
     db = TestingSession()
     yield db
     db.close()

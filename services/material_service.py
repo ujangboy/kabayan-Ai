@@ -153,7 +153,10 @@ class MaterialService:
     def cancel(self, db: Session, id: int) -> bool:
         mat = material_repository.get(db, id)
         if mat and mat.status in ("Pending", "Processing"):
-            self._remove_file(mat.filepath)
+            # Commit DB dulu (sumber kebenaran), hapus file setelahnya.
+            # Jika hapus file gagal, file jadi yatim → di-sweep
+            # cleanup_orphan_files, tidak meninggalkan record rusak.
+            filepath_to_remove = mat.filepath
             material_repository.update(db, mat, {
                 "status": "Failed",
                 "failure_reason": "Dibatalkan oleh user.",
@@ -161,6 +164,7 @@ class MaterialService:
                 "filepath": None,
             })
             db.commit()
+            self._remove_file(filepath_to_remove)
             return True
         return False
 

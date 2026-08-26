@@ -1,8 +1,10 @@
 from fastapi import APIRouter, Depends, BackgroundTasks
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from typing import List, Optional
 from sqlalchemy.orm import Session
 from database import get_db
+import database
 from services.flashcard_service import flashcard_service
 from services.quiz_service import quiz_service
 from repositories.chat_repository import chat_repository
@@ -22,6 +24,26 @@ class ChatRequest(BaseModel):
     history: List[Message] = []
     documents: List[str] = []
     session_id: Optional[str] = Field(default=None, max_length=64)
+
+
+@router.post("/api/chat/{chat_id}/delete")
+async def delete_chat(chat_id: int, db: Session = Depends(get_db)):
+    """Hapus satu chat + semua messagenya (cascade via relationship)."""
+    deleted = chat_repository.delete(db, chat_id)
+    if not deleted:
+        return JSONResponse(status_code=404, content={"detail": "Chat not found"})
+    db.commit()
+    return JSONResponse({"status": "success", "message": "Chat deleted"})
+
+
+@router.post("/api/chat/clear")
+async def clear_chats(db: Session = Depends(get_db)):
+    """Hapus SEMUA chat + messagenya."""
+    from models import Chat
+    count = db.query(Chat).count()
+    db.query(Chat).delete(synchronize_session=False)
+    db.commit()
+    return JSONResponse({"status": "success", "message": f"{count} chats deleted"})
 
 
 @router.post("/api/chat")
@@ -94,6 +116,10 @@ async def chat_endpoint(request: ChatRequest, db: Session = Depends(get_db)):
                 context = ""
 
         # ── Stream wrapper: save assistant response after completion ─
+        # Persist memakai SESSION BARU (bukan session request) agar koneksi
+        # pool tidak ditahan selama durasi stream LLM — pool SQLite hanya
+        # 5+15, chat paralel bisa menghabisnya. Session request ditutup
+        # sebelum streaming dimulai (semua data yang dibutuhkan sudah dibaca).
         async def stream_and_persist():
             full = ""
             saved_message_id = None
@@ -103,12 +129,16 @@ async def chat_endpoint(request: ChatRequest, db: Session = Depends(get_db)):
                     yield chunk
             finally:
                 if chat_id and full:
+                    # Akses runtime via modul — bisa di-patch test ke DB uji
+                    persist_db = database.SessionLocal()
                     try:
-                        msg = chat_repository.add_message(db, chat_id, "assistant", full)
-                        db.commit()
+                        msg = chat_repository.add_message(persist_db, chat_id, "assistant", full)
+                        persist_db.commit()
                         saved_message_id = msg.id
                     except Exception:
-                        db.rollback()
+                        persist_db.rollback()
+                    finally:
+                        persist_db.close()
 
             # Trailing metadata: id pesan yang tersimpan agar client dapat
             # mengirim feedback (sama seperti endpoint /api/tutor/chat).
@@ -116,6 +146,7 @@ async def chat_endpoint(request: ChatRequest, db: Session = Depends(get_db)):
                 yield f"\x00MSGID:{saved_message_id}\x00"
 
         headers = {"X-Chat-Id": str(chat_id)} if chat_id else {}
+        db.close()  # Lepaskan koneksi pool sebelum streaming dimulai
         return StreamingResponse(stream_and_persist(), media_type="text/plain", headers=headers)
     except ValueError as e:
         raise AppError(str(e), status_code=400)

@@ -62,7 +62,12 @@ async def get_subject_dashboard(subject_id: int, db: Session = Depends(get_db)):
         return JSONResponse(status_code=404, content={"detail": "Subject not found"})
 
     # ─── Topic progress dari weak/strong topics semua sesi ujian ───
-    sessions = db.query(ExamSession).filter(ExamSession.subject_id == subject_id).all()
+    # Hanya 2 kolom JSON yang dibutuhkan — jangan load entity penuh.
+    session_topics = (
+        db.query(ExamSession.strong_topics_json, ExamSession.weak_topics_json)
+        .filter(ExamSession.subject_id == subject_id)
+        .all()
+    )
     topic_map: dict = {}  # topic -> {"accuracy_sum": int, "samples": int, "weak": int, "strong": int}
 
     def _acc(item):
@@ -70,16 +75,16 @@ async def get_subject_dashboard(subject_id: int, db: Session = Depends(get_db)):
             return item.get("accuracy") or item.get("score") or 0
         return 0
 
-    for s in sessions:
-        for key, is_strong in (("strong_topics_json", True), ("weak_topics_json", False)):
-            raw = None
+    for strong_raw, weak_raw in session_topics:
+        for key, raw in (("strong_topics_json", strong_raw), ("weak_topics_json", weak_raw)):
             try:
-                raw = json.loads(getattr(s, key)) if getattr(s, key) else []
+                parsed = json.loads(raw) if raw else []
             except Exception:
-                raw = []
-            if not isinstance(raw, list):
+                parsed = []
+            if not isinstance(parsed, list):
                 continue
-            for item in raw:
+            is_strong = key == "strong_topics_json"
+            for item in parsed:
                 topic = item.get("topic", "Umum") if isinstance(item, dict) else str(item)
                 entry = topic_map.setdefault(topic, {"accuracy_sum": 0, "samples": 0, "weak": 0, "strong": 0})
                 entry["accuracy_sum"] += _acc(item)
@@ -106,42 +111,66 @@ async def get_subject_dashboard(subject_id: int, db: Session = Depends(get_db)):
     topic_progress.sort(key=lambda t: t["accuracy"])
 
     # ─── Riwayat skor (quiz + simulasi ujian) ───
+    # Kolom-spesifik (tanpa entity penuh) — kolom JSON/text besar tidak diambil.
     score_history = []
-    quiz_rows = db.query(Quiz).filter(Quiz.subject_id == subject_id).all()
-    for q in quiz_rows:
-        if q.score is not None:
-            score_history.append({
-                "date": q.created_at.isoformat() if q.created_at else None,
-                "score": q.score,
-                "label": q.title or "Quiz",
-                "type": "quiz",
-            })
-    for s in sessions:
-        score = s.best_score if s.best_score is not None else s.latest_score
+    quiz_rows = (
+        db.query(Quiz.created_at, Quiz.score, Quiz.title)
+        .filter(Quiz.subject_id == subject_id)
+        .all()
+    )
+    for created_at, score, title in quiz_rows:
         if score is not None:
             score_history.append({
-                "date": (s.submitted_at or s.updated_at or s.started_at).isoformat(),
+                "date": created_at.isoformat() if created_at else None,
                 "score": score,
-                "label": s.title or f"Simulasi {s.exam_type}" if s.exam_type else "Simulasi",
+                "label": title or "Quiz",
+                "type": "quiz",
+            })
+
+    session_rows = (
+        db.query(
+            ExamSession.submitted_at, ExamSession.updated_at, ExamSession.started_at,
+            ExamSession.best_score, ExamSession.latest_score,
+            ExamSession.title, ExamSession.exam_type,
+        )
+        .filter(ExamSession.subject_id == subject_id)
+        .all()
+    )
+    for submitted_at, updated_at, started_at, best, latest, title, exam_type in session_rows:
+        score = best if best is not None else latest
+        if score is not None:
+            score_history.append({
+                "date": (submitted_at or updated_at or started_at).isoformat(),
+                "score": score,
+                "label": title or f"Simulasi {exam_type}" if exam_type else "Simulasi",
                 "type": "ujian",
             })
     score_history.sort(key=lambda x: x["date"] or "")
 
     # ─── Aktivitas terbaru (gabungan semua fitur) ───
+    # Kolom-spesifik per sumber, lalu merge + ambil 6 terbaru.
     activity = []
-    for q in quiz_rows:
-        activity.append({"date": q.created_at, "type": "quiz", "label": q.title or "Quiz", "score": q.score})
-    for f in db.query(Flashcard).filter(Flashcard.subject_id == subject_id).all():
-        activity.append({"date": f.created_at, "type": "flashcard", "label": f.title or f.question[:40], "score": None})
-    for s in sessions:
+    for created_at, score, title in quiz_rows:
+        activity.append({"date": created_at, "type": "quiz", "label": title or "Quiz", "score": score})
+    for created_at, fc_title, question in (
+        db.query(Flashcard.created_at, Flashcard.title, Flashcard.question)
+        .filter(Flashcard.subject_id == subject_id)
+        .all()
+    ):
+        activity.append({"date": created_at, "type": "flashcard", "label": fc_title or (question[:40] if question else "Flashcard"), "score": None})
+    for submitted_at, updated_at, started_at, best, latest, title in session_rows:
         activity.append({
-            "date": s.submitted_at or s.updated_at or s.started_at,
+            "date": submitted_at or updated_at or started_at,
             "type": "ujian",
-            "label": s.title or "Simulasi",
-            "score": s.best_score if s.best_score is not None else s.latest_score,
+            "label": title or "Simulasi",
+            "score": best if best is not None else latest,
         })
-    for m in subject.materials:
-        activity.append({"date": m.upload_date, "type": "materi", "label": m.filename, "score": None})
+    for upload_date, filename in (
+        db.query(Material.upload_date, Material.filename)
+        .filter(Material.subject_id == subject_id)
+        .all()
+    ):
+        activity.append({"date": upload_date, "type": "materi", "label": filename, "score": None})
     activity = [a for a in activity if a["date"]]
     activity.sort(key=lambda a: a["date"], reverse=True)
     recent_activity = []

@@ -67,7 +67,15 @@ def trash_file_with_meta(db: Session, filepath: str, source_type: str = "materia
 # ─── Materi (soft-delete) ──────────────────────────────────────────────────
 
 def trash_material(db: Session, material_id: int) -> bool:
-    """Soft-delete materi: pindah file ke trash, tandai status Trashed."""
+    """Soft-delete materi: tandai status Trashed, lalu pindah file ke trash.
+
+    Urutan aman crash: DB di-commit DULU (sumber kebenaran), FS dimutasi
+    setelahnya. Jika proses mati di tengah, kondisi konsisten:
+    - DB sudah Trashed, file belum pindah → file jadi yatim di uploads,
+      dibersihkan otomatis oleh cleanup_orphan_files.
+    Sebaliknya (urutan lama) meninggalkan record yang menunjuk file yang
+    sudah dipindah — materi "hilang" tanpa jejak di trash.
+    """
     mat = db.query(Material).filter(Material.id == material_id).first()
     if not mat:
         return False
@@ -75,25 +83,27 @@ def trash_material(db: Session, material_id: int) -> bool:
     original_status = mat.status
     filepath = getattr(mat, "filepath", None)
 
-    # File fisik materi utama -> trash (jika ada & bukan online/youtube semata)
-    if filepath:
-        trash_file_with_meta(db, filepath, "material", material_id, mat.filename, original_status)
-
-    # Cegah cleanup_orphan_files memindah file yang sudah di-trash ke tmp naming conflict
+    # 1) Commit status dulu — DB adalah sumber kebenaran
     mat.status = "Trashed"
     mat.filepath = None
     db.commit()
 
-    # Tandai chunk RAG materi ini terhapus agar tidak lagi searchable.
+    # 2) Tandai chunk RAG materi ini terhapus agar tidak lagi searchable.
     # Gagal indexing tidak boleh gagalkan trash (best-effort, log saja).
     try:
-        from services.rag_service import rag_service
         rag_service.delete_document_chunks(f"mat_{material_id}")
     except Exception as exc:
-        import logging
-        logging.getLogger(__name__).warning(
-            f"trash_material: gagal hapus chunk RAG mat_{material_id}: {exc}"
-        )
+        logger.warning(f"trash_material: gagal hapus chunk RAG mat_{material_id}: {exc}")
+
+    # 3) Pindahkan file fisik + catat TrashItem (commit terpisah)
+    if filepath:
+        if not trash_file_with_meta(db, filepath, "material", material_id, mat.filename, original_status):
+            logger.warning(
+                f"trash_material: file {filepath} gagal dipindah ke trash — "
+                f"dibiarkan sebagai yatim untuk di-sweep cleanup_orphan_files."
+            )
+        else:
+            db.commit()
 
     cache_service.invalidate_all(db)
     return True

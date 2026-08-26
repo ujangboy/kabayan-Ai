@@ -376,7 +376,7 @@ class PracticeResult(Base):
     plan_item_id       = Column(Integer, ForeignKey("study_plan_items.id", ondelete="CASCADE"), index=True)
     session_id         = Column(Integer, ForeignKey("exam_sessions.id", ondelete="CASCADE"), index=True)
     practice_type      = Column(String, default="quiz")  # quiz / flashcard / practice
-    quiz_id            = Column(Integer, nullable=True)  # FK quiz jika practice dari quiz list
+    quiz_id            = Column(Integer, ForeignKey("quizzes.id", ondelete="SET NULL"), nullable=True, index=True)  # FK quiz jika practice dari quiz list; quiz dihapus → NULL (bukan yatim)
     score              = Column(Integer, nullable=True)  # 0-100
     total_questions    = Column(Integer, nullable=True)
     correct_count      = Column(Integer, nullable=True)

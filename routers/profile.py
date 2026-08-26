@@ -57,10 +57,12 @@ async def update_profile(payload: ProfileUpdate, db: Session = Depends(get_db)):
         settings_service.set_language(db, payload.language)
         if payload.remove_photo:
             previous = settings_service.get_photo_path(db)
-            if previous:
-                _try_remove_photo(previous)
-                settings_service.set_photo_path(db, "")
+            settings_service.set_photo_path(db, "")
         db.commit()
+
+        # Commit sukses — aman hapus file lama (best-effort)
+        if payload.remove_photo and previous:
+            _try_remove_photo(previous)
         return JSONResponse({
             "status": "success",
             "display_name": settings_service.get_display_name(db),
@@ -98,10 +100,9 @@ async def upload_profile_photo(file: UploadFile = File(...), db: Session = Depen
 
     try:
         os.makedirs(PROFILE_DIR, exist_ok=True)
-        # Hapus foto lama jika ada (hindari penumpukan sampah di static/profile/).
+        # Catat path foto lama — dihapus SETELAH commit sukses (jika commit
+        # gagal, DB masih menunjuk file lama yang masih ada di disk).
         previous = settings_service.get_photo_path(db)
-        if previous:
-            _try_remove_photo(previous)
 
         filename = f"{uuid.uuid4().hex}{ext}"
         full_path = os.path.join(PROFILE_DIR, filename)
@@ -111,6 +112,11 @@ async def upload_profile_photo(file: UploadFile = File(...), db: Session = Depen
         photo_path = f"/static/profile/{filename}"
         settings_service.set_photo_path(db, photo_path)
         db.commit()
+
+        # Commit sukses — aman menghapus foto lama (best-effort)
+        if previous and previous != photo_path:
+            _try_remove_photo(previous)
+
         return JSONResponse({"status": "success", "photo_path": photo_path})
     except AppError:
         raise
