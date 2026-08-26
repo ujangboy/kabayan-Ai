@@ -53,7 +53,9 @@ Badge mata kuliah boleh multi-hue (functional color-coding), bukan chrome.
 
 ## 3. Typography Hierarchy
 
-Font: **Inter** (weight 400/500/600/700 saja).
+Font: **Monaspace Neon** (self-hosted, weight 400/500/600/700) — dipakai global
+untuk UI, prose AI, editor, dan kode (identitas "neon coding"; ligatur aktif di
+kode, dimatikan di prose panjang demi keterbacaan).
 
 - **Display / H1:** `text-3xl`–`text-4xl`, `font-semibold`, `tracking-headline` (-0.02em), `leading-tight`
 - **Heading / H2-H3:** `text-xl`–`text-2xl`, `font-medium`, `tracking-headline`

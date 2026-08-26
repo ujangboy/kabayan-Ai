@@ -81,3 +81,12 @@ export function formatTimeOnly(dateStr) {
   if (!dateStr) return '';
   return toLocalDate(dateStr).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
 }
+
+// "1.5 MB" — satu sumber kebenaran untuk tampilan ukuran file/storage
+export function formatBytes(bytes) {
+  if (bytes == null || bytes === 0) return '0 B';
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+}

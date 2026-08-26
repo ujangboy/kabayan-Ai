@@ -117,7 +117,7 @@ function CodeBlock({ node, inline, className, children, ...props }) {
     return (
       <Suspense
         fallback={
-          <pre className="rounded-xl !text-xs !my-2 bg-[#1E1E2E] p-4 overflow-x-auto">
+          <pre className="rounded-xl !text-xs !my-2 bg-code-bg p-4 overflow-x-auto">
             <code>{String(children).replace(/\n$/, '')}</code>
           </pre>
         }

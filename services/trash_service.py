@@ -241,11 +241,34 @@ def delete_material_permanent(db: Session, material_id: int) -> bool:
         db.delete(it)
     db.flush()
 
+    # Bersihkan ID materi dari kolom comma-separated material_ids di quiz &
+    # flashcard — konsumen sudah toleran terhadap ID mati, tapi metadata
+    # sebaiknya tidak menumpuk referensi ke yang sudah terhapus permanen.
+    _purge_material_ids(db, material_id)
+
     # Hapus materi record (cascade)
     db.delete(mat)
     db.commit()
     cache_service.invalidate_all(db)
     return True
+
+
+def _purge_material_ids(db: Session, material_id: int) -> None:
+    """Hapus satu material_id dari kolom material_ids (comma-string) Quiz & Flashcard."""
+    from models import Quiz, Flashcard
+    token = str(material_id)
+
+    for model in (Quiz, Flashcard):
+        rows = (
+            db.query(model)
+            .filter(model.material_ids.isnot(None))
+            .filter(model.material_ids.contains(token))
+            .all()
+        )
+        for row in rows:
+            ids = [x.strip() for x in (row.material_ids or "").split(",") if x.strip()]
+            remaining = [x for x in ids if x != token]
+            row.material_ids = ",".join(remaining) if remaining else None
 
 
 def delete_item_permanent(db: Session, item_id: int) -> bool:

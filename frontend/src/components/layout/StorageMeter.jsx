@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { formatBytes } from '@/utils';
 import { motion } from 'framer-motion';
 import { ICONS } from '@/lib/icons';
 import { Icon } from '@/components/ui';
@@ -37,12 +38,4 @@ export default function StorageMeter() {
       </div>
     </div>
   );
-}
-
-function formatBytes(bytes) {
-  if (!bytes) return '0 B';
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  if (bytes < 1024 * 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
-  return `${(bytes / 1024 / 1024 / 1024).toFixed(2)} GB`;
 }

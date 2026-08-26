@@ -69,6 +69,11 @@ async def upload_material(
     db: Session = Depends(get_db)
 ):
     try:
+        # Validasi subject_id eksplisit — tanpa ini FK error muncul sebagai 500
+        subject = db.query(models.Subject).filter(models.Subject.id == subject_id).first()
+        if not subject:
+            return JSONResponse(status_code=404, content={"detail": "Mata kuliah tidak ditemukan."})
+
         # REQ-01: Validasi ukuran awal via Content-Length (tanpa buffer file).
         # Batas final tetap ditegakkan streaming di material_service.
         MAX_SIZE = 50 * 1024 * 1024

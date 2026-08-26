@@ -74,8 +74,10 @@ def _add_dir_to_zip(zf: zipfile.ZipFile, dir_path: str, arc_prefix: str) -> list
 
 def create_backup(cleanup_older: bool = True) -> Dict:
     """Buat arsip backup baru; kembalikan metadata (filename, size, isi)."""
+    from time_utils import utcnow
     os.makedirs(config.BACKUPS_DIR, exist_ok=True)
-    ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S_%f")[:23]
+    # Naive-UTC (konvensi repo) — filename sort konsisten lintas timezone/DST
+    ts = utcnow().strftime("%Y%m%d_%H%M%S_%f")[:23]
     zip_path = os.path.join(config.BACKUPS_DIR, f"{BACKUP_PREFIX}{ts}.zip")
 
     db_path = os.path.join(config.STORAGE_DIR, DEFAULT_DB_NAME)

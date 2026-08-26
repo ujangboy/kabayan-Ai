@@ -39,8 +39,8 @@ async def get_notes_json(db: Session = Depends(get_db), skip: int = Query(0, ge=
 
 @router.post("/api/notes")
 async def create_note(
-    title: str = Form(...),
-    content: str = Form(""),
+    title: str = Form(..., max_length=200),
+    content: str = Form("", max_length=200_000),
     subject_id: Optional[int] = Form(None),
     db: Session = Depends(get_db)
 ):
@@ -59,7 +59,7 @@ async def delete_note(note_id: int, db: Session = Depends(get_db)):
     return JSONResponse({"status": "success", "message": "Note deleted"})
 
 @router.put("/api/notes/{note_id}/rename")
-async def rename_note(note_id: int, title: str = Form(...), db: Session = Depends(get_db)):
+async def rename_note(note_id: int, title: str = Form(..., max_length=200), db: Session = Depends(get_db)):
     from repositories.note_repository import note_repository
     note = note_repository.get(db, note_id)
     if not note:
@@ -239,6 +239,9 @@ async def detect_context(request: DetectContextRequest, db: Session = Depends(ge
                     break
         return JSONResponse({"mata_kuliah": mata_kuliah, "topic": topic, "subject_id": subject_id})
     except Exception as e:
+        # Graceful degradation tetap 200, tapi kegagalan AI HARUS terlihat di log
+        import logging
+        logging.getLogger(__name__).warning(f"detect-context fallback: {e}", exc_info=True)
         return JSONResponse({"mata_kuliah": "tidak_diketahui", "topic": "", "subject_id": None})
 
 @router.post("/api/notebook/generate-title")
@@ -265,5 +268,8 @@ async def generate_title(request: GenerateTitleRequest, db: Session = Depends(ge
         if not title:
             title = content[:30].strip()
         return JSONResponse({"title": title})
-    except Exception:
+    except Exception as e:
+        # Graceful degradation tetap 200, tapi kegagalan AI HARUS terlihat di log
+        import logging
+        logging.getLogger(__name__).warning(f"generate-title fallback: {e}", exc_info=True)
         return JSONResponse({"title": content[:30].strip()})

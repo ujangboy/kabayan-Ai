@@ -5,17 +5,9 @@ import { Icon } from '@/components/ui';
 
 import { dataAPI, materiAPI, trashAPI } from '@/services/api';
 import { useToast } from '@/components/Toast';
-import { formatDate } from '@/utils';
+import { formatDate, formatBytes } from '@/utils';
 import { cn } from '@/utils';
 import { Tooltip } from '@/components/ui/Tooltip';
-
-function formatBytes(bytes) {
-  if (bytes == null) return '—';
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
-}
 
 const STATUS_BADGE = {
   Ready: 'bg-success/15 text-success border-success/30',

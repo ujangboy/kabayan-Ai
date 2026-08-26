@@ -229,10 +229,10 @@ async def get_subject_dashboard(subject_id: int, db: Session = Depends(get_db)):
 
 @router.post("/api/subjects")
 async def create_subject(
-    name: str = Form(...),
-    semester: str = Form(""),
-    lecturer: str = Form(""),
-    description: str = Form(""),
+    name: str = Form(..., max_length=200),
+    semester: str = Form("", max_length=50),
+    lecturer: str = Form("", max_length=200),
+    description: str = Form("", max_length=2000),
     db: Session = Depends(get_db)
 ):
     subject_service.create(db, name, semester, lecturer, description)
@@ -242,10 +242,10 @@ async def create_subject(
 @router.post("/api/subjects/{subject_id}/update")
 async def update_subject(
     subject_id: int,
-    name: str = Form(...),
-    semester: str = Form(""),
-    lecturer: str = Form(""),
-    description: str = Form(""),
+    name: str = Form(..., max_length=200),
+    semester: str = Form("", max_length=50),
+    lecturer: str = Form("", max_length=200),
+    description: str = Form("", max_length=2000),
     db: Session = Depends(get_db)
 ):
     subject = subject_service.update(db, subject_id, name, semester, lecturer, description)

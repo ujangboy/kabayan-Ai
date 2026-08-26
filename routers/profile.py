@@ -88,6 +88,10 @@ async def upload_profile_photo(file: UploadFile = File(...), db: Session = Depen
             status_code=400,
         )
 
+    # Cek ukuran awal via Content-Length tanpa buffer seluruh file
+    if getattr(file, "size", None) and file.size > MAX_PHOTO_BYTES:
+        raise AppError("Ukuran foto melebihi batas 5MB.", status_code=400)
+
     data = await file.read()
     if len(data) == 0:
         raise AppError("File kosong.", status_code=400)

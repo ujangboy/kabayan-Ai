@@ -19,6 +19,9 @@ from schemas.exam import (
 from exceptions import AppError
 
 router = APIRouter(prefix="/api/exam", tags=["Exam Analyzer"])
+
+# Strong refs untuk background task fire-and-forget (anti GC mid-run)
+_BACKGROUND_TASKS: set = set()
 logger = logging.getLogger(__name__)
 
 
@@ -111,9 +114,10 @@ async def submit_exam(
             import asyncio
 
             def _gen_flashcards():
-                from database import SessionLocal
+                # Akses runtime via modul — ikut patch test ke DB uji
+                import database
                 from services.flashcard_service import flashcard_service
-                session_db = SessionLocal()
+                session_db = database.SessionLocal()
                 try:
                     flashcard_service.generate_from_exam_review(session_db, session_id, max_cards=8)
                     session_db.commit()
@@ -123,7 +127,12 @@ async def submit_exam(
                 finally:
                     session_db.close()
 
-            asyncio.create_task(asyncio.to_thread(_gen_flashcards))
+            # Strong reference: task tanpa referensi bisa di-GC mid-run
+            # (dokumentasi asyncio.create_task). Set modul-level memegang
+            # referensi sampai task selesai lalu membuang dirinya sendiri.
+            _task = asyncio.create_task(asyncio.to_thread(_gen_flashcards))
+            _BACKGROUND_TASKS.add(_task)
+            _task.add_done_callback(_BACKGROUND_TASKS.discard)
         except Exception as exc:
             logger.warning("Menjadwalkan auto flashcard gagal: %s", exc)
 

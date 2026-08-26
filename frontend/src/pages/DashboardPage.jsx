@@ -3,18 +3,11 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useChatStore } from '@/store';
-import { formatDate } from '@/utils';
+import { formatDate, formatBytes } from '@/utils';
 import { EmptyState, Skeleton, HelpTip, Icon } from '@/components/ui';
 import { ICONS } from '@/lib/icons';
 import FileTypeIcon from '@/components/FileTypeIcon';
 import api from '@/services/api';
-
-const formatBytes = (bytes) => {
-  if (bytes == null) return '0 B';
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-};
 
 const QUICK_ACTIONS = (t) => [
   { icon: ICONS.communication.chat, label: t('dashboard.quickChat'),       desc: t('dashboard.quickChatDesc'),     to: '/chat',      color: 'bg-primary text-white',       shadow: 'shadow-card' },
@@ -207,7 +200,7 @@ export default function DashboardPage() {
               ) : recentMaterials.length === 0 ? (
                 <div className="p-6 text-center text-xs text-text-muted">{t('dashboard.noMaterials')}</div>
               ) : (
-                <table className="w-full text-sm">
+                <div className="overflow-x-auto"><table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border">
                       <th className="px-4 py-2.5 text-left text-xs font-medium text-text-muted">File</th>
@@ -233,7 +226,7 @@ export default function DashboardPage() {
                       </tr>
                     ))}
                   </tbody>
-                </table>
+                </table></div>
               )}
             </div>
           </motion.div>
@@ -257,7 +250,7 @@ export default function DashboardPage() {
               ) : recentQuizzes.length === 0 ? (
                 <div className="p-6 text-center text-xs text-text-muted">{t('dashboard.noQuizzes')}</div>
               ) : (
-                <table className="w-full text-sm">
+                <div className="overflow-x-auto"><table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border">
                       <th className="px-4 py-2.5 text-left text-xs font-medium text-text-muted">Judul Quiz</th>
@@ -285,7 +278,7 @@ export default function DashboardPage() {
                       </tr>
                     ))}
                   </tbody>
-                </table>
+                </table></div>
               )}
             </div>
           </motion.div>

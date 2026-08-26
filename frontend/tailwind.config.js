@@ -16,6 +16,8 @@ export default {
         surface: "rgb(var(--bg-surface) / <alpha-value>)",
         "surface-2": "rgb(var(--bg-surface) / <alpha-value>)",
         popover: "rgb(var(--popover) / <alpha-value>)",
+        // background blok kode — ikut token --code-bg (light/dark)
+        "code-bg": "var(--code-bg)",
         // wash = tint interaktif tipis yang ikut tema
         wash: {
           DEFAULT: "rgb(var(--wash) / <alpha-value>)",

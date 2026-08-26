@@ -177,8 +177,8 @@ async def get_flashcard_stats(subject_id: int = Query(None), db: Session = Depen
 
 @router.post("/api/flashcards")
 async def create_flashcard(
-    question: str = Form(...),
-    answer: str = Form(...),
+    question: str = Form(..., max_length=2000),
+    answer: str = Form(..., max_length=4000),
     subject_id: int = Form(...),
     db: Session = Depends(get_db)
 ):
@@ -211,7 +211,7 @@ async def delete_flashcard(flashcard_id: int, db: Session = Depends(get_db)):
     try:
         found = flashcard_repository.delete(db, flashcard_id)
         if not found:
-            return JSONResponse(status_code=404, content={"status": "not_found", "message": f"Flashcard #{flashcard_id} tidak ditemukan atau sudah dihapus."})
+            return JSONResponse(status_code=404, content={"detail": f"Flashcard #{flashcard_id} tidak ditemukan atau sudah dihapus."})
         return JSONResponse({"status": "success", "message": "Flashcard deleted"})
     except IntegrityError as e:
         try:

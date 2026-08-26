@@ -127,11 +127,17 @@ export function useChatMessaging() {
     }
     isNoteSavingRef.current = true;
     setIsNoteSaving(true);
-    const noteType = chat.tutorEnabled ? 'tutor' : 'chat';
     notebookOp.start(currentChatId);
     try {
-      const response = await notesAPI.generate({ chat_id: currentChatId, type: noteType });
-      const noteId = response?.note_id;
+      // Simpan jawaban assistant terakhir langsung ke Notebook (tanpa AI).
+      // Catatan: endpoint /notes/generate menuntut subject_id+material —
+      // payload {chat_id, type} lama tidak pernah didukung backend sehingga
+      // fitur ini selalu gagal 422.
+      const lastAssistant = [...chat.messages].reverse().find(m => m.role === 'assistant');
+      const content = lastAssistant?.content || '';
+      const title = (chat.title || 'Chat Export').slice(0, 60);
+      const response = await notesAPI.create(title, content);
+      const noteId = response?.data?.note_id;
       state.setTutorBadge(true);
       setNoteToast({ message: t('chat.noteSaved'), note_id: noteId });
       setTimeout(() => setNoteToast(null), 3000);

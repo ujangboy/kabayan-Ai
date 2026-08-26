@@ -139,6 +139,9 @@ class YoutubeService:
             return "Gagal: Waktu permintaan habis. Coba lagi nanti."
         if "copyright" in err_str or "blocked" in err_str:
             return "Gagal: Video diblokir atau memiliki hak cipta."
-        return f"Gagal: {str(exc)[:120]}"
+        # Fallback: jangan simpan potongan exception mentah ke DB (bisa
+        # berisi path/URL internal) — cukup pesan generik, detail di log.
+        logger.warning("YouTube processing error (unmapped): %r", exc)
+        return "Gagal: Video tidak dapat diproses. Coba lagi nanti."
 
 youtube_service = YoutubeService()

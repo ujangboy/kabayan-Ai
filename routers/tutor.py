@@ -45,13 +45,14 @@ router = APIRouter()
 
 class TutorMessage(BaseModel):
     role: str
-    content: str
+    content: str = Field(default="", max_length=8000)
 
 
 class TutorChatRequest(BaseModel):
     message: str = Field(..., max_length=1000)
     history: List[TutorMessage] = Field(default_factory=list)
-    session_id: Optional[str] = None
+    # UUID format divalidasi — string bebas sebelumnya membuat row Chat spam
+    session_id: Optional[str] = Field(default=None, max_length=64)
     mata_kuliah: Optional[str] = None
     student_level: str = Field(default="intermediate")  # beginner / intermediate / advanced
     exam_session_id: Optional[int] = None  # link ke sesi ujian untuk konteks adaptif
@@ -90,9 +91,14 @@ async def tutor_chat(request: TutorChatRequest, db: Session = Depends(get_db)):
     The first bytes "\x00TYPE:<type>\x00" are metadata and should be stripped by the client.
     """
     try:
-        # Persist or get chat session
+        # Persist or get chat session — session_id disanitasi (alphanumeric +
+        # dash) agar string arbitrer tidak men-spam row Chat baru. Frontend
+        # mengirim String(chatId) numerik, bukan UUID, jadi jangan ketat.
         chat_id: Optional[int] = None
         if request.session_id:
+            import re as _re
+            if not _re.fullmatch(r"[0-9A-Za-z_-]{1,64}", request.session_id):
+                raise AppError("session_id tidak valid.", status_code=400)
             chat = chat_repository.get_or_create_by_uuid(db, request.session_id)
             chat_id = chat.id
             chat_repository.add_message(db, chat_id, "user", request.message)
