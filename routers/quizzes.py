@@ -6,7 +6,11 @@ from repositories.quiz_repository import quiz_repository
 from services.quiz_service import quiz_service
 from services.material_service import material_service
 from services.rag_context_service import rag_context_service
+from models import Quiz
 import json
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -14,8 +18,16 @@ router = APIRouter()
 @router.get("/api/quizzes")
 async def get_quizzes_json(db: Session = Depends(get_db), skip: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=200)):
     from models import Material
-    quizzes = quiz_repository.get_all(db, skip=skip, limit=limit)
-    quizzes = sorted(quizzes, key=lambda x: x.created_at, reverse=True)
+    # Sort + paginasi di SQL (sebelumnya sort dilakukan SETELAH offset/limit
+    # sehingga item duplikat/hilang antar halaman; created_at null juga
+    # memicu TypeError di sorted()). Nulls ditaruh paling akhir.
+    quizzes = (
+        db.query(Quiz)
+        .order_by(Quiz.created_at.isnot(None), Quiz.created_at.desc(), Quiz.id.desc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
 
     # Pre-load all material names needed
     all_mat_ids: set = set()
@@ -133,19 +145,23 @@ async def generate_quiz(
         return JSONResponse(data)
 
     except ValueError as e:
-        return JSONResponse(status_code=422, content={"detail": str(e)})
+        # Kegagalan parsing output AI = error server-side (bukan 422 client),
+        # dan snippet output AI tidak boleh dikirim ke client.
+        logger.error(f"Generate quiz error: {e}")
+        return JSONResponse(status_code=502, content={"detail": "AI gagal menghasilkan soal yang valid. Silakan coba lagi."})
     except Exception as e:
-        return JSONResponse(status_code=500, content={"detail": str(e)})
+        from services.error_handler import safe_json_response
+        return safe_json_response(e, context="quizzes/generate")
 
 
 @router.post("/api/quizzes/{quiz_id}/score")
 async def save_quiz_score(
     quiz_id: int,
-    score: int = Form(...),
-    correct_count: int = Form(None),
-    wrong_count: int = Form(None),
-    time_taken: int = Form(None),
-    total_questions: int = Form(None),
+    score: int = Form(..., ge=0, le=100),
+    correct_count: int = Form(None, ge=0),
+    wrong_count: int = Form(None, ge=0),
+    time_taken: int = Form(None, ge=0),
+    total_questions: int = Form(None, ge=0),
     db: Session = Depends(get_db)
 ):
     """Simpan score + tracking setelah user selesai mengerjakan quiz."""

@@ -284,7 +284,7 @@ export default function QuizPage() {
             filtered.map((quiz, idx) => {
               const qProgress = Math.min(100, quiz.score ?? 0);
               const stats = [
-                { icon: ICONS.ui.help, value: quiz.question_count || 0, label: t('quiz.questionCount', { count: 1 }), color: 'text-accent-teal' },
+                { icon: ICONS.ui.help, value: quiz.question_count || 0, label: t('quiz.questionCount', { count: quiz.question_count || 0 }), color: 'text-accent-teal' },
                 { icon: ICONS.learning.trophy, value: quiz.score ?? '—', label: t('quiz.scoreLabel', 'Skor'), color: 'text-warning' },
                 { icon: ICONS.learning.brain, value: quiz.attempt_count || 0, label: t('quiz.playedLabel', 'Dimainkan'), color: 'text-accent-purple' },
                 { icon: ICONS.learning.clock, value: quiz.time_taken != null ? formatDuration(quiz.time_taken, t) : '—', label: t('quiz.timeLabel', 'Waktu'), color: 'text-accent-blue' },

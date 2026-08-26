@@ -69,20 +69,20 @@ async def upload_material(
     db: Session = Depends(get_db)
 ):
     try:
-        # REQ-01: Validasi ukuran (max 50MB)
+        # REQ-01: Validasi ukuran awal via Content-Length (tanpa buffer file).
+        # Batas final tetap ditegakkan streaming di material_service.
         MAX_SIZE = 50 * 1024 * 1024
-        file_bytes = await file.read()
-        if len(file_bytes) > MAX_SIZE:
-            return JSONResponse(status_code=400, content={"status": "error", "message": f"Ukuran file melebihi batas 50MB. Ukuran file: {len(file_bytes) // (1024*1024)}MB"})
-        await file.seek(0)
+        if getattr(file, "size", None) and file.size > MAX_SIZE:
+            return JSONResponse(status_code=400, content={"detail": f"Ukuran file melebihi batas 50MB. Ukuran file: {file.size // (1024*1024)}MB"})
 
         # REQ-01: Validasi ekstensi file (D1: selaras dengan parsers/document_parser.py)
         filename_lower = (file.filename or "").lower()
         ALLOWED_EXTENSIONS = (".pdf", ".docx", ".txt", ".md", ".csv", ".pptx", ".xlsx")
         if not any(filename_lower.endswith(ext) for ext in ALLOWED_EXTENSIONS):
-            return JSONResponse(status_code=400, content={"status": "error", "message": f"Format file tidak didukung. Gunakan: PDF, DOCX, TXT, MD, CSV, PPTX, XLSX"})
+            return JSONResponse(status_code=400, content={"detail": "Format file tidak didukung. Gunakan: PDF, DOCX, TXT, MD, CSV, PPTX, XLSX"})
 
-        # REQ-01: Validasi magic bytes — cegah file palsu (rename ekstensi)
+        # REQ-01: Validasi magic bytes — cegah file palsu (rename ekstensi).
+        # Cukup 8 byte pertama, jangan buffer seluruh file ke memori.
         MAGIC_BYTES = {
             ".pdf":  [b"%PDF"],
             ".docx": [b"PK\x03\x04"],  # ZIP header (OOXML)
@@ -95,18 +95,23 @@ async def upload_material(
         ext = next((e for e in ALLOWED_EXTENSIONS if filename_lower.endswith(e)), None)
         magic_list = MAGIC_BYTES.get(ext)
         if magic_list:
-            if not any(file_bytes[:8].startswith(m) for m in magic_list):
-                return JSONResponse(status_code=400, content={"status": "error", "message": f"File '{file.filename}' tampaknya rusak atau ekstensinya dipalsukan."})
-        await file.seek(0)
+            head = await file.read(8)
+            await file.seek(0)
+            if not any(head.startswith(m) for m in magic_list):
+                return JSONResponse(status_code=400, content={"detail": f"File '{file.filename}' tampaknya rusak atau ekstensinya dipalsukan."})
 
         filepath, mat_id = material_service.upload_material_sync(db, subject_id, file)
         return JSONResponse({"status": "success", "message": "Material uploaded, waiting for processing"})
+    except ValueError as e:
+        # Batas 50MB ditegakkan streaming di service layer
+        return JSONResponse(status_code=400, content={"detail": str(e)})
     finally:
         await file.close()
 
 @router.post("/api/materials/{material_id}/delete")
 async def delete_material(material_id: int, db: Session = Depends(get_db)):
-    material_service.delete(db, material_id)
+    if not material_service.delete(db, material_id):
+        return JSONResponse(status_code=404, content={"detail": "Material not found"})
     return JSONResponse({"status": "success", "message": "Material deleted"})
 
 @router.post("/api/materials/{material_id}/cancel")

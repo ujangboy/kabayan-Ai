@@ -19,7 +19,7 @@ import asyncio
 import logging
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from fastapi.responses import StreamingResponse, JSONResponse
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
@@ -234,7 +234,7 @@ async def tutor_feedback(request: TutorFeedbackRequest, db: Session = Depends(ge
 @router.get("/api/tutor/faq")
 async def list_faq(
     mata_kuliah: Optional[str] = None,
-    limit: int = 50,
+    limit: int = Query(50, ge=1, le=200),
     db: Session = Depends(get_db),
 ):
     """List FAQ entries. Optionally filter by mata_kuliah."""

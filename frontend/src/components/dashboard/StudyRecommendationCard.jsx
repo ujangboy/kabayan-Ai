@@ -61,7 +61,7 @@ export default function StudyRecommendationCard({ route, subjectId }) {
             <div key={rec.tier} className="flex items-stretch gap-2">
               <button
                 onClick={() => navigate(m.to)}
-                className={`flex-1 min-w-0 flex items-center gap-3 p-2.5 rounded-xl border transition-colors cursor-pointer text-left ${
+                className={`flex-1 min-w-0 flex items-center gap-3 p-2.5 rounded-xl border transition-colors cursor-pointer text-left overflow-hidden ${
                   isPrimary ? 'border-primary/40 bg-primary/5' : 'border-border hover:border-primary/30'
                 }`}
               >
@@ -69,12 +69,12 @@ export default function StudyRecommendationCard({ route, subjectId }) {
                   <Icon name={m.icon} size={14} />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold text-text">{m.label}</span>
-                    <span className="badge badge-warning text-2xs">{tierLabel(rec.tier)}</span>
-                    {isPrimary && <span className="badge badge-success text-2xs">{t('studyRoute.recommended')}</span>}
+                  <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
+                    <span className="text-xs font-semibold text-text shrink-0">{m.label}</span>
+                    <span className="badge badge-warning text-2xs whitespace-nowrap">{tierLabel(rec.tier)}</span>
+                    {isPrimary && <span className="badge badge-success text-2xs whitespace-nowrap">{t('studyRoute.recommended')}</span>}
                   </div>
-                  <p className="text-3xs text-text-muted mt-0.5 line-clamp-2">{rec.reason}</p>
+                  <p className="text-3xs text-text-muted mt-0.5 line-clamp-2 break-words">{rec.reason}</p>
                 </div>
               </button>
               <Tooltip label={t('focusMode.start')}>
@@ -91,8 +91,8 @@ export default function StudyRecommendationCard({ route, subjectId }) {
         })}
       </div>
       {primary && (
-        <p className="text-3xs text-text-muted mt-3 bg-background border border-border rounded-lg p-2">
-          {t('studyRoute.primaryNote', { label: primary.modality_label, n: primary.resources.flashcards_total ?? 0, q: primary.resources.quizzes_total ?? 0 })}
+        <p className="text-3xs text-text-muted mt-3 bg-background border border-border rounded-lg p-2 break-words">
+          {t('studyRoute.primaryNote', { label: primary.modality_label, n: primary.resources?.flashcards_total ?? 0, q: primary.resources?.quizzes_total ?? 0 })}
         </p>
       )}
     </motion.div>

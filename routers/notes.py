@@ -11,14 +11,14 @@ from services.rag_context_service import rag_context_service
 from services.ai_service import ai_service
 from services.subject_service import subject_service as subject_svc
 from prompts.notebook import DETECT_CONTEXT_PROMPT, GENERATE_TITLE_PROMPT
+from schemas.generate import (
+    DetectContextRequest,
+    GenerateTitleRequest,
+    GenerateNoteRequest as NotesGenerateRequest,
+)
 import json
 import re
 
-
-class NotesGenerateRequest(BaseModel):
-    subject_id: int
-    title: Optional[str] = None
-    material_ids: Optional[str] = None
 
 router = APIRouter()
 
@@ -54,7 +54,8 @@ async def create_note(
 
 @router.post("/api/notes/{note_id}/delete")
 async def delete_note(note_id: int, db: Session = Depends(get_db)):
-    notes_service.delete(db, note_id)
+    if not notes_service.delete(db, note_id):
+        return JSONResponse(status_code=404, content={"detail": "Note not found"})
     return JSONResponse({"status": "success", "message": "Note deleted"})
 
 @router.put("/api/notes/{note_id}/rename")
@@ -62,7 +63,7 @@ async def rename_note(note_id: int, title: str = Form(...), db: Session = Depend
     from repositories.note_repository import note_repository
     note = note_repository.get(db, note_id)
     if not note:
-        return JSONResponse(status_code=404, content={"status": "error", "message": "Note not found"})
+        return JSONResponse(status_code=404, content={"detail": "Note not found"})
     note_repository.update(db, note, {"title": title.strip()})
     return JSONResponse({"status": "success", "message": "Note renamed", "title": title.strip()})
 
@@ -71,7 +72,7 @@ async def toggle_pin_note(note_id: int, db: Session = Depends(get_db)):
     from repositories.note_repository import note_repository
     note = note_repository.get(db, note_id)
     if not note:
-        return JSONResponse(status_code=404, content={"status": "error", "message": "Note not found"})
+        return JSONResponse(status_code=404, content={"detail": "Note not found"})
     new_pin_state = not bool(note.is_pinned)
     note_repository.update(db, note, {"is_pinned": new_pin_state})
     return JSONResponse({"status": "success", "is_pinned": new_pin_state})
@@ -81,7 +82,7 @@ async def update_note_content(note_id: int, db: Session = Depends(get_db), conte
     from repositories.note_repository import note_repository
     note = note_repository.get(db, note_id)
     if not note:
-        return JSONResponse(status_code=404, content={"status": "error", "message": "Note not found"})
+        return JSONResponse(status_code=404, content={"detail": "Note not found"})
     note_repository.update(db, note, {"content": content})
     return JSONResponse({"status": "success"})
 
@@ -89,7 +90,7 @@ async def update_note_content(note_id: int, db: Session = Depends(get_db), conte
 async def note_action(note_id: int, action: str = Form(...), db: Session = Depends(get_db)):
     success, updated_content = notes_service.process_action(db, note_id, action)
     if not success:
-        return JSONResponse(status_code=404, content={"status": "error", "message": "Note not found"})
+        return JSONResponse(status_code=404, content={"detail": "Note not found"})
     return JSONResponse({"status": "success", "content": updated_content})
 
 @router.post("/api/notes/clear")
@@ -151,9 +152,12 @@ async def generate_notes_ai(
             "content": content
         })
     except ValueError as e:
-        return JSONResponse(status_code=422, content={"detail": str(e)})
+        from services.error_handler import safe_json_response
+        return safe_json_response(e, context="notes/generate")
     except Exception as e:
-        return JSONResponse(status_code=500, content={"detail": str(e)})
+        # Jangan bocorkan detail internal ke client — log penuh via safe handler
+        from services.error_handler import safe_json_response
+        return safe_json_response(e, context="notes/generate")
 
 # REQ-PRD: Endpoint Direct-to-Notebook dari tombol chat
 class NotebookGenerateRequest(BaseModel):
@@ -167,7 +171,7 @@ async def notebook_generate(request: NotebookGenerateRequest, db: Session = Depe
     from repositories.note_repository import note_repository
     import datetime
     if not request.content.strip():
-        return JSONResponse(status_code=400, content={"status": "error", "message": "Konten tidak boleh kosong"})
+        return JSONResponse(status_code=400, content={"detail": "Konten tidak boleh kosong"})
     title = request.title.strip() or request.content[:30].strip()
     # Idempotency check: skip jika note dengan content yang sama ATAU title yang sama
     # sudah ada dalam 60 detik terakhir — mencegah double-save dari race condition frontend
@@ -190,9 +194,9 @@ async def notebook_generate(request: NotebookGenerateRequest, db: Session = Depe
     return JSONResponse({"status": "success", "message": "Catatan berhasil disimpan ke Notebook!"})
 
 @router.post("/api/notebook/detect-context")
-async def detect_context(request: dict, db: Session = Depends(get_db)):
+async def detect_context(request: DetectContextRequest, db: Session = Depends(get_db)):
     """Detect mata_kuliah dan topic dari riwayat chat menggunakan AI."""
-    chat_history = request.get("history", [])
+    chat_history = [m.model_dump() for m in request.history]
     if not chat_history:
         return JSONResponse({"mata_kuliah": "tidak_diketahui", "topic": "", "subject_id": None})
 
@@ -238,9 +242,9 @@ async def detect_context(request: dict, db: Session = Depends(get_db)):
         return JSONResponse({"mata_kuliah": "tidak_diketahui", "topic": "", "subject_id": None})
 
 @router.post("/api/notebook/generate-title")
-async def generate_title(request: dict, db: Session = Depends(get_db)):
+async def generate_title(request: GenerateTitleRequest, db: Session = Depends(get_db)):
     """Generate judul deskriptif dari konten catatan menggunakan AI."""
-    content = request.get("content", "")
+    content = request.content
     if not content.strip():
         return JSONResponse({"title": "Catatan Baru"})
 

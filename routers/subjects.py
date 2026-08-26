@@ -154,19 +154,29 @@ async def get_subject_dashboard(subject_id: int, db: Session = Depends(get_db)):
         })
 
     # ─── Rencana belajar aktif (dari sesi terbaru yang punya plan) ───
+    # Single query join + order — bukan loop per-session (N+1).
     active_study_plan = None
-    for s in sorted(sessions, key=lambda x: x.updated_at or x.started_at, reverse=True):
-        plan = db.query(StudyPlan).filter(StudyPlan.session_id == s.id).first()
-        if plan:
-            active_study_plan = {
-                "session_id": s.id,
-                "title": plan.title or f"Rencana Belajar — {subject.name}",
-                "progress": plan.progress or 0,
-                "completed_days": plan.completed_days or 0,
-                "total_days": plan.total_days or 0,
-                "start_date": plan.start_date.isoformat() if plan.start_date else None,
-            }
-            break
+    _plan_row = (
+        db.query(StudyPlan, ExamSession.id.label("session_id"))
+        .join(ExamSession, ExamSession.id == StudyPlan.session_id)
+        .filter(ExamSession.subject_id == subject_id)
+        .order_by(
+            ExamSession.updated_at.isnot(None),
+            ExamSession.updated_at.desc(),
+            ExamSession.started_at.desc(),
+        )
+        .first()
+    )
+    if _plan_row:
+        plan, plan_session_id = _plan_row
+        active_study_plan = {
+            "session_id": plan_session_id,
+            "title": plan.title or f"Rencana Belajar — {subject.name}",
+            "progress": plan.progress or 0,
+            "completed_days": plan.completed_days or 0,
+            "total_days": plan.total_days or 0,
+            "start_date": plan.start_date.isoformat() if plan.start_date else None,
+        }
 
     stats = compute_subject_stats(db, subject)
     materials = [
@@ -217,5 +227,6 @@ async def update_subject(
 
 @router.post("/api/subjects/{subject_id}/delete")
 async def delete_subject(subject_id: int, db: Session = Depends(get_db)):
-    subject_service.delete(db, subject_id)
+    if not subject_service.delete(db, subject_id):
+        return JSONResponse(status_code=404, content={"detail": "Subject not found"})
     return JSONResponse({"status": "success", "message": "Subject deleted"})

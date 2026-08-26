@@ -84,9 +84,8 @@ export default function MaterialPicker({ subjectId, selectedMaterialIds, onSelec
           const isReady = m.status === 'Ready';
           const checked = selectedMaterialIds.includes(String(m.id));
           return (
-            <Tooltip label={!isReady ? t('materialPicker.notReadyTitle', { status: m.status }) : ''}>
+            <Tooltip key={m.id} label={!isReady ? t('materialPicker.notReadyTitle', { status: m.status }) : ''}>
               <label
-                key={m.id}
                 className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg transition-colors ${
                   !isReady ? 'opacity-60 cursor-not-allowed bg-card/50' : 
                   checked ? 'bg-primary/10 cursor-pointer' : 'hover:bg-card cursor-pointer'
@@ -97,13 +96,23 @@ export default function MaterialPicker({ subjectId, selectedMaterialIds, onSelec
                 checked={checked}
                 onChange={() => isReady && toggle(m.id)}
                 disabled={!isReady}
-                className="h-4 w-4 rounded appearance-none cursor-pointer
-                  bg-card border-2 border-border
-                  checked:bg-primary checked:border-primary
-                  focus:outline-none focus:ring-2 focus:ring-primary/50
-                  disabled:opacity-30 disabled:cursor-not-allowed
-                  transition-colors shrink-0"
+                className="peer sr-only"
               />
+              <span
+                aria-hidden="true"
+                className={`h-4 w-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors
+                  ${checked ? 'bg-primary border-primary' : 'bg-card border-border'}
+                  peer-focus-visible:ring-2 peer-focus-visible:ring-primary/50
+                  peer-disabled:opacity-30 peer-disabled:cursor-not-allowed`}
+              >
+                <svg
+                  viewBox="0 0 12 10"
+                  className={`w-2.5 h-2.5 text-white transition-opacity ${checked ? 'opacity-100' : 'opacity-0'}`}
+                  fill="none"
+                >
+                  <path d="M1 5l3 3 7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </span>
               <div className="flex flex-col overflow-hidden">
                 <span className="text-xs text-text truncate">{m.filename}</span>
                 {!isReady && (

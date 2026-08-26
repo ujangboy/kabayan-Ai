@@ -333,7 +333,7 @@ class AIService:
                            "3) ringkas pertanyaanmu.")
                 else:
                     logging.error(f"[CHAT_STREAM_ERROR] {e}")
-                    yield f"\n\nError: {str(e)}"
+                    yield "\n\n⚠️ Terjadi kesalahan saat memproses respons. Silakan coba lagi."
                 return
 
             # Normalize math delimiters on the full response before caching

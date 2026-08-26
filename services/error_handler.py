@@ -95,10 +95,17 @@ def classify(exc: Exception) -> Tuple[int, str, str]:
     Return (http_status, error_code, safe_user_message).
     Never leaks internal details.
 
-    If exc is AppError, use its own status_code and message.
+    If exc is AppError, use its own status_code and message — KECUALI untuk
+    status >= 500: pesan asli bisa berisi str(exception) dari call site
+    (SQL error, path file, pesan SDK) sehingga TIDAK aman dikirim ke client.
+    Untuk 5xx, pakai pesan fallback generik; detail asli tetap di-log penuh
+    oleh safe_response().
     Otherwise, pattern-match against _PATTERNS.
     """
     if isinstance(exc, AppError):
+        if exc.status_code >= 500:
+            _, code, msg = _FALLBACK
+            return exc.status_code, code, msg
         return exc.status_code, "APP_ERROR", exc.message
 
     raw = str(exc).lower()
@@ -124,9 +131,12 @@ def safe_response(exc: Exception, context: str = "") -> Tuple[dict, int]:
 
     body: dict = {"detail": message}
     if isinstance(exc, AppError):
-        body["detail"] = exc.message
+        # Pesan asli hanya dikirim untuk 4xx (memang user-facing).
+        # 5xx memakai pesan generik dari classify() agar internal tidak bocor.
+        if exc.status_code < 500:
+            body["detail"] = exc.message
         body["code"] = code
-        if exc.detail is not None:
+        if exc.status_code < 500 and exc.detail is not None:
             body["data"] = exc.detail
 
     return body, status

@@ -880,7 +880,7 @@
     "tierMedium": "MEDIUM",
     "tierComplex": "COMPLEX",
     "recommended": "RECOMMENDED",
-    "primaryNote": "Start with {label}: {n} cards available, {q} quizzes."
+    "primaryNote": "Start with {{label}}: {{n}} cards available, {{q}} quizzes."
   },
   "studyMetrics": {
     "title": "Learning Metrics",

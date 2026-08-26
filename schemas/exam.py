@@ -47,3 +47,10 @@ class PlanFlashcardResult(BaseModel):
 
 class SubmitPlanFlashcardsRequest(BaseModel):
     results: list[PlanFlashcardResult] = Field(default_factory=list)
+
+
+class ExplainRequest(BaseModel):
+    bank_id: Optional[int] = None
+    question: str = ""
+    correct_answer: str = ""
+    topic: str = ""

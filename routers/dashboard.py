@@ -13,9 +13,10 @@ async def get_dashboard_stats(db: Session = Depends(get_db)):
     try:
         stats = workspace_service.get_dashboard_stats(db)
 
-        # Recent materials (5 terbaru)
+        # Recent materials (5 terbaru) — Trashed tidak ditampilkan
         recent_mats = (
             db.query(models.Material)
+            .filter(models.Material.status != "Trashed")
             .order_by(models.Material.upload_date.desc())
             .limit(5)
             .all()
@@ -56,4 +57,5 @@ async def get_dashboard_stats(db: Session = Depends(get_db)):
             "recent_quizzes": quizzes,
         })
     except Exception as e:
-        return JSONResponse(status_code=500, content={"detail": str(e)})
+        from services.error_handler import safe_json_response
+        return safe_json_response(e, context="dashboard/stats")

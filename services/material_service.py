@@ -30,25 +30,44 @@ class MaterialService:
         ext = os.path.splitext(original_filename)[1].lower()
         safe_filename = f"{uuid.uuid4().hex}{ext}"
         filepath = os.path.join(config.UPLOADS_DIR, safe_filename)
-        with open(filepath, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
 
-        mat_type = self.EXT_TYPE_MAP.get(ext)
-        if mat_type is None:
+        # Tulis file dengan penghitung byte — file yang melebihi MAX_SIZE
+        # dihapus langsung, tanpa pernah buffer penuh di memori.
+        MAX_SIZE = 50 * 1024 * 1024
+        written = 0
+        try:
+            with open(filepath, "wb") as buffer:
+                while True:
+                    chunk = file.file.read(1024 * 1024)
+                    if not chunk:
+                        break
+                    written += len(chunk)
+                    if written > MAX_SIZE:
+                        raise ValueError(f"Ukuran file melebihi batas 50MB.")
+                    buffer.write(chunk)
+
+            mat = material_repository.create(db, {
+                "subject_id": subject_id,
+                "filename": original_filename,
+                "filepath": filepath,
+                "material_type": self.EXT_TYPE_MAP.get(ext, MaterialType.PDF),
+                "status": "Pending"
+            })
+        except Exception:
+            # File yatim tidak boleh tertinggal di uploads saat insert/limit gagal
+            try:
+                if os.path.isfile(filepath):
+                    os.remove(filepath)
+            except OSError:
+                logger.warning(f"Gagal membersihkan file yatim upload: {filepath}")
+            raise
+
+        if ext not in self.EXT_TYPE_MAP:
             logger.warning(
                 "Ekstensi file tak dikenal '%s' untuk '%s' — fallback ke PDF.",
                 ext, original_filename,
             )
-            mat_type = MaterialType.PDF
 
-        mat = material_repository.create(db, {
-            "subject_id": subject_id,
-            "filename": original_filename,
-            "filepath": filepath,
-            "material_type": mat_type,
-            "status": "Pending"
-        })
-        
         return filepath, mat.id
 
     def _set_progress(self, db: Session, material_id: int, progress: int, stage: str):

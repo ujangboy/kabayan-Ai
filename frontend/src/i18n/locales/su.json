@@ -865,7 +865,7 @@
     "tierMedium": "MEDIUM",
     "tierComplex": "COMPLEX",
     "recommended": "DIPUNYARANGKÉ",
-    "primaryNote": "Mimitian tina {label}: {n} kartu sadia, {q} kuis."
+    "primaryNote": "Mimitian tina {{label}}: {{n}} kartu sadia, {{q}} kuis."
   },
   "studyMetrics": {
     "title": "Métrik Diajar",

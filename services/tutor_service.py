@@ -492,7 +492,7 @@ class TutorService:
                        "3) ringkas pertanyaanmu.")
             else:
                 logging.error(f"[TUTOR_STREAM_ERROR] {exc}")
-                yield f"\n\nError: {str(exc)}"
+                yield "\n\n⚠️ Terjadi kesalahan saat memproses respons. Silakan coba lagi."
             return
 
         # Normalize math delimiters on complete response (same as ai_service)

@@ -144,7 +144,6 @@ function SepV() {
 function FontSizeDropdown({ editor, floating = false, vertical = false }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
-  const [pos, setPos] = useState('bottom');
   const [liveSize, setLiveSize] = useState(14);
   const wrapRef = useRef(null);
 
@@ -185,19 +184,39 @@ function FontSizeDropdown({ editor, floating = false, vertical = false }) {
 
   const label = liveSize;
 
-  // Decide popup direction based on available space
+  // Posisi popup dihitung dari rect tombol lalu dirender via portal `fixed`
+  // ke document.body — tidak terpotong overflow parent (toolbar scrollable,
+  // rail vertikal) dan tidak transparan.
+  const [coords, setCoords] = useState(null);
   const measure = () => {
-    if (!open || !floating || vertical) return;
     const el = wrapRef.current;
     if (!el) return;
     const rect = el.getBoundingClientRect();
-    setPos(rect.top > 260 ? 'top' : 'bottom');
+    if (vertical) {
+      setCoords({
+        top: rect.top + rect.height / 2,
+        left: rect.left - 6,
+        align: 'left-center',
+      });
+      return;
+    }
+    setCoords({
+      top: rect.top > 260 ? rect.top - 6 : rect.bottom + 6,
+      left: rect.left,
+      align: rect.top > 260 ? 'bottom-left' : 'top-left',
+    });
   };
   useEffect(() => {
+    if (!open) { setCoords(null); return; }
     measure();
     window.addEventListener('resize', measure);
-    return () => window.removeEventListener('resize', measure);
-  }, [open, floating]);
+    window.addEventListener('scroll', measure, true);
+    return () => {
+      window.removeEventListener('resize', measure);
+      window.removeEventListener('scroll', measure, true);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, floating, vertical]);
 
   const apply = (size) => {
     const domRange = getDomSelectionRange(editor);
@@ -234,20 +253,30 @@ function FontSizeDropdown({ editor, floating = false, vertical = false }) {
         </button>
       </Tooltip>
 
-      {open && (
+      {open && coords && createPortal(
         <>
-          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div className="fixed inset-0 z-[70]" onClick={() => setOpen(false)} />
           <div
             className={cn(
-              'absolute z-50 flex flex-col overflow-y-auto rounded-xl shadow-xl border p-1',
-              floating
-                ? 'bg-card/95 backdrop-blur-xl border-strong'
-                : 'bg-card border-border',
-              vertical
-                ? 'right-full mr-1 top-1/2 -translate-y-1/2'
-                : pos === 'bottom' ? 'top-full mt-1 left-0' : 'bottom-full mb-1 left-0'
+              'fixed z-[80] flex flex-col overflow-y-auto rounded-xl shadow-modal border border-strong bg-popover p-1'
             )}
-            style={{ maxHeight: 200 }}
+            style={{
+              maxHeight: 200,
+              ...(coords.align === 'left-center' && {
+                top: coords.top,
+                left: coords.left,
+                transform: 'translate(-100%, -50%)',
+              }),
+              ...(coords.align === 'top-left' && {
+                top: coords.top,
+                left: coords.left,
+              }),
+              ...(coords.align === 'bottom-left' && {
+                top: coords.top,
+                left: coords.left,
+                transform: 'translateY(-100%)',
+              }),
+            }}
           >
             {FONT_SIZE_OPTIONS.map(size => (
               <button
@@ -267,7 +296,8 @@ function FontSizeDropdown({ editor, floating = false, vertical = false }) {
               </button>
             ))}
           </div>
-        </>
+        </>,
+        document.body
       )}
     </div>
   );
@@ -515,7 +545,7 @@ function FloatingToolbar({ editor, editorMode }) {
       }}
       onMouseDown={(e) => e.preventDefault()}
     >
-      <div className="flex items-center gap-px px-2 py-1.5 bg-card/95 backdrop-blur-xl border border-strong rounded-lg shadow-[0_8px_32px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.05)]">
+      <div className="flex items-center gap-px px-2 py-1.5 bg-popover border border-strong rounded-lg shadow-modal">
         {/* ── Font size ── */}
         <FontSizeDropdown editor={editor} floating />
         <div className="w-px h-5 bg-border mx-1 shrink-0" />
@@ -574,7 +604,7 @@ function FloatingToolbar({ editor, editorMode }) {
           </ToolBtn>
           {showColors && (
             <div
-              className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 flex items-center gap-1 px-2 py-1.5 bg-card/95 backdrop-blur-xl border border-strong rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.5)]"
+              className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 flex items-center gap-1 px-2 py-1.5 bg-popover border border-strong rounded-xl shadow-modal"
               onMouseDown={(e) => e.preventDefault()}
             >
               {COLOR_PALETTE.map(({ color, labelKey }) => (
@@ -604,7 +634,7 @@ function FloatingToolbar({ editor, editorMode }) {
 
       {/* ── Arrow pointer ── */}
       <div className="flex justify-center">
-        <div className="w-2.5 h-2.5 bg-card/95 border-r border-b border-strong rotate-45 -mt-1.5" />
+        <div className="w-2.5 h-2.5 bg-popover border-r border-b border-strong rotate-45 -mt-1.5" />
       </div>
     </div>,
     document.body

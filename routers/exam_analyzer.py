@@ -1,7 +1,7 @@
 import json
 import logging
 from typing import Optional
-from fastapi import APIRouter, Depends, Query, Body
+from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -14,6 +14,7 @@ from schemas.exam import (
     StudyPlanRequest,
     SubmitPlanQuizRequest,
     SubmitPlanFlashcardsRequest,
+    ExplainRequest,
 )
 from exceptions import AppError
 
@@ -82,18 +83,6 @@ async def generate_questions(blueprint_id: int, db: Session = Depends(get_db)):
         raise AppError(str(e), status_code=500)
 
 
-@router.get("/session/{session_id}")
-async def get_session(session_id: int, db: Session = Depends(get_db)):
-    try:
-        data = exam_service.get_session_detail(db, session_id)
-        return JSONResponse(data)
-    except ValueError as e:
-        raise AppError(str(e), status_code=404)
-    except Exception as e:
-        logger.error(f"get_session error: {e}", exc_info=True)
-        raise AppError(str(e), status_code=500)
-
-
 @router.post("/submit/{session_id}")
 async def submit_exam(
     session_id: int,
@@ -158,35 +147,18 @@ async def get_recommendation(session_id: int, db: Session = Depends(get_db)):
         raise AppError(str(e), status_code=500)
 
 
-@router.post("/retry/{blueprint_id}")
-async def retry_exam(
-    blueprint_id: int,
-    payload: dict = Body(default={}),
-    db: Session = Depends(get_db),
-):
-    try:
-        weak_topics = payload.get("weak_topics", [])
-        data = exam_service.retry_from_bank(db, blueprint_id, weak_topics)
-        return JSONResponse(data)
-    except ValueError as e:
-        raise AppError(str(e), status_code=400)
-    except Exception as e:
-        logger.error(f"retry_exam error: {e}", exc_info=True)
-        raise AppError(str(e), status_code=500)
-
-
 @router.post("/explain")
 async def get_explanation(
-    payload: dict = Body(...),
+    payload: ExplainRequest,
     db: Session = Depends(get_db),
 ):
     try:
         explanation = exam_service.get_explanation(
             db=db,
-            bank_id=payload.get("bank_id"),
-            question_text=payload.get("question", ""),
-            correct_answer=payload.get("correct_answer", ""),
-            topic=payload.get("topic", ""),
+            bank_id=payload.bank_id,
+            question_text=payload.question,
+            correct_answer=payload.correct_answer,
+            topic=payload.topic,
         )
         return JSONResponse({"explanation": explanation})
     except Exception as e:

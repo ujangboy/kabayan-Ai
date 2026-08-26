@@ -880,7 +880,7 @@
     "tierMedium": "MEDIUM",
     "tierComplex": "COMPLEX",
     "recommended": "DIREKOMENDASIKAN",
-    "primaryNote": "Mulai dari {label}: {n} kartu tersedia, {q} kuis."
+    "primaryNote": "Mulai dari {{label}}: {{n}} kartu tersedia, {{q}} kuis."
   },
   "studyMetrics": {
     "title": "Metrik Belajar",

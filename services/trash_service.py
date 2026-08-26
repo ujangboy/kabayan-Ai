@@ -83,6 +83,18 @@ def trash_material(db: Session, material_id: int) -> bool:
     mat.status = "Trashed"
     mat.filepath = None
     db.commit()
+
+    # Tandai chunk RAG materi ini terhapus agar tidak lagi searchable.
+    # Gagal indexing tidak boleh gagalkan trash (best-effort, log saja).
+    try:
+        from services.rag_service import rag_service
+        rag_service.delete_document_chunks(f"mat_{material_id}")
+    except Exception as exc:
+        import logging
+        logging.getLogger(__name__).warning(
+            f"trash_material: gagal hapus chunk RAG mat_{material_id}: {exc}"
+        )
+
     cache_service.invalidate_all(db)
     return True
 

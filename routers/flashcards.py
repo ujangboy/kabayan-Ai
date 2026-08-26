@@ -2,7 +2,7 @@ from time_utils import utcnow
 import logging
 from fastapi import APIRouter, Depends, Form, Query
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List, Optional
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
@@ -65,8 +65,10 @@ async def get_flashcards_json(db: Session = Depends(get_db), skip: int = Query(0
 
 class ReviewRequest(BaseModel):
     flashcard_id: int
-    rating: int                        # 0=Lupa, 1=Sulit, 2=Biasa, 3=Mudah, 4=Sempurna
-    response_time_ms: Optional[int] = None
+    # 0=Lupa, 1=Sulit, 2=Biasa, 3=Mudah, 4=Sempurna — di luar rentang ini
+    # FSRS sebelumnya diam-diam memetakannya ke "Good" dan mengotori statistik.
+    rating: int = Field(..., ge=0, le=4)
+    response_time_ms: Optional[int] = Field(default=None, ge=0)
 
 
 @router.post("/api/flashcards/review")
@@ -201,7 +203,8 @@ async def batch_delete_flashcards(req: BatchDeleteRequest, db: Session = Depends
         return JSONResponse({"status": "success", "deleted": deleted, "total": len(req.ids)})
     except Exception as e:
         logger.error(f"Batch delete error: {e}")
-        return JSONResponse(status_code=500, content={"detail": str(e)})
+        from services.error_handler import safe_json_response
+        return safe_json_response(e, context="flashcards/batch-delete")
 
 @router.post("/api/flashcards/{flashcard_id}/delete")
 async def delete_flashcard(flashcard_id: int, db: Session = Depends(get_db)):
@@ -229,7 +232,8 @@ async def delete_flashcard(flashcard_id: int, db: Session = Depends(get_db)):
         except Exception:
             pass
         logger.error(f"Delete flashcard {flashcard_id} error: {e}")
-        return JSONResponse(status_code=500, content={"detail": str(e)})
+        from services.error_handler import safe_json_response
+        return safe_json_response(e, context="flashcards/delete")
 
 @router.post("/api/flashcards/clear")
 async def clear_flashcards(db: Session = Depends(get_db)):
@@ -286,6 +290,10 @@ async def generate_flashcards(
             "message": f"{data['count']} flashcard berhasil dibuat oleh AI."
         })
     except ValueError as e:
-        return JSONResponse(status_code=422, content={"detail": str(e)})
+        # Kegagalan parsing output AI = error server-side (bukan 422 client),
+        # dan snippet output AI tidak boleh dikirim ke client.
+        logger.error(f"Generate flashcards error: {e}")
+        return JSONResponse(status_code=502, content={"detail": "AI gagal menghasilkan flashcard yang valid. Silakan coba lagi."})
     except Exception as e:
-        return JSONResponse(status_code=500, content={"detail": str(e)})
+        from services.error_handler import safe_json_response
+        return safe_json_response(e, context="flashcards/generate")

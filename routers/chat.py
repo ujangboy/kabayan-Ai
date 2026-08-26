@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, BackgroundTasks
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List, Optional
 from sqlalchemy.orm import Session
 from database import get_db
@@ -13,13 +13,15 @@ router = APIRouter()
 
 class Message(BaseModel):
     role: str
-    content: str
+    # Batasi panjang tiap item history agar prompt LLM tidak membengkak
+    # (paritas dengan TutorChatRequest yang membatasi message 1000 char).
+    content: str = Field(default="", max_length=8000)
 
 class ChatRequest(BaseModel):
-    message: str
+    message: str = Field(..., min_length=1, max_length=8000)
     history: List[Message] = []
     documents: List[str] = []
-    session_id: Optional[str] = None
+    session_id: Optional[str] = Field(default=None, max_length=64)
 
 
 @router.post("/api/chat")
@@ -132,7 +134,7 @@ async def export_note(request: ExportRequest, db: Session = Depends(get_db)):
         note_repository.create(db, {
             "title": f"Chat Export: {title}",
             "content": request.content,
-            "subject_id": None
+            "subject_id": request.subject_id
         })
         return {"status": "success", "message": "Disimpan ke Catatan"}
     except Exception as e:

@@ -86,6 +86,10 @@ class YoutubeSource(BaseSource):
         self.video_id = self._extract_video_id(url)
         if not self.video_id:
             raise ValueError("Invalid YouTube URL")
+        # Kanonikalisasi: yt-dlp hanya pernah diberi URL ber-host YouTube resmi
+        # yang dibangun dari video_id tervalidasi regex — JANGAN pernah fetch
+        # URL mentah dari user (mencegah redirect/SSRF ke host internal).
+        self.url = f"https://www.youtube.com/watch?v={self.video_id}"
 
     def _extract_video_id(self, url: str) -> str:
         """Extract video ID dari berbagai format URL YouTube."""

@@ -41,6 +41,52 @@ from services.grading_utils import calculate_grade
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
 
+def _normalize_topics(raw) -> list:
+    """Normalisasi weak/strong_topics ke bentuk kanonik list[dict] dengan key 'topic'.
+
+    Data lama bisa berupa list[str] (hanya nama topik) — koaksikan agar kontrak
+    API ke frontend konsisten: selalu list[dict {topic, ...}].
+    """
+    if not isinstance(raw, list):
+        return []
+    normalized = []
+    for item in raw:
+        if isinstance(item, dict) and item.get("topic"):
+            normalized.append(item)
+        elif isinstance(item, str) and item.strip():
+            normalized.append({"topic": item.strip()})
+    return normalized
+
+
+def _load_topics_json(raw_json: str | None) -> list:
+    """Parse weak/strong_topics_json dari DB lalu normalisasi bentuknya."""
+    if not raw_json:
+        return []
+    try:
+        return _normalize_topics(json.loads(raw_json))
+    except (ValueError, TypeError):
+        return []
+
+
+def _safe_loads(raw_json, default=None):
+    """json.loads aman untuk kolom JSON buatan AI / data legacy — kembalikan
+    `default` jika kosong atau corrupt, alih-alih melempar JSONDecodeError."""
+    if raw_json is None or raw_json == "":
+        return default
+    try:
+        return json.loads(raw_json)
+    except (ValueError, TypeError):
+        return default
+
+
+def _load_blueprint_json(blueprint) -> dict:
+    """Parse blueprint_json; corrupt → ValueError user-facing (400), bukan crash 500."""
+    data = _safe_loads(blueprint.blueprint_json)
+    if not isinstance(data, dict):
+        raise ValueError(f"Data blueprint #{blueprint.id} rusak atau tidak valid. Buat ulang blueprint.")
+    return data
+
+
 def _parse_json_response(response: str, label: str = "AI") -> dict:
     from services.json_utils import parse_ai_json
     try:
@@ -284,7 +330,7 @@ class ExamService:
         if not blueprint:
             raise ValueError("Blueprint tidak ditemukan.")
 
-        blueprint_data = json.loads(blueprint.blueprint_json)
+        blueprint_data = _load_blueprint_json(blueprint)
         items          = blueprint_data.get("blueprint_items", [])
         subject_ids    = blueprint_data.get("subject_ids", [blueprint.subject_id])
         if isinstance(subject_ids, int):
@@ -437,7 +483,7 @@ class ExamService:
         if not blueprint:
             raise ValueError("Blueprint tidak ditemukan.")
 
-        blueprint_data = json.loads(blueprint.blueprint_json)
+        blueprint_data = _load_blueprint_json(blueprint)
         items          = blueprint_data.get("blueprint_items", [])
         total_needed   = blueprint.total_questions or sum(
             i.get("question_count", 1) for i in items
@@ -588,7 +634,7 @@ class ExamService:
         if not blueprint:
             raise ValueError("Blueprint tidak ditemukan.")
 
-        blueprint_data = json.loads(blueprint.blueprint_json)
+        blueprint_data = _load_blueprint_json(blueprint)
         items          = blueprint_data.get("blueprint_items", [])
         total_needed   = blueprint.total_questions or sum(
             i.get("question_count", 1) for i in items
@@ -662,9 +708,29 @@ class ExamService:
                     detail=f"Sesi ujian ID {session_id} tidak ditemukan",
                 )
             if session.submitted_at:
-                return json.loads(session.evaluation_json)
+                cached = _safe_loads(session.evaluation_json)
+                if isinstance(cached, dict):
+                    return cached
+                raise ValueError("Data evaluasi sesi ini rusak. Gunakan fitur retry untuk memulai ulang.")
 
-            questions_data = json.loads(session.questions_json)
+            # Atomic claim: tandai submitted_via conditional UPDATE agar dua
+            # submit paralel tidak sama-sama lolos check-then-act di atas
+            # (mencegah attempt duplikat + panggilan AI ganda). Hanya satu
+            # request yang berhasil meng-claim; yang lain mendapat cached eval.
+            claimed = (
+                db.query(ExamSession)
+                .filter(ExamSession.id == session_id, ExamSession.submitted_at.is_(None))
+                .update({"submitted_at": utcnow()}, synchronize_session=False)
+            )
+            db.commit()
+            if not claimed:
+                refreshed = exam_session_repository.get(db, session_id)
+                cached = _safe_loads(refreshed.evaluation_json) if refreshed else None
+                if isinstance(cached, dict):
+                    return cached
+                raise ValueError("Sesi ini sedang diproses atau datanya rusak.")
+
+            questions_data = _safe_loads(session.questions_json, {}) or {}
             questions      = questions_data.get("questions", [])
             exam_type      = questions_data.get("exam_type", "simulasi")
             subject        = subj_svc.get_by_id(db, session.subject_id)
@@ -737,8 +803,8 @@ class ExamService:
             session.bloom_level          = questions_data.get("bloom_level", "mixed")
             session.question_type        = questions_data.get("question_type", "mixed")
             session.total_questions      = len(questions)
-            session.weak_topics_json     = json.dumps(eval_data.get("weak_topics", []), ensure_ascii=False)
-            session.strong_topics_json   = json.dumps(eval_data.get("strong_topics", []), ensure_ascii=False)
+            session.weak_topics_json     = json.dumps(_normalize_topics(eval_data.get("weak_topics", [])), ensure_ascii=False)
+            session.strong_topics_json   = json.dumps(_normalize_topics(eval_data.get("strong_topics", [])), ensure_ascii=False)
             session.updated_at           = utcnow()
 
             attempt = ExamAttempt(
@@ -756,9 +822,9 @@ class ExamService:
             db.add(attempt)
             db.flush()
 
-            questions_data_local = json.loads(session.questions_json) if session.questions_json else {}
+            questions_data_local = _safe_loads(session.questions_json, {}) or {}
             qs = questions_data_local.get("questions", [])
-            answers_local = json.loads(session.answers_json) if session.answers_json else {}
+            answers_local = _safe_loads(session.answers_json, {}) or {}
             per_q_fb = {str(f["question_id"]): f for f in eval_data.get("per_question_feedback", [])}
             review_rows = []
             for q in qs:
@@ -791,14 +857,19 @@ class ExamService:
             db.commit()
 
         except HTTPException:
+            # Lepaskan claim agar user bisa retry (kecuali 404 yang memang fatal)
             raise
         except SQLAlchemyError as err:
+            db.rollback()
+            self._release_submit_claim(db, session_id)
             logger.error(f"submit_and_evaluate DB error: {err}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Gagal memproses data ujian karena kendala database.",
             )
         except Exception as exc:
+            db.rollback()
+            self._release_submit_claim(db, session_id)
             logger.error(f"submit_and_evaluate unexpected error: {exc}", exc_info=True)
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -806,6 +877,19 @@ class ExamService:
             )
 
         return eval_data
+
+    def _release_submit_claim(self, db: Session, session_id: int) -> None:
+        """Batalkan claim submitted_at saat evaluasi gagal agar sesi bisa di-submit ulang."""
+        try:
+            (
+                db.query(ExamSession)
+                .filter(ExamSession.id == session_id)
+                .update({"submitted_at": None}, synchronize_session=False)
+            )
+            db.commit()
+        except Exception as release_err:
+            logger.warning(f"submit_and_evaluate: gagal melepas claim sesi {session_id}: {release_err}")
+            db.rollback()
 
 
     # ── 6. Recommendation — rule-based Python, no AI ──────────────────────────
@@ -816,8 +900,10 @@ class ExamService:
         if not session or not session.evaluation_json:
             raise ValueError("Evaluasi belum tersedia untuk sesi ini.")
 
-        eval_data    = json.loads(session.evaluation_json)
-        questions_data = json.loads(session.questions_json)
+        eval_data    = _safe_loads(session.evaluation_json)
+        if not isinstance(eval_data, dict):
+            raise ValueError("Data evaluasi sesi ini rusak, rencana belajar tidak bisa dibuat.")
+        questions_data = _safe_loads(session.questions_json, {}) or {}
         subject      = subj_svc.get_by_id(db, session.subject_id)
         subject_name = subject.name if subject else "Mata Kuliah"
         exam_type    = questions_data.get("exam_type", "simulasi")
@@ -911,9 +997,9 @@ class ExamService:
         )
         if not s:
             raise ValueError("Sesi tidak ditemukan.")
-        questions_data = json.loads(s.questions_json) if s.questions_json else {}
-        evaluation     = json.loads(s.evaluation_json) if s.evaluation_json else None
-        answers        = json.loads(s.answers_json) if s.answers_json else {}
+        questions_data = _safe_loads(s.questions_json, {}) or {}
+        evaluation     = _safe_loads(s.evaluation_json)
+        answers        = _safe_loads(s.answers_json, {}) or {}
 
         attempt_data = []
         for a in s.attempts:
@@ -940,7 +1026,7 @@ class ExamService:
             plan_data = {
                 "id": s.plan.id, "title": s.plan.title,
                 "motivational_message": s.plan.motivational_message,
-                "priority_actions": json.loads(s.plan.priority_actions_json) if s.plan.priority_actions_json else [],
+                "priority_actions": _safe_loads(s.plan.priority_actions_json, []) or [],
                 "total_days": s.plan.total_days, "completed_days": s.plan.completed_days,
                 "progress": s.plan.progress,
                 "start_date": s.plan.start_date.isoformat() if s.plan.start_date else None,
@@ -973,8 +1059,8 @@ class ExamService:
             "score": s.score, "best_score": s.best_score, "latest_score": s.latest_score,
             "grade": s.grade, "progress": s.progress, "status": s.status or "active",
             "total_correct": s.total_correct, "total_wrong": s.total_wrong,
-            "weak_topics": json.loads(s.weak_topics_json) if s.weak_topics_json else [],
-            "strong_topics": json.loads(s.strong_topics_json) if s.strong_topics_json else [],
+            "weak_topics": _load_topics_json(s.weak_topics_json),
+            "strong_topics": _load_topics_json(s.strong_topics_json),
             "overall_feedback": evaluation.get("overall_feedback", "") if evaluation else "",
             "performance_level": evaluation.get("performance_level", "") if evaluation else "",
             "submitted": s.submitted_at is not None,
@@ -1048,8 +1134,8 @@ class ExamService:
                 "total_questions": s.total_questions,
                 "best_score": s.best_score, "latest_score": s.latest_score,
                 "grade": s.grade, "progress": s.progress, "status": s.status or "active",
-                "weak_topics": json.loads(s.weak_topics_json) if s.weak_topics_json else [],
-                "strong_topics": json.loads(s.strong_topics_json) if s.strong_topics_json else [],
+                "weak_topics": _load_topics_json(s.weak_topics_json),
+                "strong_topics": _load_topics_json(s.strong_topics_json),
                 "attempt_count": len(attempts), "attempts": attempt_list,
                 "has_study_plan": plan is not None,
                 "study_plan_progress": plan.progress if plan else 0,
@@ -1109,16 +1195,12 @@ class ExamService:
             # Resolve weak topics: use provided, or fall back to session's evaluated weak topics
             effective_weak = weak_topics
             if not effective_weak:
-                try:
-                    raw = json.loads(session.weak_topics_json) if session.weak_topics_json else []
-                    effective_weak = [
-                        w.get("topic", w) if isinstance(w, dict) else w
-                        for w in raw
-                    ]
-                except (json.JSONDecodeError, TypeError):
-                    effective_weak = []
+                effective_weak = [
+                    w.get("topic", w) if isinstance(w, dict) else w
+                    for w in _load_topics_json(session.weak_topics_json)
+                ]
 
-            blueprint_data = json.loads(blueprint.blueprint_json)
+            blueprint_data = _load_blueprint_json(blueprint)
             items = blueprint_data.get("blueprint_items", [])
             total_needed = blueprint.total_questions or sum(
                 i.get("question_count", 1) for i in items
@@ -1276,14 +1358,10 @@ class ExamService:
             # Use provided weak_topics, or fall back to session's evaluated weak topics
             effective_weak = weak_topics
             if not effective_weak and not topic_filter:
-                try:
-                    raw = json.loads(session.weak_topics_json) if session.weak_topics_json else []
-                    effective_weak = [
-                        w.get("topic", w) if isinstance(w, dict) else w
-                        for w in raw
-                    ]
-                except (json.JSONDecodeError, TypeError):
-                    effective_weak = []
+                effective_weak = [
+                    w.get("topic", w) if isinstance(w, dict) else w
+                    for w in _load_topics_json(session.weak_topics_json)
+                ]
 
             result = self.retry_from_bank(
                 db, blueprint_id,

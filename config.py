@@ -56,6 +56,15 @@ TRASH_RETENTION_DAYS = 7
 # Angka ini perkiraan (bukan kuota hard Groq); dipakai untuk progress bar UI.
 GROQ_DAILY_LIMIT = int(os.getenv("GROQ_DAILY_LIMIT", "8000"))
 
+# --- CORS ---
+# Default: "*" (wajar untuk aplikasi lokal single-user yang diakses via
+# 127.0.0.1). Saat di-deploy ke jaringan/publik, set CORS_ORIGINS di .env
+# ke daftar origin eksplisit, dipisah koma, contoh:
+#   CORS_ORIGINS=http://localhost:7860,https://kabayan.example.com
+CORS_ORIGINS = [
+    o.strip() for o in os.getenv("CORS_ORIGINS", "*").split(",") if o.strip()
+] or ["*"]
+
 # Ensure directories exist
 for path in [LANCEDB_DIR, TEXT_CACHE_DIR, UPLOADS_DIR, SESSION_DIR, TRASH_DIR, BACKUPS_DIR]:
     os.makedirs(path, exist_ok=True)

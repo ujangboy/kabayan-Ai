@@ -200,7 +200,7 @@ except Exception:
 # Initialize Database (Alembic is source of truth for schema)
 Base.metadata.create_all(bind=engine)
 
-# Apply pending migrations (upgrade, NOT stamp — stamp would hide unapplied migrations)
+# Apply pending migrations (upgrade, NOT blind-stamp — stamp would hide unapplied migrations)
 try:
     from alembic.config import Config
     from alembic import command
@@ -208,14 +208,30 @@ try:
     command.upgrade(alembic_cfg, "head")
     logger.info("Alembic schema upgraded to head.")
 except Exception as e:
-    logger.warning(f"Alembic upgrade failed (fresh DB with create_all schema?), stamping head instead: {e}")
+    # Stamp hanya sah untuk BOOTSTRAP: DB dibuat via create_all (semua tabel
+    # sudah ada) sehingga migrasi 001 gagal "table already exists", dan tabel
+    # alembic_version belum ada. Selain kasus itu, kegagalan upgrade = drift
+    # skema nyata — JANGAN stamp (dulu menyamarkan drift secara permanen).
     try:
-        from alembic.config import Config
-        from alembic import command
-        alembic_cfg = Config(os.path.join(os.path.dirname(__file__), "alembic.ini"))
-        command.stamp(alembic_cfg, "head")
-    except Exception as e2:
-        logger.warning(f"Alembic stamp skipped (first run?): {e2}")
+        from sqlalchemy import inspect as sa_inspect
+        insp = sa_inspect(engine)
+        versioned = insp.has_table("alembic_version")
+    except Exception:
+        versioned = True  # tak bisa memastikan → perlakukan sebagai drift
+    if not versioned:
+        logger.info(f"Alembic bootstrap: mendaftarkan DB create_all sebagai head ({e})")
+        try:
+            from alembic.config import Config
+            from alembic import command
+            alembic_cfg = Config(os.path.join(os.path.dirname(__file__), "alembic.ini"))
+            command.stamp(alembic_cfg, "head")
+        except Exception as e2:
+            logger.warning(f"Alembic stamp skipped (first run?): {e2}")
+    else:
+        logger.critical(
+            f"Alembic upgrade GAGAL pada DB yang sudah ter-versioning — "
+            f"skema kemungkinan drift dan TIDAK di-stamp. Perbaiki sebelum lanjut: {e}"
+        )
 
 from contextlib import asynccontextmanager
 
@@ -307,7 +323,7 @@ async def material_worker():
 from fastapi.middleware.cors import CORSMiddleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=config.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -320,6 +336,11 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 DIST_DIR = os.path.join(os.path.dirname(__file__), "frontend", "dist")
 if os.path.isdir(DIST_DIR):
     app.mount("/assets", StaticFiles(directory=os.path.join(DIST_DIR, "assets")), name="assets")
+    # Self-hosted fonts (build output dari public/fonts) — agar UI konsisten
+    # saat di-serve langsung lewat FastAPI (tanpa Vite dev server).
+    FONTS_DIR = os.path.join(DIST_DIR, "fonts")
+    if os.path.isdir(FONTS_DIR):
+        app.mount("/fonts", StaticFiles(directory=FONTS_DIR), name="fonts")
 
 # Include Routers
 app.include_router(dashboard.router)
@@ -371,7 +392,9 @@ async def health_check():
             
         db.close()
     except Exception as e:
-        status["SQLite"] = f"ERROR: {e}"
+        # Jangan bocorkan detail DB/driver ke client — log saja
+        logger.error(f"/health SQLite check error: {e}")
+        status["SQLite"] = "ERROR"
         
     all_pass = all(v == "OK" for v in status.values())
     return JSONResponse(status_code=200 if all_pass else 500, content={"status": "PASS" if all_pass else "FAIL", "details": status})
