@@ -165,6 +165,27 @@
     "createSubject": "Create Subject",
     "uploadMaterial": "Upload Material"
   },
+  "studyInsights": {
+    "title": "Study Insights",
+    "subtitle": "FSRS, streak & today's plan",
+    "dueCards": "Due cards",
+    "newCards": "New cards",
+    "streak": "Streak",
+    "days": "days",
+    "retention": "Retention",
+    "stability": "Avg stability (d)",
+    "difficulty": "Avg difficulty",
+    "todayPlan": "Today's Plan",
+    "planItems": "{{count}} sessions",
+    "planMinutes": "{{minutes}} min",
+    "bestHour": "Best hour {{hour}}:00",
+    "emptyPlan": "No plan yet — try studying something new.",
+    "diagnostic": "Readiness",
+    "coverage": "Coverage {{pct}}%",
+    "knowledge": "Knowledge Graph",
+    "weakTopics": "{{count}} weak topics",
+    "viewDetails": "Details"
+  },
   "chat": {
     "newChat": "New Chat",
     "deleteAll": "Delete All Chats",

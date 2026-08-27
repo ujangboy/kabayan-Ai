@@ -7,6 +7,7 @@ import { formatDate, formatBytes } from '@/utils';
 import { EmptyState, Skeleton, HelpTip, Icon , Button} from '@/components/ui';
 import { ICONS } from '@/lib/icons';
 import FileTypeIcon from '@/components/FileTypeIcon';
+import StudyInsights from '@/components/study/StudyInsights';
 import api from '@/services/api';
 
 const QUICK_ACTIONS = (t) => [
@@ -173,6 +174,9 @@ export default function DashboardPage() {
             </div>
           )}
         </motion.section>
+
+        {/* Study Insights (R7: wire study cards) */}
+        <StudyInsights />
 
         {/* Recent Materials + Recent Quizzes side by side */}
         <motion.section

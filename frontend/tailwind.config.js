@@ -5,6 +5,14 @@ export default {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
     extend: {
+      // ─── Spacing tokens (satu sumber kebenaran jarak) ───────────────────────
+      // Default Tailwind sudah pakai skala 4/8px; token semantik ini memudahkan
+      // konsistensi antar-halaman tanpa mengubah nilai existing.
+      spacing: {
+        card: "1.25rem",      // 20px — padding standar kartu (setara p-5)
+        section: "1.5rem",    // 24px — padding section / konten halaman
+        "card-gap": "1rem",   // 16px — jarak antar kartu
+      },
       colors: {
         // 60% — kanvas
         base: "rgb(var(--bg-base) / <alpha-value>)",

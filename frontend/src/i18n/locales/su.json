@@ -154,6 +154,27 @@
     "createSubject": "Jieun Mata Pelajaran",
     "uploadMaterial": "Unggah Materi"
   },
+  "studyInsights": {
+    "title": "Wawasan Belajar",
+    "subtitle": "FSRS, streak & rencana dinten ieu",
+    "dueCards": "Kartu jatuh tempo",
+    "newCards": "Kartu anyar",
+    "streak": "Streak",
+    "days": "poé",
+    "retention": "Rétensi",
+    "stability": "Stabilitas rata-rata (j)",
+    "difficulty": "Kasusah rata-rata",
+    "todayPlan": "Rencana Dinten Ieu",
+    "planItems": "{{count}} sési",
+    "planMinutes": "{{minutes}} mnt",
+    "bestHour": "Jam pangsaéstuna {{hour}}:00",
+    "emptyPlan": "Acan aya rencana — coba diajar hal anyar.",
+    "diagnostic": "Kasiapan",
+    "coverage": "Cakupan {{pct}}%",
+    "knowledge": "Péta Pangaweruh",
+    "weakTopics": "{{count}} topik lemah",
+    "viewDetails": "Rinci"
+  },
   "chat": {
     "newChat": "Chat Anyar",
     "deleteAll": "Hapus Kabéh Chat",

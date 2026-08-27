@@ -174,6 +174,18 @@ export const studyAPI = {
   // progres belajar: streak konsistensi + tren mastery (PRD US5.1)
   progress: (subjectId = null) =>
     api.get('/study/progress', { params: subjectId ? { subject_id: subjectId } : {} }).then(r => r.data),
+  // metrik FSRS global: total/due/new/mastered cards + retensi/stabilitas (PRD US3.3)
+  metrics: (subjectId = null) =>
+    api.get('/study/metrics', { params: subjectId ? { subject_id: subjectId } : {} }).then(r => r.data),
+  // rencana belajar harian (PRD US4.3)
+  dailyPlan: (subjectId = null, freeMinutes = 60) =>
+    api.get('/study/daily-plan', { params: { free_minutes: freeMinutes, ...(subjectId ? { subject_id: subjectId } : {}) } }).then(r => r.data),
+  // knowledge graph (PRD US4.1)
+  knowledgeGraph: (subjectId = null) =>
+    api.get('/study/knowledge-graph', { params: subjectId ? { subject_id: subjectId } : {} }).then(r => r.data),
+  // diagnostic kesiapan (PRD US4.2)
+  diagnostic: (subjectId = null) =>
+    api.get('/study/diagnostic', { params: subjectId ? { subject_id: subjectId } : {} }).then(r => r.data),
 };
 
 // --- TUTOR ---

@@ -165,6 +165,27 @@
     "createSubject": "Buat Mata Kuliah",
     "uploadMaterial": "Upload Materi"
   },
+  "studyInsights": {
+    "title": "Wawasan Belajar",
+    "subtitle": "FSRS, streak & rencana hari ini",
+    "dueCards": "Kartu jatuh tempo",
+    "newCards": "Kartu baru",
+    "streak": "Streak",
+    "days": "hari",
+    "retention": "Retensi",
+    "stability": "Stabilitas rata-rata (h)",
+    "difficulty": "Kesulitan rata-rata",
+    "todayPlan": "Rencana Hari Ini",
+    "planItems": "{{count}} sesi",
+    "planMinutes": "{{minutes}} mnt",
+    "bestHour": "Jam terbaik {{hour}}:00",
+    "emptyPlan": "Belum ada rencana — coba pelajari hal baru.",
+    "diagnostic": "Kesiapan",
+    "coverage": "Cakupan {{pct}}%",
+    "knowledge": "Peta Pengetahuan",
+    "weakTopics": "{{count}} topik lemah",
+    "viewDetails": "Detail"
+  },
   "chat": {
     "newChat": "Chat Baru",
     "deleteAll": "Hapus Semua Chat",
