@@ -17,6 +17,7 @@ from schemas.exam import (
     ExplainRequest,
 )
 from exceptions import AppError
+from schemas.common import StatusMessage
 
 router = APIRouter(prefix="/api/exam", tags=["Exam Analyzer"])
 
@@ -25,7 +26,7 @@ _BACKGROUND_TASKS: set = set()
 logger = logging.getLogger(__name__)
 
 
-@router.post("/analyze/{subject_id}")
+@router.post("/analyze/{subject_id}", response_model=StatusMessage)
 async def analyze_subject(subject_id: int, db: Session = Depends(get_db)):
     try:
         data = exam_service.analyze(db, subject_id)
@@ -37,7 +38,7 @@ async def analyze_subject(subject_id: int, db: Session = Depends(get_db)):
         raise AppError(str(e), status_code=500)
 
 
-@router.post("/blueprint")
+@router.post("/blueprint", response_model=StatusMessage)
 async def generate_blueprint(
     payload: BlueprintRequest,
     db: Session = Depends(get_db),
@@ -74,7 +75,7 @@ async def get_blueprints(subject_id: int, db: Session = Depends(get_db)):
         raise AppError(str(e), status_code=500)
 
 
-@router.post("/generate/{blueprint_id}")
+@router.post("/generate/{blueprint_id}", response_model=StatusMessage)
 async def generate_questions(blueprint_id: int, db: Session = Depends(get_db)):
     try:
         data = exam_service.generate_questions(db, blueprint_id)
@@ -86,7 +87,7 @@ async def generate_questions(blueprint_id: int, db: Session = Depends(get_db)):
         raise AppError(str(e), status_code=500)
 
 
-@router.post("/submit/{session_id}")
+@router.post("/submit/{session_id}", response_model=StatusMessage)
 async def submit_exam(
     session_id: int,
     payload: SubmitAnswersRequest,
@@ -156,7 +157,7 @@ async def get_recommendation(session_id: int, db: Session = Depends(get_db)):
         raise AppError(str(e), status_code=500)
 
 
-@router.post("/explain")
+@router.post("/explain", response_model=StatusMessage)
 async def get_explanation(
     payload: ExplainRequest,
     db: Session = Depends(get_db),
@@ -205,7 +206,7 @@ async def get_learning_profile(subject_id: int, db: Session = Depends(get_db)):
         raise AppError(str(e), status_code=500)
 
 
-@router.post("/learning-profile/{subject_id}/reset")
+@router.post("/learning-profile/{subject_id}/reset", response_model=StatusMessage)
 async def reset_learning_profile(subject_id: int, db: Session = Depends(get_db)):
     """Reset profil adaptif per mata kuliah ke kondisi kosong (cold start).
 
@@ -226,7 +227,7 @@ async def reset_learning_profile(subject_id: int, db: Session = Depends(get_db))
         raise AppError(str(e), status_code=500)
 
 
-@router.post("/learning-profile/{subject_id}/recalculate")
+@router.post("/learning-profile/{subject_id}/recalculate", response_model=StatusMessage)
 async def recalculate_learning_profile(subject_id: int, db: Session = Depends(get_db)):
     """Hitung ulang profil adaptif dari seluruh ExamReview yang ada.
 
@@ -273,7 +274,7 @@ async def get_detail_session(session_id: int, db: Session = Depends(get_db)):
         raise AppError(str(e), status_code=500)
 
 
-@router.post("/sessions/{session_id}/retry-inplace")
+@router.post("/sessions/{session_id}/retry-inplace", response_model=StatusMessage)
 async def retry_session_inplace(
     session_id: int,
     payload: RetryRequest = RetryRequest(),
@@ -294,7 +295,7 @@ async def retry_session_inplace(
         raise AppError(str(e), status_code=500)
 
 
-@router.post("/sessions/{session_id}/retry")
+@router.post("/sessions/{session_id}/retry", response_model=StatusMessage)
 async def retry_session(
     session_id: int,
     payload: RetryRequest = RetryRequest(),
@@ -314,7 +315,7 @@ async def retry_session(
         raise AppError(str(e), status_code=500)
 
 
-@router.post("/sessions/{session_id}/practice-questions")
+@router.post("/sessions/{session_id}/practice-questions", response_model=StatusMessage)
 async def fetch_practice_questions(
     session_id: int,
     topic_filter: Optional[str] = Query(None),
@@ -332,7 +333,7 @@ async def fetch_practice_questions(
         raise AppError(str(e), status_code=500)
 
 
-@router.post("/sessions/{session_id}/study-plan")
+@router.post("/sessions/{session_id}/study-plan", response_model=StatusMessage)
 async def save_session_study_plan(
     session_id: int,
     payload: StudyPlanRequest,
@@ -346,7 +347,7 @@ async def save_session_study_plan(
         raise AppError(str(e), status_code=500)
 
 
-@router.post("/sessions/plan-item/{item_id}/toggle")
+@router.post("/sessions/plan-item/{item_id}/toggle", response_model=StatusMessage)
 async def toggle_session_plan_item(item_id: int, db: Session = Depends(get_db)):
     try:
         data = exam_service.toggle_plan_item(db, item_id)
@@ -356,7 +357,7 @@ async def toggle_session_plan_item(item_id: int, db: Session = Depends(get_db)):
         raise AppError(str(e), status_code=500)
 
 
-@router.post("/sessions/plan-item/{item_id}/submit-quiz")
+@router.post("/sessions/plan-item/{item_id}/submit-quiz", response_model=StatusMessage)
 async def submit_plan_quiz(
     item_id: int,
     payload: SubmitPlanQuizRequest,
@@ -371,7 +372,7 @@ async def submit_plan_quiz(
         raise AppError(str(e), status_code=500)
 
 
-@router.post("/sessions/plan-item/{item_id}/submit-flashcards")
+@router.post("/sessions/plan-item/{item_id}/submit-flashcards", response_model=StatusMessage)
 async def submit_plan_flashcards(
     item_id: int,
     payload: SubmitPlanFlashcardsRequest,
@@ -388,7 +389,7 @@ async def submit_plan_flashcards(
 class SummaryRequest(BaseModel):
     topic: str
 
-@router.post("/sessions/{session_id}/summary")
+@router.post("/sessions/{session_id}/summary", response_model=StatusMessage)
 async def generate_session_summary(
     session_id: int,
     payload: SummaryRequest,
@@ -403,7 +404,7 @@ async def generate_session_summary(
         raise AppError(str(e), status_code=500)
 
 
-@router.delete("/sessions/{session_id}")
+@router.delete("/sessions/{session_id}", response_model=StatusMessage)
 async def delete_session(session_id: int, db: Session = Depends(get_db)):
     try:
         success = exam_service.delete_session(db, session_id)

@@ -18,6 +18,7 @@ from services.trash_service import (
     empty_trash,
 )
 from exceptions import AppError
+from schemas.common import StatusMessage
 
 router = APIRouter()
 
@@ -33,7 +34,7 @@ async def trash_list(db: Session = Depends(get_db)):
         raise AppError(str(exc), status_code=500)
 
 
-@router.post("/api/trash/{item_id}/restore")
+@router.post("/api/trash/{item_id}/restore", response_model=StatusMessage)
 async def trash_restore(item_id: int, db: Session = Depends(get_db)):
     """Kembalikan satu item sampah ke posisi semula."""
     try:
@@ -47,7 +48,7 @@ async def trash_restore(item_id: int, db: Session = Depends(get_db)):
         raise AppError(str(exc), status_code=500)
 
 
-@router.post("/api/trash/{item_id}/delete")
+@router.post("/api/trash/{item_id}/delete", response_model=StatusMessage)
 async def trash_delete(item_id: int, db: Session = Depends(get_db)):
     """Hapus permanen satu item sampah (file + record)."""
     try:
@@ -61,7 +62,7 @@ async def trash_delete(item_id: int, db: Session = Depends(get_db)):
         raise AppError(str(exc), status_code=500)
 
 
-@router.post("/api/trash/materials/{material_id}/restore")
+@router.post("/api/trash/materials/{material_id}/restore", response_model=StatusMessage)
 async def trash_restore_material(material_id: int, db: Session = Depends(get_db)):
     """Kembalikan materi dari sampah."""
     try:
@@ -75,7 +76,7 @@ async def trash_restore_material(material_id: int, db: Session = Depends(get_db)
         raise AppError(str(exc), status_code=500)
 
 
-@router.post("/api/trash/materials/{material_id}/delete")
+@router.post("/api/trash/materials/{material_id}/delete", response_model=StatusMessage)
 async def trash_delete_material(material_id: int, db: Session = Depends(get_db)):
     """Hapus permanen materi (file + record + RAG chunks)."""
     try:
@@ -89,7 +90,7 @@ async def trash_delete_material(material_id: int, db: Session = Depends(get_db))
         raise AppError(str(exc), status_code=500)
 
 
-@router.post("/api/trash/empty")
+@router.post("/api/trash/empty", response_model=StatusMessage)
 async def trash_empty(db: Session = Depends(get_db)):
     """Kosongkan sampah permanen (semua file di trash dir dihapus)."""
     try:

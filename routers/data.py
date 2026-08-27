@@ -17,6 +17,7 @@ from services.usage_service import get_usage
 from services.trash_service import get_trash_count
 from services.backup_service import create_backup, list_backups, backup_path_for
 from exceptions import AppError
+from schemas.common import StatusMessage
 
 router = APIRouter()
 
@@ -80,7 +81,7 @@ async def data_overview(db: Session = Depends(get_db)):
 
 # ─── Backup / Export ─────────────────────────────────────────────────────────
 
-@router.post("/api/backup/create")
+@router.post("/api/backup/create", response_model=StatusMessage)
 async def create_backup_now():
     """Buat arsip backup ZIP (DB snapshot + uploads) di storage/backups."""
     try:

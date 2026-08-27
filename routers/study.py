@@ -16,6 +16,7 @@ from database import get_db
 from engines.modality_router import route as modality_route, VALID_TIERS
 from engines.learning_metrics import get_learning_metrics
 from engines.daily_planner import generate_daily_plan
+from schemas.common import StatusMessage
 
 router = APIRouter()
 
@@ -26,7 +27,7 @@ class StudyRouteRequest(BaseModel):
     topic: Optional[str] = None
 
 
-@router.post("/api/study/route")
+@router.post("/api/study/route", response_model=StatusMessage)
 async def study_route(req: StudyRouteRequest, db: Session = Depends(get_db)):
     """Rekomendasikan modalitas belajar berdasarkan tier kompleksitas + stok latihan."""
     from models import Subject

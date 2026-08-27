@@ -17,6 +17,7 @@ from database import get_db
 from services.settings_service import settings_service, APP_DEFAULT_LANGUAGE
 from exceptions import AppError
 import config
+from schemas.common import StatusMessage
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +50,7 @@ async def get_profile(db: Session = Depends(get_db)):
         raise AppError(str(exc), status_code=500)
 
 
-@router.put("/api/profile")
+@router.put("/api/profile", response_model=StatusMessage)
 async def update_profile(payload: ProfileUpdate, db: Session = Depends(get_db)):
     """Perbarui nama tampilan dan/atau preferensi bahasa."""
     try:
@@ -77,7 +78,7 @@ async def update_profile(payload: ProfileUpdate, db: Session = Depends(get_db)):
         raise AppError(str(exc), status_code=500)
 
 
-@router.post("/api/profile/photo")
+@router.post("/api/profile/photo", response_model=StatusMessage)
 async def upload_profile_photo(file: UploadFile = File(...), db: Session = Depends(get_db)):
     """Unggah foto profil. Simpan ke static/profile/ dan simpan jalurnya di Setting."""
     original = (file.filename or "").lower()

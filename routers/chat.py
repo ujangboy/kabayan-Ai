@@ -10,6 +10,7 @@ from services.quiz_service import quiz_service
 from repositories.chat_repository import chat_repository
 from exceptions import AppError
 import time
+from schemas.common import StatusMessage
 
 router = APIRouter()
 
@@ -26,7 +27,7 @@ class ChatRequest(BaseModel):
     session_id: Optional[str] = Field(default=None, max_length=64)
 
 
-@router.post("/api/chat/{chat_id}/delete")
+@router.post("/api/chat/{chat_id}/delete", response_model=StatusMessage)
 async def delete_chat(chat_id: int, db: Session = Depends(get_db)):
     """Hapus satu chat + semua messagenya (cascade via relationship)."""
     deleted = chat_repository.delete(db, chat_id)
@@ -36,7 +37,7 @@ async def delete_chat(chat_id: int, db: Session = Depends(get_db)):
     return JSONResponse({"status": "success", "message": "Chat deleted"})
 
 
-@router.post("/api/chat/clear")
+@router.post("/api/chat/clear", response_model=StatusMessage)
 async def clear_chats(db: Session = Depends(get_db)):
     """Hapus SEMUA chat + messagenya."""
     from models import Chat
@@ -46,7 +47,7 @@ async def clear_chats(db: Session = Depends(get_db)):
     return JSONResponse({"status": "success", "message": f"{count} chats deleted"})
 
 
-@router.post("/api/chat")
+@router.post("/api/chat", response_model=StatusMessage)
 async def chat_endpoint(request: ChatRequest, db: Session = Depends(get_db)):
     import asyncio
     import os
@@ -157,7 +158,7 @@ class ExportRequest(BaseModel):
     content: str
     subject_id: Optional[int] = None
 
-@router.post("/api/export/note")
+@router.post("/api/export/note", response_model=StatusMessage)
 async def export_note(request: ExportRequest, db: Session = Depends(get_db)):
     try:
         title = request.content[:30] + "..." if len(request.content) > 30 else request.content
@@ -171,7 +172,7 @@ async def export_note(request: ExportRequest, db: Session = Depends(get_db)):
     except Exception as e:
         raise AppError(str(e), status_code=500)
 
-@router.post("/api/export/flashcards")
+@router.post("/api/export/flashcards", response_model=StatusMessage)
 async def export_flashcards(request: ExportRequest, db: Session = Depends(get_db)):
     try:
         count = flashcard_service.generate_flashcards(db, request.subject_id, request.content)
@@ -179,7 +180,7 @@ async def export_flashcards(request: ExportRequest, db: Session = Depends(get_db
     except Exception as e:
         raise AppError(f"Gagal mengekstrak flashcard: {str(e)}", status_code=500)
 
-@router.post("/api/export/quiz")
+@router.post("/api/export/quiz", response_model=StatusMessage)
 async def export_quiz(request: ExportRequest, db: Session = Depends(get_db)):
     try:
         return {"status": "success", "message": "Fitur kuis telah ditingkatkan menjadi interaktif. Silakan buka menu Quiz di sidebar untuk menggenerate kuis secara dinamis dari materi Anda!"}

@@ -180,28 +180,6 @@ async def save_quiz_score(
     return JSONResponse({"status": "success", "quiz_id": quiz_id, "score": score})
 
 
-@router.get("/api/quizzes/history")
-async def get_quiz_history(subject_id: int = Query(None), db: Session = Depends(get_db)):
-    """Riwayat skor quiz per subject — untuk grafik perkembangan."""
-    from models import Quiz as QuizModel
-    query = db.query(QuizModel).order_by(QuizModel.created_at.asc())
-    if subject_id:
-        query = query.filter(QuizModel.subject_id == subject_id)
-    rows = query.all()
-    history = []
-    for q in rows:
-        if q.score is None:
-            continue
-        history.append({
-            "id": q.id,
-            "date": q.created_at.isoformat() if q.created_at else None,
-            "score": q.score,
-            "title": q.title or f"Quiz #{q.id}",
-            "subject_id": q.subject_id,
-        })
-    return JSONResponse({"history": history})
-
-
 @router.delete("/api/quizzes/{quiz_id}", response_model=StatusMessage)
 async def delete_quiz(quiz_id: int, db: Session = Depends(get_db)):
     success = quiz_repository.delete(db, quiz_id)

@@ -35,6 +35,7 @@ from services.tutor_profile_service import (
     record_message,
 )
 from exceptions import AppError
+from schemas.common import StatusMessage
 
 logger = logging.getLogger(__name__)
 
@@ -81,7 +82,7 @@ def _estimate_tokens(text: str) -> int:
 
 # ─── Endpoints ────────────────────────────────────────────────────────────────
 
-@router.post("/api/tutor/chat")
+@router.post("/api/tutor/chat", response_model=StatusMessage)
 async def tutor_chat(request: TutorChatRequest, db: Session = Depends(get_db)):
     """
     Streaming tutor chat endpoint.
@@ -206,7 +207,7 @@ async def tutor_chat(request: TutorChatRequest, db: Session = Depends(get_db)):
         raise AppError(str(exc), status_code=500)
 
 
-@router.post("/api/tutor/classify")
+@router.post("/api/tutor/classify", response_model=StatusMessage)
 async def tutor_classify(request: TutorClassifyRequest):
     """
     Classify a message without generating a response.
@@ -220,7 +221,7 @@ async def tutor_classify(request: TutorClassifyRequest):
         raise AppError(str(exc), status_code=500)
 
 
-@router.post("/api/tutor/feedback")
+@router.post("/api/tutor/feedback", response_model=StatusMessage)
 async def tutor_feedback(request: TutorFeedbackRequest, db: Session = Depends(get_db)):
     """
     Simpan rating siswa terhadap satu respons tutor.
