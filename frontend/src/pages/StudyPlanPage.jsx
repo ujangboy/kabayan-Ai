@@ -152,7 +152,7 @@ export default function StudyPlanPage() {
       <AnimatePresence mode="wait" initial={false}>
         <motion.div key="error" {...fadeSlide} className="flex-1 flex flex-col items-center justify-center p-6 text-center">
           <p className="text-danger mb-4">Gagal memuat rencana belajar: {extractErrorMessage(error)}</p>
-          <button onClick={() => navigate('/exam-analyzer')} className="btn-ghost border border-border">Kembali</button>
+          <Button onClick={() => navigate('/exam-analyzer')} className="border border-border" variant="ghost">Kembali</Button>
         </motion.div>
       </AnimatePresence>
     );
@@ -164,7 +164,7 @@ export default function StudyPlanPage() {
         <motion.div key="noplan" {...fadeSlide} className="flex-1 flex flex-col items-center justify-center p-6 text-center">
           <EmptyState
             title={t('studyPlanPage.noPlan')}
-            action={<button onClick={() => navigate('/exam-analyzer')} className="btn-ghost border border-border">Kembali</button>}
+            action={<Button onClick={() => navigate('/exam-analyzer')} className="border border-border" variant="ghost">Kembali</Button>}
           />
         </motion.div>
       </AnimatePresence>
@@ -231,9 +231,9 @@ export default function StudyPlanPage() {
         <div className="w-full space-y-6">
         {/* Header */}
         <div className="flex items-center gap-3 flex-wrap">
-          <button onClick={() => navigate('/exam-analyzer')} className="btn-ghost px-3 py-2 rounded-xl text-sm">
+          <Button onClick={() => navigate('/exam-analyzer')} className="px-3 py-2 rounded-xl text-sm" variant="ghost">
             <Icon name={ICONS.actions.back} size={16} /> Kembali
-          </button>
+          </Button>
           <div className="flex-1 min-w-[200px]">
             <h1 className="text-2xl font-bold text-text flex items-center gap-2">
               {plan.title || 'Rencana Belajar'}

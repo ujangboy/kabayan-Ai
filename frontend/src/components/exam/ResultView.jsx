@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ICONS } from '@/lib/icons';
-import { Icon } from '@/components/ui';
+import { Icon , Button} from '@/components/ui';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 
@@ -245,12 +245,12 @@ export default function ResultView({ evalData, onReview, onFinish, sessionId, on
             ))}
           </div>
           <div className="flex gap-2 mt-3">
-            <button onClick={handleSimpanRencana} disabled={planSaving || planSaved}
-              className="btn-primary text-sm flex items-center gap-1.5">
+            <Button onClick={handleSimpanRencana} disabled={planSaving || planSaved}
+              className="text-sm flex items-center gap-1.5" variant="primary">
               {planSaving ? <><Icon name={ICONS.status.loading} size={13} className="animate-spin" /> {t('exam.result.saving')}</>
                 : planSaved ? <><Icon name={ICONS.status.check} size={13} /> {t('exam.result.saved')}</>
                 : <><Icon name={ICONS.actions.save} size={13} /> {t('exam.result.savePlan')}</>}
-            </button>
+            </Button>
           </div>
           </motion.div>
         )}
@@ -258,22 +258,22 @@ export default function ResultView({ evalData, onReview, onFinish, sessionId, on
 
       {/* Action buttons */}
       <div className="flex gap-3 flex-wrap">
-        <button onClick={onReview} className="btn-ghost text-sm border border-border">
+        <Button onClick={onReview} className="text-sm border border-border" variant="ghost">
           <Icon name={ICONS.learning.bookOpen} size={13} /> {t('exam.result.reviewAnswers')}
-        </button>
-        <button onClick={handleLihatRencana} disabled={loadingRec} className="btn-ghost text-sm border border-border">
+        </Button>
+        <Button onClick={handleLihatRencana} disabled={loadingRec} className="text-sm border border-border" variant="ghost">
           {loadingRec ? <><Icon name={ICONS.status.loading} size={13} className="animate-spin" /> {t('common.loading')}</>
             : planPreview ? <><Icon name={ICONS.learning.calendar} size={13} /> {t('exam.result.closePlan')}</>
             : <><Icon name={ICONS.learning.calendar} size={13} /> {t('exam.result.viewPlan')}</>}
-        </button>
-        <button onClick={handleSelesai} disabled={saving} className="btn-primary text-sm ml-auto">
+        </Button>
+        <Button onClick={handleSelesai} disabled={saving} className="text-sm ml-auto" variant="primary">
           {saving
             ? <><Icon name={ICONS.status.loading} size={13} className="animate-spin" /> {t('exam.result.saving')}</>
             : saved
               ? <><Icon name={ICONS.status.check} size={13} /> {t('exam.result.goingHistory')}</>
               : <><Icon name={ICONS.status.check} size={13} /> {t('exam.result.doneAndSave')}</>
           }
-        </button>
+        </Button>
       </div>
     </div>
   );

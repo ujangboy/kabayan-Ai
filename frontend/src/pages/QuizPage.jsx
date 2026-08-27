@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { quizAPI, subjectAPI } from '@/services/api';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { formatDate, formatTimeOnly, fadeSlide, cn } from '@/utils';
-import { Tooltip, EmptyState, Skeleton, SubjectBadge , Icon } from '@/components/ui';
+import { Tooltip, EmptyState, Skeleton, SubjectBadge , Icon , Button} from '@/components/ui';
 import { useUiStore } from '@/store';
 import { usePageState } from '@/hooks/usePageState';
 import { useToast } from '@/components/Toast';
@@ -172,13 +172,13 @@ export default function QuizPage() {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <button onClick={() => setIsGeneratorOpen(true)} className="btn-primary">
+            <Button onClick={() => setIsGeneratorOpen(true)} className="" variant="primary">
               {t('quiz.generateButton')}
-            </button>
+            </Button>
             {allQuizzes.length > 0 && (
-              <button onClick={handleClearAll} className="btn-ghost text-danger border border-danger/20 text-xs">
+              <Button onClick={handleClearAll} className="text-danger border border-danger/20 text-xs" variant="ghost">
                 {t('quiz.deleteAll')}
-              </button>
+              </Button>
             )}
           </div>
         </div>
@@ -267,9 +267,9 @@ export default function QuizPage() {
                 icon={ICONS.ui.help}
                 title={selectedSubject ? t('quiz.emptyForSubject') : t('quiz.empty')}
                 action={
-                  <button onClick={() => setIsGeneratorOpen(true)} className="btn-primary text-sm">
+                  <Button onClick={() => setIsGeneratorOpen(true)} className="text-sm" variant="primary">
                     {t('quiz.generateFirst')}
-                  </button>
+                  </Button>
                 }
               />
             </div>
@@ -381,12 +381,12 @@ export default function QuizPage() {
                     </div>
                   </div>
 
-                  <button
+                  <Button
                     onClick={() => handleStartQuiz(quiz.id)}
-                    className="btn-primary w-full justify-center text-xs mt-auto"
-                  >
+                    className="w-full justify-center text-xs mt-auto"
+                   variant="primary">
                     <Icon name={ICONS.media.play} size={12} /> {quiz.score != null ? t('quiz.playAgain') : t('quiz.start')}
-                  </button>
+                  </Button>
                 </motion.div>
               );
             })

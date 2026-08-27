@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 
 import { VIEW } from '@/components/exam/shared';
 import { ICONS } from '@/lib/icons';
-import { Tooltip, Select, HelpTip , Icon } from '@/components/ui';
+import { Tooltip, Select, HelpTip , Icon , Button} from '@/components/ui';
 
 export default function ExamHeader({ view, subjectId, subjects, canCreate, onBack, onSubjectChange, onCreate }) {
   const { t } = useTranslation();
@@ -40,13 +40,13 @@ export default function ExamHeader({ view, subjectId, subjects, canCreate, onBac
           {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
         </Select>
         {canCreate && (
-          <button
+          <Button
             onClick={onCreate}
             disabled={!subjectId}
-            className="btn-primary disabled:opacity-40 disabled:cursor-not-allowed"
-          >
+            className="disabled:opacity-40 disabled:cursor-not-allowed"
+           variant="primary">
             {t('exam.createSimulation')}
-          </button>
+          </Button>
         )}
       </div>
     </div>

@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { ICONS } from '@/lib/icons';
-import { Icon } from '@/components/ui';
+import { Icon , Button} from '@/components/ui';
 
 
 export default function FlashcardReviewEmptyScreen({ onGenerate, onBack }) {
@@ -15,12 +15,12 @@ export default function FlashcardReviewEmptyScreen({ onGenerate, onBack }) {
           {t('flashcard.noCardsMessage')}
         </p>
         <div className="flex flex-col gap-2">
-          <button onClick={onGenerate} className="btn-primary w-full justify-center text-sm">
+          <Button onClick={onGenerate} className="w-full justify-center text-sm" variant="primary">
             {t('flashcard.generateNow')}
-          </button>
-          <button onClick={onBack} className="btn-ghost w-full justify-center text-sm border border-border">
+          </Button>
+          <Button onClick={onBack} className="w-full justify-center text-sm border border-border" variant="ghost">
             {t('common.back')}
-          </button>
+          </Button>
         </div>
       </motion.div>
     </div>

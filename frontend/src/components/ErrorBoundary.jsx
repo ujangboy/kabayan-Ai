@@ -1,5 +1,6 @@
 import { Component } from 'react';
 import { withTranslation } from 'react-i18next';
+import { Button } from '@/components/ui';
 
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -28,8 +29,8 @@ class ErrorBoundary extends Component {
             <p className="text-danger text-lg font-semibold mb-2">{t('errorBoundary.title')}</p>
             <p className="text-sm text-text-secondary mb-4">{this.state.error?.message || t('errorBoundary.message')}</p>
             <div className="flex justify-center gap-2">
-              <button onClick={this.reset} className="btn-ghost text-sm">{t('errorBoundary.retry')}</button>
-              <button onClick={() => window.location.reload()} className="btn-primary text-sm">{t('errorBoundary.reload')}</button>
+              <Button onClick={this.reset} className="text-sm" variant="ghost">{t('errorBoundary.retry')}</Button>
+              <Button onClick={() => window.location.reload()} className="text-sm" variant="primary">{t('errorBoundary.reload')}</Button>
             </div>
           </div>
         </div>

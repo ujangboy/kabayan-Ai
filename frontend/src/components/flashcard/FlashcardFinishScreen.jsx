@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { ICONS } from '@/lib/icons';
-import { Icon } from '@/components/ui';
+import { Icon , Button} from '@/components/ui';
 
 
 export default function FlashcardFinishScreen({ knownCount, total, subjectName, onRestart, onClose }) {
@@ -22,12 +22,12 @@ export default function FlashcardFinishScreen({ knownCount, total, subjectName, 
           {t('flashcard.sessionResult', { knownCount, total })}
         </p>
         <div className="flex gap-2">
-          <button onClick={onRestart} className="btn-primary flex-1 justify-center text-sm">
+          <Button onClick={onRestart} className="flex-1 justify-center text-sm" variant="primary">
             <Icon name={ICONS.actions.replay} size={14} /> {t('flashcard.retry')}
-          </button>
-          <button onClick={onClose} className="btn-ghost flex-1 justify-center text-sm border border-border">
+          </Button>
+          <Button onClick={onClose} className="flex-1 justify-center text-sm border border-border" variant="ghost">
             {t('flashcard.done')}
-          </button>
+          </Button>
         </div>
       </motion.div>
     </div>

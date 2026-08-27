@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ICONS } from '@/lib/icons';
-import { Icon } from '@/components/ui';
+import { Icon , Button} from '@/components/ui';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { examAPI } from '@/services/api';
@@ -52,9 +52,9 @@ export default function DashboardView({ subjectId, subjects, analysis, onAnalysi
             {t('exam.dashboard.analysisDesc')}
           </p>
           {error && <p className="text-danger text-sm mb-4">{error}</p>}
-          <button onClick={runAnalysis} disabled={isAnalyzing} className="btn-primary mx-auto">
+          <Button onClick={runAnalysis} disabled={isAnalyzing} className="mx-auto" variant="primary">
             {isAnalyzing ? <><Icon name={ICONS.status.loading} size={15} className="animate-spin" /> {t('exam.dashboard.analyzing')}</> : <><Icon name={ICONS.learning.brain} size={15} /> {t('exam.dashboard.startAnalysis')}</>}
-          </button>
+          </Button>
         </motion.div>
       </AnimatePresence>
     );
@@ -193,13 +193,13 @@ export default function DashboardView({ subjectId, subjects, analysis, onAnalysi
 
       {/* Refresh + CTA */}
       <div className="flex gap-3">
-        <button onClick={runAnalysis} disabled={isAnalyzing} className="btn-ghost text-xs border border-border">
+        <Button onClick={runAnalysis} disabled={isAnalyzing} className="text-xs border border-border" variant="ghost">
           {isAnalyzing ? <Icon name={ICONS.status.loading} size={13} className="animate-spin" /> : <Icon name={ICONS.actions.refresh} size={13} />}
           {t('exam.dashboard.refreshAnalysis')}
-        </button>
-        <button onClick={onStartConfig} className="btn-primary text-xs">
+        </Button>
+        <Button onClick={onStartConfig} className="text-xs" variant="primary">
           {t('exam.dashboard.generateSimulation')}
-        </button>
+        </Button>
       </div>
       </motion.div>
     </AnimatePresence>

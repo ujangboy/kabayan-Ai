@@ -8,7 +8,7 @@ import { extractErrorMessage } from '@/utils/errors';
 import { useToast } from '@/components/Toast';
 import { usePageState } from '@/hooks/usePageState';
 import { springWave } from '@/lib/motion';
-import { Button, Textarea , Icon } from '@/components/ui';
+import { Button, Textarea, Icon } from '@/components/ui';
 import { TYPE_META, formatItemDate } from './shared';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -111,14 +111,14 @@ export default function InlinePlanPractice({ item, practiceState, onClose, onSub
           })}
         </div>
         <div className="flex gap-2 justify-end">
-          <button onClick={onClose} className="btn-ghost text-sm border border-border">Tutup</button>
-          <button
+          <Button onClick={onClose} className="text-sm border border-border" variant="ghost">Tutup</Button>
+          <Button
             onClick={handleSubmit}
             disabled={submitting}
-            className="btn-primary text-sm flex items-center gap-1.5"
-          >
+            className="text-sm flex items-center gap-1.5"
+           variant="primary">
             {submitting ? <><Icon name={ICONS.status.loading} size={13} className="animate-spin" /> Menyimpan...</> : <><Icon name={ICONS.status.completed} size={13} /> Simpan Hasil & Tandai Selesai</>}
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -185,9 +185,9 @@ export default function InlinePlanPractice({ item, practiceState, onClose, onSub
 
       <div className="flex justify-end mt-4">
         {isObjective && !userAnswer ? (
-          <button onClick={() => selectAnswer('')} className="btn-ghost text-sm text-danger">Lewati (anggap salah)</button>
+          <Button onClick={() => selectAnswer('')} className="text-sm text-danger" variant="ghost">Lewati (anggap salah)</Button>
         ) : (
-          <button
+          <Button
             onClick={() => {
               if (isObjective && !userAnswer) {
                 setResults(p => ({ ...p, [String(q.id)]: false }));
@@ -197,10 +197,10 @@ export default function InlinePlanPractice({ item, practiceState, onClose, onSub
               }
               handleNext();
             }}
-            className="btn-primary text-sm"
-          >
+            className="text-sm"
+           variant="primary">
             {idx === total - 1 ? 'Lihat Hasil' : 'Jawab & Lanjut'}
-          </button>
+          </Button>
         )}
       </div>
     </div>

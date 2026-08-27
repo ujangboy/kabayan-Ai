@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ICONS } from '@/lib/icons';
-import { Icon } from '@/components/ui';
+import { Icon , Button} from '@/components/ui';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { examAPI } from '@/services/api';
@@ -110,9 +110,9 @@ export default function QuizView({ sessionData, clockStart, onDone }) {
           >
             <Icon name={ICONS.media.pause} size={48} className="mx-auto mb-4 text-text-muted opacity-40" />
             <h3 className="text-lg font-semibold text-text mb-2">{t('exam.quiz.pausedTitle')}</h3>
-            <button onClick={() => setPaused(false)} className="btn-primary mt-4">
+            <Button onClick={() => setPaused(false)} className="mt-4" variant="primary">
               <Icon name={ICONS.media.play} size={14} /> {t('exam.quiz.resume')}
-            </button>
+            </Button>
           </motion.div>
         ) : (
           <motion.div
@@ -178,10 +178,10 @@ export default function QuizView({ sessionData, clockStart, onDone }) {
       {/* Navigation */}
       {!paused && (
         <div className="flex items-center justify-between">
-          <button onClick={() => setIdx(p => Math.max(0, p-1))} disabled={idx === 0}
-            className="btn-ghost text-sm border border-border disabled:opacity-30">
+          <Button onClick={() => setIdx(p => Math.max(0, p-1))} disabled={idx === 0}
+            className="text-sm border border-border disabled:opacity-30" variant="ghost">
             <Icon name={ICONS.ui.chevronLeft} size={14} /> {t('exam.quiz.previous')}
-          </button>
+          </Button>
 
           <div className="flex gap-1">
             {questions.map((_, i) => (
@@ -196,13 +196,13 @@ export default function QuizView({ sessionData, clockStart, onDone }) {
           </div>
 
           {idx < totalQ - 1 ? (
-            <button onClick={() => setIdx(p => p+1)} className="btn-primary text-sm">
+            <Button onClick={() => setIdx(p => p+1)} className="text-sm" variant="primary">
               {t('exam.quiz.next')} <Icon name={ICONS.ui.chevronRight} size={14} />
-            </button>
+            </Button>
           ) : (
-            <button onClick={handleSubmit} disabled={isSubmitting} className="btn-primary text-sm">
+            <Button onClick={handleSubmit} disabled={isSubmitting} className="text-sm" variant="primary">
               {isSubmitting ? <><Icon name={ICONS.status.loading} size={13} className="animate-spin" /> {t('exam.quiz.evaluating')}</> : <><Icon name={ICONS.status.check} size={13} /> {t('exam.quiz.submit')}</>}
-            </button>
+            </Button>
           )}
         </div>
       )}

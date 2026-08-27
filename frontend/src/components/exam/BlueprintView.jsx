@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ICONS } from '@/lib/icons';
-import { Icon } from '@/components/ui';
+import { Icon , Button} from '@/components/ui';
 
 import { examAPI } from '@/services/api';
 import { Chip, SectionHeader } from './shared';
@@ -128,12 +128,12 @@ export default function BlueprintView({ blueprint, onGenerate, onGenerating, onB
       )}
 
       <div className="flex gap-3 justify-between">
-        <button onClick={onBack} className="btn-ghost text-sm border border-border">
+        <Button onClick={onBack} className="text-sm border border-border" variant="ghost">
           <Icon name={ICONS.ui.chevronLeft} size={14} /> {t('exam.blueprint.changeConfig')}
-        </button>
-        <button onClick={handleGenerate} className="btn-primary">
+        </Button>
+        <Button onClick={handleGenerate} className="" variant="primary">
           <Icon name={ICONS.media.play} size={14} /> {t('exam.blueprint.generateQuestions')}
-        </button>
+        </Button>
       </div>
     </div>
   );

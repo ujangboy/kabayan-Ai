@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ICONS } from '@/lib/icons';
-import { Icon } from '@/components/ui';
+import { Icon , Button} from '@/components/ui';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -221,7 +221,7 @@ export default function FlashcardReviewPage() {
         <motion.div key="nocards" {...fadeSlide} className="flex-1 flex items-center justify-center">
           <div className="text-center text-text-muted">
             <p className="mb-4">{t('flashcard.noCards')}</p>
-            <button onClick={handleDone} className="btn-ghost border border-border">{t('common.back')}</button>
+            <Button onClick={handleDone} className="border border-border" variant="ghost">{t('common.back')}</Button>
           </div>
         </motion.div>
       </AnimatePresence>

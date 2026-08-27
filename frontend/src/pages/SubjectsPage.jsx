@@ -72,12 +72,12 @@ export default function SubjectsPage() {
                 <option key={s.id} value={String(s.id)}>{s.name}</option>
               ))}
             </Select>
-            <button
+            <Button
               onClick={() => setIsModalOpen(true)}
-              className="btn-primary"
-            >
+              className=""
+             variant="primary">
               {t('subjects.addNew')}
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -97,7 +97,7 @@ export default function SubjectsPage() {
                 icon={ICONS.learning.bookOpen}
                 title={t('subjects.empty')}
                 action={
-                  <button onClick={() => setIsModalOpen(true)} className="btn-primary text-sm">{t('subjects.createNow')}</button>
+                  <Button onClick={() => setIsModalOpen(true)} className="text-sm" variant="primary">{t('subjects.createNow')}</Button>
                 }
               />
             </div>

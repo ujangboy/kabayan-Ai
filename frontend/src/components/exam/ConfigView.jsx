@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ICONS } from '@/lib/icons';
-import { Icon } from '@/components/ui';
+import { Icon , Button} from '@/components/ui';
 
 import { examAPI } from '@/services/api';
 import { cn } from '@/utils';
@@ -119,11 +119,11 @@ export default function ConfigView({ subjectId, analysis, onDone }) {
       {error && <p className="text-danger text-sm">{error}</p>}
 
       <div className="flex justify-end pt-2">
-        <button onClick={handleSubmit} disabled={isLoading || selectedMaterialIds.length === 0} className="btn-primary">
+        <Button onClick={handleSubmit} disabled={isLoading || selectedMaterialIds.length === 0} className="" variant="primary">
           {isLoading
             ? <><Icon name={ICONS.status.loading} size={14} className="animate-spin" /> {t('exam.config.creatingBlueprint')}</>
             : <><Icon name={ICONS.learning.brain} size={14} /> {t('exam.config.generateBlueprint')}</>}
-        </button>
+        </Button>
       </div>
     </div>
   );

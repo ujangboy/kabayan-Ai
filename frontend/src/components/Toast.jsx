@@ -17,6 +17,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/components/ui/Icon';
 import { ICONS } from '@/lib/icons';
+import { Button } from '@/components/ui';
 
 // ─── Context ──────────────────────────────────────────────────────────────────
 const ToastContext = createContext(null);
@@ -203,13 +204,13 @@ function ConfirmDialog({ state, onClose }) {
             </div>
           </div>
           <div className="flex justify-end gap-2 mt-6">
-            <button
+            <Button
               onClick={onClose}
               disabled={busy}
-              className="btn-ghost text-sm disabled:opacity-50"
-            >
+              className="text-sm disabled:opacity-50"
+             variant="ghost">
               {state.cancelLabel || t('common.cancel')}
-            </button>
+            </Button>
             <button
               onClick={handleConfirm}
               disabled={busy}

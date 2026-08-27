@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ICONS } from '@/lib/icons';
-import { Icon } from '@/components/ui';
+import { Icon , Button} from '@/components/ui';
 import { useTranslation } from 'react-i18next';
 
 import { profileAPI } from '@/services/api';
@@ -98,25 +98,25 @@ export default function ProfileTab() {
         </div>
         <div className="flex flex-col gap-2">
           <div className="flex gap-2">
-            <button
+            <Button
               onClick={() => fileRef.current?.click()}
               disabled={photoMutation.isPending}
-              className="btn-ghost text-xs border border-border"
-            >
+              className="text-xs border border-border"
+             variant="ghost">
               <Icon name={ICONS.ui.camera} size={14} />
               {photoPath && photoPath !== DEFAULT_AVATAR
                 ? t('settings.profile.changePhoto')
                 : t('settings.profile.uploadPhoto')}
-            </button>
+            </Button>
             {photoPath && photoPath !== DEFAULT_AVATAR && (
-              <button
+              <Button
                 onClick={handleRemovePhoto}
                 disabled={photoMutation.isPending}
-                className="btn-ghost text-xs text-danger border border-danger/20"
-              >
+                className="text-xs text-danger border border-danger/20"
+               variant="ghost">
                 <Icon name={ICONS.actions.delete} size={14} />
                 {t('settings.profile.removePhoto')}
-              </button>
+              </Button>
             )}
           </div>
           <span className="text-2xs text-text-muted">{t('settings.profile.photoHint')}</span>
@@ -146,14 +146,14 @@ export default function ProfileTab() {
       </div>
 
       <div className="flex justify-end">
-        <button
+        <Button
           onClick={handleSave}
           disabled={saveMutation.isPending}
-          className="btn-primary text-xs"
-        >
+          className="text-xs"
+         variant="primary">
           {saveMutation.isPending && <Icon name={ICONS.status.loading} size={14} className="animate-spin" />}
           {t('common.save')}
-        </button>
+        </Button>
       </div>
     </div>
   );

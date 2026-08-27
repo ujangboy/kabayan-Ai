@@ -11,7 +11,7 @@ import { cn, formatDate, formatTimeOnly } from '@/utils';
 import DetailModal from './DetailModal';
 import { Chip, ProgressBar, STATUS_META, getBadge, getGradeColor, Q_TYPE_LABEL } from './shared';
 import { Tooltip } from '@/components/ui/Tooltip';
-import { SubjectBadge , Icon } from '@/components/ui';
+import { SubjectBadge , Icon , Button} from '@/components/ui';
 import { useToast } from '@/components/Toast';
 
 // ─── Subject picker (shown when no subject selected) ──────────────────────────
@@ -43,9 +43,9 @@ function SubjectPicker({ subjects, onSelectSubject, onStartConfig, t }) {
          <p className="text-text-muted text-sm max-w-md mx-auto mb-5">
            {t('exam.history.noSubjectsDesc')}
          </p>
-         <button onClick={() => navigate('/materi')} className="btn-primary text-sm">
+         <Button onClick={() => navigate('/materi')} className="text-sm" variant="primary">
            <Icon name={ICONS.learning.bookOpen} size={14} /> {t('exam.history.addSubject')}
-         </button>
+         </Button>
        </div>
      );
    }
@@ -279,9 +279,9 @@ export default function HistoryView({ subjectId, subjects, onSelectSubject, onSt
          <p className="text-text-muted text-xs mb-6">
            {t('exam.history.noHistoryDesc')}
          </p>
-          <button onClick={() => onStartConfig(subjectId)} className="btn-primary text-sm">
+          <Button onClick={() => onStartConfig(subjectId)} className="text-sm" variant="primary">
             {t('exam.history.createSimulation')}
-          </button>
+          </Button>
        </div>
      );
    }
@@ -503,10 +503,10 @@ function HistoryCard({ session: s, onDetail, onDelete, onRetry, t }) {
       </div>
 
       <div className="mt-auto flex gap-2">
-        <button onClick={onDetail}
-          className="btn-primary text-xs flex-1 justify-center">
+        <Button onClick={onDetail}
+          className="text-xs flex-1 justify-center" variant="primary">
            <Icon name={ICONS.ui.chevronRight} size={12} /> {t('exam.history.detail')}
-        </button>
+        </Button>
         {onRetry && (
           <Tooltip label={t('exam.history.retry') || 'Latihan Lagi'}>
             <button onClick={onRetry}

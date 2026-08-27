@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ICONS } from '@/lib/icons';
-import { Icon } from '@/components/ui';
+import { Icon , Button} from '@/components/ui';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -91,7 +91,7 @@ export function QuizSession({ quizId, onClose }) {
       <ViewShell view="error">
         <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
           <p className="text-danger mb-4">Gagal memuat quiz: {error?.message || 'Unknown error'}</p>
-          <button onClick={onClose} className="btn-ghost border border-border">Kembali</button>
+          <Button onClick={onClose} className="border border-border" variant="ghost">Kembali</Button>
         </div>
       </ViewShell>
     );
@@ -109,7 +109,7 @@ export function QuizSession({ quizId, onClose }) {
       <ViewShell view="empty">
         <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
           <p className="text-text-muted mb-4">Quiz kosong atau soal belum tersedia.</p>
-          <button onClick={onClose} className="btn-ghost border border-border">Kembali</button>
+          <Button onClick={onClose} className="border border-border" variant="ghost">Kembali</Button>
         </div>
       </ViewShell>
     );
@@ -173,7 +173,7 @@ export function QuizSession({ quizId, onClose }) {
         <div className="w-full space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold text-text">Review Jawaban</h2>
-            <button onClick={onClose} className="btn-ghost text-sm">{t('common.close', 'Tutup')}</button>
+            <Button onClick={onClose} className="text-sm" variant="ghost">{t('common.close', 'Tutup')}</Button>
           </div>
 
           {questions.map((q, idx) => {
@@ -272,12 +272,12 @@ export function QuizSession({ quizId, onClose }) {
             {recommendation.text}
           </div>
           <div className="flex gap-2">
-            <button onClick={() => setShowReview(true)} className="btn-primary flex-1 justify-center text-sm">
+            <Button onClick={() => setShowReview(true)} className="flex-1 justify-center text-sm" variant="primary">
               Review Jawaban
-            </button>
-            <button onClick={onClose} className="btn-ghost flex-1 justify-center text-sm border border-border">
+            </Button>
+            <Button onClick={onClose} className="flex-1 justify-center text-sm border border-border" variant="ghost">
               Kembali
-            </button>
+            </Button>
           </div>
         </motion.div>
         </div>
@@ -352,14 +352,14 @@ export function QuizSession({ quizId, onClose }) {
         </div>
 
         <div className="flex justify-between mt-10">
-          <button onClick={onClose} className="btn-ghost text-danger">Keluar</button>
-          <button
+          <Button onClick={onClose} className="text-danger" variant="ghost">Keluar</Button>
+          <Button
             onClick={handleNext}
             disabled={!answers[currentIdx] && currentQ.qtype === 'mcq'}
-            className="btn-primary disabled:opacity-40"
-          >
+            className="disabled:opacity-40"
+           variant="primary">
             {currentIdx === total - 1 ? 'Selesai' : 'Lanjut'}
-          </button>
+          </Button>
         </div>
       </div>
     </ViewShell>

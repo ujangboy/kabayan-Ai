@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { ICONS } from '@/lib/icons';
-import { Icon } from '@/components/ui';
+import { Icon , Button} from '@/components/ui';
 
 import { dataAPI, materiAPI, trashAPI } from '@/services/api';
 import { useToast } from '@/components/Toast';
@@ -288,18 +288,18 @@ export default function DataTab() {
         </h3>
         <p className="text-xs text-text-muted mb-4">{t('settings.data.backupDesc')}</p>
 
-        <button
+        <Button
           onClick={handleBackup}
           disabled={backupMutation.isPending}
-          className="btn-primary px-4 py-2 rounded-xl text-sm flex items-center gap-2"
-        >
+          className="px-4 py-2 rounded-xl text-sm flex items-center gap-2"
+         variant="primary">
           {backupMutation.isPending ? (
             <Icon name={ICONS.status.loading} size={15} className="animate-spin" />
           ) : (
             <Icon name={ICONS.actions.download} size={15} />
           )}
           {backupMutation.isPending ? t('settings.data.backupCreating') : t('settings.data.backupCreate')}
-        </button>
+        </Button>
 
         <p className="text-3xs text-text-muted mt-2 leading-relaxed">{t('settings.data.backupNote')}</p>
 

@@ -10,7 +10,7 @@ import { cn } from '@/utils';
 import { springWave } from '@/lib/motion';
 import MathMarkdown from '@/components/MathMarkdown';
 import { Chip, ProgressBar, STATUS_META, getBadge, getGradeColor } from './shared';
-import { Tooltip, Modal , Icon } from '@/components/ui';
+import { Tooltip, Modal , Icon , Button} from '@/components/ui';
 
 // ─── Detail Modal ─────────────────────────────────────────────────────────────
 export default function DetailModal({ open = false, historySessionId, onClose, onResume, pendingPlanTab, setPendingPlanTab }) {
@@ -130,9 +130,9 @@ export default function DetailModal({ open = false, historySessionId, onClose, o
 
       <div className="p-4 border-t border-border shrink-0 flex items-center gap-2 flex-wrap justify-end">
         <RetryButton historySessionId={historySessionId} sessionData={data} onClose={onClose} onResume={onResume} />
-         <button type="button" onClick={onClose} className="btn-ghost text-sm border border-border">
+         <Button type="button" onClick={onClose} className="text-sm border border-border" variant="ghost">
            {t('common.close')}
-         </button>
+         </Button>
       </div>
     </ModalShell>
   );
@@ -497,17 +497,17 @@ function InlinePractice({ questions, topic, onComplete, onClose, onRetryTopic })
         {/* Buttons */}
         <div className="flex gap-2 flex-wrap">
           {score >= 100 ? (
-            <button onClick={() => onComplete && onComplete()} type="button" className="btn-primary text-xs px-4 py-1.5 flex items-center gap-1">
+            <Button onClick={() => onComplete && onComplete()} type="button" className="text-xs px-4 py-1.5 flex items-center gap-1" variant="primary">
               <Icon name={ICONS.status.check} size={12} /> Selesai
-            </button>
+            </Button>
           ) : (
-            <button type="button" onClick={onClose} className="btn-ghost text-xs border border-border px-4 py-1.5">
+            <Button type="button" onClick={onClose} className="text-xs border border-border px-4 py-1.5" variant="ghost">
               Tutup
-            </button>
+            </Button>
           )}
           {/* Ulangi topik ini — re-fetch soal untuk topik yang sama */}
           {topic && onRetryTopic && (
-            <button
+            <Button
               type="button"
               disabled={retryingTopic !== null}
               onClick={async () => {
@@ -519,12 +519,12 @@ function InlinePractice({ questions, topic, onComplete, onClose, onRetryTopic })
                   setRetryingTopic(null);
                 }
               }}
-              className="btn-ghost text-xs border border-warning/40 text-warning px-4 py-1.5 flex items-center gap-1 disabled:opacity-40"
-            >
+              className="text-xs border border-warning/40 text-warning px-4 py-1.5 flex items-center gap-1 disabled:opacity-40"
+             variant="ghost">
               {retryingTopic === topic
                 ? <><Icon name={ICONS.status.loading} size={11} className="animate-spin" /> Memuat...</>
                 : <><Icon name={ICONS.actions.replay} size={11} /> Ulangi Topik Ini</>}
-            </button>
+            </Button>
           )}
         </div>
       </div>
@@ -594,10 +594,10 @@ function InlinePractice({ questions, topic, onComplete, onClose, onRetryTopic })
 
       {/* Jawab button */}
       {!showExpl && (
-        <button type="button" onClick={handleJawab} disabled={!userAnswer}
-          className="btn-primary text-xs px-4 py-1.5 disabled:opacity-40">
+        <Button type="button" onClick={handleJawab} disabled={!userAnswer}
+          className="text-xs px-4 py-1.5 disabled:opacity-40" variant="primary">
           Jawab
-        </button>
+        </Button>
       )}
 
       {/* Enhanced Explanation */}
@@ -644,10 +644,10 @@ function InlinePractice({ questions, topic, onComplete, onClose, onRetryTopic })
 
       {/* Next / Selesai */}
       {showExpl && (
-        <button type="button" onClick={handleNext}
-          className="btn-primary text-xs px-4 py-1.5 flex items-center gap-1">
+        <Button type="button" onClick={handleNext}
+          className="text-xs px-4 py-1.5 flex items-center gap-1" variant="primary">
           {isLast ? <><Icon name={ICONS.status.check} size={12} /> Lihat Hasil</> : <><Icon name={ICONS.actions.forward} size={12} /> Soal Berikutnya</>}
-        </button>
+        </Button>
       )}
         </motion.div>
       </AnimatePresence>
@@ -987,11 +987,11 @@ function RetryButton({ historySessionId, sessionData, onClose, onResume }) {
           <option value="analysis">Analisis</option>
           <option value="calculation">Perhitungan</option>
         </select>
-        <button type="button" onClick={handleRetry} disabled={loading} className="btn-primary text-sm flex items-center gap-1.5">
+        <Button type="button" onClick={handleRetry} disabled={loading} className="text-sm flex items-center gap-1.5" variant="primary">
           {loading
             ? <><Icon name={ICONS.status.loading} size={13} className="animate-spin"/> Menyiapkan...</>
             : <><Icon name={ICONS.actions.replay} size={13}/> {isDifferentType ? 'Buat Baru' : 'Latihan Lagi'}</>}
-        </button>
+        </Button>
       </div>
       {isDifferentType && !error && (
         <p className="text-xs text-warning flex items-center gap-1">

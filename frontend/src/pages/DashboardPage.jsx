@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useChatStore } from '@/store';
 import { formatDate, formatBytes } from '@/utils';
-import { EmptyState, Skeleton, HelpTip, Icon } from '@/components/ui';
+import { EmptyState, Skeleton, HelpTip, Icon , Button} from '@/components/ui';
 import { ICONS } from '@/lib/icons';
 import FileTypeIcon from '@/components/FileTypeIcon';
 import api from '@/services/api';
@@ -298,8 +298,8 @@ export default function DashboardPage() {
                 description={t('dashboard.welcomeText')}
                 action={
                   <div className="flex gap-3 justify-center">
-                    <button onClick={() => navigate('/subjects')} className="btn-primary">{t('dashboard.createSubject')}</button>
-                    <button onClick={() => navigate('/materi')} className="btn-ghost border border-border">{t('dashboard.uploadMaterial')}</button>
+                    <Button onClick={() => navigate('/subjects')} className="" variant="primary">{t('dashboard.createSubject')}</Button>
+                    <Button onClick={() => navigate('/materi')} className="border border-border" variant="ghost">{t('dashboard.uploadMaterial')}</Button>
                   </div>
                 }
               />

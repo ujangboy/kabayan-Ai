@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 import { materiAPI, subjectAPI } from '@/services/api';
 import { useToast } from '@/components/Toast';
-import { EmptyState, Skeleton , Icon } from '@/components/ui';
+import { EmptyState, Skeleton , Icon , Button} from '@/components/ui';
 import { extractErrorMessage } from '@/utils/errors';
 import { usePendingOperation } from '@/hooks/usePendingOperation';
 import { FolderCard } from '@/components/materi/FolderCard';
@@ -140,20 +140,20 @@ export default function MateriPage() {
             )}
           </div>
           <div className="flex items-center gap-3">
-            <button
+            <Button
               onClick={() => setIsYoutubeModalOpen(true)}
-              className="btn-ghost border border-border text-xs"
-            >
+              className="border border-border text-xs"
+             variant="ghost">
               <Icon name={ICONS.ui.video} size={14} className="text-danger" />
               {t('materi.importYoutube')}
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={() => setIsUploadModalOpen(true)}
-              className="btn-primary text-xs"
-            >
+              className="text-xs"
+             variant="primary">
               <Icon name={ICONS.actions.upload} size={14} />
               {t('materi.uploadMateri')}
-            </button>
+            </Button>
           </div>
         </div>
 

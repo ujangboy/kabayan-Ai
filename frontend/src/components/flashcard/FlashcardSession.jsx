@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { flashcardAPI } from '@/services/api';
 import { useToast } from '@/components/Toast';
 import { usePageState } from '@/hooks/usePageState';
-import { Tooltip , Icon } from '@/components/ui';
+import { Tooltip , Icon , Button} from '@/components/ui';
 import FlashcardCard from './FlashcardCard';
 import FlashcardFinishScreen from './FlashcardFinishScreen';
 
@@ -217,7 +217,7 @@ export default function FlashcardSession({ cards, subjectName, onClose }) {
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center text-text-muted">
           <p className="mb-4">{t('flashcard.noCards')}</p>
-          <button onClick={onClose} className="btn-ghost border border-border">{t('common.back')}</button>
+          <Button onClick={onClose} className="border border-border" variant="ghost">{t('common.back')}</Button>
         </div>
       </div>
     );
@@ -227,9 +227,9 @@ export default function FlashcardSession({ cards, subjectName, onClose }) {
     <div className="flex-1 flex flex-col w-full p-6 md:p-10">
       {/* Top bar */}
       <div className="flex items-center justify-between mb-6 shrink-0">
-        <button onClick={onClose} className="btn-ghost text-sm text-text-muted">
+        <Button onClick={onClose} className="text-sm text-text-muted" variant="ghost">
           <Icon name={ICONS.ui.chevronLeft} size={16} /> {t('common.back')}
-        </button>
+        </Button>
         <div className="text-sm text-text-secondary font-medium">{subjectName}</div>
         <span className="px-3 py-1 bg-card rounded-full text-sm font-medium text-text-secondary border border-border">
           {currentIndex + 1} / {total}
@@ -325,13 +325,13 @@ export default function FlashcardSession({ cards, subjectName, onClose }) {
 
       {/* Bottom nav */}
       <div className="flex items-center justify-between mt-8 shrink-0">
-        <button
+        <Button
           onClick={goPrev}
           disabled={currentIndex === 0}
-          className="btn-ghost disabled:opacity-30 disabled:cursor-not-allowed text-sm"
-        >
+          className="disabled:opacity-30 disabled:cursor-not-allowed text-sm"
+         variant="ghost">
           <Icon name={ICONS.ui.chevronLeft} size={16} /> {t('flashcard.prev')}
-        </button>
+        </Button>
         <Tooltip label={t('flashcard.deleteCardTitle')}>
           <button
             onClick={handleDeleteCard}
@@ -341,12 +341,12 @@ export default function FlashcardSession({ cards, subjectName, onClose }) {
             <Icon name={ICONS.actions.delete} size={15} />
           </button>
         </Tooltip>
-        <button
+        <Button
           onClick={goNext}
-          className="btn-ghost text-sm"
-        >
+          className="text-sm"
+         variant="ghost">
           {t('flashcard.skip')} <Icon name={ICONS.ui.chevronRight} size={16} />
-        </button>
+        </Button>
       </div>
     </div>
   );

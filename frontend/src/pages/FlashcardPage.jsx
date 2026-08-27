@@ -9,7 +9,7 @@ import { flashcardAPI, subjectAPI } from '@/services/api';
 import { useUiStore } from '@/store';
 import { useToast } from '@/components/Toast';
 import { extractErrorMessage } from '@/utils/errors';
-import { EmptyState, Select, Skeleton , Icon } from '@/components/ui';
+import { EmptyState, Select, Skeleton , Icon , Button} from '@/components/ui';
 import { usePageState } from '@/hooks/usePageState';
 import { fadeSlide } from '@/utils';
 import BatchFlashcardCard from '@/components/flashcard/BatchFlashcardCard';
@@ -149,25 +149,25 @@ export default function FlashcardPage() {
                 sum + g.cards.filter(c => !c.mastered && (c.times_seen === 0 || (c.next_review && new Date(c.next_review) <= new Date()))).length, 0
               );
               return (
-                <button
+                <Button
                   onClick={() => navigate('/flashcard/review')}
-                  className="btn-ghost border border-accent-purple/40 text-accent-purple text-xs"
-                >
+                  className="border border-accent-purple/40 text-accent-purple text-xs"
+                 variant="ghost">
                   <Icon name={ICONS.learning.brain} size={14} />
                   {totalDue > 0 ? t('flashcard.reviewCount', { count: totalDue }) : t('flashcard.reviewSrs')}
-                </button>
+                </Button>
               );
             })()}
-            <button onClick={() => setIsAIModalOpen(true)} className="btn-primary">
+            <Button onClick={() => setIsAIModalOpen(true)} className="" variant="primary">
               {t('flashcard.generateAi')}
-            </button>
-            <button onClick={() => setIsManualModalOpen(true)} className="btn-ghost border border-border">
+            </Button>
+            <Button onClick={() => setIsManualModalOpen(true)} className="border border-border" variant="ghost">
               {t('flashcard.manual')}
-            </button>
+            </Button>
             {allFlashcards.length > 0 && (
-              <button onClick={handleClearAll} className="btn-ghost text-danger border border-danger/20 text-xs">
+              <Button onClick={handleClearAll} className="text-danger border border-danger/20 text-xs" variant="ghost">
                 {t('flashcard.deleteAll')}
-              </button>
+              </Button>
             )}
           </div>
         </div>
@@ -208,9 +208,9 @@ export default function FlashcardPage() {
                 icon={ICONS.nav.flashcard}
                 title={t('flashcard.emptyState')}
                 action={
-                  <button onClick={() => setIsAIModalOpen(true)} className="btn-primary text-sm">
+                  <Button onClick={() => setIsAIModalOpen(true)} className="text-sm" variant="primary">
                     {t('flashcard.generateAi')}
-                  </button>
+                  </Button>
                 }
               />
             </div>
