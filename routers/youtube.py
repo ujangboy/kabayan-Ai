@@ -10,6 +10,7 @@ from repositories.material_repository import material_repository
 from services.youtube_service import youtube_service
 from sources.youtube_source import YoutubeSource
 import re
+from schemas.common import StatusMessage
 
 router = APIRouter()
 
@@ -76,7 +77,7 @@ async def get_youtube_status(id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Material not found")
     return {"status": mat.status}
 
-@router.delete("/api/materials/youtube/{id}")
+@router.delete("/api/materials/youtube/{id}", response_model=StatusMessage)
 async def delete_youtube(id: int, db: Session = Depends(get_db)):
     success = youtube_service.delete_youtube(db, id)
     if not success:

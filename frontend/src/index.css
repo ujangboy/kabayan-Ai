@@ -95,6 +95,11 @@
     --wash-strong: rgba(0, 0, 0, 0.08);
     --code-bg: #f4f4f5;
     --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.05);
+    /* Status semantik — token agar bisa disesuaikan per tema (light/dark) */
+    --success: 22 163 74;
+    --danger: 220 38 38;
+    --warning: 217 119 6;
+    --info: 2 132 199;
     color-scheme: light;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -118,6 +123,11 @@
     --wash-strong: rgba(255, 255, 255, 0.09);
     --code-bg: #18181b;
     --shadow-card: none;
+    /* Status semantik — lebih terang di dark agar lolos kontras */
+    --success: 74 222 128;
+    --danger: 248 113 113;
+    --warning: 251 191 36;
+    --info: 56 189 248;
     color-scheme: dark;
   }
 
@@ -338,19 +348,26 @@
     @apply bg-primary/10 text-primary-light;
   }
 
+  /* NOTE: <Button> (components/ui/Button.jsx, cva) adalah sumber kebenaran utama.
+     Kelas .btn-* di bawah sengaja disejajarkan agar menghasilkan tampilan IDENTIK
+     dengan variant <Button> yang bersesuaian, sehingga dua API tidak menyimpang
+     secara visual. Untuk kode baru, prefer <Button>. */
   .btn-primary {
-    @apply inline-flex items-center gap-2 px-4 py-2 rounded-btn bg-primary text-white text-sm font-medium
-           hover:bg-primary-hover active:scale-[0.98] transition-[background-color,transform] duration-150 ease-out cursor-pointer select-none;
+    @apply inline-flex items-center justify-center gap-2 font-medium select-none whitespace-nowrap rounded-btn h-10 px-4 text-[15px]
+           bg-primary text-white shadow-card hover:bg-primary-hover active:scale-[0.98] transition-all duration-200 cursor-pointer
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-1 focus-visible:ring-offset-background;
   }
 
   .btn-ghost {
-    @apply inline-flex items-center gap-2 px-4 py-2 rounded-btn text-text-secondary text-sm font-medium
-           hover:bg-wash hover:text-text active:scale-[0.98] transition-[background-color,color,transform] duration-150 ease-out cursor-pointer select-none;
+    @apply inline-flex items-center justify-center gap-2 font-medium select-none whitespace-nowrap rounded-btn h-10 px-4 text-[15px]
+           text-text-secondary hover:bg-card hover:text-text active:scale-[0.98] transition-all duration-200 cursor-pointer
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-1 focus-visible:ring-offset-background;
   }
 
   .btn-danger {
-    @apply inline-flex items-center gap-2 px-4 py-2 rounded-btn bg-danger/10 text-danger border border-danger/20 text-sm font-medium
-           hover:bg-danger/20 active:scale-[0.98] transition-[background-color,transform] duration-150 ease-out cursor-pointer select-none;
+    @apply inline-flex items-center justify-center gap-2 font-medium select-none whitespace-nowrap rounded-btn h-10 px-4 text-[15px]
+           bg-danger/10 text-danger border border-danger/20 hover:bg-danger/20 active:scale-[0.98] transition-all duration-200 cursor-pointer
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger/40 focus-visible:ring-offset-1 focus-visible:ring-offset-background;
   }
 
   .input-base {

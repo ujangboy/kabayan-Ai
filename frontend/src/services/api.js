@@ -105,7 +105,6 @@ export const flashcardAPI = {
     response_time_ms: responseTimeMs,
   }).then(r => r.data),
   getDue: (subjectId) => api.get('/flashcards/review/due', { params: subjectId ? { subject_id: subjectId } : {} }).then(r => r.data),
-  getStats: (subjectId) => api.get('/flashcards/stats', { params: subjectId ? { subject_id: subjectId } : {} }).then(r => r.data),
   getReviews: (cardIds) => api.get('/flashcards/reviews', { params: { card_ids: cardIds.join(',') } }).then(r => r.data),
 };
 
@@ -128,7 +127,6 @@ export const quizAPI = {
     }).toString(),
     { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
   ).then(r => r.data),
-  getHistory: (subjectId) => api.get('/quizzes/history', { params: subjectId ? { subject_id: subjectId } : {} }).then(r => r.data),
   delete: (id) => api.delete(`/quizzes/${id}`),
   clear: () => api.post('/quizzes/clear'),
 };
@@ -173,23 +171,6 @@ export const studyAPI = {
       ...(tier ? { tier } : {}),
       ...(topic ? { topic } : {}),
     }).then(r => r.data),
-  // metrik belajar: speed, fatigue, waktu optimal, overview FSRS
-  metrics: (subjectId = null) =>
-    api.get('/study/metrics', { params: subjectId ? { subject_id: subjectId } : {} }).then(r => r.data),
-  // rencana belajar hari ini (FSRS due + mastery rendah + waktu luang)
-  dailyPlan: (subjectId = null, freeMinutes = 60) =>
-    api.get('/study/daily-plan', {
-      params: {
-        ...(subjectId ? { subject_id: subjectId } : {}),
-        free_minutes: freeMinutes,
-      },
-    }).then(r => r.data),
-  // peta konsep: topik/bab + keterkaitan (PRD US4.1)
-  knowledgeGraph: (subjectId = null) =>
-    api.get('/study/knowledge-graph', { params: subjectId ? { subject_id: subjectId } : {} }).then(r => r.data),
-  // diagnostik belajar: kesiapan + resep perbaikan (PRD US4.2)
-  diagnostic: (subjectId = null) =>
-    api.get('/study/diagnostic', { params: subjectId ? { subject_id: subjectId } : {} }).then(r => r.data),
   // progres belajar: streak konsistensi + tren mastery (PRD US5.1)
   progress: (subjectId = null) =>
     api.get('/study/progress', { params: subjectId ? { subject_id: subjectId } : {} }).then(r => r.data),
@@ -197,10 +178,6 @@ export const studyAPI = {
 
 // --- TUTOR ---
 export const tutorAPI = {
-  // classify a message (observability / debug)
-  classify: (message, history = []) =>
-    api.post('/tutor/classify', { message, history }),
-
   // list FAQ entries (debug/admin)
   listFAQ: (mata_kuliah = null, limit = 50) =>
     api.get('/tutor/faq', { params: { ...(mata_kuliah ? { mata_kuliah } : {}), limit } }),
@@ -208,8 +185,6 @@ export const tutorAPI = {
   // kirim rating feedback untuk satu respons tutor
   feedback: (payload) => api.post('/tutor/feedback', payload),
 
-  // ambil profil adaptif siswa
-  profile: () => api.get('/tutor/profile'),
 
   // statistik pemakaian (token, pesan, sesi)
   stats: () => api.get('/tutor/stats'),

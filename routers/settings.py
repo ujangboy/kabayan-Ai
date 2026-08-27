@@ -3,6 +3,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from database import get_db
 from services.settings_service import settings_service
+from schemas.common import StatusMessage
 
 router = APIRouter()
 
@@ -10,7 +11,7 @@ router = APIRouter()
 # membuat loading model gagal saat dipakai (dan mengacaukan cache hash).
 ALLOWED_EMBEDDING_MODELS = {"all-MiniLM-L6-v2", "paraphrase-multilingual-MiniLM-L12-v2"}
 
-@router.post("/api/settings")
+@router.post("/api/settings", response_model=StatusMessage)
 async def save_settings(
     embedding_model: str = Form(..., max_length=120),
     db: Session = Depends(get_db)

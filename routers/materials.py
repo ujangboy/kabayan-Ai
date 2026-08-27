@@ -8,6 +8,7 @@ from database import get_db
 import models
 from services.material_service import material_service
 from repositories.material_repository import material_repository
+from schemas.common import StatusMessage
 
 router = APIRouter()
 
@@ -113,13 +114,13 @@ async def upload_material(
     finally:
         await file.close()
 
-@router.post("/api/materials/{material_id}/delete")
+@router.post("/api/materials/{material_id}/delete", response_model=StatusMessage)
 async def delete_material(material_id: int, db: Session = Depends(get_db)):
     if not material_service.delete(db, material_id):
         return JSONResponse(status_code=404, content={"detail": "Material not found"})
     return JSONResponse({"status": "success", "message": "Material deleted"})
 
-@router.post("/api/materials/{material_id}/cancel")
+@router.post("/api/materials/{material_id}/cancel", response_model=StatusMessage)
 async def cancel_material(material_id: int, db: Session = Depends(get_db)):
     ok = material_service.cancel(db, material_id)
     if not ok:

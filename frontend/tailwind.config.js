@@ -47,10 +47,10 @@ export default {
           secondary: "rgb(var(--text-secondary) / <alpha-value>)",
           muted: "rgb(var(--text-muted) / <alpha-value>)",
         },
-        success: "#22c55e",
-        danger: "#ef4444",
-        warning: "#f59e0b",
-        info: "#38bdf8",
+        success: "rgb(var(--success) / <alpha-value>)",
+        danger: "rgb(var(--danger) / <alpha-value>)",
+        warning: "rgb(var(--warning) / <alpha-value>)",
+        info: "rgb(var(--info) / <alpha-value>)",
         // Palet data-viz terbatas — HANYA untuk chart/kategori/badge status,
         // bukan chrome (button/nav). Nilai mid-tone agar lolos di light & dark.
         accent: {

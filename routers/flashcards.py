@@ -1,5 +1,6 @@
 from time_utils import utcnow
 import logging
+from schemas.common import StatusMessage
 from fastapi import APIRouter, Depends, Form, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
@@ -175,7 +176,7 @@ async def get_flashcard_stats(subject_id: int = Query(None), db: Session = Depen
         "avg_ease": avg_ease,
     })
 
-@router.post("/api/flashcards")
+@router.post("/api/flashcards", response_model=StatusMessage)
 async def create_flashcard(
     question: str = Form(..., max_length=2000),
     answer: str = Form(..., max_length=4000),
@@ -192,7 +193,7 @@ async def create_flashcard(
 class BatchDeleteRequest(BaseModel):
     ids: List[int]
 
-@router.post("/api/flashcards/batch-delete")
+@router.post("/api/flashcards/batch-delete", response_model=StatusMessage)
 async def batch_delete_flashcards(req: BatchDeleteRequest, db: Session = Depends(get_db)):
     """Hapus banyak flashcard dalam SATU transaksi — hindari race condition SQLite."""
     try:
@@ -206,7 +207,7 @@ async def batch_delete_flashcards(req: BatchDeleteRequest, db: Session = Depends
         from services.error_handler import safe_json_response
         return safe_json_response(e, context="flashcards/batch-delete")
 
-@router.post("/api/flashcards/{flashcard_id}/delete")
+@router.post("/api/flashcards/{flashcard_id}/delete", response_model=StatusMessage)
 async def delete_flashcard(flashcard_id: int, db: Session = Depends(get_db)):
     try:
         found = flashcard_repository.delete(db, flashcard_id)
@@ -235,7 +236,7 @@ async def delete_flashcard(flashcard_id: int, db: Session = Depends(get_db)):
         from services.error_handler import safe_json_response
         return safe_json_response(e, context="flashcards/delete")
 
-@router.post("/api/flashcards/clear")
+@router.post("/api/flashcards/clear", response_model=StatusMessage)
 async def clear_flashcards(db: Session = Depends(get_db)):
     flashcard_repository.delete_all(db)
     return JSONResponse({"status": "success", "message": "Flashcards cleared"})

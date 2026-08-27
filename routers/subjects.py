@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from database import get_db
 from services.subject_service import subject_service, compute_subject_stats
 import json
+from schemas.common import StatusMessage
 
 router = APIRouter()
 
@@ -227,7 +228,7 @@ async def get_subject_dashboard(subject_id: int, db: Session = Depends(get_db)):
     })
 
 
-@router.post("/api/subjects")
+@router.post("/api/subjects", response_model=StatusMessage)
 async def create_subject(
     name: str = Form(..., max_length=200),
     semester: str = Form("", max_length=50),
@@ -239,7 +240,7 @@ async def create_subject(
     return JSONResponse({"status": "success", "message": "Subject created"})
 
 
-@router.post("/api/subjects/{subject_id}/update")
+@router.post("/api/subjects/{subject_id}/update", response_model=StatusMessage)
 async def update_subject(
     subject_id: int,
     name: str = Form(..., max_length=200),
@@ -254,7 +255,7 @@ async def update_subject(
     return JSONResponse({"status": "success", "message": "Subject updated"})
 
 
-@router.post("/api/subjects/{subject_id}/delete")
+@router.post("/api/subjects/{subject_id}/delete", response_model=StatusMessage)
 async def delete_subject(subject_id: int, db: Session = Depends(get_db)):
     if not subject_service.delete(db, subject_id):
         return JSONResponse(status_code=404, content={"detail": "Subject not found"})

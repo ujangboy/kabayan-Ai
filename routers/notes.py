@@ -18,6 +18,7 @@ from schemas.generate import (
 )
 import json
 import re
+from schemas.common import StatusMessage
 
 
 router = APIRouter()
@@ -37,7 +38,7 @@ async def get_notes_json(db: Session = Depends(get_db), skip: int = Query(0, ge=
         })
     return JSONResponse({"notes": results, "skip": skip, "limit": limit})
 
-@router.post("/api/notes")
+@router.post("/api/notes", response_model=StatusMessage)
 async def create_note(
     title: str = Form(..., max_length=200),
     content: str = Form("", max_length=200_000),
@@ -52,13 +53,13 @@ async def create_note(
     })
     return JSONResponse({"status": "success", "message": "Note created", "note_id": note.id})
 
-@router.post("/api/notes/{note_id}/delete")
+@router.post("/api/notes/{note_id}/delete", response_model=StatusMessage)
 async def delete_note(note_id: int, db: Session = Depends(get_db)):
     if not notes_service.delete(db, note_id):
         return JSONResponse(status_code=404, content={"detail": "Note not found"})
     return JSONResponse({"status": "success", "message": "Note deleted"})
 
-@router.put("/api/notes/{note_id}/rename")
+@router.put("/api/notes/{note_id}/rename", response_model=StatusMessage)
 async def rename_note(note_id: int, title: str = Form(..., max_length=200), db: Session = Depends(get_db)):
     from repositories.note_repository import note_repository
     note = note_repository.get(db, note_id)
@@ -67,7 +68,7 @@ async def rename_note(note_id: int, title: str = Form(..., max_length=200), db: 
     note_repository.update(db, note, {"title": title.strip()})
     return JSONResponse({"status": "success", "message": "Note renamed", "title": title.strip()})
 
-@router.post("/api/notes/{note_id}/pin")
+@router.post("/api/notes/{note_id}/pin", response_model=StatusMessage)
 async def toggle_pin_note(note_id: int, db: Session = Depends(get_db)):
     from repositories.note_repository import note_repository
     note = note_repository.get(db, note_id)
@@ -93,7 +94,7 @@ async def note_action(note_id: int, action: str = Form(...), db: Session = Depen
         return JSONResponse(status_code=404, content={"detail": "Note not found"})
     return JSONResponse({"status": "success", "content": updated_content})
 
-@router.post("/api/notes/clear")
+@router.post("/api/notes/clear", response_model=StatusMessage)
 async def clear_notes(db: Session = Depends(get_db)):
     from repositories.note_repository import note_repository
     note_repository.delete_all(db)

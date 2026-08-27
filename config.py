@@ -57,13 +57,22 @@ TRASH_RETENTION_DAYS = 7
 GROQ_DAILY_LIMIT = int(os.getenv("GROQ_DAILY_LIMIT", "8000"))
 
 # --- CORS ---
-# Default: "*" (wajar untuk aplikasi lokal single-user yang diakses via
-# 127.0.0.1). Saat di-deploy ke jaringan/publik, set CORS_ORIGINS di .env
-# ke daftar origin eksplisit, dipisah koma, contoh:
+# Default: origin eksplisit localhost (dev Vite 5173 + FastAPI 7860/8000).
+# Wildcard "*" hanya sebagai fallback bila env CORS_ORIGINS="*" diset eksplisit
+# (mis. deploy terkontrol). JANGAN biarkan "*" sebagai default di jaringan publik —
+# set CORS_ORIGINS ke daftar origin eksplisit, dipisah koma, contoh:
 #   CORS_ORIGINS=http://localhost:7860,https://kabayan.example.com
-CORS_ORIGINS = [
-    o.strip() for o in os.getenv("CORS_ORIGINS", "*").split(",") if o.strip()
-] or ["*"]
+_DEFAULT_CORS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:7860",
+    "http://127.0.0.1:7860",
+]
+_env_cors = os.getenv("CORS_ORIGINS")
+CORS_ORIGINS = (
+    [o.strip() for o in _env_cors.split(",") if o.strip()]
+    if _env_cors else _DEFAULT_CORS
+)
 
 # Ensure directories exist
 for path in [LANCEDB_DIR, TEXT_CACHE_DIR, UPLOADS_DIR, SESSION_DIR, TRASH_DIR, BACKUPS_DIR]:

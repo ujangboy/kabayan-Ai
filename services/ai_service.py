@@ -275,6 +275,9 @@ class AIService:
         wrapped_context = _wrap_data("dokumen", context) if has_docs else ""
         wrapped_input = _wrap_data("pesan_pengguna", user_input)
 
+        # Pre-stream: baca setting_hash + cek cache pakai session TERPISAH yang
+        # DITUTUP SEBELUM streaming. Jangan pegang session DB lintas await
+        # network (llm.astream) — berisiko pool/lock kehabisan di SQLite.
         db = SessionLocal()
         try:
             setting_hash = settings_service.get_embedding_model(db)
@@ -286,71 +289,77 @@ class AIService:
             cached = await asyncio.to_thread(
                 cache_service.get_cache, db, prompt_str, context, setting_hash
             )
-            if cached:
-                yield cached
-                return
+        finally:
+            db.close()
 
-            llm = self._get_llm("chat")
-            if has_docs:
-                sys_msg = CHAT_SYSTEM_PROMPT_WITH_DOCS_TEMPLATE.format(context=wrapped_context, history="", input="")
+        if cached:
+            yield cached
+            return
+
+        llm = self._get_llm("chat")
+        if has_docs:
+            sys_msg = CHAT_SYSTEM_PROMPT_WITH_DOCS_TEMPLATE.format(context=wrapped_context, history="", input="")
+        else:
+            sys_msg = CHAT_SYSTEM_PROMPT_NO_DOCS_TEMPLATE.format(history="", input="")
+        messages = [SystemMessage(content=sys_msg)]
+        for msg in history:
+            if msg["role"] == "user":
+                messages.append(HumanMessage(content=msg["content"]))
             else:
-                sys_msg = CHAT_SYSTEM_PROMPT_NO_DOCS_TEMPLATE.format(history="", input="")
-            messages = [SystemMessage(content=sys_msg)]
-            for msg in history:
-                if msg["role"] == "user":
-                    messages.append(HumanMessage(content=msg["content"]))
-                else:
-                    messages.append(AIMessage(content=msg["content"]))
-            messages.append(HumanMessage(content=wrapped_input))
+                messages.append(AIMessage(content=msg["content"]))
+        messages.append(HumanMessage(content=wrapped_input))
 
-            full_response = ""
-            last_yield = time.time()
-            try:
-                async for chunk in llm.astream(messages):
-                    if chunk.content:
-                        full_response += chunk.content
-                        yield chunk.content
-                        last_yield = time.time()
-                    elif time.time() - last_yield > 8:
-                        yield ""
-                        last_yield = time.time()
-            except Exception as e:
-                err_str = str(e).lower()
-                # REQ-03: graceful stream error — beri tahu user, jangan crash
-                if "401" in err_str or "invalid api key" in err_str or "invalid_api_key" in err_str or "authentication" in err_str:
-                    logging.error(f"[GROQ_AUTH_ERROR] Groq API key invalid: {e}")
-                    yield "\n\nError: Groq API key tidak valid (401). Periksa file .env dan restart backend."
-                elif any(x in err_str for x in ["timeout", "connection", "502", "503", "504"]):
-                    yield "\n\nError: Koneksi ke Groq API terputus. Coba kirim pesan lagi."
-                elif "rate limit" in err_str or "429" in err_str:
-                    yield "\n\nError: Limit API Groq tercapai. Tunggu sebentar lalu coba lagi."
-                elif any(x in err_str for x in [
-                    "413", "request too large", "tokens per minute", "tokens_exceeded",
-                    "tpm", "context_length_exceeded", "context length", "payload too large"
-                ]):
-                    yield ("\n\n⚠️ Konteks terlalu panjang (batas 8000 token/menit untuk model ini). "
-                           "Coba: 1) kurangi dokumen terpilih, 2) mulai chat baru, "
-                           "3) ringkas pertanyaanmu.")
-                else:
-                    logging.error(f"[CHAT_STREAM_ERROR] {e}")
-                    yield "\n\n⚠️ Terjadi kesalahan saat memproses respons. Silakan coba lagi."
-                return
+        full_response = ""
+        last_yield = time.time()
+        try:
+            async for chunk in llm.astream(messages):
+                if chunk.content:
+                    full_response += chunk.content
+                    yield chunk.content
+                    last_yield = time.time()
+                elif time.time() - last_yield > 8:
+                    yield ""
+                    last_yield = time.time()
+        except Exception as e:
+            err_str = str(e).lower()
+            # REQ-03: graceful stream error — beri tahu user, jangan crash
+            if "401" in err_str or "invalid api key" in err_str or "invalid_api_key" in err_str or "authentication" in err_str:
+                logging.error(f"[GROQ_AUTH_ERROR] Groq API key invalid: {e}")
+                yield "\n\nError: Groq API key tidak valid (401). Periksa file .env dan restart backend."
+            elif any(x in err_str for x in ["timeout", "connection", "502", "503", "504"]):
+                yield "\n\nError: Koneksi ke Groq API terputus. Coba kirim pesan lagi."
+            elif "rate limit" in err_str or "429" in err_str:
+                yield "\n\nError: Limit API Groq tercapai. Tunggu sebentar lalu coba lagi."
+            elif any(x in err_str for x in [
+                "413", "request too large", "tokens per minute", "tokens_exceeded",
+                "tpm", "context_length_exceeded", "context length", "payload too large"
+            ]):
+                yield ("\n\n⚠️ Konteks terlalu panjang (batas 8000 token/menit untuk model ini). "
+                       "Coba: 1) kurangi dokumen terpilih, 2) mulai chat baru, "
+                       "3) ringkas pertanyaanmu.")
+            else:
+                logging.error(f"[CHAT_STREAM_ERROR] {e}")
+                yield "\n\n⚠️ Terjadi kesalahan saat memproses respons. Silakan coba lagi."
+            return
 
-            # Normalize math delimiters on the full response before caching
-            # so repeated requests return already-normalized text
-            normalized_response = _normalize_math(full_response)
+        # Normalize math delimiters on the full response before caching
+        # so repeated requests return already-normalized text
+        normalized_response = _normalize_math(full_response)
+        # Post-stream: session segar khusus write cache — dibuka & ditutup di sini,
+        # TIDAK dipegang selama streaming.
+        db = SessionLocal()
+        try:
             await asyncio.to_thread(
                 cache_service.set_cache, db, prompt_str, context, setting_hash, normalized_response
             )
-            # Pakai session segar agar tidak mengandalkan db request yang mungkin
-            # sudah ditutup (record_usage aman-closed-session-proof via try/except).
-            rec_db = SessionLocal()
-            try:
-                await asyncio.to_thread(record_usage, rec_db, "chat", full_response)
-            finally:
-                rec_db.close()
         finally:
             db.close()
+        # record_usage pakai session sendiri (sudah terisolasi).
+        rec_db = SessionLocal()
+        try:
+            await asyncio.to_thread(record_usage, rec_db, "chat", full_response)
+        finally:
+            rec_db.close()
 
 
 ai_service = AIService()

@@ -98,6 +98,7 @@ async def get_quiz_questions(quiz_id: int, db: Session = Depends(get_db)):
 
 
 from schemas.generate import GenerateQuizRequest
+from schemas.common import StatusMessage
 
 @router.post("/api/quizzes/generate")
 async def generate_quiz(
@@ -201,7 +202,7 @@ async def get_quiz_history(subject_id: int = Query(None), db: Session = Depends(
     return JSONResponse({"history": history})
 
 
-@router.delete("/api/quizzes/{quiz_id}")
+@router.delete("/api/quizzes/{quiz_id}", response_model=StatusMessage)
 async def delete_quiz(quiz_id: int, db: Session = Depends(get_db)):
     success = quiz_repository.delete(db, quiz_id)
     if not success:
@@ -209,7 +210,7 @@ async def delete_quiz(quiz_id: int, db: Session = Depends(get_db)):
     return JSONResponse({"status": "success"})
 
 
-@router.post("/api/quizzes/clear")
+@router.post("/api/quizzes/clear", response_model=StatusMessage)
 async def clear_quizzes(db: Session = Depends(get_db)):
     quiz_repository.delete_all(db)
     return JSONResponse({"status": "success", "message": "Semua quiz dihapus."})
