@@ -53,8 +53,12 @@ def seeded_fs(tmp_path, monkeypatch):
 
 
 def _write_db(path, rows=3):
+    # Idempoten: file bisa jadi sudah punya tabel `subjects` (mis. sisa
+    # create_all di engine uji yang menunjuk ke path sama). Pakai IF NOT
+    # EXISTS + DELETE agar jumlah baris selalu persis = rows.
     conn = sqlite3.connect(path)
-    conn.execute("CREATE TABLE subjects (id INTEGER PRIMARY KEY, name TEXT)")
+    conn.execute("CREATE TABLE IF NOT EXISTS subjects (id INTEGER PRIMARY KEY, name TEXT)")
+    conn.execute("DELETE FROM subjects")
     for i in range(rows):
         conn.execute("INSERT INTO subjects (name) VALUES (?)", (f"Matkul {i}",))
     conn.commit()
