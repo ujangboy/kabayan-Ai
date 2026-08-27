@@ -35,7 +35,7 @@ class ProfileUpdate(BaseModel):
     remove_photo: bool = False
 
 
-@router.get("/api/profile")
+@router.get("/api/profile", response_model=dict)
 async def get_profile(db: Session = Depends(get_db)):
     """Ambil profil: nama tampilan, foto, dan bahasa aplikasi."""
     try:

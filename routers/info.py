@@ -7,7 +7,7 @@ from services.settings_service import APP_VERSION
 router = APIRouter()
 
 
-@router.get("/api/info")
+@router.get("/api/info", response_model=dict)
 async def get_app_info():
     return JSONResponse({
         "app_name": "Kabayan AI",

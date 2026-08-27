@@ -29,7 +29,7 @@ def _material_size_bytes(m) -> int | None:
             continue
     return None
 
-@router.get("/api/materials")
+@router.get("/api/materials", response_model=dict)
 async def get_materials_json(
     db: Session = Depends(get_db), 
     skip: int = Query(0, ge=0), 
@@ -62,7 +62,7 @@ async def get_materials_json(
         })
     return JSONResponse({"materials": results, "skip": skip, "limit": limit})
 
-@router.post("/api/materials")
+@router.post("/api/materials", response_model=dict)
 async def upload_material(
     background_tasks: BackgroundTasks,
     subject_id: int = Form(...),

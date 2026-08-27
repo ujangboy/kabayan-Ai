@@ -23,7 +23,7 @@ from schemas.common import StatusMessage
 
 router = APIRouter()
 
-@router.get("/api/notes")
+@router.get("/api/notes", response_model=dict)
 async def get_notes_json(db: Session = Depends(get_db), skip: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=200)):
     notes = notes_service.get_all(db, skip=skip, limit=limit)
     results = []
@@ -78,7 +78,7 @@ async def toggle_pin_note(note_id: int, db: Session = Depends(get_db)):
     note_repository.update(db, note, {"is_pinned": new_pin_state})
     return JSONResponse({"status": "success", "is_pinned": new_pin_state})
 
-@router.patch("/api/notes/{note_id}/content")
+@router.patch("/api/notes/{note_id}/content", response_model=dict)
 async def update_note_content(note_id: int, db: Session = Depends(get_db), content: str = Form(...)):
     from repositories.note_repository import note_repository
     note = note_repository.get(db, note_id)
@@ -87,7 +87,7 @@ async def update_note_content(note_id: int, db: Session = Depends(get_db), conte
     note_repository.update(db, note, {"content": content})
     return JSONResponse({"status": "success"})
 
-@router.post("/api/notes/{note_id}/action")
+@router.post("/api/notes/{note_id}/action", response_model=dict)
 async def note_action(note_id: int, action: str = Form(...), db: Session = Depends(get_db)):
     success, updated_content = notes_service.process_action(db, note_id, action)
     if not success:
@@ -100,7 +100,7 @@ async def clear_notes(db: Session = Depends(get_db)):
     note_repository.delete_all(db)
     return JSONResponse({"status": "success", "message": "Notes cleared"})
 
-@router.post("/api/notes/generate")
+@router.post("/api/notes/generate", response_model=dict)
 async def generate_notes_ai(
     req: NotesGenerateRequest,
     db: Session = Depends(get_db)
@@ -166,7 +166,7 @@ class NotebookGenerateRequest(BaseModel):
     content: str
     subject_id: Optional[int] = None
 
-@router.post("/api/notebook/generate")
+@router.post("/api/notebook/generate", response_model=dict)
 async def notebook_generate(request: NotebookGenerateRequest, db: Session = Depends(get_db)):
     """Simpan teks dari input chat langsung ke notebook tanpa memanggil Groq AI."""
     from repositories.note_repository import note_repository
@@ -194,7 +194,7 @@ async def notebook_generate(request: NotebookGenerateRequest, db: Session = Depe
     })
     return JSONResponse({"status": "success", "message": "Catatan berhasil disimpan ke Notebook!"})
 
-@router.post("/api/notebook/detect-context")
+@router.post("/api/notebook/detect-context", response_model=dict)
 async def detect_context(request: DetectContextRequest, db: Session = Depends(get_db)):
     """Detect mata_kuliah dan topic dari riwayat chat menggunakan AI."""
     chat_history = [m.model_dump() for m in request.history]
@@ -245,7 +245,7 @@ async def detect_context(request: DetectContextRequest, db: Session = Depends(ge
         logging.getLogger(__name__).warning(f"detect-context fallback: {e}", exc_info=True)
         return JSONResponse({"mata_kuliah": "tidak_diketahui", "topic": "", "subject_id": None})
 
-@router.post("/api/notebook/generate-title")
+@router.post("/api/notebook/generate-title", response_model=dict)
 async def generate_title(request: GenerateTitleRequest, db: Session = Depends(get_db)):
     """Generate judul deskriptif dari konten catatan menggunakan AI."""
     content = request.content

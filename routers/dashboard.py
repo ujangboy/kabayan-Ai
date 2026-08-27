@@ -8,7 +8,7 @@ import models
 
 router = APIRouter()
 
-@router.get("/api/dashboard/stats")
+@router.get("/api/dashboard/stats", response_model=dict)
 async def get_dashboard_stats(db: Session = Depends(get_db)):
     try:
         stats = workspace_service.get_dashboard_stats(db)

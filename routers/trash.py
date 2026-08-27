@@ -23,7 +23,7 @@ from schemas.common import StatusMessage
 router = APIRouter()
 
 
-@router.get("/api/trash")
+@router.get("/api/trash", response_model=dict)
 async def trash_list(db: Session = Depends(get_db)):
     """Daftar semua item sampah."""
     try:

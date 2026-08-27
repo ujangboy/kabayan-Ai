@@ -18,7 +18,7 @@ class YoutubeImportRequest(BaseModel):
     url: str
     subject_id: int
 
-@router.post("/api/materials/youtube")
+@router.post("/api/materials/youtube", response_model=dict)
 async def import_youtube(request: YoutubeImportRequest, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     try:
         source = YoutubeSource(request.url)
@@ -70,7 +70,7 @@ async def import_youtube(request: YoutubeImportRequest, background_tasks: Backgr
 
     return {"status": "processing", "material_id": mat.id, "message": "Video sedang diproses di background."}
 
-@router.get("/api/materials/youtube/status/{id}")
+@router.get("/api/materials/youtube/status/{id}", response_model=dict)
 async def get_youtube_status(id: int, db: Session = Depends(get_db)):
     mat = material_repository.get(db, id)
     if not mat:

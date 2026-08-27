@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.get("/api/quizzes")
+@router.get("/api/quizzes", response_model=dict)
 async def get_quizzes_json(db: Session = Depends(get_db), skip: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=200)):
     from models import Material
     # Sort + paginasi di SQL (sebelumnya sort dilakukan SETELAH offset/limit
@@ -77,7 +77,7 @@ async def get_quizzes_json(db: Session = Depends(get_db), skip: int = Query(0, g
     return JSONResponse({"quizzes": results, "skip": skip, "limit": limit})
 
 
-@router.get("/api/quizzes/{quiz_id}/questions")
+@router.get("/api/quizzes/{quiz_id}/questions", response_model=dict)
 async def get_quiz_questions(quiz_id: int, db: Session = Depends(get_db)):
     """Ambil soal-soal quiz yang tersimpan di DB untuk dimainkan."""
     quiz = quiz_repository.get(db, quiz_id)
@@ -100,7 +100,7 @@ async def get_quiz_questions(quiz_id: int, db: Session = Depends(get_db)):
 from schemas.generate import GenerateQuizRequest
 from schemas.common import StatusMessage
 
-@router.post("/api/quizzes/generate")
+@router.post("/api/quizzes/generate", response_model=dict)
 async def generate_quiz(
     req: GenerateQuizRequest,
     db: Session = Depends(get_db)
@@ -155,7 +155,7 @@ async def generate_quiz(
         return safe_json_response(e, context="quizzes/generate")
 
 
-@router.post("/api/quizzes/{quiz_id}/score")
+@router.post("/api/quizzes/{quiz_id}/score", response_model=dict)
 async def save_quiz_score(
     quiz_id: int,
     score: int = Form(..., ge=0, le=100),

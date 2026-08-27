@@ -246,7 +246,7 @@ async def tutor_feedback(request: TutorFeedbackRequest, db: Session = Depends(ge
         raise AppError(str(exc), status_code=500)
 
 
-@router.get("/api/tutor/faq")
+@router.get("/api/tutor/faq", response_model=dict)
 async def list_faq(
     mata_kuliah: Optional[str] = None,
     limit: int = Query(50, ge=1, le=200),
@@ -274,7 +274,7 @@ async def list_faq(
         raise AppError(str(exc), status_code=500)
 
 
-@router.get("/api/tutor/profile")
+@router.get("/api/tutor/profile", response_model=dict)
 async def get_tutor_profile(db: Session = Depends(get_db)):
     """Return the adaptive tutor profile for the current user."""
     try:
@@ -301,7 +301,7 @@ async def get_tutor_profile(db: Session = Depends(get_db)):
         raise AppError(str(exc), status_code=500)
 
 
-@router.get("/api/tutor/stats")
+@router.get("/api/tutor/stats", response_model=dict)
 async def get_tutor_stats(db: Session = Depends(get_db)):
     """Token usage & session statistics for the tutor."""
     try:

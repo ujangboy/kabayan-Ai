@@ -22,7 +22,7 @@ from schemas.common import StatusMessage
 router = APIRouter()
 
 
-@router.get("/api/usage")
+@router.get("/api/usage", response_model=dict)
 async def usage_summary(period: str = Query("24h", pattern="^(24h|all)$"), db: Session = Depends(get_db)):
     """Pemakaian Groq API per fitur + total (token estimasi & jumlah panggilan).
 
@@ -40,7 +40,7 @@ async def usage_summary(period: str = Query("24h", pattern="^(24h|all)$"), db: S
         raise AppError(str(exc), status_code=500)
 
 
-@router.get("/api/data/overview")
+@router.get("/api/data/overview", response_model=dict)
 async def data_overview(db: Session = Depends(get_db)):
     """Ringkasan jumlah data per kategori + total penyimpanan."""
     try:
@@ -92,7 +92,7 @@ async def create_backup_now():
         raise AppError(str(exc), status_code=500)
 
 
-@router.get("/api/backup/list")
+@router.get("/api/backup/list", response_model=dict)
 async def list_backup_archives():
     """Daftar arsip backup yang tersedia (terbaru dulu)."""
     try:
@@ -103,7 +103,7 @@ async def list_backup_archives():
         raise AppError(str(exc), status_code=500)
 
 
-@router.get("/api/backup/download")
+@router.get("/api/backup/download", response_model=dict)
 async def download_backup_archive(filename: str = Query(...)):
     """Unduh arsip backup; nama file disanitasi (tolak path traversal)."""
     path = backup_path_for(filename)

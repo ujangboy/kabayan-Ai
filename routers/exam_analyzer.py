@@ -65,7 +65,7 @@ async def generate_blueprint(
         raise AppError(str(e), status_code=500)
 
 
-@router.get("/blueprints/{subject_id}")
+@router.get("/blueprints/{subject_id}", response_model=dict)
 async def get_blueprints(subject_id: int, db: Session = Depends(get_db)):
     try:
         data = exam_service.get_blueprints(db, subject_id)
@@ -145,7 +145,7 @@ async def submit_exam(
         raise AppError(str(e), status_code=500)
 
 
-@router.get("/recommendation/{session_id}")
+@router.get("/recommendation/{session_id}", response_model=dict)
 async def get_recommendation(session_id: int, db: Session = Depends(get_db)):
     try:
         data = exam_service.get_recommendation(db, session_id)
@@ -176,7 +176,7 @@ async def get_explanation(
         raise AppError(str(e), status_code=500)
 
 
-@router.get("/bank/stats/{subject_id}")
+@router.get("/bank/stats/{subject_id}", response_model=dict)
 async def bank_stats(subject_id: int, db: Session = Depends(get_db)):
     try:
         data = exam_service.get_bank_stats(db, subject_id)
@@ -186,7 +186,7 @@ async def bank_stats(subject_id: int, db: Session = Depends(get_db)):
         raise AppError(str(e), status_code=500)
 
 
-@router.get("/learning-profile/{subject_id}")
+@router.get("/learning-profile/{subject_id}", response_model=dict)
 async def get_learning_profile(subject_id: int, db: Session = Depends(get_db)):
     """Profil belajar jangka panjang (adaptive) untuk satu mata kuliah.
 
@@ -247,7 +247,7 @@ async def recalculate_learning_profile(subject_id: int, db: Session = Depends(ge
         raise AppError(str(e), status_code=500)
 
 
-@router.get("/sessions")
+@router.get("/sessions", response_model=dict)
 async def list_unified_sessions(
     subject_id: Optional[int] = Query(None),
     db: Session = Depends(get_db),
@@ -262,7 +262,7 @@ async def list_unified_sessions(
         raise AppError(str(e), status_code=500)
 
 
-@router.get("/sessions/{session_id}")
+@router.get("/sessions/{session_id}", response_model=dict)
 async def get_detail_session(session_id: int, db: Session = Depends(get_db)):
     try:
         data = exam_service.get_session_detail(db, session_id)

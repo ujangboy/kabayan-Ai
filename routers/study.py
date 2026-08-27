@@ -67,7 +67,7 @@ async def study_route(req: StudyRouteRequest, db: Session = Depends(get_db)):
         return JSONResponse(status_code=422, content={"detail": str(e)})
 
 
-@router.get("/api/study/metrics")
+@router.get("/api/study/metrics", response_model=dict)
 async def study_metrics(subject_id: Optional[int] = Query(None), db: Session = Depends(get_db)):
     """Metrik belajar (PRD US3.3): speed, fatigue, waktu optimal, overview FSRS."""
     if subject_id is not None:
@@ -79,7 +79,7 @@ async def study_metrics(subject_id: Optional[int] = Query(None), db: Session = D
     return JSONResponse(get_learning_metrics(db, subject_id))
 
 
-@router.get("/api/study/daily-plan")
+@router.get("/api/study/daily-plan", response_model=dict)
 async def study_daily_plan(
     subject_id: Optional[int] = Query(None),
     free_minutes: int = Query(60, ge=5, le=480),
@@ -95,7 +95,7 @@ async def study_daily_plan(
     return JSONResponse(generate_daily_plan(db, free_minutes=free_minutes, subject_id=subject_id))
 
 
-@router.get("/api/study/knowledge-graph")
+@router.get("/api/study/knowledge-graph", response_model=dict)
 async def study_knowledge_graph(subject_id: Optional[int] = Query(None), db: Session = Depends(get_db)):
     """Knowledge graph (PRD US4.1): peta topik/bab + keterkaitan konsep per mata kuliah."""
     from engines.knowledge_graph import build_knowledge_graph
@@ -109,7 +109,7 @@ async def study_knowledge_graph(subject_id: Optional[int] = Query(None), db: Ses
     return JSONResponse(build_knowledge_graph(db, subject_id))
 
 
-@router.get("/api/study/progress")
+@router.get("/api/study/progress", response_model=dict)
 async def study_progress(subject_id: Optional[int] = Query(None), db: Session = Depends(get_db)):
     """Progres belajar (PRD US5.1): streak konsistensi + tren mastery."""
     from engines.progress import get_progress
@@ -123,7 +123,7 @@ async def study_progress(subject_id: Optional[int] = Query(None), db: Session = 
     return JSONResponse(get_progress(db, subject_id))
 
 
-@router.get("/api/study/diagnostic")
+@router.get("/api/study/diagnostic", response_model=dict)
 async def study_diagnostic(subject_id: Optional[int] = Query(None), db: Session = Depends(get_db)):
     """Diagnostic (PRD US4.2): readiness, topik lemah/kuat, resep perbaikan, risiko."""
     from engines.diagnostic import run_diagnostic

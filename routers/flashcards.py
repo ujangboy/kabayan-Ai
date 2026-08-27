@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-@router.get("/api/flashcards")
+@router.get("/api/flashcards", response_model=dict)
 async def get_flashcards_json(db: Session = Depends(get_db), skip: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=200)):
     from models import Material
     flashcards = flashcard_repository.get_all(db, skip=skip, limit=limit)
@@ -72,7 +72,7 @@ class ReviewRequest(BaseModel):
     response_time_ms: Optional[int] = Field(default=None, ge=0)
 
 
-@router.post("/api/flashcards/review")
+@router.post("/api/flashcards/review", response_model=dict)
 async def review_flashcard(req: ReviewRequest, db: Session = Depends(get_db)):
     """Catat penilaian user untuk satu kartu dan update jadwal SRS."""
     from models import Flashcard
@@ -84,7 +84,7 @@ async def review_flashcard(req: ReviewRequest, db: Session = Depends(get_db)):
     return JSONResponse({"status": "success", "flashcard_id": req.flashcard_id, **result})
 
 
-@router.get("/api/flashcards/review/due")
+@router.get("/api/flashcards/review/due", response_model=dict)
 async def get_due_flashcards(subject_id: int = Query(None), db: Session = Depends(get_db), limit: int = Query(50, ge=1, le=200)):
     """Kartu yang siap direview: kartu baru (belum pernah direview) + kartu yang sudah jatuh tempo."""
     import datetime
@@ -118,7 +118,7 @@ async def get_due_flashcards(subject_id: int = Query(None), db: Session = Depend
     return JSONResponse({"due_count": len(results), "flashcards": results})
 
 
-@router.get("/api/flashcards/reviews")
+@router.get("/api/flashcards/reviews", response_model=dict)
 async def get_flashcard_reviews(card_ids: str = Query(..., description="Comma-separated flashcard IDs"), db: Session = Depends(get_db)):
     """Riwayat review per kartu (log Lupa/Ingat/Hafal + jadwal next_review)."""
     from models import FlashcardReview
@@ -149,7 +149,7 @@ async def get_flashcard_reviews(card_ids: str = Query(..., description="Comma-se
     return JSONResponse({"reviews": grouped})
 
 
-@router.get("/api/flashcards/stats")
+@router.get("/api/flashcards/stats", response_model=dict)
 async def get_flashcard_stats(subject_id: int = Query(None), db: Session = Depends(get_db)):
     """Statistik flashcard: total, mastered, perlu review, dll."""
     import datetime
@@ -244,7 +244,7 @@ async def clear_flashcards(db: Session = Depends(get_db)):
 
 from schemas.generate import GenerateFlashcardRequest
 
-@router.post("/api/flashcards/generate")
+@router.post("/api/flashcards/generate", response_model=dict)
 async def generate_flashcards(
     req: GenerateFlashcardRequest,
     db: Session = Depends(get_db)
