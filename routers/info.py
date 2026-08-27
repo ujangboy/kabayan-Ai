@@ -3,11 +3,12 @@ from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
 from services.settings_service import APP_VERSION
+from schemas.responses import InfoResponse
 
 router = APIRouter()
 
 
-@router.get("/api/info", response_model=dict)
+@router.get("/api/info", response_model=InfoResponse)
 async def get_app_info():
     return JSONResponse({
         "app_name": "Kabayan AI",

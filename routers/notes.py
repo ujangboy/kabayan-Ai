@@ -19,11 +19,12 @@ from schemas.generate import (
 import json
 import re
 from schemas.common import StatusMessage
+from schemas.responses import NoteList
 
 
 router = APIRouter()
 
-@router.get("/api/notes", response_model=dict)
+@router.get("/api/notes", response_model=NoteList)
 async def get_notes_json(db: Session = Depends(get_db), skip: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=200)):
     notes = notes_service.get_all(db, skip=skip, limit=limit)
     results = []

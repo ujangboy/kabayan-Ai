@@ -1,6 +1,7 @@
 from time_utils import utcnow
 import logging
 from schemas.common import StatusMessage
+from schemas.responses import FlashcardList, FlashcardDue, FlashcardReviews, FlashcardStats
 from fastapi import APIRouter, Depends, Form, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
@@ -18,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-@router.get("/api/flashcards", response_model=dict)
+@router.get("/api/flashcards", response_model=FlashcardList)
 async def get_flashcards_json(db: Session = Depends(get_db), skip: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=200)):
     from models import Material
     flashcards = flashcard_repository.get_all(db, skip=skip, limit=limit)
@@ -84,7 +85,7 @@ async def review_flashcard(req: ReviewRequest, db: Session = Depends(get_db)):
     return JSONResponse({"status": "success", "flashcard_id": req.flashcard_id, **result})
 
 
-@router.get("/api/flashcards/review/due", response_model=dict)
+@router.get("/api/flashcards/review/due", response_model=FlashcardDue)
 async def get_due_flashcards(subject_id: int = Query(None), db: Session = Depends(get_db), limit: int = Query(50, ge=1, le=200)):
     """Kartu yang siap direview: kartu baru (belum pernah direview) + kartu yang sudah jatuh tempo."""
     import datetime
@@ -118,7 +119,7 @@ async def get_due_flashcards(subject_id: int = Query(None), db: Session = Depend
     return JSONResponse({"due_count": len(results), "flashcards": results})
 
 
-@router.get("/api/flashcards/reviews", response_model=dict)
+@router.get("/api/flashcards/reviews", response_model=FlashcardReviews)
 async def get_flashcard_reviews(card_ids: str = Query(..., description="Comma-separated flashcard IDs"), db: Session = Depends(get_db)):
     """Riwayat review per kartu (log Lupa/Ingat/Hafal + jadwal next_review)."""
     from models import FlashcardReview
@@ -149,7 +150,7 @@ async def get_flashcard_reviews(card_ids: str = Query(..., description="Comma-se
     return JSONResponse({"reviews": grouped})
 
 
-@router.get("/api/flashcards/stats", response_model=dict)
+@router.get("/api/flashcards/stats", response_model=FlashcardStats)
 async def get_flashcard_stats(subject_id: int = Query(None), db: Session = Depends(get_db)):
     """Statistik flashcard: total, mastered, perlu review, dll."""
     import datetime

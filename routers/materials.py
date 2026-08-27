@@ -9,6 +9,7 @@ import models
 from services.material_service import material_service
 from repositories.material_repository import material_repository
 from schemas.common import StatusMessage
+from schemas.responses import MaterialList
 
 router = APIRouter()
 
@@ -29,7 +30,7 @@ def _material_size_bytes(m) -> int | None:
             continue
     return None
 
-@router.get("/api/materials", response_model=dict)
+@router.get("/api/materials", response_model=MaterialList)
 async def get_materials_json(
     db: Session = Depends(get_db), 
     skip: int = Query(0, ge=0), 

@@ -18,6 +18,7 @@ from services.settings_service import settings_service, APP_DEFAULT_LANGUAGE
 from exceptions import AppError
 import config
 from schemas.common import StatusMessage
+from schemas.responses import ProfileResponse
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +36,7 @@ class ProfileUpdate(BaseModel):
     remove_photo: bool = False
 
 
-@router.get("/api/profile", response_model=dict)
+@router.get("/api/profile", response_model=ProfileResponse)
 async def get_profile(db: Session = Depends(get_db)):
     """Ambil profil: nama tampilan, foto, dan bahasa aplikasi."""
     try:

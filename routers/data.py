@@ -18,11 +18,12 @@ from services.trash_service import get_trash_count
 from services.backup_service import create_backup, list_backups, backup_path_for
 from exceptions import AppError
 from schemas.common import StatusMessage
+from schemas.responses import UsageResponse
 
 router = APIRouter()
 
 
-@router.get("/api/usage", response_model=dict)
+@router.get("/api/usage", response_model=UsageResponse)
 async def usage_summary(period: str = Query("24h", pattern="^(24h|all)$"), db: Session = Depends(get_db)):
     """Pemakaian Groq API per fitur + total (token estimasi & jumlah panggilan).
 

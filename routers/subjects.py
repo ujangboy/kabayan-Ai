@@ -5,6 +5,7 @@ from database import get_db
 from services.subject_service import subject_service, compute_subject_stats
 import json
 from schemas.common import StatusMessage
+from schemas.responses import SubjectList, SubjectDetail, DashboardStats
 
 router = APIRouter()
 
@@ -21,7 +22,7 @@ def _subject_basic(s, stats):
     }
 
 
-@router.get("/api/subjects", response_model=dict)
+@router.get("/api/subjects", response_model=SubjectList)
 async def get_subjects_json(db: Session = Depends(get_db)):
     subjects = subject_service.get_all(db)
     results = []
@@ -31,7 +32,7 @@ async def get_subjects_json(db: Session = Depends(get_db)):
     return JSONResponse({"subjects": results})
 
 
-@router.get("/api/subjects/{subject_id}", response_model=dict)
+@router.get("/api/subjects/{subject_id}", response_model=SubjectDetail)
 async def get_subject_by_id(subject_id: int, db: Session = Depends(get_db)):
     subject = subject_service.get_by_id(db, subject_id)
     if not subject:
@@ -52,7 +53,7 @@ async def get_subject_by_id(subject_id: int, db: Session = Depends(get_db)):
     return JSONResponse({"subject": {**_subject_basic(subject, stats), "materials": materials}})
 
 
-@router.get("/api/subjects/{subject_id}/dashboard", response_model=dict)
+@router.get("/api/subjects/{subject_id}/dashboard", response_model=DashboardStats)
 async def get_subject_dashboard(subject_id: int, db: Session = Depends(get_db)):
     """Dashboard lengkap untuk satu mata kuliah: stats, progress topik, riwayat skor,
     aktivitas terbaru, dan rencana belajar aktif."""

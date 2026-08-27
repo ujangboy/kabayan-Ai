@@ -9,13 +9,15 @@ from services.rag_context_service import rag_context_service
 from models import Quiz
 import json
 import logging
+from schemas.common import StatusMessage
+from schemas.responses import QuizList
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
 
-@router.get("/api/quizzes", response_model=dict)
+@router.get("/api/quizzes", response_model=QuizList)
 async def get_quizzes_json(db: Session = Depends(get_db), skip: int = Query(0, ge=0), limit: int = Query(50, ge=1, le=200)):
     from models import Material
     # Sort + paginasi di SQL (sebelumnya sort dilakukan SETELAH offset/limit
@@ -98,7 +100,6 @@ async def get_quiz_questions(quiz_id: int, db: Session = Depends(get_db)):
 
 
 from schemas.generate import GenerateQuizRequest
-from schemas.common import StatusMessage
 
 @router.post("/api/quizzes/generate", response_model=dict)
 async def generate_quiz(

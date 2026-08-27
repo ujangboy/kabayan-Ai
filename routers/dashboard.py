@@ -5,10 +5,11 @@ from database import get_db
 from services.workspace_service import workspace_service
 from services.storage_cleanup_service import get_storage_usage
 import models
+from schemas.responses import DashboardStats
 
 router = APIRouter()
 
-@router.get("/api/dashboard/stats", response_model=dict)
+@router.get("/api/dashboard/stats", response_model=DashboardStats)
 async def get_dashboard_stats(db: Session = Depends(get_db)):
     try:
         stats = workspace_service.get_dashboard_stats(db)
