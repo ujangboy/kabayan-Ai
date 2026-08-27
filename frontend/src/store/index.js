@@ -39,6 +39,33 @@ export const useChatStore = create(
         return { chats: [...chats.filter((c) => !existing.has(c.id)), ...s.chats] };
       }),
 
+      // R2: sinkronkan daftar chat dari backend (GET /api/chats) ke store lokal.
+      // Chat yang sudah ada (id cocok dengan session_uuid) dilewati; sisanya
+      // ditambahkan sebagai entri sidebar agar riwayat backend tetap terlihat
+      // walau localStorage lokal kosong.
+      mergeBackendChats: (backendChats) => set((s) => {
+        if (!Array.isArray(backendChats)) return {};
+        const existing = new Set(s.chats.map((c) => c.id));
+        const additions = [];
+        for (const bc of backendChats) {
+          const localId = Number(bc.session_uuid);
+          const key = Number.isNaN(localId) ? bc.session_uuid : localId;
+          if (existing.has(key)) continue;
+          additions.push({
+            id: key,
+            title: bc.title || 'Chat',
+            messages: [],
+            pinned: false,
+            createdAt: bc.created_at || new Date().toISOString(),
+            sessionUuid: bc.session_uuid,
+            backendOnly: true,
+          });
+          existing.add(key);
+        }
+        if (additions.length === 0) return {};
+        return { chats: [...additions, ...s.chats] };
+      }),
+
       togglePinChat: (id) => set((s) => ({
         chats: s.chats.map((c) =>
           c.id === id ? { ...c, pinned: !c.pinned } : c

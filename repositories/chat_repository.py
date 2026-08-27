@@ -27,4 +27,28 @@ class ChatRepository(BaseRepository[Chat]):
         db.refresh(msg)
         return msg
 
+    def list_chats(self, db: Session) -> List[Chat]:
+        """Daftar sesi chat (terbaru dulu) beserta jumlah pesan."""
+        from sqlalchemy import func, select
+
+        count_subq = (
+            select(func.count(Message.id))
+            .where(Message.chat_id == Chat.id)
+            .correlate(Chat)
+            .scalar_subquery()
+        )
+        return (
+            db.query(Chat, count_subq.label("message_count"))
+            .order_by(Chat.created_at.desc())
+            .all()
+        )
+
+    def delete_by_session_uuid(self, db: Session, session_uuid: str) -> bool:
+        chat = db.query(Chat).filter(Chat.session_uuid == session_uuid).first()
+        if not chat:
+            return False
+        db.delete(chat)
+        db.commit()
+        return True
+
 chat_repository = ChatRepository()

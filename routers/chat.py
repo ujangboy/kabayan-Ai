@@ -47,6 +47,31 @@ async def clear_chats(db: Session = Depends(get_db)):
     return JSONResponse({"status": "success", "message": f"{count} chats deleted"})
 
 
+@router.get("/api/chats", response_model=dict)
+async def list_chats(db: Session = Depends(get_db)):
+    """Daftar sesi chat (backend-backed) untuk sinkronisasi sisi UI."""
+    rows = chat_repository.list_chats(db)
+    chats = []
+    for chat, message_count in rows:
+        chats.append({
+            "id": chat.id,
+            "session_uuid": chat.session_uuid,
+            "title": chat.title,
+            "created_at": chat.created_at.isoformat() if chat.created_at else None,
+            "message_count": message_count,
+        })
+    return JSONResponse({"chats": chats, "count": len(chats)})
+
+
+@router.post("/api/chat/session/{session_uuid}/delete", response_model=StatusMessage)
+async def delete_chat_by_session(session_uuid: str, db: Session = Depends(get_db)):
+    """Hapus satu chat by session_uuid (id yang dikirim frontend ke /api/chat)."""
+    deleted = chat_repository.delete_by_session_uuid(db, session_uuid)
+    if not deleted:
+        return JSONResponse(status_code=404, content={"detail": "Chat not found"})
+    return JSONResponse({"status": "success", "message": "Chat deleted"})
+
+
 @router.post("/api/chat", response_model=StatusMessage)
 async def chat_endpoint(request: ChatRequest, db: Session = Depends(get_db)):
     import asyncio
