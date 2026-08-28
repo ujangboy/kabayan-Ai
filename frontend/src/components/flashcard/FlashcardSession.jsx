@@ -228,7 +228,7 @@ export default function FlashcardSession({ cards, subjectName, onClose }) {
       {/* Top bar */}
       <div className="flex items-center justify-between mb-6 shrink-0">
         <Button onClick={onClose} className="text-sm text-text-muted" variant="ghost">
-          <Icon name={ICONS.ui.chevronLeft} size={16} /> {t('common.back')}
+          <Icon name={ICONS.ui.chevronLeft} size={16} /> {t('flashcard.backToAllDecks')}
         </Button>
         <div className="text-sm text-text-secondary font-medium">{subjectName}</div>
         <span className="px-3 py-1 bg-card rounded-full text-sm font-medium text-text-secondary border border-border">

@@ -81,7 +81,10 @@ def compute_subject_stats(db: Session, subject: Subject) -> dict:
 
 class SubjectService:
     def get_all(self, db: Session) -> List[Subject]:
-        return subject_repository.get_all(db)
+        # Ambil seluruh subject tanpa batas (default BaseRepository membatasi 50).
+        # Subject biasanya sedikit, tapi batas bisa menyembunyikan sebagian
+        # mata kuliah setelah banyak data — seperti keluhan "data hilang".
+        return subject_repository.get_all(db, limit=None)
 
     def get_by_id(self, db: Session, id: int) -> Optional[Subject]:
         return subject_repository.get(db, id)

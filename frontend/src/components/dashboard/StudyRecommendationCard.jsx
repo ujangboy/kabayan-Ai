@@ -42,7 +42,7 @@ export default function StudyRecommendationCard({ route, subjectId }) {
 
   const startFocus = (rec, m) => {
     enterFocus({ type: rec.modality, to: m.to, label: m.label, subjectId });
-    navigate(m.to);
+    navigate(`${m.to}?subject_id=${subjectId}`);
   };
 
   return (
@@ -60,7 +60,7 @@ export default function StudyRecommendationCard({ route, subjectId }) {
           return (
             <div key={rec.tier} className="flex items-stretch gap-2">
               <button
-                onClick={() => navigate(m.to)}
+                onClick={() => navigate(`${m.to}?subject_id=${subjectId}`)}
                 className={`flex-1 min-w-0 flex items-center gap-3 p-2.5 rounded-xl border transition-colors cursor-pointer text-left overflow-hidden ${
                   isPrimary ? 'border-primary/40 bg-primary/5' : 'border-border hover:border-primary/30'
                 }`}

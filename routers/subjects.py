@@ -6,6 +6,7 @@ from services.subject_service import subject_service, compute_subject_stats
 import json
 from schemas.common import StatusMessage
 from schemas.responses import SubjectList, SubjectDetail, DashboardStats
+from models import Material, ExamSession, StudyPlan, Quiz, Flashcard
 
 router = APIRouter()
 
@@ -58,10 +59,22 @@ async def get_subject_dashboard(subject_id: int, db: Session = Depends(get_db)):
     """Dashboard lengkap untuk satu mata kuliah: stats, progress topik, riwayat skor,
     aktivitas terbaru, dan rencana belajar aktif."""
     from models import Quiz, ExamSession, Flashcard, Material, StudyPlan
+    from repositories.subject_repository import subject_repository
 
-    subject = subject_service.recalculate_subject_stats(db, subject_id)
+    # Cek keberadaan subject dulu — 404 HANYA bila benar-benar tidak ada.
+    # Kegagalan kalkulasi statistik tidak boleh dipakai sebagai alasan 404
+    # (sebelumnya menyebabkan "Mata kuliah tidak ditemukan" padahal subject ada).
+    subject = subject_repository.get(db, subject_id)
     if not subject:
         return JSONResponse(status_code=404, content={"detail": "Subject not found"})
+
+    try:
+        recalculated = subject_service.recalculate_subject_stats(db, subject_id)
+        if recalculated is not None:
+            subject = recalculated
+    except Exception:
+        # Biarkan dashboard tetap tampil dengan data yang ada.
+        pass
 
     # ─── Topic progress dari weak/strong topics semua sesi ujian ───
     # Hanya 2 kolom JSON yang dibutuhkan — jangan load entity penuh.
@@ -116,17 +129,18 @@ async def get_subject_dashboard(subject_id: int, db: Session = Depends(get_db)):
     # Kolom-spesifik (tanpa entity penuh) — kolom JSON/text besar tidak diambil.
     score_history = []
     quiz_rows = (
-        db.query(Quiz.created_at, Quiz.score, Quiz.title)
+        db.query(Quiz.id, Quiz.created_at, Quiz.score, Quiz.title)
         .filter(Quiz.subject_id == subject_id)
         .all()
     )
-    for created_at, score, title in quiz_rows:
+    for quiz_id, created_at, score, title in quiz_rows:
         if score is not None:
             score_history.append({
                 "date": created_at.isoformat() if created_at else None,
                 "score": score,
                 "label": title or "Quiz",
                 "type": "quiz",
+                "quiz_id": quiz_id,
             })
 
     session_rows = (
@@ -152,27 +166,27 @@ async def get_subject_dashboard(subject_id: int, db: Session = Depends(get_db)):
     # ─── Aktivitas terbaru (gabungan semua fitur) ───
     # Kolom-spesifik per sumber, lalu merge + ambil 6 terbaru.
     activity = []
-    for created_at, score, title in quiz_rows:
-        activity.append({"date": created_at, "type": "quiz", "label": title or "Quiz", "score": score})
-    for created_at, fc_title, question in (
-        db.query(Flashcard.created_at, Flashcard.title, Flashcard.question)
+    for quiz_id, created_at, score, title in quiz_rows:
+        activity.append({"date": created_at, "type": "quiz", "label": title or "Quiz", "score": score, "quiz_id": quiz_id})
+    for created_at, fc_title, question, batch_id in (
+        db.query(Flashcard.created_at, Flashcard.title, Flashcard.question, Flashcard.batch_id)
         .filter(Flashcard.subject_id == subject_id)
         .all()
     ):
-        activity.append({"date": created_at, "type": "flashcard", "label": fc_title or (question[:40] if question else "Flashcard"), "score": None})
-    for submitted_at, updated_at, started_at, best, latest, title in session_rows:
+        activity.append({"date": created_at, "type": "flashcard", "label": fc_title or (question[:40] if question else "Flashcard"), "score": None, "batch_id": batch_id})
+    for submitted_at, updated_at, started_at, best, latest, title, exam_type in session_rows:
         activity.append({
             "date": submitted_at or updated_at or started_at,
             "type": "ujian",
-            "label": title or "Simulasi",
+            "label": title or (f"Simulasi {exam_type}" if exam_type else "Simulasi"),
             "score": best if best is not None else latest,
         })
-    for upload_date, filename in (
-        db.query(Material.upload_date, Material.filename)
+    for upload_date, filename, material_id in (
+        db.query(Material.upload_date, Material.filename, Material.id)
         .filter(Material.subject_id == subject_id)
         .all()
     ):
-        activity.append({"date": upload_date, "type": "materi", "label": filename, "score": None})
+        activity.append({"date": upload_date, "type": "materi", "label": filename, "score": None, "material_id": material_id})
     activity = [a for a in activity if a["date"]]
     activity.sort(key=lambda a: a["date"], reverse=True)
     recent_activity = []
@@ -182,6 +196,9 @@ async def get_subject_dashboard(subject_id: int, db: Session = Depends(get_db)):
             "type": a["type"],
             "label": a["label"],
             "score": a["score"],
+            "quiz_id": a.get("quiz_id"),
+            "batch_id": a.get("batch_id"),
+            "material_id": a.get("material_id"),
         })
 
     # ─── Rencana belajar aktif (dari sesi terbaru yang punya plan) ───
@@ -261,3 +278,21 @@ async def delete_subject(subject_id: int, db: Session = Depends(get_db)):
     if not subject_service.delete(db, subject_id):
         return JSONResponse(status_code=404, content={"detail": "Subject not found"})
     return JSONResponse({"status": "success", "message": "Subject deleted"})
+
+
+@router.get("/api/subjects/{subject_id}/usage", response_model=dict)
+async def get_subject_usage(subject_id: int, db: Session = Depends(get_db)):
+    """Hitung jumlah data yang akan ikut terhapus bila mata kuliah dihapus.
+
+    Dipakai untuk peringatan konfirmasi agar user sadar ini hapus-massa
+    (bukan hapus satu materi/simulasi).
+    """
+    session_ids = db.query(ExamSession.id).filter(ExamSession.subject_id == subject_id).subquery()
+    counts = {
+        "materials": db.query(Material).filter(Material.subject_id == subject_id).count(),
+        "exam_sessions": db.query(ExamSession).filter(ExamSession.subject_id == subject_id).count(),
+        "study_plans": db.query(StudyPlan).filter(StudyPlan.session_id.in_(session_ids)).count(),
+        "quizzes": db.query(Quiz).filter(Quiz.subject_id == subject_id).count(),
+        "flashcards": db.query(Flashcard).filter(Flashcard.subject_id == subject_id).count(),
+    }
+    return {"status": "success", "counts": counts}

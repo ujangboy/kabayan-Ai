@@ -25,6 +25,30 @@ class MaterialService:
         '.csv': MaterialType.TXT,
     }
 
+    _MAGIC_BYTES = {
+        ".pdf": [b"%PDF"],
+        ".docx": [b"PK\x03\x04"],  # ZIP header (OOXML)
+        ".pptx": [b"PK\x03\x04"],
+        ".xlsx": [b"PK\x03\x04"],
+        # txt / md / csv: teks plain, tidak ada magic bytes spesifik
+    }
+
+    def _validate_magic(self, ext: str, filepath: str):
+        magic_list = self._MAGIC_BYTES.get(ext)
+        if not magic_list:
+            return
+        try:
+            with open(filepath, "rb") as f:
+                head = f.read(2048)
+        except OSError:
+            raise ValueError("Gagal membaca file yang diunggah.")
+        if not any(m in head for m in magic_list):
+            try:
+                os.remove(filepath)
+            except OSError:
+                pass
+            raise ValueError("File tampaknya rusak atau ekstensinya dipalsukan.")
+
     def upload_material_sync(self, db: Session, subject_id: int, file: UploadFile) -> str:
         original_filename = file.filename or "uploaded_file"
         ext = os.path.splitext(original_filename)[1].lower()
@@ -45,6 +69,12 @@ class MaterialService:
                     if written > MAX_SIZE:
                         raise ValueError(f"Ukuran file melebihi batas 50MB.")
                     buffer.write(chunk)
+
+            # REQ-01: Validasi magic bytes dari file yang SUDAH ditulis ke disk
+            # (stream upload hanya dibaca sekali saat menulis di atas). Scan
+            # substring di jendela 2KB pertama agar PDF ber-preamble (mis. BOM)
+            # dan file ZIP (docx/pptx/xlsx) tetap lolos. Teks tak punya magic.
+            self._validate_magic(ext, filepath)
 
             mat = material_repository.create(db, {
                 "subject_id": subject_id,

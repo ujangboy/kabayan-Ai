@@ -26,6 +26,7 @@ export const ICONS = {
     quiz: 'quiz',
     exam: 'psychology',
     studyPlan: 'event_note',
+    audio: 'graphic_eq',
     settings: 'settings',
   },
   // Actions

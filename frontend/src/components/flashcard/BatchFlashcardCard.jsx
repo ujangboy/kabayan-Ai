@@ -9,13 +9,16 @@ import { formatDate, formatTimeOnly } from '@/utils';
 
 export default function BatchFlashcardCard({ group, onStart, onReview, onHistory, onDeleteAll, tone }) {
   const { t } = useTranslation();
-  const { subject, cards } = group;
+  const { subject, cards, title, materialNames } = group;
   const latestCard = cards.reduce((a, b) =>
     new Date(b.created_at || 0) > new Date(a.created_at || 0) ? b : a, cards[0]);
   const createdAt = latestCard?.created_at;
 
   const allMaterialNames = [...new Set(
-    cards.flatMap(c => c.material_names || []).filter(Boolean)
+    ([]).concat(
+      materialNames || [],
+      cards.flatMap(c => c.material_names || [])
+    ).filter(Boolean)
   )];
 
   const masteredCount = cards.filter(c => c.mastered).length;
@@ -36,8 +39,10 @@ export default function BatchFlashcardCard({ group, onStart, onReview, onHistory
         <div className="flex items-start gap-3 min-w-0">
           <SubjectBadge name={subject.name} tone={tone} size="sm" />
           <div className="flex-1 min-w-0">
-            <p className="text-3xs font-semibold text-accent-teal uppercase tracking-wider">{t('flashcard.subjectLabel')}</p>
-            <h3 className="font-semibold text-text text-base truncate">{subject.name}</h3>
+            <p className="text-3xs font-semibold text-accent-teal uppercase tracking-wider">
+              {title ? subject.name : t('flashcard.subjectLabel')}
+            </p>
+            <h3 className="font-semibold text-text text-base truncate">{title || subject.name}</h3>
           </div>
         </div>
         <Tooltip label={t('flashcard.deleteAllCardsTitle')}>

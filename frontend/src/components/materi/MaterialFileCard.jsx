@@ -23,12 +23,13 @@ function fileTint(type) {
   return key ? FILE_TINT[key] : 'bg-text-secondary/10';
 }
 
-export function MaterialFileCard({ material: m, index, showSubject, isRagActive, onToggleRag, onDelete, onCancel }) {
+export function MaterialFileCard({ material: m, index, showSubject, isRagActive, onToggleRag, onDelete, onCancel, onAudio, highlighted = false }) {
   const { t } = useTranslation();
   const iconColor = FILE_COLOR_MAP[String(m.material_type || '').toUpperCase().includes('YOUTUBE') ? 'YOUTUBE' : m.material_type] || 'text-text-secondary';
 
   return (
     <motion.div
+      id={`highlight-${m.id}`}
       layout={{ transition: { duration: 0.25 } }}
       initial={{ opacity: 0, y: 12 }}
       animate={{
@@ -37,7 +38,7 @@ export function MaterialFileCard({ material: m, index, showSubject, isRagActive,
         transition: { delay: Math.min(index * 0.04, 0.4), duration: 0.25 },
       }}
       exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
-      className="card-base card-hoverable group relative flex flex-col gap-3"
+      className={`card-base card-hoverable group relative flex flex-col gap-3 ${highlighted ? 'ring-2 ring-warning/60 bg-warning/5 animate-pulse' : ''}`}
     >
       {/* Top: icon + name + delete */}
       <div className="flex items-start gap-3">
@@ -57,6 +58,16 @@ export function MaterialFileCard({ material: m, index, showSubject, isRagActive,
             </Tooltip>
           )}
         </div>
+        <Tooltip label={t('nav.audio')}>
+          <button
+            onClick={onAudio}
+            aria-label={t('nav.audio')}
+            disabled={m.status !== 'Ready'}
+            className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-text-secondary hover:text-primary hover:bg-primary/10 transition-all shrink-0 disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            <Icon name={ICONS.nav.audio} size={15} />
+          </button>
+        </Tooltip>
         <Tooltip label={t('materi.deleteMateriTitle')}>
           <button
             onClick={onDelete}

@@ -134,7 +134,26 @@ export default function SubjectDashboardPage() {
     );
   }
 
-  if (error || !subject) {
+  if (error) {
+    return (
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div key="error" {...fadeSlide} className="flex-1 overflow-y-auto p-6 md:p-8 bg-base">
+          <div className="w-full rounded-xl border border-red-500/30 bg-surface p-8 text-center">
+            <p className="text-sm text-red-400">{extractErrorMessage(error) || t('subjectDashboard.notFound')}</p>
+            <button
+              type="button"
+              onClick={() => queryClient.invalidateQueries(['subject-dashboard', subjectId])}
+              className="mt-4 text-xs font-medium text-primary border border-border rounded-lg px-3 py-1.5 hover:bg-subtle"
+            >
+              {t('common.retry')}
+            </button>
+          </div>
+        </motion.div>
+      </AnimatePresence>
+    );
+  }
+
+  if (!subject) {
     return (
       <AnimatePresence mode="wait" initial={false}>
         <motion.div key="notfound" {...fadeSlide} className="flex-1 overflow-y-auto p-6 md:p-8 bg-base">
@@ -278,8 +297,18 @@ export default function SubjectDashboardPage() {
                           <div className="space-y-2.5">
                             {recentActivity.slice(0, 8).map((a, i) => {
                               const meta = activityMeta[a.type] || activityMeta.materi;
+                              const target =
+                                a.type === 'quiz' && a.quiz_id ? `/quiz?highlight=${a.quiz_id}`
+                                : a.type === 'flashcard' && a.batch_id ? `/flashcard?highlight=${a.batch_id}`
+                                :                                 a.type === 'materi' && a.material_id ? `/materi?subject_id=${subjectId}&highlight=${a.material_id}` : a.type === 'materi' ? `/materi?subject_id=${subjectId}`
+                                : a.type === 'ujian' ? `/exam-analyzer?subject_id=${subjectId}`
+                                : null;
                               return (
-                                <div key={i} className="flex items-center gap-2.5 py-1">
+                                <div
+                                  key={i}
+                                  onClick={() => target && navigate(target)}
+                                  className={`flex items-center gap-2.5 py-1 ${target ? 'cursor-pointer hover:bg-subtle rounded-lg px-1 -mx-1 transition-colors' : ''}`}
+                                >
                                   <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border ${meta.cls}`}>
                                     <Icon name={meta.icon} size={12} />
                                   </div>

@@ -25,6 +25,7 @@ class ChatRequest(BaseModel):
     history: List[Message] = []
     documents: List[str] = []
     session_id: Optional[str] = Field(default=None, max_length=64)
+    tutor_enabled: bool = False
 
 
 @router.post("/api/chat/{chat_id}/delete", response_model=StatusMessage)
@@ -59,6 +60,7 @@ async def list_chats(db: Session = Depends(get_db)):
             "title": chat.title,
             "created_at": chat.created_at.isoformat() if chat.created_at else None,
             "message_count": message_count,
+            "tutor_enabled": bool(chat.tutor_enabled),
         })
     return JSONResponse({"chats": chats, "count": len(chats)})
 
@@ -86,6 +88,8 @@ async def chat_endpoint(request: ChatRequest, db: Session = Depends(get_db)):
             chat = chat_repository.get_or_create_by_uuid(db, request.session_id)
             chat_id = chat.id
             chat_repository.add_message(db, chat_id, "user", request.message)
+            if request.tutor_enabled and not chat.tutor_enabled:
+                chat_repository.set_tutor_enabled(db, chat.id, True)
             db.commit()
 
         limited_history = request.history[-8:]

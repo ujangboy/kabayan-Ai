@@ -15,7 +15,7 @@ import { Icon, Tooltip } from '@/components/ui';
 export default function ChatPage() {
   useChatUrlSync();
 
-  const { sendMessage, handleFeedback, noteToast } = useChatMessaging();
+  const { sendMessage, handleFeedback, noteToast, generateAndSaveNote, isNoteSaving } = useChatMessaging();
   const currentChatId = useChatStore((s) => s.currentChatId);
   const chat = useChatStore((s) => s.getCurrentChat());
   const isCurrentChatStreaming = useChatStore((s) => s.streamingChatIds.includes(currentChatId));
@@ -85,6 +85,8 @@ export default function ChatPage() {
                 isStreaming={isCurrentChatStreaming}
                 onStop={() => abortActiveStream(currentChatId)}
                 tutorMode={!!chat?.tutorEnabled}
+                onSaveNote={generateAndSaveNote}
+                isNoteSaving={isNoteSaving}
               />
             </div>
           </div>

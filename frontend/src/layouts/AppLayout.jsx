@@ -11,10 +11,13 @@ import KeyboardShortcuts from '@/components/KeyboardShortcuts';
 import BackgroundProcessSync from '@/components/BackgroundProcessSync';
 import FocusModeView from '@/components/FocusModeView';
 import { useAppStore, useFocusStore } from '@/store';
+import { useJobStore, cancelJobByKey } from '@/store/jobStore';
 import { useTranslation } from 'react-i18next';
 
-import { profileAPI } from '@/services/api';
+import { profileAPI, materiAPI, audioAPI } from '@/services/api';
 import { setAppLanguage, STORAGE_KEY } from '@/i18n';
+import { extractErrorMessage } from '@/utils/errors';
+import { useToast } from '@/components/Toast';
 
 const OP_LABELS = [
   ['chat', 'appLayout.opChat'],
@@ -23,6 +26,7 @@ const OP_LABELS = [
   ['youtube', 'appLayout.opYoutube'],
   ['quiz', 'appLayout.opQuiz'],
   ['flashcard', 'appLayout.opFlashcard'],
+  ['audio', 'appLayout.opAudio'],
 ];
 
 function getOpLabel(op, t) {
@@ -35,23 +39,55 @@ function getOpLabel(op, t) {
 
 function PendingBanner({ t }) {
   const pendingOperations = useAppStore((s) => s.pendingOperations);
-  if (pendingOperations.size === 0) return null;
+  const jobs = useJobStore((s) => s.jobs);
+  const { toast } = useToast();
 
-  const ops = [...pendingOperations];
+  // Gabungkan job material (pendingOperations) + job background store.
+  const materialOps = [...pendingOperations].map((op) => ({ key: op, label: getOpLabel(op, t), kind: 'material' }));
+  const bgOps = Object.values(jobs).map((j) => ({ key: j.key, label: j.label || getOpLabel(j.type, t), kind: j.type, audioId: j.audioId }));
+  const ops = [...materialOps, ...bgOps];
+
+  if (ops.length === 0) return null;
+
+  const handleCancel = async (op) => {
+    try {
+      if (op.kind === 'material') {
+        const m = op.key.match(/^process-(\d+)$/);
+        if (m) await materiAPI.cancel(Number(m[1]));
+      } else if (op.kind === 'audio' && op.audioId) {
+        await audioAPI.cancel(op.audioId);
+      }
+      cancelJobByKey(op.key);
+      toast.info(t('appLayout.opCancelled'));
+    } catch (err) {
+      toast.error(extractErrorMessage(err));
+    }
+  };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: -12 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -12 }}
-      transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
-      className="flex items-center gap-2 px-4 py-2 bg-warning/10 border-b border-warning/25 text-warning text-xs"
-    >
-      <Icon name={ICONS.actions.refresh} size={12} className="animate-spin" />
-      <span>
-        {ops.length === 1 ? getOpLabel(ops[0], t) : t('appLayout.opRunningMultiple', { count: ops.length })}
-      </span>
-    </motion.div>
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0, y: -12 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -12 }}
+        transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
+        className="flex items-center gap-2 px-4 py-2 bg-warning/10 border-b border-warning/25 text-warning text-xs flex-wrap"
+      >
+        <Icon name={ICONS.actions.refresh} size={12} className="animate-spin" />
+        <span>
+          {ops.length === 1 ? ops[0].label : t('appLayout.opRunningMultiple', { count: ops.length })}
+        </span>
+        <span className="text-warning/70">·</span>
+        <button
+          onClick={() => handleCancel(ops[0])}
+          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md border border-warning/40 hover:bg-warning/20 transition-colors"
+          aria-label={t('appLayout.opCancel')}
+        >
+          <Icon name={ICONS.actions.close} size={11} />
+          {t('appLayout.opCancel')}
+        </button>
+      </motion.div>
+    </AnimatePresence>
   );
 }
 

@@ -16,18 +16,22 @@ export default function FlashcardCard({ currentCard, isFlipped, onFlip }) {
         transition={{ duration: 0.55, type: 'spring', stiffness: 280, damping: 22 }}
       >
         {/* Front */}
-        <div className="absolute inset-0 backface-hidden card-base flex flex-col items-center justify-center p-8 text-center border-t-2 border-t-primary/70 shadow-xl">
-          <span className="text-xs font-semibold text-text-secondary uppercase tracking-widest mb-4">{t('flashcard.question')}</span>
-          <MathMarkdown className="text-xl font-bold text-text leading-snug text-center">{currentCard.question}</MathMarkdown>
-          <p className="absolute bottom-4 text-2xs text-text-muted">{t('flashcard.clickToSeeAnswer')}</p>
+        <div className="absolute inset-0 backface-hidden card-base flex flex-col items-center justify-center p-6 text-center border-t-2 border-t-primary/70 shadow-xl">
+          <span className="text-xs font-semibold text-text-secondary uppercase tracking-widest mb-3 shrink-0">{t('flashcard.question')}</span>
+          <div className="w-full max-h-[190px] overflow-y-auto custom-scrollbar px-1">
+            <MathMarkdown className="text-[17px] sm:text-xl font-semibold text-text leading-relaxed text-center break-words whitespace-pre-wrap">{currentCard.question}</MathMarkdown>
+          </div>
+          <p className="absolute bottom-3 text-2xs text-text-muted">{t('flashcard.clickToSeeAnswer')}</p>
         </div>
         {/* Back */}
         <div
-          className="absolute inset-0 backface-hidden card-base flex flex-col items-center justify-center p-8 text-center border-t-2 border-t-success/70 shadow-xl"
+          className="absolute inset-0 backface-hidden card-base flex flex-col items-center justify-center p-6 text-center border-t-2 border-t-success/70 shadow-xl"
           style={{ transform: 'rotateY(180deg)' }}
         >
-          <span className="text-xs font-semibold text-text-secondary uppercase tracking-widest mb-4">{t('flashcard.answer')}</span>
-          <MathMarkdown className="text-lg text-text leading-relaxed text-center">{currentCard.answer}</MathMarkdown>
+          <span className="text-xs font-semibold text-text-secondary uppercase tracking-widest mb-3 shrink-0">{t('flashcard.answer')}</span>
+          <div className="w-full max-h-[210px] overflow-y-auto custom-scrollbar px-1">
+            <MathMarkdown className="text-base sm:text-lg text-text leading-relaxed text-center break-words whitespace-pre-wrap">{currentCard.answer}</MathMarkdown>
+          </div>
         </div>
       </motion.div>
     </div>

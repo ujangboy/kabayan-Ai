@@ -64,13 +64,13 @@ export default function DetailModal({ open = false, historySessionId, onClose, o
     <ModalShell open={open} onClose={onClose}>
       <div className="p-5 divider-gradient-b relative shrink-0">
         <div className="flex items-start justify-between gap-3">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-1 flex-wrap">
+           <div className="flex-1 min-w-0">
+             <div className="flex items-center gap-2 mb-1 flex-wrap">
                <Chip label={data.exam_type?.toUpperCase() || t('exam.history.defaultExamType')} size="xs" color="blue" />
               <Chip label={meta.label} size="xs" color={meta.color} />
               <Chip label={badge.label} size="xs" color={badge.color} />
             </div>
-            <h2 className="text-lg font-bold text-text">{data.title}</h2>
+             <h2 className="text-lg font-bold text-text break-words">{data.title}</h2>
             <p className="text-sm text-text-muted">{data.subject_name}</p>
           </div>
           <div className="text-right shrink-0">
@@ -79,7 +79,7 @@ export default function DetailModal({ open = false, historySessionId, onClose, o
           </div>
         </div>
 
-        <div className="flex gap-1 mt-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory -mx-1 px-1">
+        <div className="flex flex-wrap gap-1.5 mt-4">
           {[
             { id:'overview', label:t('exam.detail.overview'),  icon: ICONS.learning.barChart },
             { id:'review',   label:t('exam.detail.review'),     icon: ICONS.learning.bookOpen },
@@ -203,12 +203,12 @@ function OverviewTab({ data }) {
              <p className="text-xs font-semibold text-success mb-2 flex items-center gap-1">
                <Icon name={ICONS.learning.progress} size={11} /> {t('exam.detail.strongTopics')}
              </p>
-            {(data.strong_topics || []).slice(0,5).map((topic,i) => (
-              <div key={i} className="flex items-center justify-between py-1 border-b border-success/10 last:border-0">
-                <span className="text-xs text-text">{typeof topic === 'string' ? topic : topic.topic || ''}</span>
-                {topic.mastery && <Chip label={topic.mastery} size="xs" color="success" />}
-              </div>
-            ))}
+              {(data.strong_topics || []).slice(0,5).map((topic,i) => (
+                <div key={i} className="flex items-center justify-between gap-2 py-1 border-b border-success/10 last:border-0">
+                  <span className="text-xs text-text flex-1 min-w-0 break-words whitespace-normal leading-snug line-clamp-2" title={typeof topic === 'string' ? topic : topic.topic || ''}>{typeof topic === 'string' ? topic : topic.topic || ''}</span>
+                  {topic.mastery && <span className="shrink-0"><Chip label={topic.mastery} size="xs" color="success" /></span>}
+                </div>
+              ))}
           </div>
         )}
         {(data.weak_topics || []).length > 0 && (
@@ -216,13 +216,13 @@ function OverviewTab({ data }) {
              <p className="text-xs font-semibold text-danger mb-2 flex items-center gap-1">
                <Icon name={ICONS.status.warning} size={11} /> {t('exam.detail.weakTopics')}
              </p>
-            {(data.weak_topics || []).slice(0,5).map((topic,i) => (
-              <div key={i} className="flex items-center justify-between py-1 border-b border-danger/10 last:border-0">
-                <span className="text-xs text-text">{typeof topic === 'string' ? topic : topic.topic || ''}</span>
-                {topic.priority && <Chip label={topic.priority} size="xs"
-                  color={topic.priority==='Tinggi'?'danger':topic.priority==='Menengah'?'warning':'teal'} />}
-              </div>
-            ))}
+              {(data.weak_topics || []).slice(0,5).map((topic,i) => (
+                <div key={i} className="flex items-center justify-between gap-2 py-1 border-b border-danger/10 last:border-0">
+                  <span className="text-xs text-text flex-1 min-w-0 break-words whitespace-normal leading-snug line-clamp-2" title={typeof topic === 'string' ? topic : topic.topic || ''}>{typeof topic === 'string' ? topic : topic.topic || ''}</span>
+                  {topic.priority && <span className="shrink-0"><Chip label={topic.priority} size="xs"
+                    color={topic.priority==='Tinggi'?'danger':topic.priority==='Menengah'?'warning':'teal'} /></span>}
+                </div>
+              ))}
           </div>
         )}
       </div>

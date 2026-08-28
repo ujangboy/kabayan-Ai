@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ICONS } from '@/lib/icons';
 
@@ -9,7 +10,7 @@ import { useToast } from '@/components/Toast';
 import { usePageState } from '@/hooks/usePageState';
 import { springWave } from '@/lib/motion';
 import { Button, Textarea, Icon } from '@/components/ui';
-import { TYPE_META, formatItemDate } from './shared';
+import { TYPE_META, formatItemDate, formatRealDate } from './shared';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Inline quiz practice dengan submit ke PracticeResult
@@ -215,15 +216,20 @@ export function StudyPlanItem({
   onToggle, onOpenPractice, onGenerateSummary, onAskTutor,
   practiceState, onPracticeClose, onPracticeSubmitted,
 }) {
+  const { t } = useTranslation();
   const meta = TYPE_META[item.activity_type] || TYPE_META.review;
-  const dateLabel = planStartDate ? formatItemDate(planStartDate, item.order_number) : (item.day_label || `Hari ${item.order_number + 1}`);
+  // Tanggal real: pakai created_at materi jika ada, bukan plan.start_date imajiner.
+  const realCreatedAt = item.material_created_at || (planStartDate || null);
+  const dateLabel = realCreatedAt
+    ? formatRealDate(realCreatedAt)
+    : (item.day_label || `Hari ${item.order_number + 1}`);
   const latestResult = item.practice_results?.[item.practice_results.length - 1];
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`rounded-xl border overflow-hidden transition-all ${isPracticeOpen ? 'border-primary/30 bg-primary/5' : item.completed ? 'bg-success/5 border-success/20' : 'card-base'}`}
+      className={`rounded-xl border overflow-hidden transition-all ${isPracticeOpen ? 'border-primary/30 bg-primary/5' : item.completed ? 'bg-success/5 border-success/20' : 'bg-surface border-border hover:border-strong'}`}
     >
       <div className="flex items-start gap-3 p-4">
         <button
@@ -247,6 +253,20 @@ export function StudyPlanItem({
           <p className={`text-base font-medium text-text ${item.completed ? 'line-through opacity-60' : ''}`}>{item.topic}</p>
           {item.activity && <p className="text-xs text-text-secondary mt-0.5">{item.activity}</p>}
 
+          {/* Materi terkait + tanggal real dibuat (bukan now) */}
+          {item.material_names?.length > 0 && (
+            <div className="flex gap-1 flex-wrap mt-2">
+              {item.material_names.slice(0, 4).map((name, i) => (
+                <span key={i} className="inline-flex items-center gap-0.5 text-3xs px-2 py-0.5 rounded bg-accent-blue/10 text-accent-blue border border-accent-blue/20 truncate max-w-[220px]">
+                  <Icon name={ICONS.files.document} size={8} className="shrink-0" />{name}
+                </span>
+              ))}
+              {item.material_names.length > 4 && (
+                <span className="text-3xs text-text-muted">{t('studyPlanPage.moreMaterials', { count: item.material_names.length - 4 })}</span>
+              )}
+            </div>
+          )}
+
           {/* Latest practice result */}
           {latestResult && (
             <div className="mt-2 flex items-center gap-3 text-2xs">
@@ -267,7 +287,7 @@ export function StudyPlanItem({
           )}
 
           {/* Action buttons */}
-          <div className="flex gap-2 mt-3 flex-wrap">
+          <div className="flex gap-2 mt-3 flex-wrap items-center">
             {!item.completed && item.activity_type !== 'rest' && (
               <button
                 disabled={isPracticeOpen}

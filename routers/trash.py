@@ -62,14 +62,14 @@ async def trash_delete(item_id: int, db: Session = Depends(get_db)):
         raise AppError(str(exc), status_code=500)
 
 
-@router.post("/api/trash/materials/{material_id}/restore", response_model=StatusMessage)
+@router.post("/api/trash/materials/{material_id}/restore", response_model=dict)
 async def trash_restore_material(material_id: int, db: Session = Depends(get_db)):
-    """Kembalikan materi dari sampah."""
+    """Kembalikan materi dari sampah. Mengembalikan subject_id untuk redirect FE."""
     try:
-        ok = restore_material(db, material_id)
-        if not ok:
+        subject_id = restore_material(db, material_id)
+        if subject_id is False:
             raise AppError("Materi sampah tidak ditemukan.", status_code=404)
-        return JSONResponse({"status": "success", "message": "Materi dipulihkan."})
+        return {"status": "success", "material_id": material_id, "subject_id": subject_id}
     except AppError:
         raise
     except Exception as exc:

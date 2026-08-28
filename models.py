@@ -137,7 +137,8 @@ class Chat(Base):
     session_uuid = Column(String, unique=True, nullable=True, index=True)
     title = Column(String)
     created_at = Column(DateTime, default=utcnow)
-    
+    tutor_enabled = Column(Boolean, default=False, nullable=False, server_default="0")
+
     messages = relationship("Message", back_populates="chat", cascade="all, delete-orphan")
 
 class Message(Base):
@@ -540,4 +541,30 @@ class LearningProfile(Base):
     created_at = Column(DateTime, default=utcnow)
     updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
 
+    subject = relationship("Subject")
+
+
+class AudioGeneration(Base):
+    """
+    Hasil generate audio TTS (EdgeTTS) dari isi materi (full text).
+
+    Single-user lokal. 1 materi bisa punya beberapa generate (beda voice).
+    File disimpan di storage/static/audio/<uuid>.mp3 dan dilayani via
+    endpoint router audio (bukan static mount global).
+    """
+    __tablename__ = "audio_generations"
+    id = Column(Integer, primary_key=True, index=True)
+    material_id = Column(Integer, ForeignKey("materials.id", ondelete="CASCADE"), index=True)
+    subject_id = Column(Integer, ForeignKey("subjects.id", ondelete="CASCADE"), index=True)
+    voice = Column(String)  # voice id, mis. id-ID-ArdiNeural
+    status = Column(String, default="Processing", index=True)  # Processing | Ready | Failed | Cancelled
+    progress = Column(Integer, default=0, nullable=False)
+    stage = Column(String, nullable=True)
+    file_path = Column(String, nullable=True)
+    duration_sec = Column(Integer, nullable=True)
+    error = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=utcnow)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
+
+    material = relationship("Material")
     subject = relationship("Subject")

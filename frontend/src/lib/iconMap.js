@@ -8,11 +8,12 @@ import { DashboardW100, DashboardW200, DashboardW300, DashboardW400, DashboardW5
 import { ChatW100, ChatW200, ChatW300, ChatW400, ChatW500, ChatW600, ChatW700, ChatFillW100, ChatFillW200, ChatFillW300, ChatFillW400, ChatFillW500, ChatFillW600, ChatFillW700 } from '@material-symbols-svg/react/rounded/icons/chat';
 import { MenuBookW100, MenuBookW200, MenuBookW300, MenuBookW400, MenuBookW500, MenuBookW600, MenuBookW700, MenuBookFillW100, MenuBookFillW200, MenuBookFillW300, MenuBookFillW400, MenuBookFillW500, MenuBookFillW600, MenuBookFillW700 } from '@material-symbols-svg/react/rounded/icons/menu-book';
 import { DescriptionW100, DescriptionW200, DescriptionW300, DescriptionW400, DescriptionW500, DescriptionW600, DescriptionW700, DescriptionFillW100, DescriptionFillW200, DescriptionFillW300, DescriptionFillW400, DescriptionFillW500, DescriptionFillW600, DescriptionFillW700 } from '@material-symbols-svg/react/rounded/icons/description';
-import { BookmarkW100, BookmarkW200, BookmarkW300, BookmarkW400, BookmarkW500, BookmarkW600, BookmarkW700, BookmarkFillW100, BookmarkFillW200, BookmarkFillW300, BookmarkFillW400, BookmarkFillW500, BookmarkFillW600, BookmarkFillW700 } from '@material-symbols-svg/react/rounded/icons/bookmark';
+import { BookW100, BookW200, BookW300, BookW400, BookW500, BookW600, BookW700, BookFillW100, BookFillW200, BookFillW300, BookFillW400, BookFillW500, BookFillW600, BookFillW700 } from '@material-symbols-svg/react/rounded/icons/book';
 import { StyleW100, StyleW200, StyleW300, StyleW400, StyleW500, StyleW600, StyleW700, StyleFillW100, StyleFillW200, StyleFillW300, StyleFillW400, StyleFillW500, StyleFillW600, StyleFillW700 } from '@material-symbols-svg/react/rounded/icons/style';
 import { QuizW100, QuizW200, QuizW300, QuizW400, QuizW500, QuizW600, QuizW700, QuizFillW100, QuizFillW200, QuizFillW300, QuizFillW400, QuizFillW500, QuizFillW600, QuizFillW700 } from '@material-symbols-svg/react/rounded/icons/quiz';
 import { PsychologyW100, PsychologyW200, PsychologyW300, PsychologyW400, PsychologyW500, PsychologyW600, PsychologyW700, PsychologyFillW100, PsychologyFillW200, PsychologyFillW300, PsychologyFillW400, PsychologyFillW500, PsychologyFillW600, PsychologyFillW700 } from '@material-symbols-svg/react/rounded/icons/psychology';
 import { EventNoteW100, EventNoteW200, EventNoteW300, EventNoteW400, EventNoteW500, EventNoteW600, EventNoteW700, EventNoteFillW100, EventNoteFillW200, EventNoteFillW300, EventNoteFillW400, EventNoteFillW500, EventNoteFillW600, EventNoteFillW700 } from '@material-symbols-svg/react/rounded/icons/event-note';
+import { GraphicEqW100, GraphicEqW200, GraphicEqW300, GraphicEqW400, GraphicEqW500, GraphicEqW600, GraphicEqW700, GraphicEqFillW100, GraphicEqFillW200, GraphicEqFillW300, GraphicEqFillW400, GraphicEqFillW500, GraphicEqFillW600, GraphicEqFillW700 } from '@material-symbols-svg/react/rounded/icons/graphic-eq';
 import { SettingsW100, SettingsW200, SettingsW300, SettingsW400, SettingsW500, SettingsW600, SettingsW700, SettingsFillW100, SettingsFillW200, SettingsFillW300, SettingsFillW400, SettingsFillW500, SettingsFillW600, SettingsFillW700 } from '@material-symbols-svg/react/rounded/icons/settings';
 import { AddCircleW100, AddCircleW200, AddCircleW300, AddCircleW400, AddCircleW500, AddCircleW600, AddCircleW700, AddCircleFillW100, AddCircleFillW200, AddCircleFillW300, AddCircleFillW400, AddCircleFillW500, AddCircleFillW600, AddCircleFillW700 } from '@material-symbols-svg/react/rounded/icons/add-circle';
 import { AddW100, AddW200, AddW300, AddW400, AddW500, AddW600, AddW700, AddFillW100, AddFillW200, AddFillW300, AddFillW400, AddFillW500, AddFillW600, AddFillW700 } from '@material-symbols-svg/react/rounded/icons/add';
@@ -99,7 +100,6 @@ import { TrophyW100, TrophyW200, TrophyW300, TrophyW400, TrophyW500, TrophyW600,
 import { CelebrationW100, CelebrationW200, CelebrationW300, CelebrationW400, CelebrationW500, CelebrationW600, CelebrationW700, CelebrationFillW100, CelebrationFillW200, CelebrationFillW300, CelebrationFillW400, CelebrationFillW500, CelebrationFillW600, CelebrationFillW700 } from '@material-symbols-svg/react/rounded/icons/celebration';
 import { LightbulbW100, LightbulbW200, LightbulbW300, LightbulbW400, LightbulbW500, LightbulbW600, LightbulbW700, LightbulbFillW100, LightbulbFillW200, LightbulbFillW300, LightbulbFillW400, LightbulbFillW500, LightbulbFillW600, LightbulbFillW700 } from '@material-symbols-svg/react/rounded/icons/lightbulb';
 import { StarShineW100, StarShineW200, StarShineW300, StarShineW400, StarShineW500, StarShineW600, StarShineW700, StarShineFillW100, StarShineFillW200, StarShineFillW300, StarShineFillW400, StarShineFillW500, StarShineFillW600, StarShineFillW700 } from '@material-symbols-svg/react/rounded/icons/star-shine';
-import { BookW100, BookW200, BookW300, BookW400, BookW500, BookW600, BookW700, BookFillW100, BookFillW200, BookFillW300, BookFillW400, BookFillW500, BookFillW600, BookFillW700 } from '@material-symbols-svg/react/rounded/icons/book';
 import { HistoryW100, HistoryW200, HistoryW300, HistoryW400, HistoryW500, HistoryW600, HistoryW700, HistoryFillW100, HistoryFillW200, HistoryFillW300, HistoryFillW400, HistoryFillW500, HistoryFillW600, HistoryFillW700 } from '@material-symbols-svg/react/rounded/icons/history';
 import { HubW100, HubW200, HubW300, HubW400, HubW500, HubW600, HubW700, HubFillW100, HubFillW200, HubFillW300, HubFillW400, HubFillW500, HubFillW600, HubFillW700 } from '@material-symbols-svg/react/rounded/icons/hub';
 import { MapW100, MapW200, MapW300, MapW400, MapW500, MapW600, MapW700, MapFillW100, MapFillW200, MapFillW300, MapFillW400, MapFillW500, MapFillW600, MapFillW700 } from '@material-symbols-svg/react/rounded/icons/map';
@@ -111,6 +111,7 @@ import { BarChartW100, BarChartW200, BarChartW300, BarChartW400, BarChartW500, B
 import { GridViewW100, GridViewW200, GridViewW300, GridViewW400, GridViewW500, GridViewW600, GridViewW700, GridViewFillW100, GridViewFillW200, GridViewFillW300, GridViewFillW400, GridViewFillW500, GridViewFillW600, GridViewFillW700 } from '@material-symbols-svg/react/rounded/icons/grid-view';
 import { StarW100, StarW200, StarW300, StarW400, StarW500, StarW600, StarW700, StarFillW100, StarFillW200, StarFillW300, StarFillW400, StarFillW500, StarFillW600, StarFillW700 } from '@material-symbols-svg/react/rounded/icons/star';
 import { FavoriteW100, FavoriteW200, FavoriteW300, FavoriteW400, FavoriteW500, FavoriteW600, FavoriteW700, FavoriteFillW100, FavoriteFillW200, FavoriteFillW300, FavoriteFillW400, FavoriteFillW500, FavoriteFillW600, FavoriteFillW700 } from '@material-symbols-svg/react/rounded/icons/favorite';
+import { BookmarkW100, BookmarkW200, BookmarkW300, BookmarkW400, BookmarkW500, BookmarkW600, BookmarkW700, BookmarkFillW100, BookmarkFillW200, BookmarkFillW300, BookmarkFillW400, BookmarkFillW500, BookmarkFillW600, BookmarkFillW700 } from '@material-symbols-svg/react/rounded/icons/bookmark';
 import { VisibilityW100, VisibilityW200, VisibilityW300, VisibilityW400, VisibilityW500, VisibilityW600, VisibilityW700, VisibilityFillW100, VisibilityFillW200, VisibilityFillW300, VisibilityFillW400, VisibilityFillW500, VisibilityFillW600, VisibilityFillW700 } from '@material-symbols-svg/react/rounded/icons/visibility';
 import { VisibilityOffW100, VisibilityOffW200, VisibilityOffW300, VisibilityOffW400, VisibilityOffW500, VisibilityOffW600, VisibilityOffW700, VisibilityOffFillW100, VisibilityOffFillW200, VisibilityOffFillW300, VisibilityOffFillW400, VisibilityOffFillW500, VisibilityOffFillW600, VisibilityOffFillW700 } from '@material-symbols-svg/react/rounded/icons/visibility-off';
 import { LockW100, LockW200, LockW300, LockW400, LockW500, LockW600, LockW700, LockFillW100, LockFillW200, LockFillW300, LockFillW400, LockFillW500, LockFillW600, LockFillW700 } from '@material-symbols-svg/react/rounded/icons/lock';
@@ -185,9 +186,9 @@ export const MATERIAL_ICONS = {
     regular: { 100: DescriptionW100, 200: DescriptionW200, 300: DescriptionW300, 400: DescriptionW400, 500: DescriptionW500, 600: DescriptionW600, 700: DescriptionW700 },
     filled: { 100: DescriptionFillW100, 200: DescriptionFillW200, 300: DescriptionFillW300, 400: DescriptionFillW400, 500: DescriptionFillW500, 600: DescriptionFillW600, 700: DescriptionFillW700 },
   },
-  'bookmark': {
-    regular: { 100: BookmarkW100, 200: BookmarkW200, 300: BookmarkW300, 400: BookmarkW400, 500: BookmarkW500, 600: BookmarkW600, 700: BookmarkW700 },
-    filled: { 100: BookmarkFillW100, 200: BookmarkFillW200, 300: BookmarkFillW300, 400: BookmarkFillW400, 500: BookmarkFillW500, 600: BookmarkFillW600, 700: BookmarkFillW700 },
+  'book': {
+    regular: { 100: BookW100, 200: BookW200, 300: BookW300, 400: BookW400, 500: BookW500, 600: BookW600, 700: BookW700 },
+    filled: { 100: BookFillW100, 200: BookFillW200, 300: BookFillW300, 400: BookFillW400, 500: BookFillW500, 600: BookFillW600, 700: BookFillW700 },
   },
   'style': {
     regular: { 100: StyleW100, 200: StyleW200, 300: StyleW300, 400: StyleW400, 500: StyleW500, 600: StyleW600, 700: StyleW700 },
@@ -204,6 +205,10 @@ export const MATERIAL_ICONS = {
   'event_note': {
     regular: { 100: EventNoteW100, 200: EventNoteW200, 300: EventNoteW300, 400: EventNoteW400, 500: EventNoteW500, 600: EventNoteW600, 700: EventNoteW700 },
     filled: { 100: EventNoteFillW100, 200: EventNoteFillW200, 300: EventNoteFillW300, 400: EventNoteFillW400, 500: EventNoteFillW500, 600: EventNoteFillW600, 700: EventNoteFillW700 },
+  },
+  'graphic_eq': {
+    regular: { 100: GraphicEqW100, 200: GraphicEqW200, 300: GraphicEqW300, 400: GraphicEqW400, 500: GraphicEqW500, 600: GraphicEqW600, 700: GraphicEqW700 },
+    filled: { 100: GraphicEqFillW100, 200: GraphicEqFillW200, 300: GraphicEqFillW300, 400: GraphicEqFillW400, 500: GraphicEqFillW500, 600: GraphicEqFillW600, 700: GraphicEqFillW700 },
   },
   'settings': {
     regular: { 100: SettingsW100, 200: SettingsW200, 300: SettingsW300, 400: SettingsW400, 500: SettingsW500, 600: SettingsW600, 700: SettingsW700 },
@@ -553,10 +558,6 @@ export const MATERIAL_ICONS = {
     regular: { 100: StarShineW100, 200: StarShineW200, 300: StarShineW300, 400: StarShineW400, 500: StarShineW500, 600: StarShineW600, 700: StarShineW700 },
     filled: { 100: StarShineFillW100, 200: StarShineFillW200, 300: StarShineFillW300, 400: StarShineFillW400, 500: StarShineFillW500, 600: StarShineFillW600, 700: StarShineFillW700 },
   },
-  'book': {
-    regular: { 100: BookW100, 200: BookW200, 300: BookW300, 400: BookW400, 500: BookW500, 600: BookW600, 700: BookW700 },
-    filled: { 100: BookFillW100, 200: BookFillW200, 300: BookFillW300, 400: BookFillW400, 500: BookFillW500, 600: BookFillW600, 700: BookFillW700 },
-  },
   'history': {
     regular: { 100: HistoryW100, 200: HistoryW200, 300: HistoryW300, 400: HistoryW400, 500: HistoryW500, 600: HistoryW600, 700: HistoryW700 },
     filled: { 100: HistoryFillW100, 200: HistoryFillW200, 300: HistoryFillW300, 400: HistoryFillW400, 500: HistoryFillW500, 600: HistoryFillW600, 700: HistoryFillW700 },
@@ -600,6 +601,10 @@ export const MATERIAL_ICONS = {
   'favorite': {
     regular: { 100: FavoriteW100, 200: FavoriteW200, 300: FavoriteW300, 400: FavoriteW400, 500: FavoriteW500, 600: FavoriteW600, 700: FavoriteW700 },
     filled: { 100: FavoriteFillW100, 200: FavoriteFillW200, 300: FavoriteFillW300, 400: FavoriteFillW400, 500: FavoriteFillW500, 600: FavoriteFillW600, 700: FavoriteFillW700 },
+  },
+  'bookmark': {
+    regular: { 100: BookmarkW100, 200: BookmarkW200, 300: BookmarkW300, 400: BookmarkW400, 500: BookmarkW500, 600: BookmarkW600, 700: BookmarkW700 },
+    filled: { 100: BookmarkFillW100, 200: BookmarkFillW200, 300: BookmarkFillW300, 400: BookmarkFillW400, 500: BookmarkFillW500, 600: BookmarkFillW600, 700: BookmarkFillW700 },
   },
   'visibility': {
     regular: { 100: VisibilityW100, 200: VisibilityW200, 300: VisibilityW300, 400: VisibilityW400, 500: VisibilityW500, 600: VisibilityW600, 700: VisibilityW700 },

@@ -27,6 +27,7 @@ export default function MaterialsTable({ materials, subjectId, compact = false }
       await materiAPI.delete(deleteTarget.id);
       toast.success(t('subjectDashboard.materialDeleted', 'Materi berhasil dihapus'));
       queryClient.invalidateQueries(['subject-dashboard', subjectId]);
+      queryClient.invalidateQueries(['materials']);
       setDeleteTarget(null);
     } catch (err) {
       toast.error(extractErrorMessage(err) || t('subjectDashboard.deleteMaterialError', 'Gagal menghapus materi'));
@@ -97,8 +98,12 @@ export default function MaterialsTable({ materials, subjectId, compact = false }
                 </td>
               </tr>
             ) : (
-              filtered.map((m, idx) => (
-                <tr key={m.id} className="border-b border-border last:border-0 hover:bg-subtle transition-colors">
+               filtered.map((m, idx) => (
+                <tr
+                  key={m.id}
+                  onClick={() => navigate(`/materi?subject_id=${subjectId}&highlight=${m.id}`)}
+                  className="border-b border-border last:border-0 hover:bg-subtle transition-colors cursor-pointer"
+                >
                   <td className={`px-3 ${rowPy} text-text-secondary text-xs w-8`}>{idx + 1}</td>
                   <td className={`px-3 ${rowPy}`}>
                     <div className="flex items-center gap-2.5">
@@ -116,10 +121,10 @@ export default function MaterialsTable({ materials, subjectId, compact = false }
                   </td>
                   <td className={`px-3 ${rowPy} text-text-secondary text-xs whitespace-nowrap`}>{formatDate(m.upload_date)}</td>
                   <td className={`px-3 ${rowPy} text-right`}>
-                    <div className="flex items-center justify-end gap-1">
+                    <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
                       <Tooltip label={t('subjectDashboard.viewMaterial', 'Lihat')}>
                         <button
-                          onClick={() => navigate('/materi')}
+                          onClick={() => navigate(`/materi?subject_id=${subjectId}&highlight=${m.id}`)}
                           aria-label={t('subjectDashboard.viewMaterial', 'Lihat')}
                           className="p-1 rounded-md text-text-secondary hover:text-sky-300 hover:bg-sky-500/10 transition-colors"
                         >

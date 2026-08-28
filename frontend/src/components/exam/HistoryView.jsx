@@ -25,15 +25,33 @@ function SubjectPicker({ subjects, onSelectSubject, onStartConfig, t }) {
      onSuccess: () => queryClient.invalidateQueries(['subjects']),
    });
 
-   const handleDelete = (id) => {
-     toast.confirm({
-       title: t('exam.history.deleteSubjectConfirm'),
-       message: t('exam.history.deleteSubjectConfirm'),
-       danger: true,
-       confirmLabel: t('common.delete'),
-       onConfirm: () => deleteMutation.mutate(id),
-     });
-   };
+    const handleDelete = async (subject) => {
+      let counts = null;
+      try {
+        const res = await subjectAPI.getUsage(subject.id);
+        counts = res.data?.counts;
+      } catch {
+        counts = null;
+      }
+      const parts = [];
+      if (counts) {
+        if (counts.materials) parts.push(t('exam.history.usageMaterials', { count: counts.materials }));
+        if (counts.exam_sessions) parts.push(t('exam.history.usageSessions', { count: counts.exam_sessions }));
+        if (counts.study_plans) parts.push(t('exam.history.usagePlans', { count: counts.study_plans }));
+        if (counts.quizzes) parts.push(t('exam.history.usageQuizzes', { count: counts.quizzes }));
+        if (counts.flashcards) parts.push(t('exam.history.usageFlashcards', { count: counts.flashcards }));
+      }
+      const list = parts.length
+        ? `\n• ${parts.join('\n• ')}`
+        : '';
+      toast.confirm({
+        title: t('exam.history.deleteSubjectTitle'),
+        message: t('exam.history.deleteSubjectBody', { name: subject.name, list }),
+        danger: true,
+        confirmLabel: t('common.delete'),
+        onConfirm: () => deleteMutation.mutate(subject.id),
+      });
+    };
 
    if (!subjects.length) {
      return (
@@ -127,7 +145,7 @@ function SubjectCard({ subject, onSelectSubject, onStartConfig, onDelete, t, ton
          {onDelete && (
            <Tooltip label={t('exam.history.deleteSubject')}>
              <button
-               onClick={(e) => { e.stopPropagation(); onDelete(subject.id); }}
+                onClick={(e) => { e.stopPropagation(); onDelete(subject); }}
                aria-label={t('exam.history.deleteSubject')}
                className="p-1 text-text-muted hover:text-danger transition-colors shrink-0"
              >
@@ -430,13 +448,13 @@ function HistoryCard({ session: s, onDetail, onDelete, onRetry, t }) {
             <Chip label={meta.label} size="xs" color={meta.color} />
             {s.status === 'mastered' && <Icon name={ICONS.ui.star} size={11} className="text-warning fill-warning" />}
           </div>
-          <h3 className="font-bold text-text text-base leading-snug line-clamp-2">{s.title}</h3>
+          <h3 className="font-bold text-text text-base leading-snug line-clamp-2 break-words">{s.title}</h3>
           <p className="text-xs text-text-muted mt-0.5">{s.subject_name}</p>
           {/* Nama materi yang digunakan */}
           {(s.material_names || []).length > 0 && (
             <div className="flex gap-1 flex-wrap mt-1.5">
               {(s.material_names || []).slice(0, 2).map((name, i) => (
-                <span key={i} className="inline-flex items-center gap-0.5 text-3xs px-1.5 py-0.5 rounded bg-accent-blue/10 text-accent-blue border border-accent-blue/20 truncate max-w-[120px]">
+                 <span key={i} className="inline-flex items-center gap-0.5 text-3xs px-1.5 py-0.5 rounded bg-accent-blue/10 text-accent-blue border border-accent-blue/20 truncate max-w-[150px] sm:max-w-[200px]">
                   <Icon name={ICONS.files.document} size={8} className="shrink-0" />{name}
                 </span>
               ))}

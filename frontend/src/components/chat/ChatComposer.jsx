@@ -16,7 +16,7 @@ const QUICK_PROMPTS = [
 
 const MAX_TEXTAREA_HEIGHT = 144;
 
-export default function ChatComposer({ onSend, isStreaming, onStop, tutorMode }) {
+export default function ChatComposer({ onSend, isStreaming, onStop, tutorMode, onSaveNote, isNoteSaving }) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const [input, setInput] = useState('');
@@ -92,6 +92,31 @@ export default function ChatComposer({ onSend, isStreaming, onStop, tutorMode })
                   <span className="truncate font-medium">{q.label}</span>
                 </motion.button>
               ))}
+
+              <div className="my-1 h-px bg-border" />
+
+              <motion.button
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.98 }}
+                disabled={isStreaming || isNoteSaving}
+                onClick={() => {
+                  onSaveNote?.();
+                  setShowQuickPrompts(false);
+                }}
+                className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-accent-teal hover:bg-accent-teal/10 transition-all duration-150 text-left group border border-transparent hover:border-accent-teal/30 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <span className="w-8 h-8 rounded-lg bg-accent-teal/10 text-accent-teal flex items-center justify-center shrink-0 border border-accent-teal/20">
+                  {isNoteSaving
+                    ? <Icon name={ICONS.status.loading} size={16} className="animate-spin" />
+                    : <Icon name={ICONS.files.document} size={16} />}
+                </span>
+                <span className="truncate font-medium">
+                  {isNoteSaving ? 'Menyimpan catatan…' : 'Simpan ke Notebook'}
+                </span>
+              </motion.button>
+              <p className="px-3 pt-1 text-3xs text-text-muted leading-snug">
+                Jawaban terakhir AI akan disimpan sebagai catatan.
+              </p>
             </div>
           </motion.div>
         )}

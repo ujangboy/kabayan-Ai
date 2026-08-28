@@ -52,6 +52,7 @@ async def get_materials_json(
             "progress": m.progress,
             "stage": m.stage,
             "upload_date": m.upload_date.isoformat() if m.upload_date else None,
+            "subject_id": m.subject_id,
             "subject": {"id": m.subject.id, "name": m.subject.name} if m.subject else None,
             # Detail tambahan untuk halaman Pengaturan > Data
             "filepath": m.filepath,
@@ -88,25 +89,9 @@ async def upload_material(
         if not any(filename_lower.endswith(ext) for ext in ALLOWED_EXTENSIONS):
             return JSONResponse(status_code=400, content={"detail": "Format file tidak didukung. Gunakan: PDF, DOCX, TXT, MD, CSV, PPTX, XLSX"})
 
-        # REQ-01: Validasi magic bytes — cegah file palsu (rename ekstensi).
-        # Cukup 8 byte pertama, jangan buffer seluruh file ke memori.
-        MAGIC_BYTES = {
-            ".pdf":  [b"%PDF"],
-            ".docx": [b"PK\x03\x04"],  # ZIP header (OOXML)
-            ".pptx": [b"PK\x03\x04"],
-            ".xlsx": [b"PK\x03\x04"],
-            ".txt":  None,  # teks plain, tidak ada magic bytes spesifik
-            ".md":   None,
-            ".csv":  None,
-        }
-        ext = next((e for e in ALLOWED_EXTENSIONS if filename_lower.endswith(e)), None)
-        magic_list = MAGIC_BYTES.get(ext)
-        if magic_list:
-            head = await file.read(8)
-            await file.seek(0)
-            if not any(head.startswith(m) for m in magic_list):
-                return JSONResponse(status_code=400, content={"detail": f"File '{file.filename}' tampaknya rusak atau ekstensinya dipalsukan."})
-
+        # REQ-01: Validasi magic bytes dilakukan di material_service SETELAH file
+        # ditulis ke disk (bukan dari stream upload) — lebih aman (stream hanya
+        # dibaca sekali) dan mendukung file yang punya preamble kecil (mis. BOM).
         filepath, mat_id = material_service.upload_material_sync(db, subject_id, file)
         return JSONResponse({"status": "success", "message": "Material uploaded, waiting for processing"})
     except ValueError as e:

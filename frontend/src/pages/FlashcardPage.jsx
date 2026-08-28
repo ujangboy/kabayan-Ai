@@ -9,8 +9,9 @@ import { flashcardAPI, subjectAPI } from '@/services/api';
 import { useUiStore } from '@/store';
 import { useToast } from '@/components/Toast';
 import { extractErrorMessage } from '@/utils/errors';
-import { EmptyState, Select, Skeleton , Icon , Button} from '@/components/ui';
+import { EmptyState, Skeleton , Icon , Button} from '@/components/ui';
 import { usePageState } from '@/hooks/usePageState';
+import { useHighlightScroll } from '@/hooks/useHighlightScroll';
 import { fadeSlide } from '@/utils';
 import BatchFlashcardCard from '@/components/flashcard/BatchFlashcardCard';
 import FlashcardSession from '@/components/flashcard/FlashcardSession';
@@ -27,12 +28,17 @@ export default function FlashcardPage() {
   const location = useLocation();
   const { restore, persist, clear } = usePageState(PAGE_KEY);
   const { toast } = useToast();
+  const { activeId: highlightedId, missed: flashcardMissed } = useHighlightScroll('highlight');
+  useEffect(() => {
+    if (flashcardMissed) toast.error(t('flashcard.deckNotFound'));
+  }, [flashcardMissed]);
   const [isAIModalOpen, setIsAIModalOpen] = useState(false);
   const [isManualModalOpen, setIsManualModalOpen] = useState(false);
   const [activeBatchId, setActiveBatchId] = useState(null);
   const [historyBatchId, setHistoryBatchId] = useState(null);
   const subjectFilter = useUiStore((s) => s.subjectFilterFlashcard);
   const setSubjectFilter = useUiStore((s) => s.setSubjectFilter);
+  const setActiveFlashcardDeck = useUiStore((s) => s.setActiveFlashcardDeck);
 
   // Restore active session + read subject_id / deck_id from URL (re-run saat pindah param via sidebar)
   useEffect(() => {
@@ -46,8 +52,26 @@ export default function FlashcardPage() {
       const saved = restore();
       if (saved?.activeBatchId) setActiveBatchId(saved.activeBatchId);
     }
-    if (location.search) navigate('/flashcard', { replace: true });
+    // Hanya buang flag sekali-pakai 'upload'; biarkan subject_id & deck_id
+    // tetap di URL agar highlight & konteks bertahan saat pindah menu.
+    if (params.has('upload')) {
+      params.delete('upload');
+      navigate(`/flashcard?${params.toString()}`, { replace: true });
+    }
   }, [location.search]);
+
+  // Sinkronkan filter & deck aktif ke URL agar konteks tidak hilang saat pindah menu.
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const curS = params.get('subject_id') || '';
+    const curD = params.get('deck_id') || '';
+    const nextS = subjectFilter || '';
+    const nextD = activeBatchId || '';
+    if (curS === nextS && curD === nextD) return;
+    if (nextS) params.set('subject_id', nextS); else params.delete('subject_id');
+    if (nextD) params.set('deck_id', nextD); else params.delete('deck_id');
+    navigate(`/flashcard?${params.toString()}`, { replace: true });
+  }, [subjectFilter, activeBatchId]);
 
   const { data: flashcardData, isLoading } = useQuery({
     queryKey: ['flashcards'],
@@ -70,8 +94,17 @@ export default function FlashcardPage() {
       batchGroups[bid] = {
         batch_id: bid,
         subject: f.subject || { id: 0, name: 'Umum' },
+        title: f.title || null,
+        materialNames: f.material_names || [],
         cards: [],
       };
+    } else if (!batchGroups[bid].title && f.title) {
+      batchGroups[bid].title = f.title;
+    }
+    if (f.material_names?.length) {
+      const set = new Set(batchGroups[bid].materialNames);
+      f.material_names.forEach((n) => set.add(n));
+      batchGroups[bid].materialNames = [...set];
     }
     batchGroups[bid].cards.push(f);
   }
@@ -98,6 +131,13 @@ export default function FlashcardPage() {
   useEffect(() => {
     if (activeBatchId) persist({ activeBatchId });
   }, [activeBatchId]);
+
+  // Sinkronkan deck aktif ke store agar sidebar (UnifiedSidebar) bisa
+  // menyorot submenu flashcard yang sedang dibuka — baik lewat klik
+  // submenu (?deck_id) maupun klik kartu di grid (onStart).
+  useEffect(() => {
+    setActiveFlashcardDeck(activeBatchId);
+  }, [activeBatchId, setActiveFlashcardDeck]);
 
   const handleClearAll = () => {
     toast.confirm({
@@ -172,18 +212,52 @@ export default function FlashcardPage() {
           </div>
         </div>
 
-        {/* Filter Mata Kuliah */}
+        {/* Filter Mata Kuliah — chip dengan indikator aktif */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <Select
-              value={subjectFilter}
-              onChange={(e) => setSubjectFilter('flashcard', e.target.value)}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1">
+            <button
+              onClick={() => setSubjectFilter('flashcard', '')}
+              className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
+                !subjectFilter
+                  ? 'bg-primary text-white border-primary'
+                  : 'bg-surface border-strong text-text-secondary hover:border-primary/50'
+              }`}
             >
-              <option value="">{t('flashcard.filterAllSubjects')}</option>
-              {[...subjects].sort((a, b) => a.name.localeCompare(b.name, 'id', { sensitivity: 'base' })).map(s => (
-                <option key={s.id} value={String(s.id)}>{s.name}</option>
-              ))}
-            </Select>
+              {t('flashcard.filterAllSubjects')}
+            </button>
+            {[...subjects].sort((a, b) => a.name.localeCompare(b.name, 'id', { sensitivity: 'base' })).map(s => {
+              const active = String(subjectFilter) === String(s.id);
+              return (
+                <button
+                  key={s.id}
+                  onClick={() => setSubjectFilter('flashcard', String(s.id))}
+                  className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors flex items-center gap-1.5 ${
+                    active
+                      ? 'bg-primary text-white border-primary'
+                      : 'bg-surface border-strong text-text-secondary hover:border-primary/50'
+                  }`}
+                >
+                  {active && <Icon name={ICONS.status.check} size={11} className="shrink-0" />}
+                  {s.name}
+                </button>
+              );
+            })}
+            {(subjectFilter || highlightedId) && (
+              <Button
+                onClick={() => {
+                  setSubjectFilter('flashcard', '');
+                  setActiveBatchId(null);
+                  navigate('/flashcard', { replace: true });
+                }}
+                variant="outline"
+                size="sm"
+                className="shrink-0 border-primary/30 text-primary shadow-sm"
+                aria-label={t('flashcard.backToAllDecks')}
+              >
+                <Icon name={ICONS.actions.back} size={14} />
+                {t('flashcard.backToAllDecks')}
+              </Button>
+            )}
             <span className="text-xs text-text-secondary font-medium">
               {t('flashcard.showingCount', { shown: filteredGroups.length, total: groups.length })}
             </span>
@@ -220,28 +294,33 @@ export default function FlashcardPage() {
             </div>
           ) : (
             filteredGroups.map((group, idx) => (
-              <BatchFlashcardCard
+              <div
                 key={group.batch_id}
-                group={group}
-                tone={idx}
-                onStart={() => setActiveBatchId(group.batch_id)}
-                onReview={() => navigate(`/flashcard/review?subject_id=${group.subject.id}`)}
-                onHistory={() => setHistoryBatchId(group.batch_id)}
-                onDeleteAll={() => {
-                  toast.confirm({
-                    title: t('flashcard.confirmDeleteDeck', { count: group.cards.length }),
-                    message: t('flashcard.confirmDeleteDeck', { count: group.cards.length }),
-                    danger: true,
-                    confirmLabel: t('common.delete'),
-                    onConfirm: () => {
-                      const ids = group.cards.map(c => c.id);
-                      flashcardAPI.batchDelete(ids)
-                        .then(() => queryClient.invalidateQueries(['flashcards']))
-                        .catch(err => toast.error(extractErrorMessage(err)));
-                    },
-                  });
-                }}
-              />
+                id={`highlight-${group.batch_id}`}
+                className={highlightedId === String(group.batch_id) ? 'rounded-2xl ring-2 ring-warning/60 bg-warning/5 animate-pulse' : ''}
+              >
+                <BatchFlashcardCard
+                  group={group}
+                  tone={idx}
+                  onStart={() => setActiveBatchId(group.batch_id)}
+                  onReview={() => navigate(`/flashcard/review?subject_id=${group.subject.id}`)}
+                  onHistory={() => setHistoryBatchId(group.batch_id)}
+                  onDeleteAll={() => {
+                    toast.confirm({
+                      title: t('flashcard.confirmDeleteDeck', { count: group.cards.length }),
+                      message: t('flashcard.confirmDeleteDeck', { count: group.cards.length }),
+                      danger: true,
+                      confirmLabel: t('common.delete'),
+                      onConfirm: () => {
+                        const ids = group.cards.map(c => c.id);
+                        flashcardAPI.batchDelete(ids)
+                          .then(() => queryClient.invalidateQueries(['flashcards']))
+                          .catch(err => toast.error(extractErrorMessage(err)));
+                      },
+                    });
+                  }}
+                />
+              </div>
             ))
           )}
         </div>

@@ -14,7 +14,9 @@
     "opProcess": "Memproses materi...",
     "opYoutube": "Mengunduh transkrip YouTube...",
     "opQuiz": "Membuat soal quiz...",
-    "opFlashcard": "Membuat flashcard..."
+    "opFlashcard": "Membuat flashcard...",
+    "opCancel": "Batal",
+    "opCancelled": "Dibatalkan"
   },
   "audioStatus": {
     "processing": "Membuat audio...",
@@ -28,6 +30,34 @@
     "download": "Unduh audio",
     "regenerateTitle": "Buat ulang audio",
     "regenerateConfirm": "Buat ulang audio dari materi ini? Audio lama akan dihapus."
+  },
+  "audioPage": {
+    "title": "Audio Materi",
+    "subtitle": "Dengarkan materi kuliahmu dalam bentuk audio. Pilih mata kuliah, lalu materi, dan biarkan AI membacakannya.",
+    "subjectLabel": "Mata Kuliah",
+    "materialLabel": "Materi",
+    "allMaterials": "(semua mata kuliah)",
+    "voiceLabel": "Suara",
+    "generateBtn": "Buat Audio",
+    "generateShort": "Audio",
+    "pickMaterialFirst": "Pilih materi terlebih dahulu.",
+    "pickVoiceFirst": "Pilih suara terlebih dahulu.",
+    "noMaterials": "Belum ada materi untuk mata kuliah ini.",
+    "generatedTitle": "Audio Tersimpan",
+    "noGenerated": "Belum ada audio yang dibuat untuk mata kuliah ini.",
+    "download": "Unduh",
+    "cancel": "Batalkan",
+    "delete": "Hapus",
+    "byMaterial": "Materi: {{name}}",
+    "voiceName": "{{name}}",
+    "goToMaterials": "Lihat materi",
+    "step1": "Pilih Mata Kuliah & Suara",
+    "step2": "Pilih Materi",
+    "step3": "Dengarkan",
+    "step1Title": "Langkah 1 — Pilih mata kuliah dan suara",
+    "searchPlaceholder": "Cari materi...",
+    "fileMissing": "File materi tidak ditemukan di storage, upload ulang materi ini.",
+    "noMaterialsMatch": "Tidak ada materi yang cocok dengan pencarian."
   },
   "commandSearch": {
     "searchPlaceholder": "Cari halaman atau fitur...",
@@ -110,6 +140,7 @@
     "quiz": "Quiz",
     "exam": "Ujian Simulasi",
     "studyPlan": "Rencana Belajar",
+    "audio": "Audio",
     "settings": "Pengaturan"
   },
   "common": {
@@ -127,7 +158,8 @@
     "no": "Tidak",
     "undo": "Undo",
     "notifications": "Notifikasi",
-    "menu": "Menu"
+    "menu": "Menu",
+    "retry": "Coba lagi"
   },
   "dashboard": {
     "greetingMorning": "Selamat pagi",
@@ -332,7 +364,9 @@
     "audioModalTitle": "Upload Audio (Transkripsi)",
     "audioSubtitle": "Rekaman kuliah atau audio belajar — ditranskripsikan otomatis (Whisper) lalu dijadikan materi.",
     "audioFormats": "MP3, WAV, M4A, OGG, FLAC — maks 24MB",
-    "audioUploading": "Audio diterima — transkripsi sedang berjalan di background."
+    "audioUploading": "Audio diterima — transkripsi sedang berjalan di background.",
+    "upload": "Ungah Materi",
+    "notFound": "Materi tidak ditemukan atau sudah dihapus"
   },
   "notebook": {
     "notes": "Catatan",
@@ -368,7 +402,9 @@
     "generateNote": "Generate Catatan",
     "generateError": "Gagal generate catatan.",
     "generateLoadError": "Catatan berhasil dibuat tapi gagal dimuat.",
-    "aiNoteTitle": "Catatan AI"
+    "aiNoteTitle": "Catatan AI",
+    "edit": "Edit",
+    "preview": "Pratinjau"
   },
   "flashcard": {
     "pageTitle": "Flashcard",
@@ -377,6 +413,7 @@
     "manual": "Buat Manual",
     "deleteAll": "Hapus Semua",
     "filterAllSubjects": "Semua Mata Kuliah",
+    "backToAllDecks": "Kembali ke Semua Deck",
     "showingCount": "Menampilkan {{shown}} dari {{total}} deck",
     "loading": "Memuat flashcard...",
     "emptyState": "Belum ada flashcard. Generate sekarang!",
@@ -463,7 +500,8 @@
     "ingatCount": "{{count}} Ingat",
     "hafalCount": "{{count}} Hafal",
     "repeat": "Ulangi",
-    "loadError": "Gagal memuat flashcard: {{message}}"
+    "loadError": "Gagal memuat flashcard: {{message}}",
+    "deckNotFound": "Deck tidak ditemukan atau sudah dihapus"
   },
   "quiz": {
     "title": "Quiz",
@@ -503,7 +541,8 @@
     "errorMaterialRequired": "Pilih minimal satu materi.",
     "errorMinQuestions": "Tambahkan minimal 1 soal.",
     "errorMissingId": "ID quiz tidak ditemukan.",
-    "errorGenerateFailed": "Gagal generate quiz. Coba lagi."
+    "errorGenerateFailed": "Gagal generate quiz. Coba lagi.",
+    "notFound": "Kuis tidak ditemukan atau sudah dihapus"
   },
   "exam": {
     "title": "Ujian Simulasi",
@@ -552,6 +591,13 @@
       "simulation": "Simulasi",
       "deleteSubject": "Hapus mata kuliah",
       "deleteSubjectConfirm": "Hapus mata kuliah ini? Semua data terkait akan dihapus.",
+      "deleteSubjectTitle": "Hapus SELURUH mata kuliah?",
+      "deleteSubjectBody": "Menghapus \"{{name}}\" akan menghapus PERMANEN seluruh datanya, bukan hanya satu materi atau simulasi:{{list}}\n\nTindakan tidak dapat dibatalkan.",
+      "usageMaterials": "{{count}} materi",
+      "usageSessions": "{{count}} simulasi ujian",
+      "usagePlans": "{{count}} rencana belajar",
+      "usageQuizzes": "{{count}} kuis",
+      "usageFlashcards": "{{count}} flashcard",
       "deleteSessionConfirm": "Hapus sesi ujian ini?",
       "searchPlaceholder": "Cari simulasi...",
       "all": "Semua",
@@ -698,7 +744,8 @@
     "formNotesLabel": "Catatan",
     "formNotesPlaceholder": "Catatan tambahan (opsional)",
     "saving": "Menyimpan...",
-    "createError": "Gagal membuat mata kuliah."
+    "createError": "Gagal membuat mata kuliah.",
+    "new": "Mata Kuliah Baru"
   },
   "subjectDashboard": {
     "notFound": "Mata kuliah tidak ditemukan.",
@@ -763,7 +810,12 @@
     "learningStrongEmpty": "Belum ada topik yang dikuasai.",
     "learningMastery": "Penguasaan per Topik",
     "learningThreshold": "Butuh minimal {{n}} sesi per topik untuk diklasifikasikan",
-    "learningAdaptiveNote": "Soal ujian berikutnya otomatis disesuaikan: bobot lebih pada topik lemah & kesulitan naik pada topik yang dikuasai."
+    "learningAdaptiveNote": "Soal ujian berikutnya otomatis disesuaikan: bobot lebih pada topik lemah & kesulitan naik pada topik yang dikuasai.",
+    "editName": "Nama",
+    "editSemester": "Semester",
+    "editLecturer": "Dosen",
+    "editDescription": "Deskripsi",
+    "deleteError": "Gagal menghapus mata kuliah"
   },
   "settings": {
     "title": "Pengaturan",
@@ -944,7 +996,17 @@
     },
     "noSessionTitle": "Pilih Sesi Ujian",
     "noSessionDesc": "Pilih salah satu sesi ujian dari menu Rencana Belajar di sidebar untuk melihat rencananya.",
-    "noPlan": "Belum ada rencana belajar untuk sesi ini. Buat ulang simulasi ujian untuk membuat rencana."
+    "noPlan": "Belum ada rencana belajar untuk sesi ini. Buat ulang simulasi ujian untuk membuat rencana.",
+    "day": "Hari {{n}}",
+    "itemNotFound": "Item rencana belajar tidak ditemukan atau sudah dihapus",
+    "createdOn": "dibuat {{date}}",
+    "moreMaterials": "+{{count}} materi lagi",
+    "deleteItem": "Hapus item",
+    "deleteGroup": "Hapus semua item di grup ini",
+    "deleteAllItems": "Hapus semua item",
+    "confirmDeleteItem": "Hapus item rencana ini? Tindakan tidak dapat dibatalkan.",
+    "confirmDeleteGroup": "Hapus semua item pada tanggal ini? Tindakan tidak dapat dibatalkan.",
+    "confirmDeleteAllItems": "Hapus seluruh item rencana belajar? Rencana akan dikosongkan."
   },
   "studyProgress": {
     "title": "Konsistensi Belajar",
@@ -1012,7 +1074,10 @@
     "expand": "Bentangkan sidebar",
     "toggle": "Buka/tutup sidebar",
     "search": "Cari",
-    "allSubjects": "Semua mata kuliah"
+    "allSubjects": "Semua mata kuliah",
+    "flashcardAll": "Semua Deck",
+    "studyPlanAll": "Semua Rencana",
+    "studyPlanEmpty": "Belum ada rencana belajar"
   },
   "breadcrumb": {
     "label": "Breadcrumb",

@@ -79,6 +79,25 @@ class StudyPlanItemRepository(BaseRepository[StudyPlanItem]):
         self._recalc_plan_progress(db, obj.plan_id)
         return obj
 
+    def get_by_plan(self, db: Session, plan_id: int) -> List[StudyPlanItem]:
+        return (
+            db.query(StudyPlanItem)
+            .filter(StudyPlanItem.plan_id == plan_id)
+            .order_by(StudyPlanItem.order_number)
+            .all()
+        )
+
+    def delete(self, db: Session, item_id: int) -> bool:
+        obj = self.get(db, item_id)
+        if not obj:
+            return False
+        plan_id = obj.plan_id
+        db.delete(obj)
+        db.flush()
+        # Recalculate plan progress (completed_days/progress) after removal.
+        self._recalc_plan_progress(db, plan_id)
+        return True
+
 
 exam_attempt_repo    = ExamAttemptRepository()
 study_plan_repo      = StudyPlanRepository()

@@ -52,6 +52,7 @@ async def get_flashcards_json(db: Session = Depends(get_db), skip: int = Query(0
             "created_at": f.created_at.isoformat() if f.created_at else None,
             "subject": {"id": f.subject.id, "name": f.subject.name} if f.subject else None,
             "material_names": material_names,
+            "title": f.title,
             "batch_id": f.batch_id,
             # ─── SRS fields ───
             "next_review": f.next_review.isoformat() if f.next_review else None,
@@ -245,6 +246,23 @@ async def clear_flashcards(db: Session = Depends(get_db)):
 
 from schemas.generate import GenerateFlashcardRequest
 
+
+def _derive_deck_title(materials):
+    """Derive judul deck dari nama file materi (mis. 'PERT 11_ALGORITMA' -> 'Pertemuan 11 — Algoritma')."""
+    import re
+    names = [m.filename or '' for m in materials if m.filename]
+    base = names[0] if names else 'Flashcard'
+    stem = base.rsplit('.', 1)[0]
+    stem = stem.replace('_', ' ').replace('-', ' ').replace('.', ' ')
+    m = re.search(r'(pertemuan|modul|bab|pert|pt)\s*[:#]?\s*(\d+)', stem, re.IGNORECASE)
+    if m:
+        kind = 'Pertemuan' if m.group(1).lower().startswith('pert') else m.group(1).capitalize()
+        num = m.group(2)
+        rest = re.sub(r'(pertemuan|modul|bab|pert|pt)\s*[:#]?\s*\d+', '', stem, flags=re.IGNORECASE)
+        rest = re.sub(r'\s+', ' ', rest).strip(' —-')
+        return f"{kind} {num}{(' — ' + rest) if rest else ''}"
+    return re.sub(r'\s+', ' ', stem).strip() or base
+
 @router.post("/api/flashcards/generate", response_model=dict)
 async def generate_flashcards(
     req: GenerateFlashcardRequest,
@@ -283,7 +301,9 @@ async def generate_flashcards(
         data = flashcard_service.generate_flashcards(
             db, req.subject_id, context,
             count=req.count,
+            title=_derive_deck_title(materials),
             material_ids=req.material_ids or None,
+            batch_id=req.batch_id or None,
         )
         return JSONResponse({
             "status": "success",

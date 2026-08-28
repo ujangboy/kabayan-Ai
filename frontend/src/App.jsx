@@ -16,6 +16,7 @@ const FlashcardReviewPage = lazy(() => import('./pages/FlashcardReviewPage'));
 const QuizPage = lazy(() => import('./pages/QuizPage'));
 const ExamAnalyzerPage = lazy(() => import('./pages/ExamAnalyzerPage'));
 const StudyPlanPage = lazy(() => import('./pages/StudyPlanPage'));
+const AudioPage = lazy(() => import('./pages/AudioPage'));
 const SettingsPage = lazy(() => import('./pages/SettingsPage'));
 
 // Isolasi error per-halaman: satu halaman crash tidak mematikan seluruh UI (B6)
@@ -47,6 +48,7 @@ export default function App() {
               <Route path="quiz" element={<PageBoundary><QuizPage /></PageBoundary>} />
               <Route path="exam-analyzer" element={<PageBoundary><ExamAnalyzerPage /></PageBoundary>} />
               <Route path="study-plan" element={<PageBoundary><StudyPlanPage /></PageBoundary>} />
+              <Route path="audio" element={<PageBoundary><AudioPage /></PageBoundary>} />
               <Route path="settings" element={<PageBoundary><SettingsPage /></PageBoundary>} />
             </Route>
           </Routes>

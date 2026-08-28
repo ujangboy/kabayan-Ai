@@ -15,7 +15,7 @@ class FlashcardService:
         from services.fsrs_service import apply_review as fsrs_apply_review
         return fsrs_apply_review(db, flashcard, rating, response_time_ms)
 
-    def generate_flashcards(self, db: Session, subject_id, context: str, count: int = 10, title: str = None, material_ids: str = None):
+    def generate_flashcards(self, db: Session, subject_id, context: str, count: int = 10, title: str = None, material_ids: str = None, batch_id: str = None):
         import models
         import datetime
         import uuid
@@ -37,9 +37,10 @@ class FlashcardService:
                 raise ValueError("AI tidak menghasilkan flashcard. Coba lagi.")
 
             now = utcnow()
-            # Selalu generate batch_id baru — tidak pernah dari parameter luar
-            # agar setiap Generate AI menghasilkan deck yang benar-benar terpisah
-            generated_batch_id = str(uuid.uuid4())
+            # Append ke deck yang sudah ada bila batch_id diberikan, supaya
+            # 1 mata kuliah = 1 wadah (versi di dalamnya). Kalau kosong,
+            # buat deck baru.
+            generated_batch_id = batch_id or str(uuid.uuid4())
             count_created = 0
             for item in items:
                 # B3: validasi struktur tiap kartu dengan Pydantic schema
@@ -143,12 +144,16 @@ class FlashcardService:
             + "\n\n".join(parts)
         )
 
+        import datetime
+        import uuid
+        _now = datetime.date.today()
+        _short = uuid.uuid4().hex[:4].upper()
         return self.generate_flashcards(
             db,
             subject_id=subject_id,
             context=context,
             count=min(max_cards, len(parts)),
-            title=f"Ujian {subject_name} — Soal Salah",
+            title=f"Ujian {subject_name} — {_now.strftime('%d %b')} #{_short}",
         )
 
 

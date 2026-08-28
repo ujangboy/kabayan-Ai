@@ -40,7 +40,7 @@ export default function QuizTimer({ totalSeconds, onTimeUp, isActive = true }) {
             ? 'bg-danger/15 text-danger border-danger/30 animate-pulse'
             : warning
               ? 'bg-warning/15 text-warning border-warning/30'
-              : 'bg-card text-text-secondary border-border'
+              : 'bg-surface text-text-secondary border-strong'
         }`}
       >
         <Icon name={ICONS.learning.timer} size={13} />

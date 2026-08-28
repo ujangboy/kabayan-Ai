@@ -198,7 +198,7 @@ function ConfirmDialog({ state, onClose }) {
               <h3 className="text-base font-semibold text-text mb-1">
                 {state.title || t('toast.confirmTitle')}
               </h3>
-              <p className="text-meta text-text-secondary leading-relaxed">
+              <p className="text-meta text-text-secondary leading-relaxed whitespace-pre-line">
                 {state.message}
               </p>
             </div>

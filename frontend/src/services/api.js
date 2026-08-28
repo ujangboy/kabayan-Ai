@@ -4,7 +4,24 @@ import { extractErrorMessage } from '@/utils/errors';
 const api = axios.create({
   baseURL: '/api',
   timeout: 60000,
-  headers: { 'Content-Type': 'application/json' },
+});
+
+// ─── Request interceptor ───────────────────────────────────────────────────────
+api.interceptors.request.use((config) => {
+  // JANGAN paksa Content-Type JSON saat body adalah FormData — biarkan browser
+  // yang menyetel `multipart/form-data; boundary=...`. Tanpa ini, upload file ke
+  // endpoint FastAPI (Form(...)/File(...)) gagal dengan 422 "Data yang dimasukkan
+  // belum valid." (field subject_id/file tidak ter-parse).
+  if (config.data instanceof FormData) {
+    if (config.headers) {
+      delete config.headers['Content-Type'];
+      delete config.headers['content-type'];
+    }
+  } else if (config.headers && !config.headers['Content-Type'] && !config.headers['content-type']) {
+    // Fallback aman untuk body JSON (axios juga otomatis, tapi eksplisit lebih pasti).
+    config.headers['Content-Type'] = 'application/json';
+  }
+  return config;
 });
 
 // ─── Response interceptor ─────────────────────────────────────────────────────
@@ -59,6 +76,7 @@ export const subjectAPI = {
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
   }),
   delete: (id) => api.post(`/subjects/${id}/delete`),
+  getUsage: (id) => api.get(`/subjects/${id}/usage`),
 };
 
 // --- NOTES ---
@@ -73,9 +91,10 @@ export const notesAPI = {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     });
   },
-  generate: (payload) => api.post('/notes/generate', payload, {
+  generate: (payload, config) => api.post('/notes/generate', payload, {
     headers: { 'Content-Type': 'application/json' },
     timeout: 120000,
+    ...config,
   }),
   detectContext: (history) => api.post('/notebook/detect-context', { history }),
   generateTitle: (content) => api.post('/notebook/generate-title', { content }),
@@ -98,7 +117,7 @@ export const flashcardAPI = {
   delete: (id) => api.post(`/flashcards/${id}/delete`),
   batchDelete: (ids) => api.post('/flashcards/batch-delete', { ids }).then(r => r.data),
   clear: () => api.post('/flashcards/clear'),
-  generate: (payload) => api.post('/flashcards/generate', payload).then(r => r.data),
+  generate: (payload, config) => api.post('/flashcards/generate', payload, config).then(r => r.data),
   review: (flashcardId, rating, responseTimeMs) => api.post('/flashcards/review', {
     flashcard_id: flashcardId,
     rating,
@@ -112,7 +131,7 @@ export const flashcardAPI = {
 export const quizAPI = {
   getAll: () => api.get('/quizzes'),
   getQuestions: (id) => api.get(`/quizzes/${id}/questions`),
-  generate: (payload) => api.post('/quizzes/generate', payload).then(r => r.data),
+  generate: (payload, config) => api.post('/quizzes/generate', payload, config).then(r => r.data),
   saveScore: (id, score) => api.post(`/quizzes/${id}/score`,
     new URLSearchParams({ score: String(score) }).toString(),
     { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
@@ -134,8 +153,8 @@ export const quizAPI = {
 // --- EXAM ANALYZER ---
 export const examAPI = {
   analyze: (subjectId) => api.post(`/exam/analyze/${subjectId}`, {}, { timeout: 120000 }),
-  generateBlueprint: (payload) => api.post('/exam/blueprint', payload, { timeout: 120000 }),
-  generateQuestions: (blueprintId) => api.post(`/exam/generate/${blueprintId}`, {}, { timeout: 300000 }),
+  generateBlueprint: (payload, config) => api.post('/exam/blueprint', payload, { ...config, timeout: 120000 }),
+  generateQuestions: (blueprintId, config) => api.post(`/exam/generate/${blueprintId}`, {}, { ...config, timeout: 300000 }),
   getSessions: (subjectId) => api.get('/exam/sessions', { params: subjectId ? { subject_id: subjectId } : {} }),
   submit: (sessionId, answers) => api.post(`/exam/submit/${sessionId}`, { answers }, { timeout: 120000 }),
   getRecommendation: (sessionId) => api.get(`/exam/recommendation/${sessionId}`),
@@ -156,9 +175,10 @@ export const sessionsAPI = {
     }),
   saveStudyPlan: (sessionId, planData) => api.post(`/exam/sessions/${sessionId}/study-plan`, planData),
   togglePlanItem: (itemId) => api.post(`/exam/sessions/plan-item/${itemId}/toggle`),
+  deletePlanItem: (itemId) => api.post(`/exam/sessions/plan-item/${itemId}/delete`),
   submitPlanQuiz: (itemId, payload) => api.post(`/exam/sessions/plan-item/${itemId}/submit-quiz`, payload),
   submitPlanFlashcards: (itemId, payload) => api.post(`/exam/sessions/plan-item/${itemId}/submit-flashcards`, payload),
-  generateSummary: (sessionId, topic) => api.post(`/exam/sessions/${sessionId}/summary`, { topic }),
+  generateSummary: (sessionId, topic, config) => api.post(`/exam/sessions/${sessionId}/summary`, { topic }, config),
   delete: (sessionId) => api.delete(`/exam/sessions/${sessionId}`),
 };
 
@@ -200,6 +220,16 @@ export const tutorAPI = {
 
   // statistik pemakaian (token, pesan, sesi)
   stats: () => api.get('/tutor/stats'),
+};
+
+// --- AUDIO (TTS materi penuh) ---
+export const audioAPI = {
+  generate: (payload) => api.post('/audio/generate', payload, { timeout: 120000 }).then(r => r.data),
+  list: (subjectId) => api.get('/audio', { params: subjectId ? { subject_id: subjectId } : {} }).then(r => r.data),
+  status: (id) => api.get(`/audio/${id}/status`).then(r => r.data),
+  cancel: (id) => api.post(`/audio/${id}/cancel`).then(r => r.data),
+  remove: (id) => api.delete(`/audio/${id}`).then(r => r.data),
+  voices: () => api.get('/audio/voices').then(r => r.data),
 };
 
 export default api;

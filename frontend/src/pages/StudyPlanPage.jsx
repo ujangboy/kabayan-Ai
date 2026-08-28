@@ -10,6 +10,7 @@ import MathMarkdown from '@/components/MathMarkdown';
 import { extractErrorMessage } from '@/utils/errors';
 import { useToast } from '@/components/Toast';
 import { usePageState } from '@/hooks/usePageState';
+import { useHighlightScroll } from '@/hooks/useHighlightScroll';
 import { fadeSlide } from '@/utils';
 import { Modal, Button, EmptyState, HelpTip , Icon } from '@/components/ui';
 import { StudyPlanItem } from '@/components/studyplan/StudyPlanItem';
@@ -71,6 +72,13 @@ export default function StudyPlanPage() {
   const completedItems = items.filter(i => i.completed).length;
   const totalItems = items.length;
   const progress = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
+  // Tanpa ?highlight → sorot otomatis 1 item berikutnya yang belum selesai (fallback).
+  const lastWorked = items.find(i => !i.completed) || items.at(-1);
+  const lastWorkedId = lastWorked ? `item-${lastWorked.id}` : null;
+  const { activeId: highlightedItemId, missed: planItemMissed } = useHighlightScroll('highlight', { fallbackId: lastWorkedId });
+  useEffect(() => {
+    if (planItemMissed) toast.error(t('studyPlanPage.itemNotFound'));
+  }, [planItemMissed, toast, t]);
 
   // Initialize generatedSummaries from persisted data
   const persistedSummaries = {};
@@ -242,7 +250,19 @@ export default function StudyPlanPage() {
             <p className="text-text-secondary text-sm mt-0.5">
               {data.subject_name || 'Mata Kuliah'}
               {plan.start_date ? ` • mulai ${formatItemDate(plan.start_date, 0)}` : ''}
+              {(data.created_at || data.started_at) ? ` • ${t('studyPlanPage.createdOn', {
+                date: new Date(data.created_at || data.started_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
+              })}` : ''}
             </p>
+            {data.material_names?.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-2">
+                {data.material_names.map((name, i) => (
+                  <span key={i} className="inline-flex items-center gap-1 text-3xs px-2 py-0.5 rounded bg-accent-blue/10 text-accent-blue border border-accent-blue/20 truncate max-w-[240px]">
+                    <Icon name={ICONS.files.document} size={9} className="shrink-0" />{name}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
@@ -288,8 +308,12 @@ export default function StudyPlanPage() {
         {/* Items */}
         <div className="space-y-3">
           {items.map((item) => (
-            <StudyPlanItem
+            <div
               key={item.id}
+              id={`highlight-item-${item.id}`}
+              className={highlightedItemId === `item-${item.id}` ? 'rounded-2xl ring-2 ring-warning/60 bg-warning/5 animate-pulse' : ''}
+            >
+            <StudyPlanItem
               item={item}
               planStartDate={plan.start_date}
               isPracticeOpen={inPracticeItem === item.id}
@@ -304,6 +328,7 @@ export default function StudyPlanPage() {
               onPracticeClose={handlePracticeClose}
               onPracticeSubmitted={handlePracticeSubmitted}
             />
+            </div>
           ))}
         </div>
       </div>

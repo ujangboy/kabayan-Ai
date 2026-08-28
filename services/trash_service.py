@@ -176,12 +176,26 @@ def list_trash(db: Session) -> list[dict]:
     return result
 
 
-def restore_material(db: Session, material_id: int) -> bool:
-    """Kembalikan materi dari sampah: balikan file + status, hapus TrashItem."""
+def restore_material(db: Session, material_id: int):
+    """Kembalikan materi dari sampah: balikan file + status, hapus TrashItem.
+
+    Mengembalikan subject_id (int|None) bila berhasil, atau False bila gagal.
+    Setelah restore, jadwalkan rebuild index RAG agar materi kembali searchable
+    & aktif di Chat (trash_material sebelumnya menghapus chunk-nya).
+    """
     mat = db.query(Material).filter(Material.id == material_id).first()
     if not mat:
         return False
-    return _restore_for_material(db, mat)
+    ok = _restore_for_material(db, mat)
+    if not ok:
+        return False
+    try:
+        from services.rag_service import rag_service
+        import threading
+        threading.Thread(target=rag_service.rebuild_index, daemon=True).start()
+    except Exception as exc:
+        logger.warning(f"restore_material: gagal rebuild RAG mat_{material_id}: {exc}")
+    return mat.subject_id
 
 
 def _restore_for_material(db: Session, mat: Material) -> bool:

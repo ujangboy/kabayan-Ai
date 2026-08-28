@@ -10,6 +10,8 @@ import { formatDate, formatTimeOnly, fadeSlide, cn } from '@/utils';
 import { Tooltip, EmptyState, Skeleton, SubjectBadge , Icon , Button} from '@/components/ui';
 import { useUiStore } from '@/store';
 import { usePageState } from '@/hooks/usePageState';
+import { useHighlightScroll } from '@/hooks/useHighlightScroll';
+import { useBackgroundJob } from '@/hooks/useBackgroundJob';
 import { useToast } from '@/components/Toast';
 import { formatDuration } from '@/components/quiz/shared';
 import { springWave, springLift } from '@/lib/motion';
@@ -32,15 +34,26 @@ export default function QuizPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const { restore, persist, clear } = usePageState(PAGE_KEY);
+  const { run: runJob } = useBackgroundJob();
+  const { activeId: highlightedId, missed: quizMissed } = useHighlightScroll('highlight');
+  useEffect(() => {
+    if (quizMissed) toast.error(t('quiz.notFound'));
+  }, [quizMissed]);
   const selectedSubject = useUiStore((s) => s.subjectFilterQuiz);
   const setSubjectFilter = useUiStore((s) => s.setSubjectFilter);
+  const quizSearch = useUiStore((s) => s.quizSearch);
+  const setQuizFilter = useUiStore((s) => s.setQuizFilter);
   const [isGeneratorOpen, setIsGeneratorOpen] = useState(false);
   const [activeQuizId, setActiveQuizId] = useState(null);
   const [sessionKey, setSessionKey] = useState(0);
-  const [search, setSearch] = useState('');
-  const [diffFilter, setDiffFilter] = useState('all');
-  const [typeFilter, setTypeFilter] = useState('all');
-  const [sortBy, setSortBy] = useState('newest');
+  const search = quizSearch;
+  const setSearch = (v) => setQuizFilter('quizSearch', v);
+  const diffFilter = useUiStore((s) => s.quizDiff);
+  const setDiffFilter = (v) => setQuizFilter('quizDiff', v);
+  const typeFilter = useUiStore((s) => s.quizType);
+  const setTypeFilter = (v) => setQuizFilter('quizType', v);
+  const sortBy = useUiStore((s) => s.quizSort);
+  const setSortBy = (v) => setQuizFilter('quizSort', v);
 
   // Restore active quiz + read subject_id from URL (re-run saat pindah param via sidebar)
   useEffect(() => {
@@ -52,8 +65,17 @@ export default function QuizPage() {
       setActiveQuizId(saved.activeQuizId);
       if (saved.sessionKey) setSessionKey(saved.sessionKey);
     }
-    if (location.search) navigate('/quiz', { replace: true });
   }, [location.search]);
+
+  // Sinkronkan filter quiz ke URL agar konteks bertahan saat pindah menu.
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const cur = params.get('subject_id') || '';
+    if (cur === selectedSubject) return;
+    if (selectedSubject) params.set('subject_id', selectedSubject);
+    else params.delete('subject_id');
+    navigate(`/quiz?${params.toString()}`, { replace: true });
+  }, [selectedSubject]);
 
   const { data: quizData, isLoading } = useQuery({
     queryKey: ['quizzes'],
@@ -290,15 +312,16 @@ export default function QuizPage() {
                 { icon: ICONS.learning.clock, value: quiz.time_taken != null ? formatDuration(quiz.time_taken, t) : '—', label: t('quiz.timeLabel', 'Waktu'), color: 'text-accent-blue' },
               ];
               return (
-                <motion.div
-                  key={quiz.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  whileHover={{ y: -3 }}
-                  whileTap={{ scale: 0.98 }}
-                  transition={{ delay: idx * 0.05, ...springLift }}
-                  className="card-base card-hoverable flex flex-col justify-between gap-3"
-                >
+              <motion.div
+                key={quiz.id}
+                id={`highlight-${quiz.id}`}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                whileHover={{ y: -3 }}
+                whileTap={{ scale: 0.98 }}
+                transition={{ delay: idx * 0.05, ...springLift }}
+                className={`card-base card-hoverable flex flex-col justify-between gap-3 ${highlightedId === String(quiz.id) ? 'ring-2 ring-warning/60 bg-warning/5 animate-pulse' : ''}`}
+              >
                   {/* Header — badge + title + badges + aksi */}
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-start gap-3 min-w-0">

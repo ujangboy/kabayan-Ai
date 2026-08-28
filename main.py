@@ -6,7 +6,7 @@ from fastapi.responses import RedirectResponse, JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 import os
 
-from routers import dashboard, subjects, materials, chat, notes, flashcards, quizzes, youtube, settings, exam_analyzer, tutor, profile, info, data, trash, study
+from routers import dashboard, subjects, materials, chat, notes, flashcards, quizzes, youtube, settings, exam_analyzer, tutor, profile, info, data, trash, study, audio
 from database import engine, Base, SessionLocal
 import config
 from services.error_handler import register_all_handlers
@@ -217,6 +217,7 @@ app.include_router(quizzes.router)
 app.include_router(youtube.router)
 app.include_router(settings.router)
 app.include_router(exam_analyzer.router)
+app.include_router(audio.router)
 app.include_router(tutor.router)
 app.include_router(profile.router)
 app.include_router(info.router)

@@ -54,6 +54,7 @@ export function useChatMessaging() {
             student_level: chat.tutorLevel || 'intermediate',
             exam_session_id: chat.examSessionId || null,
             rag_docs: selectedDocs || [],
+            tutor_enabled: !!chat.tutorEnabled,
           },
           onChunk: (chunk, full) => {
             const { clean, msgId } = parseStreamContent(full);
@@ -70,6 +71,7 @@ export function useChatMessaging() {
             history,
             documents: selectedDocs || [],
             session_id: String(chatId),
+            tutor_enabled: !!chat.tutorEnabled,
           },
           onChunk: (chunk, full) => {
             const { clean, msgId } = parseStreamContent(full);

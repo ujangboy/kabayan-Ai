@@ -357,6 +357,17 @@ async def toggle_session_plan_item(item_id: int, db: Session = Depends(get_db)):
         raise AppError(str(e), status_code=500)
 
 
+@router.post("/sessions/plan-item/{item_id}/delete", response_model=StatusMessage)
+async def delete_session_plan_item(item_id: int, db: Session = Depends(get_db)):
+    """Hapus satu item rencana belajar (bukan seluruh sesi)."""
+    try:
+        data = exam_service.delete_plan_item(db, item_id)
+        return JSONResponse(data)
+    except Exception as e:
+        logger.error(f"delete_plan_item error: {e}", exc_info=True)
+        raise AppError(str(e), status_code=500)
+
+
 @router.post("/sessions/plan-item/{item_id}/submit-quiz", response_model=StatusMessage)
 async def submit_plan_quiz(
     item_id: int,

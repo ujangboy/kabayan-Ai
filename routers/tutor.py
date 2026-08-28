@@ -103,6 +103,8 @@ async def tutor_chat(request: TutorChatRequest, db: Session = Depends(get_db)):
             chat = chat_repository.get_or_create_by_uuid(db, request.session_id)
             chat_id = chat.id
             chat_repository.add_message(db, chat_id, "user", request.message)
+            if not chat.tutor_enabled:
+                chat_repository.set_tutor_enabled(db, chat.id, True)
             db.commit()
 
         hist_dicts = [{"role": m.role, "content": m.content} for m in request.history[-20:]]

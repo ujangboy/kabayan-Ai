@@ -1,8 +1,15 @@
 import { useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { materiAPI } from '@/services/api';
+import { materiAPI, audioAPI } from '@/services/api';
 import { useAppStore } from '@/store';
+import { useJobStore } from '@/store/jobStore';
 
+/**
+ * Sinkronisasi job background ke banner global (AppLayout PendingBanner):
+ *  - Material yang masih Pending/Processing  -> pendingOperations ('process-<id>')
+ *  - Audio TTS yang masih Processing         -> jobStore audio jobs (biar banner
+ *    tetap muncul walau user sedang di halaman lain)
+ */
 export default function BackgroundProcessSync() {
   const addPendingOperation = useAppStore((s) => s.addPendingOperation);
   const removePendingOperation = useAppStore((s) => s.removePendingOperation);
@@ -17,6 +24,7 @@ export default function BackgroundProcessSync() {
     },
   });
 
+  // Material sync (tetap seperti sebelumnya)
   useEffect(() => {
     const active = new Set();
     for (const m of materialsData?.materials || []) {
@@ -36,6 +44,36 @@ export default function BackgroundProcessSync() {
       }
     }
   }, [materialsData, addPendingOperation, removePendingOperation]);
+
+  // Audio sync (poll global agar banner tahu job audio di halaman lain)
+  const { data: audioData } = useQuery({
+    queryKey: ['audio-bg-sync'],
+    queryFn: () => audioAPI.list().then((r) => r.data),
+    refetchInterval: (query) => {
+      const jobs = query.state.data?.audio || [];
+      return jobs.some((j) => j.status === 'Processing') ? 3000 : 15000;
+    },
+    retry: false,
+  });
+
+  useEffect(() => {
+    const jobs = audioData?.audio || [];
+    const store = useJobStore.getState();
+    const liveKeys = new Set();
+    for (const j of jobs) {
+      if (j.status === 'Processing') {
+        const key = `audio-${j.id}`;
+        liveKeys.add(key);
+        store.setAudioJob(key, j.id, 'Audio');
+      }
+    }
+    // Hapus job audio yang sudah tidak ada / tidak lagi Processing
+    for (const key of Object.keys(store.jobs)) {
+      if (key.startsWith('audio-') && !liveKeys.has(key)) {
+        store.removeJob(key);
+      }
+    }
+  }, [audioData]);
 
   return null;
 }

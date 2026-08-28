@@ -11,6 +11,7 @@ import { useToast } from '@/components/Toast';
 import { EmptyState, Skeleton , Icon , Button} from '@/components/ui';
 import { extractErrorMessage } from '@/utils/errors';
 import { usePendingOperation } from '@/hooks/usePendingOperation';
+import { useHighlightScroll } from '@/hooks/useHighlightScroll';
 import { FolderCard } from '@/components/materi/FolderCard';
 import { MaterialFileCard } from '@/components/materi/MaterialFileCard';
 import { UploadModal } from '@/components/materi/UploadModal';
@@ -23,6 +24,12 @@ export default function MateriPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const processOp = usePendingOperation('process');
+  const { activeId: highlightedId, missed: highlightMissed } = useHighlightScroll('highlight');
+  useEffect(() => {
+    if (highlightMissed) {
+      toast.error(t('materi.notFound'));
+    }
+  }, [highlightMissed]);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isYoutubeModalOpen, setIsYoutubeModalOpen] = useState(false);
   const subjectFilter = useUiStore((s) => s.subjectFilterMateri);
@@ -33,9 +40,23 @@ export default function MateriPage() {
     const params = new URLSearchParams(location.search);
     const sid = params.get('subject_id');
     if (sid) setSubjectFilter('materi', sid);
-    if (params.get('upload') === '1') setIsUploadModalOpen(true);
-    if (location.search) navigate('/materi', { replace: true });
+    if (params.get('upload') === '1') {
+      setIsUploadModalOpen(true);
+      params.delete('upload');
+      navigate(`/materi?${params.toString()}`, { replace: true });
+    }
   }, [location.search]);
+
+  // Sinkronkan filter materi ke URL agar konteks (mata kuliah terpilih) bertahan
+  // saat pindah menu / refresh / tombol Back (URL = source of truth).
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const cur = params.get('subject_id') || '';
+    if (cur === subjectFilter) return;
+    if (subjectFilter) params.set('subject_id', subjectFilter);
+    else params.delete('subject_id');
+    navigate(`/materi?${params.toString()}`, { replace: true });
+  }, [subjectFilter]);
 
   const { data: materiData, isLoading } = useQuery({
     queryKey: ['materials'],
@@ -245,9 +266,11 @@ export default function MateriPage() {
                         index={idx}
                         showSubject={!subjectFilter}
                         isRagActive={isRagActive(m)}
+                        highlighted={highlightedId === String(m.id)}
                         onToggleRag={() => m.status === 'Ready' && toggleSelection(m.id)}
                         onDelete={() => handleDelete(m.id)}
                         onCancel={() => handleCancelProcessing(m.id)}
+                        onAudio={() => navigate(`/audio?subject_id=${m.subject_id || subjectFilter}&material_id=${m.id}`)}
                       />
                     ))}
                   </AnimatePresence>
@@ -272,9 +295,11 @@ export default function MateriPage() {
                         index={idx}
                         showSubject={!subjectFilter}
                         isRagActive={isRagActive(m)}
+                        highlighted={highlightedId === String(m.id)}
                         onToggleRag={() => m.status === 'Ready' && toggleSelection(m.id)}
                         onDelete={() => handleDelete(m.id)}
                         onCancel={() => handleCancelProcessing(m.id)}
+                        onAudio={() => navigate(`/audio?subject_id=${m.subject_id || subjectFilter}&material_id=${m.id}`)}
                       />
                     ))}
                   </AnimatePresence>

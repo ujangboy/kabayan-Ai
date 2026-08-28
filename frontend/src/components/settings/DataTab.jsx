@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { ICONS } from '@/lib/icons';
 import { Icon , Button} from '@/components/ui';
 
@@ -20,6 +21,7 @@ export default function DataTab() {
   const { t } = useTranslation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const { data: overview, isLoading } = useQuery({
     queryKey: ['data-overview'],
@@ -34,9 +36,9 @@ export default function DataTab() {
   const deleteMutation = useMutation({
     mutationFn: (id) => materiAPI.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries(['materials', 'all']);
-      queryClient.invalidateQueries(['data-overview']);
-      queryClient.invalidateQueries(['trash']);
+      queryClient.invalidateQueries({ queryKey: ['materials'] });
+      queryClient.invalidateQueries({ queryKey: ['data-overview'] });
+      queryClient.invalidateQueries({ queryKey: ['trash'] });
       toast.success(t('settings.data.deleted'));
     },
     onError: () => toast.error(t('settings.data.deleteError')),
@@ -59,11 +61,18 @@ export default function DataTab() {
 
   const restoreMutation = useMutation({
     mutationFn: (item) => (item.material_id ? trashAPI.restoreMaterial(item.material_id) : trashAPI.restore(item.id)),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['trash']);
-      queryClient.invalidateQueries(['materials', 'all']);
-      queryClient.invalidateQueries(['data-overview']);
+    onSuccess: (res, item) => {
+      const payload = res?.data || {};
+      const mid = item.material_id ?? item.id;
+      const sid = payload.subject_id ?? materialData?.materials?.find(m => m.id === mid)?.subject_id;
+      queryClient.invalidateQueries({ queryKey: ['trash'] });
+      queryClient.invalidateQueries({ queryKey: ['materials'] });
+      queryClient.invalidateQueries({ queryKey: ['data-overview'] });
+      queryClient.invalidateQueries({ queryKey: ['subjects'] });
+      queryClient.invalidateQueries({ queryKey: ['exam-sessions'] });
+      queryClient.invalidateQueries({ queryKey: ['subject-dashboard'] });
       toast.success(t('settings.data.trashRestored'));
+      if (sid) navigate(`/materi?subject_id=${sid}&highlight=${mid}`);
     },
     onError: () => toast.error(t('settings.data.trashError')),
   });

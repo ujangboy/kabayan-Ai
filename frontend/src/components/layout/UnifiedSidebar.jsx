@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { Icon, Tooltip } from '@/components/ui';
+import { useToast } from '@/components/Toast';
 import { ICONS } from '@/lib/icons';
 import { cn } from '@/utils';
+import { extractErrorMessage } from '@/utils/errors';
 import { useAppStore, useUiStore } from '@/store';
 import { subjectAPI, flashcardAPI, sessionsAPI } from '@/services/api';
 import { useSwipeGesture } from '@/hooks/useSwipeGesture';
@@ -41,6 +43,7 @@ const NAV = [
   { to: '/quiz', icon: ICONS.nav.quiz, labelKey: 'nav.quiz' },
   { to: '/exam-analyzer', icon: ICONS.nav.exam, labelKey: 'nav.exam', group: 'exam' },
   { to: '/study-plan', icon: ICONS.nav.studyPlan, labelKey: 'nav.studyPlan', group: 'studyPlan' },
+  { to: '/audio', icon: ICONS.nav.audio, labelKey: 'nav.audio' },
 ];
 
 function isActive(to, pathname) {
@@ -90,6 +93,26 @@ function SidebarContent({ collapsed, onNavigate }) {
     queryFn: () => sessionsAPI.list().then((r) => r.data),
     enabled: !collapsed,
   });
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const deletePlanItemMutation = useMutation({
+    mutationFn: (itemId) => sessionsAPI.deletePlanItem(itemId),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['sidebar-study-plans']);
+      queryClient.invalidateQueries(['session-detail']);
+      queryClient.invalidateQueries(['subject-dashboard']);
+    },
+    onError: (err) => toast.error(extractErrorMessage(err)),
+  });
+  const handleDeletePlanItem = (itemId) => {
+    toast.confirm({
+      title: t('studyPlanPage.deleteItem'),
+      message: t('studyPlanPage.confirmDeleteItem'),
+      danger: true,
+      confirmLabel: t('common.delete'),
+      onConfirm: () => deletePlanItemMutation.mutate(itemId),
+    });
+  };
 
   // Flyout state untuk collapsed rail (materi & exam)
   const [flyoutGroup, setFlyoutGroup] = useState(null);
@@ -98,27 +121,11 @@ function SidebarContent({ collapsed, onNavigate }) {
 
   const subjectList = subjects?.subjects || [];
 
-  // Kelompokkan flashcard per batch_id (sama seperti ContextSidebar lama).
-  const decks = (() => {
-    const all = flashcards?.flashcards || [];
-    const map = {};
-    for (const f of all) {
-      const bid = String(f.batch_id || `legacy-${f.subject?.id ?? 0}`);
-      if (!map[bid]) {
-        map[bid] = { batch_id: bid, subject: f.subject || { id: 0, name: t('flashcard.defaultName') }, cards: [] };
-      }
-      map[bid].cards.push(f);
-    }
-    return Object.values(map).sort((a, b) => {
-      const aTime = new Date(a.cards[0]?.created_at || 0);
-      const bTime = new Date(b.cards[0]?.created_at || 0);
-      return bTime - aTime;
-    });
-  })();
-
   // Store filter untuk penanda aktif yang persist setelah URL dibersihkan (MateriPage & ExamAnalyzerPage clear query)
   const subjectFilterMateri = useUiStore((s) => s.subjectFilterMateri);
   const subjectFilterExam = useUiStore((s) => s.subjectFilterExam);
+  const subjectFilterFlashcard = useUiStore((s) => s.subjectFilterFlashcard);
+  const activeFlashcardDeck = useUiStore((s) => s.activeFlashcardDeck);
 
   const submenuItems = (group) => {
     if (group === 'subjects') {
@@ -133,19 +140,91 @@ function SidebarContent({ collapsed, onNavigate }) {
       return subjectList.map((s) => ({ key: `ex-${s.id}`, label: s.name, to: `/exam-analyzer?subject_id=${s.id}`, icon: ICONS.files.folder, active: urlSid === String(s.id) || (location.pathname === '/exam-analyzer' && subjectFilterExam === String(s.id)) }));
     }
     if (group === 'flashcard') {
-      return decks.map((d) => ({ key: `f-${d.batch_id}`, label: d.subject?.name || t('flashcard.defaultName'), to: `/flashcard?deck_id=${d.batch_id}`, icon: ICONS.nav.flashcard, active: new URLSearchParams(location.search).get('deck_id') === d.batch_id }));
+      // Kelompokkan per mata kuliah (1 mata kuliah = 1 wadah). Tiap wadah
+      // (batch_id) ditampilkan dengan judul deck-nya (mis. "Pertemuan 11 — Algoritma").
+      const bySubject = {};
+      for (const f of (flashcards?.flashcards || [])) {
+        const sid = f.subject?.id;
+        if (sid == null) continue;
+        if (!bySubject[sid]) bySubject[sid] = { subject: f.subject, decks: {}, order: [] };
+        const bid = f.batch_id || `legacy-${sid}`;
+        if (!bySubject[sid].decks[bid]) {
+          bySubject[sid].decks[bid] = { batch_id: bid, title: f.title || null, count: 0, latest: f.created_at || '' };
+          bySubject[sid].order.push(bid);
+        }
+        bySubject[sid].decks[bid].count += 1;
+        if (f.created_at && f.created_at > bySubject[sid].decks[bid].latest) bySubject[sid].decks[bid].latest = f.created_at;
+      }
+      const items = [{
+        key: 'f-all',
+        label: t('sidebar.flashcardAll'),
+        to: '/flashcard',
+        icon: ICONS.nav.flashcard,
+        active: location.pathname === '/flashcard' && !subjectFilterFlashcard,
+      }];
+      for (const { subject, decks, order } of Object.values(bySubject).sort((a, b) => a.subject.name.localeCompare(b.subject.name, 'id', { sensitivity: 'base' }))) {
+        items.push({ key: `fh-${subject.id}`, label: subject.name, header: true });
+        for (const bid of order.sort((x, y) => (decks[y].latest || '').localeCompare(decks[x].latest || ''))) {
+          const d = decks[bid];
+          items.push({
+            key: `fd-${bid}`,
+            label: d.title || `${subject.name} (${d.count})`,
+            to: `/flashcard?subject_id=${subject.id}&highlight=${bid}`,
+            icon: ICONS.nav.flashcard,
+            active: location.pathname === '/flashcard' && subjectFilterFlashcard === String(subject.id) && activeFlashcardDeck === bid,
+          });
+        }
+      }
+      return items;
     }
     if (group === 'studyPlan') {
+      // Flat: tiap item rencana belajar jadi satu baris (tanpa grouping per sesi).
       const list = sessions?.sessions || [];
-      const plans = list.filter((s) => s.has_study_plan);
-      const shown = plans.length ? plans : list;
-      return shown.map((s) => ({
-        key: `sp-${s.id}`,
-        label: s.subject_name || t('studyPlanPage.noSessionTitle', 'Rencana Belajar'),
-        to: `/study-plan?session_id=${s.id}`,
+      const urlParams = new URLSearchParams(location.search);
+      const activeItemId = urlParams.get('highlight') || '';
+
+      // TANPA ?highlight → sorot otomatis 1 item berikutnya yang belum selesai
+      // dari sesi terbaru (started_at DESC) yang punya rencana. (keputusan user)
+      const withPlan = list.filter((s) => s.has_study_plan && (s.study_plan_items || []).length);
+      const latest = withPlan[0];
+      const nextIncomplete = latest
+        ? (latest.study_plan_items.find((it) => !it.completed) || latest.study_plan_items.at(-1))
+        : null;
+      const lastWorkedId = nextIncomplete ? `item-${nextIncomplete.id}` : '';
+      const effectiveActive = activeItemId || lastWorkedId;
+
+      const items = [{
+        key: 'sp-all',
+        label: t('sidebar.studyPlanAll', 'Semua Rencana'),
+        to: '/study-plan',
         icon: ICONS.nav.studyPlan,
-        active: new URLSearchParams(location.search).get('session_id') === String(s.id),
-      }));
+        active: location.pathname === '/study-plan' && !urlParams.get('session_id'),
+      }];
+      for (const s of list) {
+        const planItems = s.study_plan_items || [];
+        if (!planItems.length) continue;
+        const created = s.created_at ? new Date(s.created_at) : null;
+        const shortDate = created ? created.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }) : '';
+        const fullDate = created ? created.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+        const createdLabel = shortDate ? ` · ${shortDate}` : '';
+        const createdTitle = fullDate ? t('studyPlanPage.createdOn', { date: fullDate }) : '';
+          for (const it of planItems) {
+            items.push({
+              key: `spi-${it.id}`,
+              label: `${it.topic} — ${s.subject_name} · ${t('studyPlanPage.day', { n: it.order_number + 1 })}${createdLabel}`,
+              title: createdTitle || undefined,
+              to: `/study-plan?session_id=${s.id}&highlight=item-${it.id}`,
+              icon: ICONS.nav.studyPlan,
+              active: effectiveActive === `item-${it.id}`,
+              indent: true,
+              itemId: it.id,
+            });
+          }
+      }
+      if (items.length === 1) {
+        items[0].label = t('sidebar.studyPlanEmpty', 'Belum ada rencana belajar');
+      }
+      return items;
     }
     return [];
   };
@@ -260,19 +339,42 @@ function SidebarContent({ collapsed, onNavigate }) {
                 <div className="mb-1 ml-[26px] mt-1 border-l border-border pl-2">
                   <div className="space-y-0.5 pr-1">
                     {submenuItems(item.group).map((sub) => (
-                      <button
-                        key={sub.key}
-                        onClick={() => handleNav(sub.to)}
-                        className={cn(
-                          'flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-sm transition-colors',
-                          sub.active ? 'bg-primary/10 text-primary-light' : 'text-text-secondary hover:bg-card hover:text-text'
+                      sub.header ? (
+                        <div key={sub.key} className="px-2.5 pt-2 pb-0.5 text-2xs font-semibold uppercase tracking-wider text-text-muted">
+                          {sub.label}
+                        </div>
+                      ) : (
+                      <div key={sub.key} className={cn('relative group/subrow', sub.itemId != null && 'pr-7')}>
+                        <button
+                          onClick={() => handleNav(sub.to)}
+                          className={cn(
+                            'flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-sm transition-colors',
+                            sub.indent && 'pl-5',
+                            sub.active ? 'bg-primary/10 text-primary-light' : 'text-text-secondary hover:bg-card hover:text-text'
+                          )}
+                        >
+                          {sub.indent ? (
+                            <span className={cn('shrink-0 w-1.5 h-1.5 rounded-full', sub.active ? 'bg-primary-light' : 'bg-warning/60')} />
+                          ) : (
+                            <Icon name={sub.icon} size={15} className={cn('shrink-0', sub.active ? 'text-primary-light' : 'text-warning')} />
+                          )}
+                          <Tooltip label={sub.title || sub.label}>
+                            <span className="truncate">{sub.label}</span>
+                          </Tooltip>
+                        </button>
+                        {sub.itemId != null && (
+                          <Tooltip label={t('studyPlanPage.deleteItem')}>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleDeletePlanItem(sub.itemId); }}
+                              aria-label={t('studyPlanPage.deleteItem')}
+                              className="absolute right-1 top-1/2 -translate-y-1/2 p-1 rounded-md text-text-muted opacity-0 group-hover/subrow:opacity-100 hover:bg-danger/10 hover:text-danger transition-opacity"
+                            >
+                              <Icon name={ICONS.actions.delete} size={13} />
+                            </button>
+                          </Tooltip>
                         )}
-                      >
-                        <Icon name={sub.icon} size={15} className={cn('shrink-0', sub.active ? 'text-primary-light' : 'text-warning')} />
-                        <Tooltip label={sub.label}>
-                          <span className="truncate">{sub.label}</span>
-                        </Tooltip>
-                      </button>
+                      </div>
+                      )
                     ))}
                     {submenuItems(item.group).length === 0 && (
                       <p className="px-2.5 py-1 text-xs text-text-muted">{t('subjects.empty')}</p>

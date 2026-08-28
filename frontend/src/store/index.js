@@ -59,6 +59,7 @@ export const useChatStore = create(
             createdAt: bc.created_at || new Date().toISOString(),
             sessionUuid: bc.session_uuid,
             backendOnly: true,
+            tutorEnabled: !!bc.tutor_enabled,
           });
           existing.add(key);
         }
@@ -166,16 +167,31 @@ export const useUiStore = create(
       subjectFilterFlashcard: '',
       subjectFilterQuiz: '',
       subjectFilterExam: '',
+      subjectFilterAudio: '',
+      // Deck flashcard yang sedang aktif — dipakai sidebar untuk penanda aktif
+      // karena FlashcardPage membersihkan ?deck_id dari URL setelah navigasi.
+      activeFlashcardDeck: '',
       lastSubjectId: null,
+      // Filter list Quiz yang persisten (tidak reset saat pindah menu)
+      quizSearch: '',
+      quizDiff: 'all',
+      quizType: 'all',
+      quizSort: 'newest',
+      // Filter list Audio yang persisten
+      audioVoice: 'id-ID-ArdiNeural',
       setSubjectFilter: (page, value) => {
         const v = String(value || '');
         if (page === 'flashcard') return set({ subjectFilterFlashcard: v });
         if (page === 'quiz')      return set({ subjectFilterQuiz: v });
         if (page === 'exam')      return set({ subjectFilterExam: v });
+        if (page === 'audio')     return set({ subjectFilterAudio: v });
         // default: 'materi'
         return set({ subjectFilterMateri: v });
       },
+      setActiveFlashcardDeck: (id) => set({ activeFlashcardDeck: id ? String(id) : '' }),
       setLastSubjectId: (id) => set({ lastSubjectId: id || null }),
+      setQuizFilter: (key, value) => set({ [key]: value }),
+      setAudioVoice: (v) => set({ audioVoice: v || 'id-ID-ArdiNeural' }),
     }),
     { name: 'kabayan-ui-store' }
   )

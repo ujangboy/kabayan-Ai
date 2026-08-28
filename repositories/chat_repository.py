@@ -43,6 +43,12 @@ class ChatRepository(BaseRepository[Chat]):
             .all()
         )
 
+    def set_tutor_enabled(self, db: Session, chat_id: int, value: bool) -> None:
+        chat = db.query(Chat).filter(Chat.id == chat_id).first()
+        if chat:
+            chat.tutor_enabled = value
+            db.commit()
+
     def delete_by_session_uuid(self, db: Session, session_uuid: str) -> bool:
         chat = db.query(Chat).filter(Chat.session_uuid == session_uuid).first()
         if not chat:

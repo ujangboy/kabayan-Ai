@@ -133,7 +133,7 @@ function CodeBlock({ node, inline, className, children, ...props }) {
   }
   return (
     <code
-      className={`${className || ''} bg-card border border-border rounded px-1 py-0.5 text-xs font-mono text-text`}
+      className={`${className || ''} bg-card border border-border rounded px-1 py-0.5 text-[0.85em] font-mono text-text break-words`}
       {...props}
     >
       {children}

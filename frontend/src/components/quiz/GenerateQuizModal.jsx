@@ -5,7 +5,7 @@ import { ICONS } from '@/lib/icons';
 import { quizAPI } from '@/services/api';
 import { Modal, Button, Select, Input , Icon } from '@/components/ui';
 import MaterialPicker from '@/components/MaterialPicker';
-import { usePendingOperation } from '@/hooks/usePendingOperation';
+import { useBackgroundJob } from '@/hooks/useBackgroundJob';
 
 export function GenerateQuizModal({ open, onClose, subjects, onSuccess }) {
   const { t } = useTranslation();
@@ -16,7 +16,7 @@ export function GenerateQuizModal({ open, onClose, subjects, onSuccess }) {
   const [selectedMaterialIds, setSelectedMaterialIds] = useState([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState('');
-  const quizOp = usePendingOperation('quiz');
+  const { run: runJob } = useBackgroundJob();
 
   const DIFFICULTIES = [
     { value: 'mudah',  label: 'quiz.difficultyEasy',   desc: 'quiz.difficultyEasyDesc' },
@@ -31,24 +31,23 @@ export function GenerateQuizModal({ open, onClose, subjects, onSuccess }) {
     if (!mcqCount && !essayCount) return setError(t('quiz.errorMinQuestions'));
     setError('');
     setIsGenerating(true);
-    quizOp.start();
-    try {
-      const result = await quizAPI.generate({
-        subject_id: subjectId,
-        mcq_count: Number(mcqCount) || 0,
-        essay_count: Number(essayCount) || 0,
-        difficulty,
-        material_ids: selectedMaterialIds.length > 0 ? selectedMaterialIds.join(',') : '',
-      });
-      if (result.detail) throw new Error(result.detail);
-      if (!result.id) throw new Error(t('quiz.errorMissingId'));
-      onSuccess(result.id);
-    } catch (err) {
-      setError(err.message || t('quiz.errorGenerateFailed'));
-    } finally {
-      setIsGenerating(false);
-      quizOp.finish();
-    }
+    // Generate tetap jalan walau modal ditutup / user pindah menu (job di store).
+    runJob('quiz', t('appLayout.opQuiz'), (signal) => quizAPI.generate({
+      subject_id: subjectId,
+      mcq_count: Number(mcqCount) || 0,
+      essay_count: Number(essayCount) || 0,
+      difficulty,
+      material_ids: selectedMaterialIds.length > 0 ? selectedMaterialIds.join(',') : '',
+    }, { signal }), {
+      onError: (err) => { setError(err?.message || t('quiz.errorGenerateFailed')); setIsGenerating(false); },
+      onDone: (result) => {
+        setIsGenerating(false);
+        if (!result) return;
+        if (result.detail) { setError(result.detail); return; }
+        if (!result.id) { setError(t('quiz.errorMissingId')); return; }
+        onSuccess(result.id);
+      },
+    });
   };
 
   return (

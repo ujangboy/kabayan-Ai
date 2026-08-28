@@ -1037,9 +1037,15 @@ class ExamService:
                            "duration_minutes": i.duration_minutes,
                            "time_slot": i.time_slot or TIME_SLOTS[i.order_number % len(TIME_SLOTS)] if i.order_number is not None else "",
                            "resources": i.resources,
-                           "completed": bool(i.completed),
-                           "summary": i.summary,
-                           "practice_results": [
+                            "completed": bool(i.completed),
+                            "summary": i.summary,
+                            "material_names": material_names,
+                            "material_created_at": (
+                                min(material_created_ats)
+                                if material_created_ats
+                                else (s.plan.start_date.isoformat() if s.plan and s.plan.start_date else (s.started_at.isoformat() if s.started_at else None))
+                            ),
+                            "practice_results": [
                                {"id": pr.id, "practice_type": pr.practice_type,
                                 "score": pr.score, "total_questions": pr.total_questions,
                                 "correct_count": pr.correct_count,
@@ -1047,8 +1053,39 @@ class ExamService:
                                 "time_taken_seconds": pr.time_taken_seconds,
                                 "created_at": pr.created_at.isoformat() if pr.created_at else None}
                                for pr in i.practice_results
-                           ]} for i in s.plan.items],
+                            ]} for i in s.plan.items],
             }
+
+        # Resolve material names + real creation dates for this session's blueprint
+        # (untuk tampilan "Materi: <nama> • dibuat <tanggal real>", bukan now()).
+        material_names = []
+        material_created_ats = []
+        if s.blueprint_id:
+            from models import Material, ExamBlueprint
+            bp = db.query(ExamBlueprint).filter(ExamBlueprint.id == s.blueprint_id).first()
+            if bp:
+                ids = []
+                try:
+                    bjson = _safe_loads(bp.blueprint_json) or {}
+                    raw_top = bjson.get("material_ids", "")
+                    if raw_top:
+                        ids.extend(int(x.strip()) for x in str(raw_top).split(",") if x.strip().isdigit())
+                    for it in bjson.get("blueprint_items", []):
+                        mid = it.get("material_id") or it.get("material_ids")
+                        if mid:
+                            if isinstance(mid, list):
+                                ids.extend(int(x) for x in mid if str(x).isdigit())
+                            elif str(mid).isdigit():
+                                ids.append(int(mid))
+                except Exception:
+                    pass
+                if ids:
+                    mats = db.query(Material).filter(Material.id.in_(set(ids)), Material.status != "Trashed").all()
+                    material_names = [m.filename or f"Materi #{m.id}" for m in mats]
+                    material_created_ats = [
+                        (m.created_at or m.upload_date or s.started_at).isoformat()
+                        for m in mats if (m.created_at or m.upload_date or s.started_at)
+                    ]
 
         return {
             "id": s.id, "blueprint_id": s.blueprint_id, "subject_id": s.subject_id,
@@ -1063,6 +1100,7 @@ class ExamService:
             "strong_topics": _load_topics_json(s.strong_topics_json),
             "overall_feedback": evaluation.get("overall_feedback", "") if evaluation else "",
             "performance_level": evaluation.get("performance_level", "") if evaluation else "",
+            "material_names": material_names,
             "submitted": s.submitted_at is not None,
             "started_at": s.started_at.isoformat() if s.started_at else None,
             "submitted_at": s.submitted_at.isoformat() if s.submitted_at else None,
@@ -1091,6 +1129,7 @@ class ExamService:
         # Pre-load material names from blueprint_json for all sessions at once
         blueprint_ids = list({s.blueprint_id for s in sessions if s.blueprint_id})
         blueprint_material_map: dict = {}  # blueprint_id → list[str] of material names
+        blueprint_material_created_map: dict = {}  # blueprint_id → earliest created_at iso
         if blueprint_ids:
             from models import Material
             bps = db.query(ExamBlueprint).filter(ExamBlueprint.id.in_(blueprint_ids)).all()
@@ -1110,8 +1149,14 @@ class ExamService:
             if all_mat_ids:
                 mats = db.query(Material).filter(Material.id.in_(all_mat_ids), Material.status != "Trashed").all()
                 mat_name_map = {m.id: m.filename or f"Materi #{m.id}" for m in mats}
+                mat_created_map = {
+                    m.id: (m.created_at or m.upload_date).isoformat()
+                    for m in mats if (m.created_at or m.upload_date)
+                }
                 for bp_id, ids in bp_mat_ids.items():
                     blueprint_material_map[bp_id] = [mat_name_map[i] for i in ids if i in mat_name_map]
+                    createds = [mat_created_map[i] for i in ids if i in mat_created_map]
+                    blueprint_material_created_map[bp_id] = min(createds) if createds else None
 
         result = []
         for s in sessions:
@@ -1123,6 +1168,23 @@ class ExamService:
                 for a in attempts
             ]
             plan = study_plan_repo.get_by_session(db, s.id)
+            plan_items = []
+            if plan:
+                plan_items = [
+                    {
+                        "id": it.id,
+                        "topic": it.topic,
+                        "order_number": it.order_number,
+                        "activity_type": it.activity_type,
+                        "completed": it.completed,
+                        "material_names": material_names,
+                        "material_created_at": (
+                            blueprint_material_created_map.get(s.blueprint_id)
+                            or (plan.start_date.isoformat() if plan.start_date else None)
+                        ),
+                    }
+                    for it in study_plan_item_repo.get_by_plan(db, plan.id)
+                ]
             material_names = blueprint_material_map.get(s.blueprint_id, []) if s.blueprint_id else []
             result.append({
                 "id": s.id, "subject_id": s.subject_id,
@@ -1141,6 +1203,7 @@ class ExamService:
                 "study_plan_progress": plan.progress if plan else 0,
                 "study_plan_start_date": plan.start_date.isoformat() if (plan and plan.start_date) else None,
                 "material_names": material_names,
+                "study_plan_items": plan_items,
                 "created_at": s.started_at.isoformat() if s.started_at else None,
                 "updated_at": s.updated_at.isoformat() if s.updated_at else None,
             })
@@ -1456,6 +1519,28 @@ class ExamService:
             "item_id": item.id, "completed": bool(item.completed),
             "plan_progress": plan.progress if plan else 0,
             "plan_completed_days": plan.completed_days if plan else 0,
+        }
+
+    def delete_plan_item(self, db: Session, item_id: int) -> dict:
+        item = study_plan_item_repo.get(db, item_id)
+        if not item:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Item rencana tidak ditemukan.",
+            )
+        plan_id = item.plan_id
+        study_plan_item_repo.delete(db, item_id)
+        plan = study_plan_repo.get(db, plan_id)
+        # If the plan has no items left, drop the plan entirely (avoid empty plan).
+        remaining = study_plan_item_repo.get_by_plan(db, plan_id)
+        if not remaining and plan:
+            db.delete(plan)
+        db.commit()
+        return {
+            "item_id": item_id,
+            "plan_progress": plan.progress if (plan and remaining) else 0,
+            "plan_completed_days": plan.completed_days if (plan and remaining) else 0,
+            "plan_empty": not bool(remaining),
         }
 
     def submit_plan_quiz(self, db: Session, item_id: int, payload) -> dict:

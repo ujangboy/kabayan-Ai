@@ -22,7 +22,7 @@ class GenerateFlashcardRequest(BaseModel):
     subject_id: int
     count: int = Field(default=10, ge=5, le=20)
     material_ids: Optional[str] = None
-    # batch_id dihapus — service selalu generate batch_id baru agar setiap generate = deck terpisah
+    batch_id: Optional[str] = None  # jika diisi, generate menambah ke deck yang sudah ada (append)
 
 class GenerateNoteRequest(BaseModel):
     subject_id: int

@@ -189,7 +189,7 @@ export function QuizSession({ quizId, onClose }) {
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <p className="text-sm font-semibold text-text-secondary">Soal {idx + 1}</p>
-                      <span className="text-2xs px-1.5 py-0.5 rounded bg-card border border-border text-text-secondary">
+                      <span className="text-2xs px-1.5 py-0.5 rounded bg-surface border-strong text-text-secondary">
                         {isEssay ? 'Essay (tidak dinilai otomatis)' : 'Pilihan Ganda'}
                       </span>
                     </div>
@@ -322,7 +322,7 @@ export function QuizSession({ quizId, onClose }) {
                   onChange={(e) => handleEssayChange(e.target.value)}
                   rows={7}
                   placeholder="Tulis jawaban Anda di sini..."
-                  className="w-full px-4 py-3 bg-card border border-border rounded-xl text-base text-text focus:outline-none focus:border-primary transition-colors resize-y"
+                   className="w-full px-4 py-3 bg-surface border-strong rounded-xl text-base text-text focus:outline-none focus:border-primary transition-colors resize-y"
                 />
               ) : (
                 <div className="space-y-3">
@@ -335,7 +335,7 @@ export function QuizSession({ quizId, onClose }) {
                         className={`relative w-full text-left p-4 rounded-xl border overflow-hidden transition-all ${
                           isSelected
                             ? 'bg-primary/10 border-primary text-primary'
-                            : 'bg-card border-border text-text hover:border-primary/50'
+                            : 'bg-surface border-strong text-text hover:border-primary/60'
                         }`}
                       >
                         {isSelected && (

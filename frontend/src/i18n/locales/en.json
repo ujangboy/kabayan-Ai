@@ -14,7 +14,9 @@
     "opProcess": "Processing material...",
     "opYoutube": "Downloading YouTube transcript...",
     "opQuiz": "Generating quiz...",
-    "opFlashcard": "Generating flashcards..."
+    "opFlashcard": "Generating flashcards...",
+    "opCancel": "Cancel",
+    "opCancelled": "Cancelled"
   },
   "audioStatus": {
     "processing": "Generating audio...",
@@ -28,6 +30,34 @@
     "download": "Download audio",
     "regenerateTitle": "Regenerate audio",
     "regenerateConfirm": "Regenerate audio from this material? The old audio will be deleted."
+  },
+  "audioPage": {
+    "title": "Audio Materi",
+    "subtitle": "Dengarkan materi kuliahmu dalam bentuk audio. Pilih mata kuliah, lalu materi, dan biarkan AI membacakan isinya.",
+    "subjectLabel": "Mata Kuliah",
+    "materialLabel": "Materi",
+    "allMaterials": "(semua mata kuliah)",
+    "voiceLabel": "Suara",
+    "generateBtn": "Buat Audio",
+    "generateShort": "Audio",
+    "pickMaterialFirst": "Pilih materi terlebih dahulu.",
+    "pickVoiceFirst": "Pilih suara terlebih dahulu.",
+    "noMaterials": "Belum ada materi untuk mata kuliah ini.",
+    "generatedTitle": "Audio Tersimpan",
+    "noGenerated": "Belum ada audio yang dibuat untuk mata kuliah ini.",
+    "download": "Unduh",
+    "cancel": "Batalkan",
+    "delete": "Hapus",
+    "byMaterial": "Materi: {{name}}",
+    "voiceName": "{{name}}",
+    "goToMaterials": "View materials",
+    "step1": "Pick Subject & Voice",
+    "step2": "Pick Material",
+    "step3": "Listen",
+    "step1Title": "Step 1 — Choose subject and voice",
+    "searchPlaceholder": "Search materials...",
+    "noMaterialsMatch": "No materials match your search.",
+    "fileMissing": "Material file not found in storage, please re-upload this material."
   },
   "commandSearch": {
     "searchPlaceholder": "Search pages or features...",
@@ -110,6 +140,7 @@
     "quiz": "Quiz",
     "exam": "Exam Simulator",
     "studyPlan": "Study Plan",
+    "audio": "Audio",
     "settings": "Settings"
   },
   "common": {
@@ -127,7 +158,8 @@
     "no": "No",
     "undo": "Undo",
     "notifications": "Notifications",
-    "menu": "Menu"
+    "menu": "Menu",
+    "retry": "Retry"
   },
   "dashboard": {
     "greetingMorning": "Good morning",
@@ -332,7 +364,9 @@
     "audioModalTitle": "Upload Audio (Transcription)",
     "audioSubtitle": "Lecture recordings or study audio — auto-transcribed (Whisper) then turned into a material.",
     "audioFormats": "MP3, WAV, M4A, OGG, FLAC — max 24MB",
-    "audioUploading": "Audio accepted — transcription is running in the background."
+    "audioUploading": "Audio accepted — transcription is running in the background.",
+    "upload": "Upload Material",
+    "notFound": "Material not found or already deleted"
   },
   "notebook": {
     "notes": "Notes",
@@ -368,7 +402,9 @@
     "generateNote": "Generate Note",
     "generateError": "Failed to generate note.",
     "generateLoadError": "Note created but failed to load.",
-    "aiNoteTitle": "AI Note"
+    "aiNoteTitle": "AI Note",
+    "edit": "Edit",
+    "preview": "Preview"
   },
   "flashcard": {
     "pageTitle": "Flashcards",
@@ -377,6 +413,7 @@
     "manual": "Create Manual",
     "deleteAll": "Delete All",
     "filterAllSubjects": "All Subjects",
+    "backToAllDecks": "Back to All Decks",
     "showingCount": "Showing {{shown}} of {{total}} decks",
     "loading": "Loading flashcards...",
     "emptyState": "No flashcards yet. Generate now!",
@@ -463,7 +500,8 @@
     "ingatCount": "{{count}} Recalled",
     "hafalCount": "{{count}} Mastered",
     "repeat": "Repeat",
-    "loadError": "Failed to load flashcards: {{message}}"
+    "loadError": "Failed to load flashcards: {{message}}",
+    "deckNotFound": "Deck not found or already deleted"
   },
   "quiz": {
     "title": "Quiz",
@@ -503,7 +541,8 @@
     "errorMaterialRequired": "Please select at least one material.",
     "errorMinQuestions": "Add at least 1 question.",
     "errorMissingId": "Quiz ID not found.",
-    "errorGenerateFailed": "Failed to generate quiz. Please try again."
+    "errorGenerateFailed": "Failed to generate quiz. Please try again.",
+    "notFound": "Quiz not found or already deleted"
   },
   "exam": {
     "title": "Exam Simulator",
@@ -552,6 +591,13 @@
       "simulation": "Simulation",
       "deleteSubject": "Delete subject",
       "deleteSubjectConfirm": "Delete this subject? All related data will be deleted.",
+      "deleteSubjectTitle": "Delete the ENTIRE subject?",
+      "deleteSubjectBody": "Deleting \"{{name}}\" will PERMANENTLY delete all of its data — not just one material or simulation:{{list}}\n\nThis cannot be undone.",
+      "usageMaterials": "{{count}} materials",
+      "usageSessions": "{{count}} exam simulations",
+      "usagePlans": "{{count}} study plans",
+      "usageQuizzes": "{{count}} quizzes",
+      "usageFlashcards": "{{count}} flashcards",
       "deleteSessionConfirm": "Delete this exam session?",
       "searchPlaceholder": "Search simulations...",
       "all": "All",
@@ -698,7 +744,8 @@
     "formNotesLabel": "Notes",
     "formNotesPlaceholder": "Additional notes (optional)",
     "saving": "Saving...",
-    "createError": "Failed to create subject."
+    "createError": "Failed to create subject.",
+    "new": "New Subject"
   },
   "subjectDashboard": {
     "notFound": "Subject not found.",
@@ -763,7 +810,12 @@
     "learningStrongEmpty": "No mastered topics yet.",
     "learningMastery": "Mastery per Topic",
     "learningThreshold": "Requires at least {{n}} sessions per topic to classify",
-    "learningAdaptiveNote": "Next exam questions adjust automatically: more weight on weak topics & higher difficulty on mastered ones."
+    "learningAdaptiveNote": "Next exam questions adjust automatically: more weight on weak topics & higher difficulty on mastered ones.",
+    "editName": "Name",
+    "editSemester": "Semester",
+    "editLecturer": "Lecturer",
+    "editDescription": "Description",
+    "deleteError": "Failed to delete subject"
   },
   "settings": {
     "title": "Settings",
@@ -944,7 +996,17 @@
     },
     "noSessionTitle": "Select an Exam Session",
     "noSessionDesc": "Pick an exam session from the Study Plan menu in the sidebar to view its plan.",
-    "noPlan": "No study plan for this session yet. Re-run the exam simulation to create one."
+    "noPlan": "No study plan for this session yet. Re-run the exam simulation to create one.",
+    "day": "Day {{n}}",
+    "itemNotFound": "Study plan item not found or already deleted",
+    "createdOn": "created {{date}}",
+    "moreMaterials": "+{{count}} more materials",
+    "deleteItem": "Delete item",
+    "deleteGroup": "Delete all items in this group",
+    "deleteAllItems": "Delete all items",
+    "confirmDeleteItem": "Delete this study plan item? This cannot be undone.",
+    "confirmDeleteGroup": "Delete all items for this date? This cannot be undone.",
+    "confirmDeleteAllItems": "Delete the entire study plan? The plan will be emptied."
   },
   "studyProgress": {
     "title": "Study Consistency",
@@ -1012,7 +1074,10 @@
     "expand": "Expand sidebar",
     "toggle": "Toggle sidebar",
     "search": "Search",
-    "allSubjects": "All subjects"
+    "allSubjects": "All subjects",
+    "flashcardAll": "All Decks",
+    "studyPlanAll": "All Plans",
+    "studyPlanEmpty": "No study plans yet"
   },
   "breadcrumb": {
     "label": "Breadcrumb",

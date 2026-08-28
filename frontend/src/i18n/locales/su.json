@@ -7,7 +7,9 @@
   },
   "appLayout": {
     "opFallback": "Keur diproses...",
-    "opRunningMultiple": "{{count}} prosés keur jalan"
+    "opRunningMultiple": "{{count}} prosés keur jalan",
+    "opCancel": "Bolay",
+    "opCancelled": "Dibatalkan"
   },
   "audioStatus": {
     "processing": "Keur nyieun audio...",
@@ -21,6 +23,34 @@
     "download": "Unduh audio",
     "regenerateTitle": "Jieun deui audio",
     "regenerateConfirm": "Jieun deui audio tina materi ieu? Audio lama bakal dihapus."
+  },
+  "audioPage": {
+    "title": "Audio Materi",
+    "subtitle": "Dengekeun materi kuliah anjeun dina wangun audio. Pilih mata pelajaran, teras materi, sareng hayu AI maca éta.",
+    "subjectLabel": "Mata Pelajaran",
+    "materialLabel": "Materi",
+    "allMaterials": "(kabéh mata pelajaran)",
+    "voiceLabel": "Sora",
+    "generateBtn": "Jieun Audio",
+    "generateShort": "Audio",
+    "pickMaterialFirst": "Pilih materi heula.",
+    "pickVoiceFirst": "Pilih sora heula.",
+    "noMaterials": "Can aya materi pikeun mata pelajaran ieu.",
+    "generatedTitle": "Audio Disimpen",
+    "noGenerated": "Can aya audio anu dijieun pikeun mata pelajaran ieu.",
+    "download": "Unduh",
+    "cancel": "Bolay",
+    "delete": "Hapus",
+    "byMaterial": "Materi: {{name}}",
+    "voiceName": "{{name}}",
+    "goToMaterials": "Tingali materi",
+    "step1": "Pilih Mata Kuliah & Sora",
+    "step2": "Pilih Materi",
+    "step3": "Dengekeun",
+    "step1Title": "Lengkah 1 — Pilih mata kuliah sareng sora",
+    "searchPlaceholder": "Cari materi...",
+    "noMaterialsMatch": "Henteu aya materi anu cocog sareng pilarian.",
+    "fileMissing": "File materi henteu kapendak di storage, unggah ulang materi ieu."
   },
   "commandSearch": {
     "searchPlaceholder": "Paluruh halaman atanapi fitur...",
@@ -99,6 +129,7 @@
     "quiz": "Kuis",
     "exam": "Ujian Simulasi",
     "studyPlan": "Rencana Diajar",
+    "audio": "Audio",
     "settings": "Setélan"
   },
   "common": {
@@ -116,7 +147,8 @@
     "no": "Henteu",
     "undo": "Batalkeun",
     "notifications": "Notifikasi",
-    "menu": "Menu"
+    "menu": "Menu",
+    "retry": "Cobi deui"
   },
   "dashboard": {
     "greetingMorning": "Wilujeng énjing",
@@ -317,7 +349,9 @@
     "audioModalTitle": "Unggah Audio (Transkripsi)",
     "audioSubtitle": "Rékaman kuliah atawa audio diajar — ditranskripsikeun otomatis (Whisper) tuluy dijieun materi.",
     "audioFormats": "MP3, WAV, M4A, OGG, FLAC — maks 24MB",
-    "audioUploading": "Audio ditarima — transkripsi keur jalan di latar tukang."
+    "audioUploading": "Audio ditarima — transkripsi keur jalan di latar tukang.",
+    "upload": "Unggah Materi",
+    "notFound": "Materi henteu kapanggih atanapi tos dihapus"
   },
   "notebook": {
     "notes": "Catetan",
@@ -353,7 +387,9 @@
     "generateNote": "Jieun Catetan",
     "generateError": "Gagal ngajantenkeun catetan.",
     "generateLoadError": "Catetan hasil dijieun tapi gagal dimuat.",
-    "aiNoteTitle": "Catetan AI"
+    "aiNoteTitle": "Catetan AI",
+    "edit": "Édit",
+    "preview": "Pratinjau"
   },
   "flashcard": {
     "pageTitle": "Flashcard",
@@ -362,6 +398,7 @@
     "manual": "Jieun Manual",
     "deleteAll": "Hapus Kabéh",
     "filterAllSubjects": "Sadaya Mata Pelajaran",
+    "backToAllDecks": "Balik ka Sadaya Deck",
     "showingCount": "Némbongkeun {{shown}} tina {{total}} deck",
     "loading": "Ngamuat flashcard...",
     "emptyState": "Can aya flashcard. Jieun ayeuna!",
@@ -448,7 +485,8 @@
     "ingatCount": "{{count}} Inget",
     "hafalCount": "{{count}} Hafal",
     "repeat": "Ulang Deui",
-    "loadError": "Gagal ngamuat flashcard: {{message}}"
+    "loadError": "Gagal ngamuat flashcard: {{message}}",
+    "deckNotFound": "Deck henteu kapanggih atanapi tos dihapus"
   },
   "quiz": {
     "title": "Kuis",
@@ -488,7 +526,8 @@
     "errorMaterialRequired": "Pilih sahenteuna hiji materi.",
     "errorMinQuestions": "Tambahkeun sahenteuna 1 soal.",
     "errorMissingId": "ID kuis henteu kapanggih.",
-    "errorGenerateFailed": "Gagal ngajantenkeun kuis. Cobi deui."
+    "errorGenerateFailed": "Gagal ngajantenkeun kuis. Cobi deui.",
+    "notFound": "Kuis henteu kapanggih atanapi tos dihapus"
   },
   "exam": {
     "title": "Ujian Simulasi",
@@ -537,6 +576,13 @@
       "simulation": "Simulasi",
       "deleteSubject": "Hapus mata pelajaran",
       "deleteSubjectConfirm": "Hapus mata pelajaran ieu? Sadaya data anu aya hubunganana bakal dihapus.",
+      "deleteSubjectTitle": "Hapus SADAYA mata pelajaran?",
+      "deleteSubjectBody": "Nghapus \"{{name}}\" bakal mupus PERMANEN sadaya datana, sanés ngan hiji materi atanapi simulasi:{{list}}\n\nTindakan ieu teu tiasa dibalikeun.",
+      "usageMaterials": "{{count}} materi",
+      "usageSessions": "{{count}} simulasi ujian",
+      "usagePlans": "{{count}} rencana diajar",
+      "usageQuizzes": "{{count}} kuis",
+      "usageFlashcards": "{{count}} flashcard",
       "deleteSessionConfirm": "Hapus sési ujian ieu?",
       "searchPlaceholder": "Paluruh simulasi...",
       "all": "Kabéh",
@@ -683,7 +729,8 @@
     "formNotesLabel": "Catetan",
     "formNotesPlaceholder": "Catetan tambahan (opsional)",
     "saving": "Nyimpen...",
-    "createError": "Gagal nyieun mata pelajaran."
+    "createError": "Gagal nyieun mata pelajaran.",
+    "new": "Mata Kuliah Anyar"
   },
   "subjectDashboard": {
     "notFound": "Mata pelajaran henteu kapanggih.",
@@ -748,7 +795,12 @@
     "learningStrongEmpty": "Can aya topik anu dikuasai.",
     "learningMastery": "Penguasaan per Topik",
     "learningThreshold": "Butuh sahenteuna {{n}} sési per topik pikeun digolongkeun",
-    "learningAdaptiveNote": "Soal ujian salajengna otomatis disaluyukeun: bobot langkung kana topik lemah & kasusah naék kana topik anu dikuasai."
+    "learningAdaptiveNote": "Soal ujian salajengna otomatis disaluyukeun: bobot langkung kana topik lemah & kasusah naék kana topik anu dikuasai.",
+    "editName": "Nama",
+    "editSemester": "Semester",
+    "editLecturer": "Dosén",
+    "editDescription": "Katerangan",
+    "deleteError": "Gagal mupus mata kuliah"
   },
   "settings": {
     "title": "Setélan",
@@ -929,7 +981,17 @@
     },
     "noSessionTitle": "Pilih Sési Ujian",
     "noSessionDesc": "Pilih salah sahiji sési ujian tina menu Rencana Belajar di sidebar pikeun ningali rencanana.",
-    "noPlan": "Can aya rencana diajar pikeun sési ieu. Jieun deui simulasi ujian pikeun nyieun rencana."
+    "noPlan": "Can aya rencana diajar pikeun sési ieu. Jieun deui simulasi ujian pikeun nyieun rencana.",
+    "day": "Poé {{n}}",
+    "itemNotFound": "Item rencana diajar henteu kapanggih atanapi tos dihapus",
+    "createdOn": "dijieun {{date}}",
+    "moreMaterials": "+{{count}} bahan deui",
+    "deleteItem": "Hapus item",
+    "deleteGroup": "Hapus sadaya item dina grup ieu",
+    "deleteAllItems": "Hapus sadaya item",
+    "confirmDeleteItem": "Hapus item rencana diajar ieu? Teu tiasa dibalikeun.",
+    "confirmDeleteGroup": "Hapus sadaya item tanggal ieu? Teu tiasa dibalikeun.",
+    "confirmDeleteAllItems": "Hapus sakabéh rencana diajar? Rencana bakal kosong."
   },
   "studyProgress": {
     "title": "Konsisténsi Diajar",
@@ -997,7 +1059,10 @@
     "expand": "Jéntrékeun sidebar",
     "toggle": "Buka/tutup sidebar",
     "search": "Paluruh",
-    "allSubjects": "Sadaya mata kuliah"
+    "allSubjects": "Sadaya mata kuliah",
+    "flashcardAll": "Sadaya Deck",
+    "studyPlanAll": "Sadaya Rencana",
+    "studyPlanEmpty": "Can aya rencana diajar"
   },
   "breadcrumb": {
     "label": "Breadcrumb",
