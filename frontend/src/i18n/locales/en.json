@@ -542,6 +542,8 @@
     "errorMinQuestions": "Add at least 1 question.",
     "errorMissingId": "Quiz ID not found.",
     "errorGenerateFailed": "Failed to generate quiz. Please try again.",
+    "successCreated": "Quiz created successfully.",
+    "generatingBackground": "Quiz generation continues in the background.",
     "notFound": "Quiz not found or already deleted"
   },
   "exam": {
@@ -591,8 +593,8 @@
       "simulation": "Simulation",
       "deleteSubject": "Delete subject",
       "deleteSubjectConfirm": "Delete this subject? All related data will be deleted.",
-      "deleteSubjectTitle": "Delete the ENTIRE subject?",
-      "deleteSubjectBody": "Deleting \"{{name}}\" will PERMANENTLY delete all of its data — not just one material or simulation:{{list}}\n\nThis cannot be undone.",
+      "deleteSubjectTitle": "Move subject to Trash?",
+      "deleteSubjectBody": "The subject \"{{name}}\" and all of its data will be moved to Trash (not permanently deleted):{{list}}\n\nYou can restore it later from Settings › Data.",
       "usageMaterials": "{{count}} materials",
       "usageSessions": "{{count}} exam simulations",
       "usagePlans": "{{count}} study plans",
@@ -892,6 +894,8 @@
       "trashRestore": "Restore",
       "trashDeleteForever": "Delete Forever",
       "trashRestored": "Item restored",
+      "subjectRestored": "Subject restored",
+      "trashedSubjects": "Trashed Subjects",
       "trashDeleted": "Item permanently deleted",
       "trashEmptied": "Trash emptied",
       "trashError": "Trash action failed",

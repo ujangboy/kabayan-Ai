@@ -542,6 +542,8 @@
     "errorMinQuestions": "Tambahkan minimal 1 soal.",
     "errorMissingId": "ID quiz tidak ditemukan.",
     "errorGenerateFailed": "Gagal generate quiz. Coba lagi.",
+    "successCreated": "Quiz berhasil dibuat.",
+    "generatingBackground": "Pembuatan quiz tetap berjalan di latar belakang.",
     "notFound": "Kuis tidak ditemukan atau sudah dihapus"
   },
   "exam": {
@@ -591,8 +593,8 @@
       "simulation": "Simulasi",
       "deleteSubject": "Hapus mata kuliah",
       "deleteSubjectConfirm": "Hapus mata kuliah ini? Semua data terkait akan dihapus.",
-      "deleteSubjectTitle": "Hapus SELURUH mata kuliah?",
-      "deleteSubjectBody": "Menghapus \"{{name}}\" akan menghapus PERMANEN seluruh datanya, bukan hanya satu materi atau simulasi:{{list}}\n\nTindakan tidak dapat dibatalkan.",
+      "deleteSubjectTitle": "Pindahkan mata kuliah ke Sampah?",
+      "deleteSubjectBody": "Mata kuliah \"{{name}}\" beserta seluruh datanya akan dipindahkan ke Sampah (bukan dihapus permanen):{{list}}\n\nKamu bisa memulihkannya nanti dari Pengaturan › Data.",
       "usageMaterials": "{{count}} materi",
       "usageSessions": "{{count}} simulasi ujian",
       "usagePlans": "{{count}} rencana belajar",
@@ -892,6 +894,8 @@
       "trashRestore": "Pulihkan",
       "trashDeleteForever": "Hapus Permanen",
       "trashRestored": "Item berhasil dipulihkan",
+      "subjectRestored": "Mata kuliah berhasil dipulihkan",
+      "trashedSubjects": "Mata Kuliah di Sampah",
       "trashDeleted": "Item dihapus permanen",
       "trashEmptied": "Sampah dikosongkan",
       "trashError": "Aksi sampah gagal",

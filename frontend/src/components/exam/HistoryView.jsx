@@ -74,7 +74,7 @@ function SubjectPicker({ subjects, onSelectSubject, onStartConfig, t }) {
        <p className="text-text-muted text-sm mb-5">
          {t('exam.history.selectSubjectDesc')}
        </p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div id="subject-picker" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {subjects.map((s, i) => (
           <SubjectCard
             key={s.id}

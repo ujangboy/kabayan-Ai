@@ -277,7 +277,25 @@ async def update_subject(
 async def delete_subject(subject_id: int, db: Session = Depends(get_db)):
     if not subject_service.delete(db, subject_id):
         return JSONResponse(status_code=404, content={"detail": "Subject not found"})
-    return JSONResponse({"status": "success", "message": "Subject deleted"})
+    return JSONResponse({"status": "success", "message": "Mata kuliah dipindahkan ke sampah"})
+
+
+@router.get("/api/subjects/trash", response_model=dict)
+async def get_subjects_trash(db: Session = Depends(get_db)):
+    """Daftar mata kuliah yang sedang di-trash (soft-delete)."""
+    subjects = subject_service.get_trash(db)
+    results = [
+        {"id": s.id, "name": s.name, "semester": s.semester, "lecturer": s.lecturer}
+        for s in subjects
+    ]
+    return {"status": "success", "subjects": results}
+
+
+@router.post("/api/subjects/{subject_id}/restore", response_model=StatusMessage)
+async def restore_subject(subject_id: int, db: Session = Depends(get_db)):
+    if not subject_service.restore(db, subject_id):
+        return JSONResponse(status_code=404, content={"detail": "Subject not found"})
+    return JSONResponse({"status": "success", "message": "Mata kuliah dipulihkan"})
 
 
 @router.get("/api/subjects/{subject_id}/usage", response_model=dict)

@@ -42,7 +42,7 @@ export default function ExamHeader({ view, subjectId, subjects, canCreate, onBac
         {canCreate && (
           <Button
             onClick={onCreate}
-            disabled={!subjectId}
+            disabled={!subjects.length}
             className="disabled:opacity-40 disabled:cursor-not-allowed"
            variant="primary">
             {t('exam.createSimulation')}

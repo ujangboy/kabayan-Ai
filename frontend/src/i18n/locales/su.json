@@ -527,6 +527,8 @@
     "errorMinQuestions": "Tambahkeun sahenteuna 1 soal.",
     "errorMissingId": "ID kuis henteu kapanggih.",
     "errorGenerateFailed": "Gagal ngajantenkeun kuis. Cobi deui.",
+    "successCreated": "Kuis hasil dijieun.",
+    "generatingBackground": "Pembuatan kuis tetep jalan di latar belakang.",
     "notFound": "Kuis henteu kapanggih atanapi tos dihapus"
   },
   "exam": {
@@ -576,8 +578,8 @@
       "simulation": "Simulasi",
       "deleteSubject": "Hapus mata pelajaran",
       "deleteSubjectConfirm": "Hapus mata pelajaran ieu? Sadaya data anu aya hubunganana bakal dihapus.",
-      "deleteSubjectTitle": "Hapus SADAYA mata pelajaran?",
-      "deleteSubjectBody": "Nghapus \"{{name}}\" bakal mupus PERMANEN sadaya datana, sanés ngan hiji materi atanapi simulasi:{{list}}\n\nTindakan ieu teu tiasa dibalikeun.",
+      "deleteSubjectTitle": "Pindahkeun mata pelajaran ka Sampah?",
+      "deleteSubjectBody": "Mata pelajaran \"{{name}}\" sareng sadaya datana bakal dipindahkeun ka Sampah (henteu dihapus permanen):{{list}}\n\nAnjeun tiasa mulihkeun deui ti Pangaturan › Data.",
       "usageMaterials": "{{count}} materi",
       "usageSessions": "{{count}} simulasi ujian",
       "usagePlans": "{{count}} rencana diajar",
@@ -877,6 +879,8 @@
       "trashRestore": "Pulihkeun",
       "trashDeleteForever": "Hapus Permanén",
       "trashRestored": "Item hasil dipulihkeun",
+      "subjectRestored": "Mata pelajaran hasil dipulihkeun",
+      "trashedSubjects": "Mata Pelajaran di Sampah",
       "trashDeleted": "Item dihapus permanén",
       "trashEmptied": "Sampah dikosongkeun",
       "trashError": "Aksi sampah gagal",

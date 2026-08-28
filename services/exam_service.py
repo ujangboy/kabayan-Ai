@@ -463,6 +463,8 @@ class ExamService:
             subject_id=blueprint.subject_id,
             questions_json=json.dumps(payload, ensure_ascii=False),
         )
+        db.commit()
+        db.refresh(session)
         return {"session_id": session.id, **payload}
 
 
@@ -608,6 +610,8 @@ class ExamService:
             subject_id=blueprint.subject_id,
             questions_json=json.dumps(payload, ensure_ascii=False),
         )
+        db.commit()
+        db.refresh(session)
         return {"session_id": session.id, **payload}
 
     def fetch_practice_questions(

@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { ICONS } from '@/lib/icons';
 import { Icon , Button} from '@/components/ui';
 
-import { dataAPI, materiAPI, trashAPI } from '@/services/api';
+import { dataAPI, materiAPI, trashAPI, subjectAPI } from '@/services/api';
 import { useToast } from '@/components/Toast';
 import { formatDate, formatBytes } from '@/utils';
 import { cn } from '@/utils';
@@ -58,6 +58,26 @@ export default function DataTab() {
     queryKey: ['trash'],
     queryFn: () => trashAPI.list().then((r) => r.data),
   });
+
+  const { data: trashedSubjects } = useQuery({
+    queryKey: ['subjects-trash'],
+    queryFn: () => subjectAPI.getTrash().then((r) => r.data?.subjects || []),
+  });
+
+  const restoreSubjectMutation = useMutation({
+    mutationFn: (id) => subjectAPI.restore(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['subjects-trash'] });
+      queryClient.invalidateQueries({ queryKey: ['subjects'] });
+      queryClient.invalidateQueries({ queryKey: ['data-overview'] });
+      toast.success(t('settings.data.subjectRestored'));
+    },
+    onError: () => toast.error(t('settings.data.trashError')),
+  });
+
+  const handleRestoreSubject = (s) => {
+    restoreSubjectMutation.mutate(s.id);
+  };
 
   const restoreMutation = useMutation({
     mutationFn: (item) => (item.material_id ? trashAPI.restoreMaterial(item.material_id) : trashAPI.restore(item.id)),
@@ -425,6 +445,40 @@ export default function DataTab() {
           </div>
         )}
       </div>
+
+      {/* Trashed subjects (soft-delete) */}
+      {(trashedSubjects?.length || 0) > 0 && (
+        <div className="card-base p-6 md:p-7">
+          <h3 className="text-base font-semibold text-text mb-3 flex items-center gap-2">
+            <Icon name={ICONS.actions.delete} size={15} className="text-warning" />
+            {t('settings.data.trashedSubjects')} ({trashedSubjects.length})
+          </h3>
+          <div className="space-y-1.5">
+            {trashedSubjects.map((s) => (
+              <div key={s.id} className="flex items-center justify-between gap-2 bg-background border border-border rounded-lg px-3 py-2">
+                <div className="min-w-0">
+                  <p className="text-xs text-text truncate">{s.name}</p>
+                  {s.semester && <p className="text-3xs text-text-muted">{s.semester}</p>}
+                </div>
+                <Tooltip label={t('settings.data.trashRestore')}>
+                  <button
+                    onClick={() => handleRestoreSubject(s)}
+                    disabled={restoreSubjectMutation.isPending}
+                    aria-label={t('settings.data.trashRestore')}
+                    className="p-1.5 rounded-lg text-text-muted hover:text-success hover:bg-success/10 transition-colors shrink-0"
+                  >
+                    {restoreSubjectMutation.isPending && restoreSubjectMutation.variables === s.id ? (
+                      <Icon name={ICONS.status.loading} size={14} className="animate-spin" />
+                    ) : (
+                      <Icon name={ICONS.actions.replay} size={14} />
+                    )}
+                  </button>
+                </Tooltip>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Storage */}
       <div className="card-base p-6 md:p-7">

@@ -6,9 +6,12 @@ import { quizAPI } from '@/services/api';
 import { Modal, Button, Select, Input , Icon } from '@/components/ui';
 import MaterialPicker from '@/components/MaterialPicker';
 import { useBackgroundJob } from '@/hooks/useBackgroundJob';
+import { useToast } from '@/components/Toast';
+import { extractErrorMessage } from '@/utils/errors';
 
 export function GenerateQuizModal({ open, onClose, subjects, onSuccess }) {
   const { t } = useTranslation();
+  const { toast } = useToast();
   const [subjectId, setSubjectId] = useState('');
   const [mcqCount, setMcqCount] = useState(5);
   const [essayCount, setEssayCount] = useState(0);
@@ -31,29 +34,45 @@ export function GenerateQuizModal({ open, onClose, subjects, onSuccess }) {
     if (!mcqCount && !essayCount) return setError(t('quiz.errorMinQuestions'));
     setError('');
     setIsGenerating(true);
+    // Key unik per submit agar job tidak saling menimpa bila modal ditutup & dibuka lagi.
     // Generate tetap jalan walau modal ditutup / user pindah menu (job di store).
-    runJob('quiz', t('appLayout.opQuiz'), (signal) => quizAPI.generate({
+    const jobKey = `quiz-${Date.now()}`;
+    runJob(jobKey, t('appLayout.opQuiz'), (signal) => quizAPI.generate({
       subject_id: subjectId,
       mcq_count: Number(mcqCount) || 0,
       essay_count: Number(essayCount) || 0,
       difficulty,
       material_ids: selectedMaterialIds.length > 0 ? selectedMaterialIds.join(',') : '',
     }, { signal }), {
-      onError: (err) => { setError(err?.message || t('quiz.errorGenerateFailed')); setIsGenerating(false); },
+      onError: (err) => {
+        const msg = extractErrorMessage(err) || t('quiz.errorGenerateFailed');
+        setError(msg);
+        setIsGenerating(false);
+        toast.error(msg);
+      },
       onDone: (result) => {
         setIsGenerating(false);
         if (!result) return;
-        if (result.detail) { setError(result.detail); return; }
-        if (!result.id) { setError(t('quiz.errorMissingId')); return; }
+        if (result.detail) { setError(result.detail); toast.error(result.detail); return; }
+        if (!result.id) { const m = t('quiz.errorMissingId'); setError(m); toast.error(m); return; }
+        toast.success(t('quiz.successCreated'));
         onSuccess(result.id);
       },
     });
   };
 
+  const handleClose = () => {
+    if (isGenerating) {
+      // Biarkan generate tetap berjalan di background; beri tahu user via toast.
+      toast.info(t('quiz.generatingBackground'));
+    }
+    onClose();
+  };
+
   return (
     <Modal
       open={open}
-      onClose={onClose}
+      onClose={handleClose}
       size="sm"
       title={<span className="flex items-center gap-2"><Icon name={ICONS.ui.bolt} size={18} className="text-primary" />{t('quiz.modalTitle')}</span>}
       footer={

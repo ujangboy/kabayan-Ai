@@ -48,7 +48,8 @@ async def data_overview(db: Session = Depends(get_db)):
         storage = get_storage_usage()
 
         stats = {
-            "subjects": db.query(models.Subject).count(),
+            "subjects": db.query(models.Subject)
+                .filter(models.Subject.status != "trashed").count(),
             "materials": db.query(models.Material)
                 .filter(models.Material.status != "Trashed").count(),
             "materials_ready": db.query(models.Material)

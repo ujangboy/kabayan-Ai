@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { subjectAPI, sessionsAPI } from '@/services/api';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -30,6 +30,7 @@ export default function ExamAnalyzerPage() {
   const location  = useLocation();
   const navigate  = useNavigate();
   const { restore, persist, clear } = usePageState(PAGE_KEY);
+  const queryClient                  = useQueryClient();
   const [view, setView]               = useState(VIEW.HISTORY);
   const subjectId                     = useUiStore((s) => s.subjectFilterExam);
   const setSubjectFilter              = useUiStore((s) => s.setSubjectFilter);
@@ -153,10 +154,15 @@ export default function ExamAnalyzerPage() {
   const go = (v) => setView(v);
 
   const handleAnalysisDone = (data) => { setAnalysis(data); go(VIEW.DASHBOARD); };
-  const handleSessionReady  = (data) => { setGenerating(null); setSessionData(data); setQuizClockStart(Date.now()); go(VIEW.QUIZ); };
+  const handleSessionReady  = (data) => {
+    setGenerating(null); setSessionData(data); setQuizClockStart(Date.now());
+    queryClient.invalidateQueries({ queryKey: ['exam-sessions', subjectId] });
+    go(VIEW.QUIZ);
+  };
   const handleEvalDone      = (data, answersSnapshot) => {
     if (answersSnapshot) setSessionData(prev => ({ ...prev, answers: answersSnapshot }));
     setEvalData(data);
+    queryClient.invalidateQueries({ queryKey: ['exam-sessions', subjectId] });
     go(VIEW.RESULT);
   };
 
@@ -243,7 +249,17 @@ export default function ExamAnalyzerPage() {
           canCreate={view === VIEW.DASHBOARD || view === VIEW.HISTORY}
           onBack={handleExit}
           onSubjectChange={(e) => { setSubjectId(e.target.value); setAnalysis(null); setBlueprint(null); setSessionData(null); setEvalData(null); setRecommend(null); go(VIEW.HISTORY); }}
-          onCreate={() => { if (!subjectId) return; openConfig(); }}
+          onCreate={() => {
+            if (subjectId) return openConfig();
+            if (subjects.length === 1) return openConfig(String(subjects[0].id));
+            if (subjects.length === 0) {
+              toast.info(t('exam.config.selectSubjectFirst'));
+              navigate('/materi');
+              return;
+            }
+            toast.info(t('exam.config.selectSubjectFirst'));
+            document.getElementById('subject-picker')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }}
         />
 
         {/* ── Tab Riwayat / Analisis ── */}
@@ -281,7 +297,7 @@ export default function ExamAnalyzerPage() {
             {view === VIEW.DASHBOARD  && <DashboardView subjectId={subjectId} subjects={subjects} analysis={analysis} onAnalysisDone={handleAnalysisDone} onStartConfig={() => openConfig(subjectId)} />}
             {view === VIEW.HISTORY    && <HistoryView subjectId={subjectId} subjects={subjects} onSelectSubject={(id) => { setSubjectId(id); go(VIEW.HISTORY); }} onStartConfig={(id) => openConfig(id)} onRetry={handleRetry} onResume={(sd) => { setSessionData(sd); setQuizClockStart(Date.now()); go(VIEW.QUIZ); }} detailId={detailId} setDetailId={setDetailId} pendingPlanTab={pendingPlanTab} setPendingPlanTab={setPendingPlanTab} />}
             {view === VIEW.QUIZ       && <QuizView sessionData={sessionData} clockStart={quizClockStart} onDone={handleEvalDone} />}
-            {view === VIEW.RESULT     && <ResultView evalData={evalData} onReview={() => go(VIEW.REVIEW)} onFinish={() => { clearAll(); go(VIEW.HISTORY); }} sessionId={sessionData?.session_id} onOpenPlanTab={() => { setPendingPlanTab(true); setDetailId(sessionData?.session_id); }} subjectName={sessionData?.subject_name || ''} />}
+            {view === VIEW.RESULT     && <ResultView evalData={evalData} onReview={() => go(VIEW.REVIEW)} onFinish={() => { queryClient.invalidateQueries({ queryKey: ['exam-sessions', subjectId] }); clearAll(); go(VIEW.HISTORY); }} sessionId={sessionData?.session_id} onOpenPlanTab={() => { setPendingPlanTab(true); setDetailId(sessionData?.session_id); }} subjectName={sessionData?.subject_name || ''} />}
             {view === VIEW.REVIEW     && <ReviewView sessionData={sessionData} evalData={evalData} />}
           </motion.div>
         </AnimatePresence>

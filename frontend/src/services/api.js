@@ -77,6 +77,8 @@ export const subjectAPI = {
   }),
   delete: (id) => api.post(`/subjects/${id}/delete`),
   getUsage: (id) => api.get(`/subjects/${id}/usage`),
+  getTrash: () => api.get('/subjects/trash'),
+  restore: (id) => api.post(`/subjects/${id}/restore`),
 };
 
 // --- NOTES ---

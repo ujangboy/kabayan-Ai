@@ -36,6 +36,7 @@ class Subject(Base):
     total_flashcards = Column(Integer, default=0)        # jumlah flashcard untuk subject ini
     total_materials = Column(Integer, default=0)         # jumlah materi untuk subject ini
     last_activity_at = Column(DateTime, nullable=True)   # aktivitas terakhir (upload/quiz/ujian/flashcard)
+    status = Column(String(20), default="active", nullable=True)  # 'active' | 'trashed' (soft-delete)
 
     materials = relationship("Material", back_populates="subject", cascade="all, delete-orphan")
     notes = relationship("Note", back_populates="subject", cascade="all, delete-orphan")

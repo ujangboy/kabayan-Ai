@@ -1,6 +1,7 @@
 from repositories.subject_repository import subject_repository
 from services.cache_service import cache_service
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 from models import Subject
 from typing import List, Optional
 import datetime
@@ -84,7 +85,15 @@ class SubjectService:
         # Ambil seluruh subject tanpa batas (default BaseRepository membatasi 50).
         # Subject biasanya sedikit, tapi batas bisa menyembunyikan sebagian
         # mata kuliah setelah banyak data — seperti keluhan "data hilang".
-        return subject_repository.get_all(db, limit=None)
+        # Kecualikan yang sudah di-trash (soft-delete).
+        return (
+            db.query(Subject)
+            .filter(or_(Subject.status.is_(None), Subject.status != "trashed"))
+            .all()
+        )
+
+    def get_trash(self, db: Session) -> List[Subject]:
+        return db.query(Subject).filter(Subject.status == "trashed").all()
 
     def get_by_id(self, db: Session, id: int) -> Optional[Subject]:
         return subject_repository.get(db, id)
@@ -110,36 +119,27 @@ class SubjectService:
         return subject
 
     def delete(self, db: Session, id: int) -> bool:
-        # Kumpulkan materi milik subject SEBELUM cascade delete untuk cleanup
-        # RAG index & TrashItem yatim (material_id tanpa FK → tidak ter-cascade).
-        from models import Material, TrashItem
-        mat_ids = [m.id for m in db.query(Material.id).filter(Material.subject_id == id).all()]
+        # SOFT-DELETE: pindahkan subject ke trash (status='trashed') TANPA menghapus
+        # baris. Ini mencegah cascade hard-delete yang ikut menghapus seluruh materi,
+        # sesi ujian, quiz, flashcard, dan rencana belajar sekaligus.
+        subject = subject_repository.get(db, id)
+        if not subject:
+            return False
+        subject.status = "trashed"
+        db.commit()
+        db.refresh(subject)
+        cache_service.invalidate_all(db)
+        return True
 
-        success = subject_repository.delete(db, id)
-        if success:
-            # 1) Chunk RAG semua materi subject tidak boleh tetap searchable
-            try:
-                from services.rag_service import rag_service
-                for mid in mat_ids:
-                    rag_service.delete_document_chunks(f"mat_{mid}")
-            except Exception as exc:
-                import logging
-                logging.getLogger(__name__).warning(
-                    f"subject_delete: gagal bersihkan chunk RAG subject {id}: {exc}"
-                )
-
-            # 2) TrashItem yang menunjuk materi subject yang sudah terhapus
-            if mat_ids:
-                db.query(TrashItem).filter(TrashItem.material_id.in_(mat_ids)).delete(
-                    synchronize_session=False
-                )
-                db.commit()
-
-            cache_service.invalidate_all(db)
-            # D2: file materi milik subject yang cascade-delete jadi yatim → sweep ke trash
-            from services.storage_cleanup_service import cleanup_orphan_files
-            cleanup_orphan_files(db)
-        return success
+    def restore(self, db: Session, id: int) -> bool:
+        subject = subject_repository.get(db, id)
+        if not subject:
+            return False
+        subject.status = "active"
+        db.commit()
+        db.refresh(subject)
+        cache_service.invalidate_all(db)
+        return True
 
     def recalculate_subject_stats(self, db: Session, subject_id: int) -> Optional[Subject]:
         """Hitung ulang + persist statistik agregat untuk satu subject."""
