@@ -17,6 +17,11 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 import config as app_config
 from database import Base
 
+# Wajib di-import agar Base.metadata berisi seluruh tabel. Tanpa ini
+# Alembic menganggap database memiliki tabel yang tidak dikenal dan
+# `alembic check`/autogenerate bisa menghasilkan drop_table.
+import models  # noqa: F401
+
 # Alembic Config object
 config = context.config
 
