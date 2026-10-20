@@ -25,6 +25,14 @@ function Tile({ icon, label, value, sub, tone }) {
   );
 }
 
+function readinessPercent(value) {
+  if (typeof value === 'number') return Math.round(value * 100);
+  if (value?.avg_mastery != null && Number.isFinite(Number(value.avg_mastery))) {
+    return Math.round(Number(value.avg_mastery));
+  }
+  return null;
+}
+
 export default function StudyInsights() {
   const { t } = useTranslation();
   const { data, isLoading } = useQuery({
@@ -52,7 +60,7 @@ export default function StudyInsights() {
   const planItems = Array.isArray(data?.plan?.items) ? data.plan.items : [];
   const planMinutes = data?.plan?.total_duration_minutes ?? null;
   const bestHour = data?.plan?.best_hour ?? null;
-  const readiness = data?.diag?.readiness ?? null;
+  const readinessPct = readinessPercent(data?.diag?.readiness);
   const coverage = data?.diag?.overview?.coverage_pct ?? null;
   const graphWeak = data?.graph?.meta?.weak_topics_count ?? null;
   const graphTopics = data?.graph?.meta?.topics_count ?? null;
@@ -140,9 +148,9 @@ export default function StudyInsights() {
           ) : (
             <div className="text-sm text-text space-y-1">
               <p>
-                {t('studyInsights.retention')}:{' '}
+                {t('studyInsights.diagnostic')}:{' '}
                 <span className="font-semibold">
-                  {readiness != null ? `${Math.round(readiness * 100)}%` : '—'}
+                  {readinessPct != null ? `${readinessPct}%` : '—'}
                 </span>
               </p>
               {coverage != null && (

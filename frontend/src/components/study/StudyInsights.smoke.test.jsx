@@ -21,7 +21,10 @@ const { mockStudy } = vi.hoisted(() => ({
       total_duration_minutes: 30,
       best_hour: 9,
     }),
-    diagnostic: vi.fn().mockResolvedValue({ readiness: 0.8, overview: { coverage_pct: 70 } }),
+    diagnostic: vi.fn().mockResolvedValue({
+      readiness: { level: 'siap_ujian', avg_mastery: 80 },
+      overview: { coverage_pct: 70 },
+    }),
     knowledgeGraph: vi.fn().mockResolvedValue({
       meta: { topics_count: 4, weak_topics_count: 1 },
     }),
@@ -46,5 +49,9 @@ describe('StudyInsights smoke', () => {
     await waitFor(() => {
       expect(screen.getByText(/Kartu jatuh tempo/i)).toBeTruthy();
     });
+    await waitFor(() => {
+      expect(screen.getByText('80%')).toBeTruthy();
+    });
+    expect(screen.queryByText(/NaN/)).toBeNull();
   });
 });
