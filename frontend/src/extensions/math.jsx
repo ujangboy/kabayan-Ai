@@ -10,6 +10,15 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import katex from 'katex';
 import { Tooltip } from '@/components/ui/Tooltip';
 
+// KaTeX `trust: true` mengizinkan \href, \html*, dan \includegraphics.
+// Konten LaTeX berasal dari input user, jadi jangan pernah mengaktifkannya.
+// Fallback error juga harus di-escape sebelum masuk dangerouslySetInnerHTML.
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, (char) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  }[char]));
+}
+
 // ─── KaTeX React renderer ────────────────────────────────────────────────
 function KaTeXNode({ node, updateAttributes }) {
   const { latex } = node.attrs;
@@ -59,10 +68,10 @@ function KaTeXNode({ node, updateAttributes }) {
     html = katex.renderToString(latex || '?', {
       throwOnError: false,
       displayMode: isBlock,
-      trust: true,
+      trust: false,
     });
   } catch {
-    html = `<span style="color:var(--warning,#F6B93B);display:inline-flex;align-items:center;gap:4px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>${latex}</span>`;
+    html = `<span style="color:var(--warning,#F6B93B);display:inline-flex;align-items:center;gap:4px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>${escapeHtml(latex)}</span>`;
   }
 
   return (
