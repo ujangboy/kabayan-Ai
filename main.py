@@ -269,22 +269,34 @@ async def get_home():
 
 @app.get("/health")
 async def health_check():
+    from services.rag_service import rag_service
+
     status = {
         "FastAPI": "OK",
         "SQLite": "ERROR",
         "Schema_Materials": "ERROR",
         "Groq API": "OK" if config.GROQ_API_KEY else "ERROR",
-        "LanceDB": "OK" if os.path.exists(config.LANCEDB_DIR) else "ERROR",
-        "Upload Folder": "OK" if os.path.exists(config.UPLOADS_DIR) else "ERROR",
-        "Embedding": "OK", # LangChain initialized locally in rag_service
-        "Cache": "OK"
+        "LanceDB": (
+            "OK"
+            if os.path.isdir(config.LANCEDB_DIR) and os.access(config.LANCEDB_DIR, os.W_OK)
+            else "ERROR"
+        ),
+        "Upload Folder": (
+            "OK"
+            if os.path.isdir(config.UPLOADS_DIR) and os.access(config.UPLOADS_DIR, os.W_OK)
+            else "ERROR"
+        ),
+        # RAG dimuat lazy. Jangan klaim OK sebelum model benar-benar ada,
+        # tapi jangan pula anggap LAZY sebagai kegagalan.
+        "Embedding": "OK" if rag_service._cached_embedder is not None else "LAZY",
+        "Cache": "ERROR",
     }
     try:
         from sqlalchemy import text
         db = SessionLocal()
         db.execute(text("SELECT 1"))
         status["SQLite"] = "OK"
-        
+
         # Check Schema Drift
         res = db.execute(text("PRAGMA table_info(materials)")).fetchall()
         columns = [row[1] for row in res]
@@ -292,14 +304,22 @@ async def health_check():
             status["Schema_Materials"] = "OK"
         else:
             status["Schema_Materials"] = "DRIFT_DETECTED"
-            
+
+        try:
+            db.execute(text("SELECT 1 FROM caches LIMIT 1"))
+            status["Cache"] = "OK"
+        except Exception as cache_error:
+            logger.error(f"/health cache check error: {cache_error}")
+            status["Cache"] = "ERROR"
+
         db.close()
     except Exception as e:
         # Jangan bocorkan detail DB/driver ke client — log saja
         logger.error(f"/health SQLite check error: {e}")
         status["SQLite"] = "ERROR"
-        
-    all_pass = all(v == "OK" for v in status.values())
+
+    healthy = {"OK", "LAZY"}
+    all_pass = all(v in healthy for v in status.values())
     return JSONResponse(status_code=200 if all_pass else 500, content={"status": "PASS" if all_pass else "FAIL", "details": status})
 
 # SPA fallback — DAFTARKAN PALING AKHIR agar /health, /, dan route lain menang dulu
