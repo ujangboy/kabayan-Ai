@@ -1,8 +1,11 @@
 /**
  * Generator iconMap.js — baca ICONS dari src/lib/icons.js, lalu hasilkan
- * src/lib/iconMap.js yang memetakan nama glyph Material Symbols (snake_case)
- * ke SVG components dari @material-symbols-svg/react (style Rounded, weight 100-700,
- * varian regular + filled).
+ * src/lib/iconMap.js berisi path SVG Material Symbols (style Rounded).
+ *
+ * Hanya weight 400 yang di-generate: UI tidak pernah memakai weight lain.
+ * Path diekstrak langsung dari source package agar object `pathData` yang
+ * berisi 14 varian per icon tidak ikut masuk ke bundle. Varian filled hanya
+ * dihasilkan untuk icon yang memang memakai `fill` di UI.
  *
  * Jalankan: node scripts/generate-icon-map.mjs
  */
@@ -18,11 +21,16 @@ const PKG_ICONS_DIR = resolve(
   'node_modules/@material-symbols-svg/react/dist/rounded/icons'
 );
 
-// Icon yang tidak tersedia di package tapi di-vendor manual (SVG lokal).
-// Key = nama glyph (snake_case) di ICONS; value = komponen + path import.
+// Icon yang tidak tersedia di package tapi di-vendor manual (path Material
+// Symbols Rounded, viewBox 0 -960 960 960).
 const VENDORED = {
-  push_pin: { component: 'PushPinSvg', from: '@/components/ui/icons/PushPinSvg' },
+  push_pin:
+    'm634-448 86 77v60H510v241l-30 30-30-30v-241H240v-60l80-77v-332h-50v-60h414v60h-50v332Zm-313 77h312l-59-55v-354H380v354l-59 55Zm156 0Z',
 };
+
+// Icon yang memakai varian filled di UI. Tambahkan nama glyph di sini jika
+// suatu saat memakai <Icon fill={1}>.
+const FILLED_ICONS = new Set(['push_pin']);
 
 const src = readFileSync(ICONS_SRC, 'utf8');
 const match = src.match(/export const ICONS = \{([\s\S]*?)\n\};/);
@@ -43,69 +51,74 @@ const fallback = fbMatch[1];
 names.push(fallback);
 const uniq = [...new Set(names)];
 
-function pascal(name) {
-  return name
-    .split('_')
-    .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
-    .join('');
-}
-
 function kebab(name) {
   return name.replaceAll('_', '-');
 }
 
-const missing = uniq.filter((n) => !VENDORED[n] && !existsSync(resolve(PKG_ICONS_DIR, `${kebab(n)}.js`)));
+function extractPath(source, variant, name) {
+  const block = source.match(
+    new RegExp(`${variant}:\\s*\\{[\\s\\S]*?\\n\\s*\\}`, 'm')
+  );
+  if (!block) {
+    console.error(`Varian ${variant} tidak ditemukan untuk ${name}`);
+    process.exit(1);
+  }
+  const path = block[0].match(/"400":\s*"([^"]+)"/);
+  if (!path) {
+    console.error(`Path weight 400 tidak ditemukan untuk ${name} (${variant})`);
+    process.exit(1);
+  }
+  return path[1];
+}
+
+const missing = uniq.filter(
+  (n) => !VENDORED[n] && !existsSync(resolve(PKG_ICONS_DIR, `${kebab(n)}.js`))
+);
 if (missing.length > 0) {
   console.error('Icon file tidak ditemukan di package:', missing.join(', '));
   process.exit(1);
+}
+
+const paths = new Map();
+for (const n of uniq) {
+  if (VENDORED[n]) {
+    paths.set(n, { regular: VENDORED[n], filled: VENDORED[n] });
+    continue;
+  }
+
+  const source = readFileSync(resolve(PKG_ICONS_DIR, `${kebab(n)}.js`), 'utf8');
+  paths.set(n, {
+    regular: extractPath(source, 'regular', n),
+    filled: FILLED_ICONS.has(n) ? extractPath(source, 'filled', n) : null,
+  });
 }
 
 const lines = [];
 lines.push('/**');
 lines.push(' * AUTO-GENERATED — jangan edit manual.');
 lines.push(' * Regenerate: node scripts/generate-icon-map.mjs');
+lines.push(' *');
+lines.push(' * Path Material Symbols Rounded weight 400, viewBox 0 -960 960 960.');
+lines.push(' * Varian filled hanya tersedia untuk icon yang terdaftar di FILLED_ICONS.');
 lines.push(' */');
-
-// Import icon yang di-vendor (tidak dari package).
-for (const [n, v] of Object.entries(VENDORED)) {
-  if (uniq.includes(n)) lines.push(`import { ${v.component} } from '${v.from}';`);
-}
 lines.push('');
-
-for (const n of uniq) {
-  if (VENDORED[n]) continue;
-  const P = pascal(n);
-  lines.push(
-    `import { ${P}W100, ${P}W200, ${P}W300, ${P}W400, ${P}W500, ${P}W600, ${P}W700, ` +
-      `${P}FillW100, ${P}FillW200, ${P}FillW300, ${P}FillW400, ${P}FillW500, ${P}FillW600, ${P}FillW700 } ` +
-      `from '@material-symbols-svg/react/rounded/icons/${kebab(n)}';`
-  );
-}
-lines.push('');
-lines.push('/** Map nama glyph → komponen SVG per weight (regular/filled). */');
+lines.push('/** Map nama glyph → path SVG (regular/filled). */');
 lines.push('export const MATERIAL_ICONS = {');
 for (const n of uniq) {
-  if (VENDORED[n]) {
-    const c = VENDORED[n].component;
-    lines.push(`  '${n}': {`);
-    lines.push(`    regular: { 400: ${c} },`);
-    lines.push(`    filled: { 400: ${c} },`);
-    lines.push('  },');
-    continue;
-  }
-  const P = pascal(n);
-  lines.push(`  '${n}': {`);
-  lines.push(`    regular: { 100: ${P}W100, 200: ${P}W200, 300: ${P}W300, 400: ${P}W400, 500: ${P}W500, 600: ${P}W600, 700: ${P}W700 },`);
-  lines.push(`    filled: { 100: ${P}FillW100, 200: ${P}FillW200, 300: ${P}FillW300, 400: ${P}FillW400, 500: ${P}FillW500, 600: ${P}FillW600, 700: ${P}FillW700 },`);
-  lines.push('  },');
+  const entry = paths.get(n);
+  const filled = entry.filled == null ? '' : `, filled: ${JSON.stringify(entry.filled)}`;
+  lines.push(`  ${JSON.stringify(n)}: { regular: ${JSON.stringify(entry.regular)}${filled} },`);
 }
 lines.push('};');
 lines.push('');
-lines.push('/** Komponen fallback bila nama tidak dikenal. */');
-lines.push(`export const FALLBACK_ICON = MATERIAL_ICONS['${fallback}'].regular[400];`);
+lines.push(`/** Nama fallback bila glyph tidak dikenal. */`);
+lines.push(`export const FALLBACK_ICON_NAME = ${JSON.stringify(fallback)};`);
+lines.push('');
+lines.push('/** Path fallback bila glyph tidak dikenal. */');
+lines.push(`export const FALLBACK_ICON = MATERIAL_ICONS[FALLBACK_ICON_NAME].regular;`);
 lines.push('');
 lines.push('export const VALID_ICON_NAMES = new Set(Object.keys(MATERIAL_ICONS));');
 lines.push('');
 
 writeFileSync(OUT, lines.join('\n'));
-console.log(`iconMap.js dihasilkan: ${names.length} icons -> ${OUT}`);
+console.log(`iconMap.js dihasilkan: ${uniq.length} icons -> ${OUT}`);

@@ -1,8 +1,10 @@
 import { forwardRef } from 'react';
-import { MATERIAL_ICONS, FALLBACK_ICON } from '@/lib/iconMap';
+import {
+  FALLBACK_ICON,
+  FALLBACK_ICON_NAME,
+  MATERIAL_ICONS,
+} from '@/lib/iconMap';
 import { cn } from '@/utils';
-
-const FALLBACK_ICON_LOOKUP = 'help';
 
 /**
  * Icon — wrapper terpusat untuk Google Material Symbols (style Rounded).
@@ -15,12 +17,9 @@ const FALLBACK_ICON_LOOKUP = 'help';
  *                mis. ICONS.actions.search.
  * - size        (number, default 24) — ukuran piksel. Minimum 20px untuk
  *                icon interaktif, 16px untuk dekoratif kecil.
- * - weight      (number, default 400) — 100–700 (glyph berbeda tiap weight).
+ * - weight      (number, default 400) — hanya weight 400 yang di-bundle.
+ *                Nilai lain tetap diterima agar API kompatibel.
  * - fill        (number|boolean, default 0) — 0 = outline, 1/truthy = filled.
- * - grade       (number, default 0) — -50..200. Hanya relevan untuk font
- *                variable; tidak berdampak pada render SVG.
- * - opticalSize (number, default 24) — 20..48. Hanya relevan untuk font
- *                variable; tidak berdampak pada render SVG.
  * - className   (string) — class tambahan (warna via text-*, ukuran via size).
  * - ariaLabel   (string) — label aksesibilitas untuk icon fungsional.
  * - ariaHidden  (boolean, default true) — sembunyikan dari screen reader
@@ -36,8 +35,6 @@ const Icon = forwardRef(function Icon(
     size = 24,
     weight = 400,
     fill = 0,
-    grade = 0,
-    opticalSize = 24,
     className,
     ariaLabel,
     ariaHidden = true,
@@ -46,27 +43,35 @@ const Icon = forwardRef(function Icon(
   },
   ref
 ) {
-  const entry = MATERIAL_ICONS[name] || MATERIAL_ICONS[FALLBACK_ICON_LOOKUP];
-  const w = String(weight);
+  const entry = MATERIAL_ICONS[name] || MATERIAL_ICONS[FALLBACK_ICON_NAME];
   const isFilled = Boolean(fill);
-  const pool = isFilled ? entry.filled : entry.regular;
-  const Component = pool[w] || entry.regular[400] || FALLBACK_ICON;
-
+  const path = isFilled ? entry.filled || entry.regular : entry.regular;
   const accessible = Boolean(ariaLabel);
 
   return (
-    <Component
+    <svg
       ref={ref}
-      size={size}
-      className={cn('select-none', className)}
+      xmlns="http://www.w3.org/2000/svg"
+      width={size}
+      height={size}
+      viewBox="0 -960 960 960"
+      fill="none"
+      className={cn(
+        'material-symbols select-none',
+        `material-symbols_${name}`,
+        className
+      )}
       style={style}
       data-icon={name}
+      data-weight={weight}
       data-fill={isFilled ? '1' : '0'}
       aria-hidden={accessible ? undefined : ariaHidden}
       role={accessible ? 'img' : undefined}
-      title={accessible ? ariaLabel : undefined}
       {...props}
-    />
+    >
+      {accessible && <title>{ariaLabel}</title>}
+      <path d={path || FALLBACK_ICON} fill="currentColor" />
+    </svg>
   );
 });
 
