@@ -1,5 +1,5 @@
 import enum
-from sqlalchemy import Column, Integer, String, Text, DateTime, Date, ForeignKey, Enum, UniqueConstraint, Boolean, Float
+from sqlalchemy import Column, Integer, String, Text, DateTime, Date, ForeignKey, Enum, UniqueConstraint, Boolean, Float, Index
 from sqlalchemy.orm import relationship
 import datetime
 from time_utils import utcnow
@@ -45,6 +45,9 @@ class Subject(Base):
 
 class Material(Base):
     __tablename__ = "materials"
+    __table_args__ = (
+        Index("ix_materials_type_external_id", "material_type", "external_id", unique=True),
+    )
     id = Column(Integer, primary_key=True, index=True)
     subject_id = Column(Integer, ForeignKey("subjects.id", ondelete="CASCADE"), index=True)
     filename = Column(String)
@@ -60,7 +63,7 @@ class Material(Base):
     stage = Column(String, nullable=True)                 # label tahap pemrosesan (untuk UI)
     created_at = Column(DateTime, default=utcnow)
     updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
-    upload_date = Column(DateTime, default=utcnow)
+    upload_date = Column(DateTime, default=utcnow, index=True)
 
     subject = relationship("Subject", back_populates="materials")
 
@@ -77,13 +80,16 @@ class Note(Base):
 
 class Flashcard(Base):
     __tablename__ = "flashcards"
+    __table_args__ = (
+        Index("idx_flashcards_subject_created", "subject_id", "created_at"),
+    )
     id = Column(Integer, primary_key=True, index=True)
     subject_id = Column(Integer, ForeignKey("subjects.id", ondelete="CASCADE"), index=True)
     title = Column(String, nullable=True)          # nama set flashcard (opsional)
     batch_id = Column(String, nullable=True)       # UUID batch untuk membedakan hasil generate
     question = Column(Text)
     answer = Column(Text)
-    material_ids = Column(String, nullable=True)   # comma-separated material IDs
+    material_ids = Column(Text, nullable=True)     # comma-separated material IDs
     created_at = Column(DateTime, default=utcnow)
     # ─── Spaced Repetition fields (Fase 3: SRS) ───
     ease_factor = Column(Integer, default=250)     # 2.5 dalam satuan 1/100 (250 = 2.50)
@@ -103,8 +109,8 @@ class Flashcard(Base):
 class FlashcardReview(Base):
     """Riwayat penilaian per kartu untuk spaced repetition."""
     __tablename__ = "flashcard_reviews"
-    id = Column(Integer, primary_key=True, index=True)
-    flashcard_id = Column(Integer, ForeignKey("flashcards.id", ondelete="CASCADE"), index=True)
+    id = Column(Integer, primary_key=True)
+    flashcard_id = Column(Integer, ForeignKey("flashcards.id", ondelete="CASCADE"), index=True, nullable=False)
     rating = Column(Integer)                        # 0=Lupa, 1=Sulit, 2=Biasa, 3=Mudah, 4=Sempurna
     reviewed_at = Column(DateTime, default=utcnow)
     next_review = Column(DateTime, nullable=True)
@@ -114,12 +120,15 @@ class FlashcardReview(Base):
 
 class Quiz(Base):
     __tablename__ = "quizzes"
+    __table_args__ = (
+        Index("idx_quizzes_subject_created", "subject_id", "created_at"),
+    )
     id = Column(Integer, primary_key=True, index=True)
     subject_id = Column(Integer, ForeignKey("subjects.id", ondelete="CASCADE"), index=True)
     title = Column(String, nullable=True)          # judul quiz (opsional)
     score = Column(Integer, nullable=True)         # null = belum dimainkan
     questions_json = Column(Text, nullable=True)   # JSON string hasil generate AI
-    material_ids = Column(String, nullable=True)   # comma-separated material IDs
+    material_ids = Column(Text, nullable=True)     # comma-separated material IDs
     created_at = Column(DateTime, default=utcnow)
     # ─── Tracking fields (Fase 2: quiz enhanced) ───
     question_type = Column(String, nullable=True)          # mcq / essay / mixed
@@ -144,6 +153,9 @@ class Chat(Base):
 
 class Message(Base):
     __tablename__ = "messages"
+    __table_args__ = (
+        Index("ix_messages_chat_id_timestamp", "chat_id", "timestamp"),
+    )
     id = Column(Integer, primary_key=True, index=True)
     chat_id = Column(Integer, ForeignKey("chats.id", ondelete="CASCADE"), index=True)
     role = Column(String) # user or assistant
@@ -213,7 +225,7 @@ class TrashItem(Base):
 class YoutubeMetadata(Base):
     __tablename__ = "youtube_metadata"
     id = Column(Integer, primary_key=True, index=True)
-    material_id = Column(Integer, ForeignKey("materials.id", ondelete="CASCADE"))
+    material_id = Column(Integer, ForeignKey("materials.id", ondelete="CASCADE"), index=True)
     video_id = Column(String, index=True)
     title = Column(String)
     channel_name = Column(String)
@@ -255,6 +267,9 @@ class ExamSession(Base):
     Setelah migrasi, semua data histori disimpan di sini.
     """
     __tablename__ = "exam_sessions"
+    __table_args__ = (
+        Index("idx_exam_sessions_subject_status_started", "subject_id", "status", "started_at"),
+    )
     id = Column(Integer, primary_key=True, index=True)
     blueprint_id = Column(Integer, ForeignKey("exam_blueprints.id", ondelete="SET NULL"))
     subject_id = Column(Integer, ForeignKey("subjects.id", ondelete="CASCADE"), index=True)
@@ -362,7 +377,7 @@ class StudyPlanItem(Base):
     activity       = Column(Text, nullable=True)
     activity_type  = Column(String, nullable=True)       # review/practice/simulation/rest
     duration_minutes = Column(Integer, nullable=True)
-    time_slot      = Column(String, nullable=True)       # "Pagi (08:00–09:00)"
+    time_slot      = Column(Text, nullable=True)         # "Pagi (08:00–09:00)"
     resources      = Column(Text, nullable=True)
     completed      = Column(Integer, default=0)          # 0/1
     summary        = Column(Text, nullable=True)         # rangkuman AI per topik item
@@ -374,8 +389,8 @@ class StudyPlanItem(Base):
 class PracticeResult(Base):
     """Hasil latihan (quiz / flashcard) yang dikerjakan dari item rencana belajar."""
     __tablename__ = "practice_results"
-    id                 = Column(Integer, primary_key=True, index=True)
-    plan_item_id       = Column(Integer, ForeignKey("study_plan_items.id", ondelete="CASCADE"), index=True)
+    id                 = Column(Integer, primary_key=True)
+    plan_item_id       = Column(Integer, ForeignKey("study_plan_items.id", ondelete="CASCADE"), index=True, nullable=False)
     session_id         = Column(Integer, ForeignKey("exam_sessions.id", ondelete="CASCADE"), index=True)
     practice_type      = Column(String, default="quiz")  # quiz / flashcard / practice
     quiz_id            = Column(Integer, ForeignKey("quizzes.id", ondelete="SET NULL"), nullable=True, index=True)  # FK quiz jika practice dari quiz list; quiz dihapus → NULL (bukan yatim)
@@ -400,15 +415,15 @@ class TutorFAQ(Base):
     Answered from database with 0 token cost.
     """
     __tablename__ = "tutor_faq"
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True)
     mata_kuliah = Column(String, index=True)          # e.g. "Matematika"
     topic = Column(String, index=True)                # e.g. "Limit"
     keywords_json = Column(Text)                      # JSON list of keywords
     question = Column(Text)
     answer = Column(Text)
     difficulty = Column(String, default="sedang")     # mudah / sedang / sulit
-    usage_count = Column(Integer, default=0)
-    effectiveness = Column(Integer, default=80)       # 0-100
+    usage_count = Column(Integer, default=0, nullable=False)
+    effectiveness = Column(Integer, default=80, nullable=False)       # 0-100
     created_at = Column(DateTime, default=utcnow)
     updated_by = Column(String, nullable=True)
     last_updated = Column(DateTime, nullable=True)
@@ -420,13 +435,13 @@ class TutorTemplate(Base):
     Used to enrich SIMPLE route answers without AI calls.
     """
     __tablename__ = "tutor_templates"
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True)
     mata_kuliah = Column(String, index=True)
     type = Column(String, default="formula")          # formula / procedure / example
     title = Column(String)
     content = Column(Text)                            # content with {{variable}} placeholders
     variables_json = Column(Text, nullable=True)      # JSON: [{name, description, type}]
-    usage_count = Column(Integer, default=0)
+    usage_count = Column(Integer, default=0, nullable=False)
     created_at = Column(DateTime, default=utcnow)
 
 
@@ -439,10 +454,10 @@ class TutorFeedback(Base):
     diturunkan dari pesan agar tidak pernah melanggar foreign key.
     """
     __tablename__ = "tutor_feedback"
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True)
     message_id = Column(Integer, ForeignKey("messages.id", ondelete="CASCADE"), index=True)
     chat_id = Column(Integer, ForeignKey("chats.id", ondelete="CASCADE"), index=True, nullable=True)
-    user_key = Column(String, default="local", index=True)
+    user_key = Column(String, default="local", index=True, nullable=False)
     rating = Column(String, nullable=False)           # helpful / somewhat / not_helpful
     comment = Column(Text, nullable=True)
     flag = Column(String, nullable=True)              # incorrect / unclear / irrelevant / inappropriate
