@@ -32,7 +32,7 @@ export default function ChatSidebar() {
   // R2: muat daftar chat dari backend agar riwayat tersinkron (best-effort).
   useEffect(() => {
     let alive = true;
-    api.get('/api/chats').then((r) => {
+    api.get('/chats').then((r) => {
       if (alive && r?.data?.chats) mergeBackendChats(r.data.chats);
     }).catch(() => {});
     return () => { alive = false; };
@@ -102,7 +102,7 @@ export default function ChatSidebar() {
       onConfirm: async () => {
         await deleteAllChats();
         // R2: bersihkan juga baris chat di backend (best-effort).
-        api.post('/api/chat/clear').catch(() => {});
+        api.post('/chat/clear').catch(() => {});
         navigate('/chat');
         toast.success(t('chat.deletedAllChats'), undefined, {
           label: t('common.undo'),
@@ -115,7 +115,7 @@ export default function ChatSidebar() {
     await deleteChat(c.id);
     // R2: hapus juga baris chat di backend by session_uuid (best-effort).
     const sessionUuid = c.sessionUuid || String(c.id);
-    api.post(`/api/chat/session/${encodeURIComponent(sessionUuid)}/delete`).catch(() => {});
+    api.post(`/chat/session/${encodeURIComponent(sessionUuid)}/delete`).catch(() => {});
     if (currentChatId === c.id) navigate('/chat');
     toast.success(t('chat.chatDeleted'), undefined, {
       label: t('common.undo'),
