@@ -8,6 +8,13 @@
   "appLayout": {
     "opFallback": "Keur diproses...",
     "opRunningMultiple": "{{count}} prosés keur jalan",
+    "opChat": "AI keur ngaréspon...",
+    "opNotebook": "AI keur nulis catetan...",
+    "opAudio": "Nyieun audio podcast...",
+    "opProcess": "Ngolah materi...",
+    "opYoutube": "Ngundeur transkrip YouTube...",
+    "opQuiz": "Nyieun soal kuis...",
+    "opFlashcard": "Nyieun flashcard...",
     "opCancel": "Bolay",
     "opCancelled": "Dibatalkan"
   },
@@ -111,7 +118,11 @@
     "insertMath": "Sisipkeun rumus",
     "mathPrompt": "Ketik rumus LaTeX",
     "undo": "Urungkeun",
-    "redo": "Ulang Deui"
+    "redo": "Ulang Deui",
+    "copyCode": "Salin kode",
+    "copyTableExcel": "Salin salaku Excel",
+    "copyTableMarkdown": "Salin Markdown",
+    "copied": "Tersalin"
   },
   "quizProgress": {
     "questionOf": "{{current}} tina {{total}}"
@@ -304,6 +315,10 @@
     "importYoutube": "Import YouTube",
     "uploadMateri": "Unggah Materi",
     "filterAllSubjects": "Sadaya Mata Pelajaran",
+    "folderAll": "Sadaya Materi",
+    "folderFiles": "{{count}} file",
+    "filesTitle": "File",
+    "fileManagerEmpty": "Ieu folder kosong. Unggah materi pikeun ngamimitian.",
     "showingCount": "Némbongkeun {{shown}} tina {{total}}",
     "colFilename": "Ngaran File",
     "colSubject": "Mata Pelajaran",
