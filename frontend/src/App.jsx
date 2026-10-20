@@ -24,7 +24,7 @@ const PageBoundary = ({ children }) => <ErrorBoundary>{children}</ErrorBoundary>
 
 // Fallback singkat saat chunk halaman sedang dimuat
 const PageFallback = () => (
-    <div className="flex min-h-[60vh] items-center justify-center text-muted">
+    <div className="flex min-h-[60vh] items-center justify-center text-text-muted">
     <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
   </div>
 );

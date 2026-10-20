@@ -4,8 +4,8 @@
  * Reproduksi untuk error "semua halaman tidak bisa tampil".
  * Run: npm test
  */
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import App from '@/App';
 import { TooltipProvider } from '@/components/ui/Tooltip';
@@ -33,7 +33,14 @@ describe('App smoke render', () => {
     window.history.pushState({}, '', '/');
   });
 
-  it.each(ROUTES)('render %s tanpa error', async (path, title) => {
+  // Wajib: vitest tidak mengaktifkan auto-cleanup Testing Library secara
+  // global. Tanpa ini App dari test sebelumnya tetap ter-mount dan React
+  // menjadwalkan work setelah jsdom di-teardown ("window is not defined").
+  afterEach(() => {
+    cleanup();
+  });
+
+  it.each(ROUTES)('render %s tanpa error', async (path) => {
     window.history.pushState({}, '', path);
     const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     render(

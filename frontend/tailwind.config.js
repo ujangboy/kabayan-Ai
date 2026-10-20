@@ -26,14 +26,16 @@ export default {
         popover: "rgb(var(--popover) / <alpha-value>)",
         // background blok kode — ikut token --code-bg (light/dark)
         "code-bg": "var(--code-bg)",
-        // wash = tint interaktif tipis yang ikut tema
+        // wash = tint interaktif tipis yang ikut tema.
+        // Pakai triplet RGB + alpha terpisah agar `bg-card/60` tetap valid
+        // (var(--wash) sendiri berupa rgba dan tidak bisa dipakai di rgb()).
         wash: {
-          DEFAULT: "rgb(var(--wash) / <alpha-value>)",
-          strong: "rgb(var(--wash-strong) / <alpha-value>)",
+          DEFAULT: "rgb(var(--wash-rgb) / calc(var(--wash-alpha) * <alpha-value>))",
+          strong: "rgb(var(--wash-strong-rgb) / calc(var(--wash-strong-alpha) * <alpha-value>))",
         },
-        card: "rgb(var(--wash) / <alpha-value>)",
+        card: "rgb(var(--wash-rgb) / calc(var(--wash-alpha) * <alpha-value>))",
         subtle: "rgb(var(--bg-subtle) / <alpha-value>)",
-        "card-hover": "rgb(var(--wash-strong) / <alpha-value>)",
+        "card-hover": "rgb(var(--wash-strong-rgb) / calc(var(--wash-strong-alpha) * <alpha-value>))",
         border: "var(--border-subtle)",
         strong: "var(--border-strong)",
         glass: {
@@ -51,9 +53,9 @@ export default {
           foreground: "#ffffff",
         },
         text: {
-          DEFAULT: "rgb(var(--text-primary) / <alpha-value>)",
-          secondary: "rgb(var(--text-secondary) / <alpha-value>)",
-          muted: "rgb(var(--text-muted) / <alpha-value>)",
+          DEFAULT: "rgb(var(--text-primary-rgb) / <alpha-value>)",
+          secondary: "rgb(var(--text-secondary-rgb) / <alpha-value>)",
+          muted: "rgb(var(--text-muted-rgb) / <alpha-value>)",
         },
         success: "rgb(var(--success) / <alpha-value>)",
         danger: "rgb(var(--danger) / <alpha-value>)",
