@@ -12,7 +12,7 @@
  * Provider:
  *   Wrap <App /> with <ToastProvider />.
  */
-import { createContext, useContext, useState, useCallback, useRef } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, useId, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/components/ui/Icon';
@@ -47,6 +47,7 @@ const RING = {
 export function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([]);
   const [confirmState, setConfirmState] = useState(null);
+  const dismissConfirm = useCallback(() => setConfirmState(null), []);
   const counterRef = useRef(0);
 
   const dismiss = useCallback((id) => {
@@ -81,7 +82,7 @@ export function ToastProvider({ children }) {
     <ToastContext.Provider value={toast}>
       {children}
       <ToastContainer toasts={toasts} onDismiss={dismiss} />
-      <ConfirmDialog state={confirmState} onClose={() => setConfirmState(null)} />
+      <ConfirmDialog state={confirmState} onClose={dismissConfirm} />
     </ToastContext.Provider>
   );
 }
@@ -154,6 +155,63 @@ function ToastItem({ toast, onDismiss }) {
 function ConfirmDialog({ state, onClose }) {
   const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
+  const titleId = useId();
+  const descId = useId();
+  const dialogRef = useRef(null);
+  const previousFocusRef = useRef(null);
+  const busyRef = useRef(busy);
+  busyRef.current = busy;
+
+  useEffect(() => {
+    if (!state) return undefined;
+
+    previousFocusRef.current = document.activeElement;
+    const node = dialogRef.current;
+    const focusables = node?.querySelectorAll(
+      'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    );
+    focusables?.[0]?.focus();
+
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        if (!busyRef.current) onClose();
+        return;
+      }
+      if (event.key !== 'Tab' || !node) return;
+      const items = Array.from(
+        node.querySelectorAll(
+          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        )
+      );
+      if (items.length === 0) {
+        event.preventDefault();
+        node.focus();
+        return;
+      }
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      document.body.style.overflow = previousOverflow;
+      if (previousFocusRef.current instanceof HTMLElement) {
+        previousFocusRef.current.focus();
+      }
+    };
+  }, [state, onClose]);
+
   if (!state) return null;
 
   const handleConfirm = async () => {
@@ -174,15 +232,21 @@ function ConfirmDialog({ state, onClose }) {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-[9998] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-        onClick={onClose}
+        onClick={() => { if (!busy) onClose(); }}
       >
         <motion.div
+          ref={dialogRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={titleId}
+          aria-describedby={descId}
+          tabIndex={-1}
           initial={{ opacity: 0, scale: 0.92, y: 12 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 8 }}
           transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
           onClick={(e) => e.stopPropagation()}
-          className="w-full max-w-sm glass rounded-dialog p-6 shadow-modal border border-border"
+          className="w-full max-w-sm glass rounded-dialog p-6 shadow-modal border border-border outline-none"
         >
           <div className="flex items-start gap-4">
             <div className={`w-11 h-11 rounded-lg flex items-center justify-center shrink-0 ${
@@ -195,17 +259,17 @@ function ConfirmDialog({ state, onClose }) {
                 : <Icon name={ICONS.status.info} size={20} />}
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="text-base font-semibold text-text mb-1">
+              <h3 id={titleId} className="text-base font-semibold text-text mb-1">
                 {state.title || t('toast.confirmTitle')}
               </h3>
-              <p className="text-meta text-text-secondary leading-relaxed whitespace-pre-line">
+              <p id={descId} className="text-meta text-text-secondary leading-relaxed whitespace-pre-line">
                 {state.message}
               </p>
             </div>
           </div>
           <div className="flex justify-end gap-2 mt-6">
             <Button
-              onClick={onClose}
+              onClick={() => { if (!busy) onClose(); }}
               disabled={busy}
               className="text-sm disabled:opacity-50"
              variant="ghost">
