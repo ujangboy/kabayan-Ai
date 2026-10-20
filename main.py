@@ -148,6 +148,18 @@ async def lifespan(_app: FastAPI):
     except Exception as e:
         logger.warning(f"Recovery stuck rows gagal: {e}")
 
+    # Thread TTS tidak selamat melewati restart; jangan biarkan record
+    # "Processing" lama membuat frontend polling selamanya.
+    try:
+        from services.audio_service import recover_stale_audio
+        recovered_audio = recover_stale_audio()
+        if recovered_audio:
+            logger.warning(
+                f"Recovery: {recovered_audio} audio generation(s) ditandai Failed (restart)."
+            )
+    except Exception as e:
+        logger.warning(f"Recovery audio stale gagal: {e}")
+
     # C5/D2/D3: sweep file yatim ke trash + bersihkan trash kedaluwarsa + temp yt-dlp
     try:
         db = SessionLocal()

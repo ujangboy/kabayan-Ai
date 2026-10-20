@@ -149,6 +149,36 @@ def generate_audio(db, material_id, voice):
 _cancel_flags = {}
 
 
+def recover_stale_audio(db=None):
+    """Tandai audio \"Processing\" sebagai gagal setelah server restart.
+
+    Thread TTS tidak bertahan melewati restart. Tanpa recovery, record lama
+    tetap Processing selamanya dan frontend terus polling (banner job macet).
+    """
+    own_db = db is None
+    if own_db:
+        db = SessionLocal()
+    try:
+        stale = (
+            db.query(AudioGeneration)
+            .filter(AudioGeneration.status == "Processing")
+            .all()
+        )
+        for rec in stale:
+            rec.status = "Failed"
+            rec.stage = "Gagal"
+            rec.error = (
+                "Proses terhenti karena server dimulai ulang. "
+                "Silakan generate ulang audio."
+            )
+        if stale:
+            db.commit()
+        return len(stale)
+    finally:
+        if own_db:
+            db.close()
+
+
 def _run(rec_id, text, voice, file_path):
     db = SessionLocal()
     try:
