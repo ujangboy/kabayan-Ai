@@ -20,8 +20,8 @@
 
 set -euo pipefail
 
-# --- 1. Blok file .env ikut ter-stage ---
-STAGED_ENV=$(git diff --cached --name-only --diff-filter=ACM | grep -E '^(\.env$|\.env\.)' || true)
+# --- 1. Blok file .env ikut ter-stage (kecuali template .env.example) ---
+STAGED_ENV=$(git diff --cached --name-only --diff-filter=ACM | grep -E '^(\.env$|\.env\.)' | grep -v '^\.env\.example$' || true)
 if [ -n "$STAGED_ENV" ]; then
   echo "❌ [SECRET-SCAN] File env ter-stage: $STAGED_ENV" >&2
   echo "   .env harus di-ignore. Hapus dari stage: git reset HEAD <file>" >&2

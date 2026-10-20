@@ -18,6 +18,8 @@ ENV/
 # Environment variables — JANGAN commit API keys
 .env
 .env.*
+# Template aman (hanya placeholder) tetap di-commit agar fresh-clone bisa setup.
+!.env.example
 
 # Database SQLite
 *.db
