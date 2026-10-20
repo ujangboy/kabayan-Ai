@@ -1166,6 +1166,7 @@ class ExamService:
 
         result = []
         for s in sessions:
+            material_names = blueprint_material_map.get(s.blueprint_id, []) if s.blueprint_id else []
             attempts = exam_attempt_repo.get_by_session(db, s.id)
             attempt_list = [
                 {"id": a.id, "attempt_number": a.attempt_number, "score": a.score,
@@ -1191,7 +1192,6 @@ class ExamService:
                     }
                     for it in study_plan_item_repo.get_by_plan(db, plan.id)
                 ]
-            material_names = blueprint_material_map.get(s.blueprint_id, []) if s.blueprint_id else []
             result.append({
                 "id": s.id, "subject_id": s.subject_id,
                 "blueprint_id": s.blueprint_id,
