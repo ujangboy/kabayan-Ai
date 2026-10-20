@@ -46,7 +46,7 @@ export default function AudioPage() {
 
   const { data: audioData, isLoading: audioLoading } = useQuery({
     queryKey: ['audio', subjectFilter],
-    queryFn: () => audioAPI.list(subjectFilter || undefined).then((r) => r.data),
+    queryFn: () => audioAPI.list(subjectFilter || undefined),
     // Poll live selama ada audio yang masih diproses, agar progress bar & stage update real-time.
     refetchInterval: (q) => (q.state.data?.audio || []).some((a) => a.status === 'Processing') ? 2000 : false,
   });

@@ -48,7 +48,7 @@ export default function BackgroundProcessSync() {
   // Audio sync (poll global agar banner tahu job audio di halaman lain)
   const { data: audioData } = useQuery({
     queryKey: ['audio-bg-sync'],
-    queryFn: () => audioAPI.list().then((r) => r.data),
+    queryFn: async () => (await audioAPI.list()) ?? { audio: [] },
     refetchInterval: (query) => {
       const jobs = query.state.data?.audio || [];
       return jobs.some((j) => j.status === 'Processing') ? 3000 : 15000;
