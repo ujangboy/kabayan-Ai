@@ -179,19 +179,26 @@ class TestFullChain:
             names = set(zf.namelist())
         assert any(n.startswith("uploads/") for n in names)
 
-        # ── 5. Hapus subject → materi masuk trash ──────────────────────
+        # ── 5. Hapus subject → soft-delete, materi & riwayat tetap utuh ─
         res = client.post(f"/api/subjects/{subj.id}/delete")
         assert res.status_code == 200
 
-        res = client.get("/api/trash")
-        trash_items = res.json()["items"]
-        trashed_names = " ".join(i.get("original_filename") or "" for i in trash_items)
-        assert len(trash_items) >= 1
-        assert ".txt" in trashed_names
+        res = client.get("/api/subjects/trash")
+        assert res.status_code == 200
+        trashed_subjects = res.json()["subjects"]
+        assert subj.id in {s["id"] for s in trashed_subjects}
 
-        # Study endpoints tetap berjalan (subject 404 ditangani)
+        # Subject hilang dari listing aktif, tetapi data terkait tidak dihapus.
+        res = client.get("/api/subjects")
+        assert subj.id not in {s["id"] for s in res.json()["subjects"]}
+
+        db_session.expire_all()
+        assert db_session.get(models.Subject, subj.id).status == "trashed"
+        assert db_session.get(models.Material, mat["id"]) is not None
+
+        # Endpoint study tetap dapat membaca data subject yang di-trash.
         res = client.get(f"/api/study/progress?subject_id={subj.id}")
-        assert res.status_code == 404
+        assert res.status_code == 200
 
     def test_study_endpoints_empty_subject(self, client, make_subject):
         """Subject baru tanpa data: semua endpoint tetap 200 dengan payload kosong."""

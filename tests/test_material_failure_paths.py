@@ -86,20 +86,35 @@ def test_cleanup_orphan_trashes_orphan_keeps_referenced(db_session, make_subject
     assert any("orphan" in n for n in _trash_contents())
 
 
-def test_delete_subject_sweeps_orphan_files(db_session, make_subject, make_material):
+def test_delete_subject_soft_deletes_without_touching_material_files(
+    db_session, make_subject, make_material
+):
+    """Kontrak baru: delete subject = soft-delete, materi & file tetap utuh.
+
+    Subject hanya dipindahkan ke trash agar seluruh riwayat (materi, quiz,
+    exam, flashcard) bisa dipulihkan. Hard cascade bukan lagi perilaku yang
+    diharapkan.
+    """
+    from models import Material, Subject
     from services.subject_service import subject_service
+
     subject = make_subject()
     fp = os.path.join(config.UPLOADS_DIR, "subj.pdf")
     with open(fp, "w", encoding="utf-8") as f:
         f.write("x")
-    make_material(subject.id, status="Ready", filepath=fp)
+    mat = make_material(subject.id, status="Ready", filepath=fp)
 
-    subject_service.delete(db_session, subject.id)
+    assert subject_service.delete(db_session, subject.id) is True
     db_session.commit()
+    db_session.expire_all()
 
-    # materi cascade-delete → file jadi yatim → dipindah ke trash
-    assert not os.path.exists(fp)
-    assert _trash_contents()
+    subject_after = db_session.get(Subject, subject.id)
+    material_after = db_session.get(Material, mat.id)
+    assert subject_after is not None
+    assert subject_after.status == "trashed"
+    assert material_after is not None
+    assert material_after.status == "Ready"
+    assert os.path.exists(fp)
 
 
 def test_trash_retention_removes_only_old_files(db_session):

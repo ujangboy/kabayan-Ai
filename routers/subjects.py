@@ -33,6 +33,22 @@ async def get_subjects_json(db: Session = Depends(get_db)):
     return JSONResponse({"subjects": results})
 
 
+@router.get("/api/subjects/trash", response_model=dict)
+async def get_subjects_trash(db: Session = Depends(get_db)):
+    """Daftar mata kuliah yang sedang di-trash (soft-delete).
+
+    Route ini WAJIB didefinisikan sebelum ``/api/subjects/{subject_id}``.
+    Jika tidak, FastAPI akan mencoba mem-parse "trash" sebagai integer dan
+    mengembalikan 422 sebelum handler ini sempat dipanggil.
+    """
+    subjects = subject_service.get_trash(db)
+    results = [
+        {"id": s.id, "name": s.name, "semester": s.semester, "lecturer": s.lecturer}
+        for s in subjects
+    ]
+    return {"status": "success", "subjects": results}
+
+
 @router.get("/api/subjects/{subject_id}", response_model=SubjectDetail)
 async def get_subject_by_id(subject_id: int, db: Session = Depends(get_db)):
     subject = subject_service.get_by_id(db, subject_id)
@@ -278,17 +294,6 @@ async def delete_subject(subject_id: int, db: Session = Depends(get_db)):
     if not subject_service.delete(db, subject_id):
         return JSONResponse(status_code=404, content={"detail": "Subject not found"})
     return JSONResponse({"status": "success", "message": "Mata kuliah dipindahkan ke sampah"})
-
-
-@router.get("/api/subjects/trash", response_model=dict)
-async def get_subjects_trash(db: Session = Depends(get_db)):
-    """Daftar mata kuliah yang sedang di-trash (soft-delete)."""
-    subjects = subject_service.get_trash(db)
-    results = [
-        {"id": s.id, "name": s.name, "semester": s.semester, "lecturer": s.lecturer}
-        for s in subjects
-    ]
-    return {"status": "success", "subjects": results}
 
 
 @router.post("/api/subjects/{subject_id}/restore", response_model=StatusMessage)

@@ -1025,6 +1025,39 @@ class ExamService:
                 ],
             })
 
+        # Resolve material names + real creation dates BEFORE building plan_data.
+        # plan_data.items memakai kedua variabel ini; sebelumnya blok ini berada
+        # SETELAH plan_data sehingga memicu UnboundLocalError saat session
+        # memiliki study plan.
+        material_names = []
+        material_created_ats = []
+        if s.blueprint_id:
+            from models import Material, ExamBlueprint
+            bp = db.query(ExamBlueprint).filter(ExamBlueprint.id == s.blueprint_id).first()
+            if bp:
+                ids = []
+                try:
+                    bjson = _safe_loads(bp.blueprint_json) or {}
+                    raw_top = bjson.get("material_ids", "")
+                    if raw_top:
+                        ids.extend(int(x.strip()) for x in str(raw_top).split(",") if x.strip().isdigit())
+                    for it in bjson.get("blueprint_items", []):
+                        mid = it.get("material_id") or it.get("material_ids")
+                        if mid:
+                            if isinstance(mid, list):
+                                ids.extend(int(x) for x in mid if str(x).isdigit())
+                            elif str(mid).isdigit():
+                                ids.append(int(mid))
+                except Exception:
+                    pass
+                if ids:
+                    mats = db.query(Material).filter(Material.id.in_(set(ids)), Material.status != "Trashed").all()
+                    material_names = [m.filename or f"Materi #{m.id}" for m in mats]
+                    material_created_ats = [
+                        (m.created_at or m.upload_date or s.started_at).isoformat()
+                        for m in mats if (m.created_at or m.upload_date or s.started_at)
+                    ]
+
         plan_data = None
         if s.plan:
             plan_data = {
@@ -1059,37 +1092,6 @@ class ExamService:
                                for pr in i.practice_results
                             ]} for i in s.plan.items],
             }
-
-        # Resolve material names + real creation dates for this session's blueprint
-        # (untuk tampilan "Materi: <nama> • dibuat <tanggal real>", bukan now()).
-        material_names = []
-        material_created_ats = []
-        if s.blueprint_id:
-            from models import Material, ExamBlueprint
-            bp = db.query(ExamBlueprint).filter(ExamBlueprint.id == s.blueprint_id).first()
-            if bp:
-                ids = []
-                try:
-                    bjson = _safe_loads(bp.blueprint_json) or {}
-                    raw_top = bjson.get("material_ids", "")
-                    if raw_top:
-                        ids.extend(int(x.strip()) for x in str(raw_top).split(",") if x.strip().isdigit())
-                    for it in bjson.get("blueprint_items", []):
-                        mid = it.get("material_id") or it.get("material_ids")
-                        if mid:
-                            if isinstance(mid, list):
-                                ids.extend(int(x) for x in mid if str(x).isdigit())
-                            elif str(mid).isdigit():
-                                ids.append(int(mid))
-                except Exception:
-                    pass
-                if ids:
-                    mats = db.query(Material).filter(Material.id.in_(set(ids)), Material.status != "Trashed").all()
-                    material_names = [m.filename or f"Materi #{m.id}" for m in mats]
-                    material_created_ats = [
-                        (m.created_at or m.upload_date or s.started_at).isoformat()
-                        for m in mats if (m.created_at or m.upload_date or s.started_at)
-                    ]
 
         return {
             "id": s.id, "blueprint_id": s.blueprint_id, "subject_id": s.subject_id,

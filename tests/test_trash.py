@@ -27,6 +27,19 @@ def _trash_contents():
     return os.listdir(config.TRASH_DIR)
 
 
+def test_subject_trash_route_is_not_shadowed(client, make_subject):
+    """GET /api/subjects/trash tidak boleh tertutup route /{subject_id}."""
+    subject = make_subject("Matkul Sampah")
+    res = client.post(f"/api/subjects/{subject.id}/delete")
+    assert res.status_code == 200
+
+    res = client.get("/api/subjects/trash")
+    assert res.status_code == 200
+    payload = res.json()
+    assert payload["status"] == "success"
+    assert subject.id in {item["id"] for item in payload["subjects"]}
+
+
 def test_delete_moves_to_trash_soft(db_session, make_subject, make_material):
     """Hapus materi = soft-delete: file masuk trash, status Trashed, record tetap."""
     subject = make_subject()
@@ -71,9 +84,10 @@ def test_restore_material_returns_file_and_status(db_session, make_subject, make
     material_service.delete(db_session, mat.id)
     assert not os.path.exists(fp)
 
-    ok = restore_material(db_session, mat.id)
+    restored_subject_id = restore_material(db_session, mat.id)
 
-    assert ok is True
+    # Kontrak service: subject_id (int) saat sukses, False saat gagal.
+    assert restored_subject_id == subject.id
     db_session.expire_all()
     mat2 = db_session.get(Material, mat.id)
     assert mat2.status == "Ready"
