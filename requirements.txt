@@ -1,4 +1,4 @@
-﻿lancedb
+lancedb
 requests
 pymupdf
 python-docx
@@ -22,7 +22,7 @@ fsrs
 # Dev
 pytest
 pytest-asyncio
-httpx2
+httpx
 
 
 

@@ -21,8 +21,17 @@ def fix_stuck_materials():
     import models
     import os
     from services.rag_service import rag_service as _rag
+
+    # Lazy-load dulu: tanpa ini chunk_metadata masih kosong saat fungsi
+    # dipanggil di import time, sehingga materi yang sebenarnya sudah
+    # ter-index tetapi file-nya hilang selalu dianggap gagal.
     try:
-        db = SessionLocal()
+        _rag._ensure_loaded()
+    except Exception as exc:
+        logger.warning(f"fix_stuck_materials: gagal memuat index RAG: {exc}")
+
+    db = SessionLocal()
+    try:
         stuck = db.query(models.Material).filter(models.Material.status == "Processing").all()
         for mat in stuck:
             doc_id = f"mat_{mat.id}"
@@ -41,9 +50,11 @@ def fix_stuck_materials():
                     mat.failure_reason = "Background processing died and file is missing."
                     logger.warning(f"Material {mat.id} marked Failed (missing file)")
         db.commit()
-        db.close()
     except Exception as e:
+        db.rollback()
         logger.error(f"fix_stuck_materials error: {e}")
+    finally:
+        db.close()
 
 fix_stuck_materials()
 
@@ -99,6 +110,9 @@ except Exception as e:
 
 from contextlib import asynccontextmanager
 
+_material_worker_task = None
+material_executor = None
+
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     # Cleanup LanceDB orphaned locks
@@ -145,16 +159,28 @@ async def lifespan(_app: FastAPI):
     except Exception as e:
         logger.warning(f"Storage cleanup startup gagal: {e}")
 
-    asyncio.create_task(material_worker())
-    yield
+    global _material_worker_task, material_executor
+    material_executor = ThreadPoolExecutor(max_workers=2)
+    _material_worker_task = asyncio.create_task(material_worker(), name="material_worker")
+    try:
+        yield
+    finally:
+        if _material_worker_task is not None:
+            _material_worker_task.cancel()
+            try:
+                await _material_worker_task
+            except asyncio.CancelledError:
+                pass
+            _material_worker_task = None
+        if material_executor is not None:
+            material_executor.shutdown(wait=False, cancel_futures=True)
+            material_executor = None
 
 app = FastAPI(title="Kabayan AI Study Workspace", lifespan=lifespan)
 register_all_handlers(app)
 
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
-
-material_executor = ThreadPoolExecutor(max_workers=2)
 
 async def material_worker():
     """Background worker loop to process pending materials."""

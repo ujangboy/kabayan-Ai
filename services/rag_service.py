@@ -2,6 +2,7 @@ import os
 import re
 import json
 import hashlib
+import logging
 import numpy as np
 import lancedb
 import threading
@@ -15,6 +16,7 @@ from services.settings_service import settings_service
 from database import SessionLocal
 
 TABLE_NAME = "chunks"
+logger = logging.getLogger(__name__)
 
 # Bobot hybrid scoring (0 token LLM — murni kalkulasi lokal):
 #   vector   : kesamaan semantik embedding (jarak L2 → skor 0..1)
@@ -183,7 +185,13 @@ class RAGService:
         return self._cached_embedder
 
     def get_embedding_model_name(self) -> str:
-        return self._cached_model_name or settings_service.get_embedding_model(SessionLocal())
+        if self._cached_model_name:
+            return self._cached_model_name
+        db = SessionLocal()
+        try:
+            return settings_service.get_embedding_model(db)
+        finally:
+            db.close()
 
     def get_embedding_model_version(self) -> str:
         return _embedding_model_version(self.get_embedding_model_name())
@@ -254,7 +262,8 @@ class RAGService:
                 if hasattr(vec_col, "__len__"):
                     self.dimension = len(vec_col)
 
-            except Exception:
+            except Exception as exc:
+                logger.warning("Gagal memuat index LanceDB: %r", exc)
                 self._table = None
                 self.chunk_metadata = []
                 self.doc_to_chunk_indices = {}
@@ -274,8 +283,6 @@ class RAGService:
         doc_id = _sanitize_doc_id(doc_id)
         if not doc_id:
             raise ValueError("doc_id tidak valid")
-
-        self.delete_document_chunks(doc_id)
 
         embedder = self._get_embedder()
         model_name = self.get_embedding_model_name()
@@ -322,6 +329,11 @@ class RAGService:
                 f"embedding setelah materi sudah di-index. Silakan hapus dan "
                 f"upload ulang semua materi setelah ganti model embedding."
             )
+
+        # Baru hapus chunk lama SETELAH embedding baru berhasil dibuat dan
+        # dimensinya cocok. Sebelumnya delete dilakukan paling awal sehingga
+        # kegagalan embedding/model membuat dokumen lama hilang dari index.
+        self.delete_document_chunks(doc_id)
 
         with self._lock:
             self.dimension = emb_matrix.shape[1]
@@ -414,7 +426,8 @@ class RAGService:
 
             try:
                 results = self._table.search(query_vec).where(where_clause).limit(fetch_k).to_list()
-            except Exception:
+            except Exception as exc:
+                logger.warning("Pencarian RAG gagal: %r", exc)
                 return {"text": "", "sources": []}
 
             out = []

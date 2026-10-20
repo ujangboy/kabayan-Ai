@@ -1,4 +1,4 @@
-import fitz  # PyMuPDF
+import pymupdf as fitz  # PyMuPDF (paket `fitz` lama sudah deprecated)
 import docx
 import os
 from . import pptx_parser
