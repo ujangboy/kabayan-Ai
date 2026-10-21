@@ -9,7 +9,7 @@ import { springWave, springLift } from '@/lib/motion';
 import { materiAPI, sessionsAPI, subjectAPI } from '@/services/api';
 import { cn, formatDate, formatTimeOnly } from '@/utils';
 import DetailModal from './DetailModal';
-import { Chip, ProgressBar, STATUS_META, getBadge, getGradeColor, Q_TYPE_LABEL } from './shared';
+import { Chip, ProgressBar, STATUS_META, getBadge, getGradeColor, getExamTypeLabel } from './shared';
 import { Tooltip } from '@/components/ui/Tooltip';
 import { SubjectBadge , Icon , Button} from '@/components/ui';
 import { useToast } from '@/components/Toast';
@@ -185,11 +185,11 @@ function SubjectCard({ subject, onSelectSubject, onStartConfig, onDelete, t, ton
            {subjectMaterials.slice(0, 3).map((m, i) => (
              <span key={i} className="inline-flex items-center gap-0.5 text-3xs px-2 py-0.5 rounded bg-accent-blue/10 text-accent-blue border border-accent-blue/20 truncate max-w-[200px]">
                <Icon name={ICONS.files.document} size={8} className="shrink-0" />
-               {m.filename || `Materi #${m.id}`}
+               {m.filename || `#${m.id}`}
              </span>
            ))}
            {subjectMaterials.length > 3 && (
-             <span className="text-3xs text-text-muted self-center">+{subjectMaterials.length - 3} lagi</span>
+             <span className="text-3xs text-text-muted self-center">+{subjectMaterials.length - 3} {t('exam.history.moreMaterials')}</span>
            )}
          </div>
        )}
@@ -318,8 +318,8 @@ export default function HistoryView({ subjectId, subjects, onSelectSubject, onSt
             />
           </div>
           {search && (
-            <Tooltip label="Hapus pencarian">
-              <button onClick={() => setSearch('')} aria-label="Hapus pencarian" className="p-2 rounded-lg border border-border bg-card text-text-muted hover:text-text">
+            <Tooltip label={t('common.clearSearch')}>
+              <button onClick={() => setSearch('')} aria-label={t('common.clearSearch')} className="p-2 rounded-lg border border-border bg-card text-text-muted hover:text-text">
                 <Icon name={ICONS.actions.close} size={14} />
               </button>
             </Tooltip>
@@ -333,7 +333,7 @@ export default function HistoryView({ subjectId, subjects, onSelectSubject, onSt
               {typeFilter === type && (
                 <motion.span layoutId="history-type-indicator" transition={springWave} className="absolute inset-0 bg-primary/10 rounded-lg" />
               )}
-              <span className="relative">{type === 'all' ? t('exam.history.all') : type.toUpperCase().replace('_',' ')}</span>
+              <span className="relative">{type === 'all' ? t('exam.history.all') : getExamTypeLabel(t, type)}</span>
             </button>
           ))}
           <div className="w-px bg-border mx-1" />
@@ -363,10 +363,10 @@ export default function HistoryView({ subjectId, subjects, onSelectSubject, onSt
       {sessions.length > 0 && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
-            { label:'Total Simulasi', value: sessions.length,                              icon: ICONS.learning.history,   color:'text-primary' },
-            { label:'Mastered',       value: sessions.filter(s=>s.status==='mastered').length, icon: ICONS.learning.certificate,  color:'text-success' },
-            { label:'Rata-rata Nilai',value: Math.round(sessions.reduce((a,s)=>a+(s.best_score||0),0)/sessions.length)||0, icon: ICONS.learning.barChart, color:'text-warning' },
-            { label:'Total Attempt',  value: sessions.reduce((a,s)=>a+(s.attempt_count||0),0), icon: ICONS.actions.replay, color:'text-accent-blue' },
+            { label: t('exam.history.totalSimulations'), value: sessions.length,                              icon: ICONS.learning.history,   color:'text-primary' },
+            { label: t('exam.history.mastered'),       value: sessions.filter(s=>s.status==='mastered').length, icon: ICONS.learning.certificate,  color:'text-success' },
+            { label: t('exam.history.avgScore'),value: Math.round(sessions.reduce((a,s)=>a+(s.best_score||0),0)/sessions.length)||0, icon: ICONS.learning.barChart, color:'text-warning' },
+            { label: t('exam.history.totalAttempts'),  value: sessions.reduce((a,s)=>a+(s.attempt_count||0),0), icon: ICONS.actions.replay, color:'text-accent-blue' },
            ].map(({ label, value, icon, color }) => (
             <motion.div key={label} whileHover={{ y: -3 }} transition={springLift} className="card-base p-4 flex items-center gap-3 hover:border-primary/40">
               <div className={cn('w-9 h-9 rounded-xl bg-card border border-border flex items-center justify-center shrink-0', color)}>
@@ -438,14 +438,14 @@ function HistoryCard({ session: s, onDetail, onDelete, onRetry, t }) {
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 mb-1 flex-wrap">
-             <Chip label={s.exam_type?.toUpperCase().replace('_',' ') || t('exam.history.defaultExamType')} size="xs" color="blue" />
+             <Chip label={getExamTypeLabel(t, s.exam_type)} size="xs" color="blue" />
             {s.question_type && s.question_type !== 'mixed' && (
-              <Chip label={Q_TYPE_LABEL[s.question_type] || s.question_type} size="xs" color="purple" />
+              <Chip label={t(`exam.config.type${({ mcq: 'Mcq', truefalse: 'TrueFalse', short_answer: 'ShortAnswer', essay: 'Essay', case_study: 'CaseStudy', analysis: 'Analysis', calculation: 'Calculation' })[s.question_type] || 'Mixed'}`)} size="xs" color="purple" />
             )}
              {s.question_type === 'mixed' && (
                <Chip label={t('exam.history.mixed')} size="xs" color="teal" />
              )}
-            <Chip label={meta.label} size="xs" color={meta.color} />
+            <Chip label={t(meta.labelKey)} size="xs" color={meta.color} />
             {s.status === 'mastered' && <Icon name={ICONS.ui.star} size={11} className="text-warning fill-warning" />}
           </div>
           <h3 className="font-bold text-text text-base leading-snug line-clamp-2 break-words">{s.title}</h3>
@@ -471,12 +471,12 @@ function HistoryCard({ session: s, onDetail, onDelete, onRetry, t }) {
       </div>
 
       <div className="mb-3">
-        <Chip label={badge.label} size="xs" color={badge.color} />
+        <Chip label={t(badge.labelKey)} size="xs" color={badge.color} />
       </div>
 
       <div className="mb-3">
         <div className="flex justify-between text-xs text-text-muted mb-1">
-          <span>Progress</span>
+          <span>{t('common.progress')}</span>
           <span>{s.progress || 0}%</span>
         </div>
         <ProgressBar value={s.progress || 0}

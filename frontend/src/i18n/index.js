@@ -27,18 +27,30 @@ i18n.use(initReactI18next).init({
   interpolation: { escapeValue: false },
 });
 
+// Jaga atribut <html lang> agar sesuai bahasa aktif (aksesibilitas &
+// penerjemahan browser). Ini juga menutup kasus bahasa tersimpan != id.
+function syncDocumentLanguage(lang) {
+  if (typeof document !== 'undefined') {
+    document.documentElement.lang = ['id', 'en', 'su'].includes(lang) ? lang : 'id';
+  }
+}
+
+syncDocumentLanguage(i18n.language);
+i18n.on('languageChanged', syncDocumentLanguage);
+
 export function getAppLanguage() {
   return i18n.language && ['id', 'en', 'su'].includes(i18n.language) ? i18n.language : 'id';
 }
 
 export function setAppLanguage(lang) {
   const normalized = ['id', 'en', 'su'].includes(lang) ? lang : 'id';
-  i18n.changeLanguage(normalized);
+  const result = i18n.changeLanguage(normalized);
   try {
     localStorage.setItem(STORAGE_KEY, normalized);
   } catch {
     /* abaikan */
   }
+  return result;
 }
 
 export { STORAGE_KEY };

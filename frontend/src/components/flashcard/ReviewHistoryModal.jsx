@@ -54,8 +54,8 @@ export default function ReviewHistoryModal({ open, group, onClose }) {
               </span>
             </div>
             <div className="mt-2 flex items-center gap-3 text-2xs text-text-muted">
-              <span>Direview: <b className="text-text">{card.times_seen || 0}×</b></span>
-              {card.last_reviewed && <span>Terakhir: {formatDateTime(card.last_reviewed)}</span>}
+              <span>{t('flashcard.reviewedCount')} <b className="text-text">{card.times_seen || 0}×</b></span>
+              {card.last_reviewed && <span>{t('flashcard.lastReviewed')} {formatDateTime(card.last_reviewed)}</span>}
             </div>
             {history.length === 0 ? (
               <p className="mt-2 text-xs text-text-muted">{t('flashcard.neverReviewed')}</p>
@@ -68,7 +68,7 @@ export default function ReviewHistoryModal({ open, group, onClose }) {
                       <span className="font-medium">{meta.label}</span>
                       <span className="flex items-center gap-3 text-text-muted">
                         <span className="capitalize">{formatDate(r.reviewed_at)} · {formatTimeOnly(r.reviewed_at)}</span>
-                        {r.next_review && <span>Next: {formatDate(r.next_review)}</span>}
+                        {r.next_review && <span>{t('flashcard.nextReview')} {formatDate(r.next_review)}</span>}
                       </span>
                     </li>
                   );

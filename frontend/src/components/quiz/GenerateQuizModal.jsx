@@ -138,7 +138,7 @@ export function GenerateQuizModal({ open, onClose, subjects, onSuccess }) {
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-medium text-text-secondary mb-1">Soal Pilihan Ganda</label>
+            <label className="block text-xs font-medium text-text-secondary mb-1">{t('quiz.mcqCountLabel')}</label>
             <Input
               type="number"
               min="0"
@@ -149,7 +149,7 @@ export function GenerateQuizModal({ open, onClose, subjects, onSuccess }) {
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-text-secondary mb-1">Soal Essay</label>
+            <label className="block text-xs font-medium text-text-secondary mb-1">{t('quiz.essayCountLabel')}</label>
             <Input
               type="number"
               min="0"
@@ -162,7 +162,7 @@ export function GenerateQuizModal({ open, onClose, subjects, onSuccess }) {
         </div>
         {Number(essayCount) > 0 && (
           <p className="text-3xs text-text-muted">
-            Soal essay tidak dinilai otomatis — tujuannya untuk latihan menulis jawaban.
+            {t('quiz.essayNote')}
           </p>
         )}
         {isGenerating && (

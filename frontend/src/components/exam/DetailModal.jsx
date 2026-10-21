@@ -9,7 +9,8 @@ import { examAPI, sessionsAPI } from '@/services/api';
 import { cn } from '@/utils';
 import { springWave } from '@/lib/motion';
 import MathMarkdown from '@/components/MathMarkdown';
-import { Chip, ProgressBar, STATUS_META, getBadge, getGradeColor } from './shared';
+import { formatItemDate } from '@/components/studyplan/shared';
+import { Chip, ProgressBar, STATUS_META, getBadge, getGradeColor, getExamTypeLabel } from './shared';
 import { Tooltip, Modal , Icon , Button} from '@/components/ui';
 
 // ─── Detail Modal ─────────────────────────────────────────────────────────────
@@ -66,9 +67,9 @@ export default function DetailModal({ open = false, historySessionId, onClose, o
         <div className="flex items-start justify-between gap-3">
            <div className="flex-1 min-w-0">
              <div className="flex items-center gap-2 mb-1 flex-wrap">
-               <Chip label={data.exam_type?.toUpperCase() || t('exam.history.defaultExamType')} size="xs" color="blue" />
-              <Chip label={meta.label} size="xs" color={meta.color} />
-              <Chip label={badge.label} size="xs" color={badge.color} />
+               <Chip label={getExamTypeLabel(t, data.exam_type)} size="xs" color="blue" />
+              <Chip label={t(meta.labelKey)} size="xs" color={meta.color} />
+              <Chip label={t(badge.labelKey)} size="xs" color={badge.color} />
             </div>
              <h2 className="text-lg font-bold text-text break-words">{data.title}</h2>
             <p className="text-sm text-text-muted">{data.subject_name}</p>
@@ -254,7 +255,7 @@ function ReviewTab({ attempt }) {
       const text = res.data?.explanation || 'Penjelasan tidak tersedia.';
       setExplanations(prev => ({ ...prev, [i]: { loading: false, text, error: '' } }));
     } catch {
-      setExplanations(prev => ({ ...prev, [i]: { loading: false, text: '', error: 'Gagal memuat penjelasan.' } }));
+      setExplanations(prev => ({ ...prev, [i]: { loading: false, text: '', error: t('exam.detail.explanationError') } }));
     }
   };
 
@@ -297,7 +298,7 @@ function ReviewTab({ attempt }) {
                       <div className="p-2 rounded-lg bg-background">
                          <p className="text-3xs text-text-muted mb-0.5">{t('exam.detail.yourAnswer')}</p>
                         <div className={cn('font-medium text-sm', r.is_correct ? 'text-success' : 'text-danger')}>
-                          <MathMarkdown>{r.user_answer || '(Tidak dijawab)'}</MathMarkdown>
+                          <MathMarkdown>{r.user_answer || t('quiz.notAnswered')}</MathMarkdown>
                         </div>
                       </div>
                       {!r.is_correct && (
@@ -464,7 +465,7 @@ function InlinePractice({ questions, topic, onComplete, onClose, onRetryTopic })
               <div key={weakTopic} className="text-xs text-text-secondary space-y-1">
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-text truncate">• "{weakTopic}" — {data.count} soal salah</p>
+                    <p className="font-medium text-text truncate">• "{weakTopic}" — {t('exam.detail.wrongCount', { count: data.count })}</p>
                     {data.tips && <p className="ml-3 text-primary/80 flex items-center gap-1"><Icon name={ICONS.learning.lightbulb} size={9} /> {data.tips}</p>}
                     {data.material && <p className="ml-3 text-text-muted flex items-center gap-1"><Icon name={ICONS.learning.bookOpen} size={10} className="shrink-0" /> {data.material}</p>}
                   </div>
@@ -484,8 +485,8 @@ function InlinePractice({ questions, topic, onComplete, onClose, onRetryTopic })
                       className="shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-lg bg-primary text-white text-3xs font-bold hover:bg-primary-hover transition-colors disabled:opacity-40"
                     >
                       {retryingTopic === weakTopic
-                        ? <><Icon name={ICONS.status.loading} size={9} className="animate-spin" /> Memuat...</>
-                        : <><Icon name={ICONS.actions.refresh} size={9} /> Latih</>}
+                        ? <><Icon name={ICONS.status.loading} size={9} className="animate-spin" /> {t('common.loading')}</>
+                        : <><Icon name={ICONS.actions.refresh} size={9} /> {t('common.practice')}</>}
                     </button>
                   )}
                 </div>
@@ -498,11 +499,11 @@ function InlinePractice({ questions, topic, onComplete, onClose, onRetryTopic })
         <div className="flex gap-2 flex-wrap">
           {score >= 100 ? (
             <Button onClick={() => onComplete && onComplete()} type="button" className="text-xs px-4 py-1.5 flex items-center gap-1" variant="primary">
-              <Icon name={ICONS.status.check} size={12} /> Selesai
+              <Icon name={ICONS.status.check} size={12} /> {t('common.finish')}
             </Button>
           ) : (
             <Button type="button" onClick={onClose} className="text-xs border border-border px-4 py-1.5" variant="ghost">
-              Tutup
+              {t('common.close')}
             </Button>
           )}
           {/* Ulangi topik ini — re-fetch soal untuk topik yang sama */}
@@ -522,8 +523,8 @@ function InlinePractice({ questions, topic, onComplete, onClose, onRetryTopic })
               className="text-xs border border-warning/40 text-warning px-4 py-1.5 flex items-center gap-1 disabled:opacity-40"
              variant="ghost">
               {retryingTopic === topic
-                ? <><Icon name={ICONS.status.loading} size={11} className="animate-spin" /> Memuat...</>
-                : <><Icon name={ICONS.actions.replay} size={11} /> Ulangi Topik Ini</>}
+                ? <><Icon name={ICONS.status.loading} size={11} className="animate-spin" /> {t('common.loading')}</>
+                : <><Icon name={ICONS.actions.replay} size={11} /> {t('exam.detail.retryTopic')}</>}
             </Button>
           )}
         </div>
@@ -537,7 +538,7 @@ function InlinePractice({ questions, topic, onComplete, onClose, onRetryTopic })
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold text-text">Soal {idx + 1}/{total}</span>
+          <span className="text-xs font-semibold text-text">{t('exam.detail.questionProgress', { current: idx + 1, total })}</span>
           <Chip label={q.type} size="xs" color="blue" />
           {q.bloom_level && <Chip label={q.bloom_level.toLowerCase()} size="xs" color="purple" />}
           {q.difficulty && <Chip label={q.difficulty} size="xs" color={q.difficulty === 'sulit' ? 'danger' : q.difficulty === 'menengah' ? 'warning' : 'success'} />}
@@ -545,7 +546,7 @@ function InlinePractice({ questions, topic, onComplete, onClose, onRetryTopic })
         <div className="flex items-center gap-2">
           <span className="text-3xs text-success flex items-center gap-0.5"><Icon name={ICONS.status.success} size={10} />{correctCount}</span>
           <span className="text-3xs text-danger flex items-center gap-0.5"><Icon name={ICONS.status.error} size={10} />{wrongCount}</span>
-          <button type="button" onClick={onClose} className="text-3xs text-text-muted hover:text-text">Tutup</button>
+          <button type="button" onClick={onClose} className="text-3xs text-text-muted hover:text-text">{t('common.close')}</button>
         </div>
       </div>
 
@@ -588,7 +589,7 @@ function InlinePractice({ questions, topic, onComplete, onClose, onRetryTopic })
         </div>
       ) : (
         <textarea rows={3} value={userAnswer} onChange={e => selectAnswer(e.target.value)} disabled={showExpl}
-          placeholder="Tulis jawaban di sini..."
+          placeholder={t('quiz.answerPlaceholder')}
           className="w-full px-3 py-2 bg-card border border-border rounded-lg text-xs text-text focus:outline-none focus:border-primary resize-none disabled:opacity-50" />
       )}
 
@@ -596,7 +597,7 @@ function InlinePractice({ questions, topic, onComplete, onClose, onRetryTopic })
       {!showExpl && (
         <Button type="button" onClick={handleJawab} disabled={!userAnswer}
           className="text-xs px-4 py-1.5 disabled:opacity-40" variant="primary">
-          Jawab
+          {t('common.answer')}
         </Button>
       )}
 
@@ -609,24 +610,24 @@ function InlinePractice({ questions, topic, onComplete, onClose, onRetryTopic })
             {!results[String(q.id)] && (
               <p className="text-danger flex items-center gap-1.5">
                 <Icon name={ICONS.status.error} size={11} className="shrink-0" />
-                <span>Jawaban kamu: <strong>{userAnswer}</strong>{q.options?.[userAnswer] ? `. ${q.options[userAnswer]}` : ''}</span>
+                <span>{t('exam.detail.yourAnswer')}: <strong>{userAnswer}</strong>{q.options?.[userAnswer] ? `. ${q.options[userAnswer]}` : ''}</span>
               </p>
             )}
             <p className="text-success flex items-center gap-1.5">
               <Icon name={ICONS.status.success} size={11} className="shrink-0" />
-              <span>Jawaban benar: <strong>{q.answer}</strong>{q.options?.[q.answer] ? `. ${q.options[q.answer]}` : ''}</span>
+              <span>{t('exam.detail.correctAnswer')}: <strong>{q.answer}</strong>{q.options?.[q.answer] ? `. ${q.options[q.answer]}` : ''}</span>
             </p>
           </div>
 
           {/* Explanation */}
           <div className="border-t border-border pt-2">
-            <p className="text-3xs font-semibold text-text-secondary uppercase tracking-wider mb-1 flex items-center gap-1"><Icon name={ICONS.actions.edit} size={10} /> Penjelasan</p>
+            <p className="text-3xs font-semibold text-text-secondary uppercase tracking-wider mb-1 flex items-center gap-1"><Icon name={ICONS.actions.edit} size={10} /> {t('common.explanation')}</p>
             {fetchingExpl ? (
-              <p className="text-text-muted flex items-center gap-1"><Icon name={ICONS.status.loading} size={10} className="animate-spin" /> Memuat penjelasan...</p>
+              <p className="text-text-muted flex items-center gap-1"><Icon name={ICONS.status.loading} size={10} className="animate-spin" /> {t('exam.detail.loadingExplanation')}</p>
             ) : explanations[String(q.id)] ? (
               <p className="text-text-secondary leading-relaxed">{explanations[String(q.id)]}</p>
             ) : (
-              <p className="text-text-muted italic">Penjelasan tidak tersedia.</p>
+              <p className="text-text-muted italic">{t('exam.detail.explanationUnavailable')}</p>
             )}
           </div>
 
@@ -646,7 +647,7 @@ function InlinePractice({ questions, topic, onComplete, onClose, onRetryTopic })
       {showExpl && (
         <Button type="button" onClick={handleNext}
           className="text-xs px-4 py-1.5 flex items-center gap-1" variant="primary">
-          {isLast ? <><Icon name={ICONS.status.check} size={12} /> Lihat Hasil</> : <><Icon name={ICONS.actions.forward} size={12} /> Soal Berikutnya</>}
+          {isLast ? <><Icon name={ICONS.status.check} size={12} /> {t('exam.detail.viewResult')}</> : <><Icon name={ICONS.actions.forward} size={12} /> {t('exam.detail.nextQuestion')}</>}
         </Button>
       )}
         </motion.div>
@@ -673,14 +674,7 @@ function StudyPlanTab({ plan, sessionId, onToggle, onPlanSaved,
     if (plan?.start_date) setStartDate(plan.start_date);
   }, [plan?.start_date]);
 
-  const DAYS_ID   = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
-  const MONTHS_ID = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
-
-  function formatItemDate(startDateStr, orderNumber) {
-    const d = new Date(startDateStr);
-    d.setDate(d.getDate() + orderNumber);
-    return `${DAYS_ID[d.getDay()]}, ${d.getDate()} ${MONTHS_ID[d.getMonth()]}`;
-  }
+  // Tanggal memakai formatter bersama agar mengikuti bahasa aktif.
 
   async function handleDateChange(newDate) {
     const prevDate = startDate;
@@ -705,13 +699,13 @@ function StudyPlanTab({ plan, sessionId, onToggle, onPlanSaved,
       onPlanSaved?.();
     } catch {
       setStartDate(prevDate);
-      setDateError('Gagal menyimpan tanggal. Coba lagi.');
+      setDateError(t('exam.detail.dateSaveFailed'));
     } finally { setDateSaving(false); }
   }
 
   if (!plan) return (
     <p className="text-text-muted text-sm py-8 text-center">
-      Belum ada rencana belajar tersimpan untuk sesi ini.
+      {t('exam.detail.noPlan')}
     </p>
   );
 
@@ -728,7 +722,7 @@ function StudyPlanTab({ plan, sessionId, onToggle, onPlanSaved,
       {/* Date picker + open full plan */}
       <div className="flex items-center gap-2 mb-2">
         <Icon name={ICONS.learning.calendar} size={14} className="text-primary" />
-        <span className="text-xs font-semibold text-text-secondary">Mulai Belajar:</span>
+        <span className="text-xs font-semibold text-text-secondary">{t('exam.detail.startLearning')}</span>
         <input
           type="date"
           value={startDate}
@@ -742,7 +736,7 @@ function StudyPlanTab({ plan, sessionId, onToggle, onPlanSaved,
           onClick={() => navigate(`/study-plan?session_id=${sessionId}`)}
           className="ml-auto inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-primary/30 text-primary text-2xs font-semibold hover:bg-primary/10 transition-colors"
         >
-          <Icon name={ICONS.actions.externalLink} size={11} /> Buka Halaman Penuh
+          <Icon name={ICONS.actions.externalLink} size={11} /> {t('exam.detail.openFullPage')}
         </button>
       </div>
       {dateError && <p className="text-danger text-xs mb-2">{dateError}</p>}
@@ -766,18 +760,18 @@ function StudyPlanTab({ plan, sessionId, onToggle, onPlanSaved,
 
       {/* Dynamic progress bar */}
       <div className="flex justify-between text-xs text-text-muted mb-1">
-        <span>Progress Rencana Belajar</span>
+        <span>{t('exam.detail.planProgress')}</span>
         <span>
           {progressValue >= 100
-            ? <span className="flex items-center gap-1"><Icon name={ICONS.learning.certificate} size={12} className="text-success" /> Rencana Selesai!</span>
-            : `${completedItems}/${totalItems} hari · ${progressValue}%`}
+            ? <span className="flex items-center gap-1"><Icon name={ICONS.learning.certificate} size={12} className="text-success" /> {t('studyPlanPage.completedTitle')}</span>
+            : t('studyPlanPage.dayProgress', { completed: completedItems, total: totalItems, progress: progressValue })}
         </span>
       </div>
       <ProgressBar value={progressValue} color={progressValue >= 100 ? 'success' : 'primary'} />
 
       {(plan.priority_actions || []).length > 0 && (
         <div className="p-3 rounded-xl bg-card border border-border">
-          <p className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">Aksi Prioritas</p>
+          <p className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">{t('common.priorityActions')}</p>
           {(plan.priority_actions || []).map((a, i) => (
             <p key={i} className="text-xs text-text flex items-start gap-1.5 py-1">
               <span className="w-4 h-4 rounded-full bg-primary/10 text-primary flex items-center justify-center text-2xs font-bold shrink-0 mt-0.5">{i+1}</span>
@@ -837,10 +831,10 @@ function StudyPlanTab({ plan, sessionId, onToggle, onPlanSaved,
                             try {
                               const r = await sessionsAPI.fetchPracticeQuestions(sessionId, item.topic);
                               if (r.data?.detail) throw new Error(r.data.detail);
-                              if (!r.data?.questions?.length) throw new Error('Tidak ada soal tersedia untuk topik ini.');
+                              if (!r.data?.questions?.length) throw new Error(t('studyPlanPage.noQuestions'));
                               setPracticeMode({ itemId: item.id, topic: item.topic, questions: r.data.questions, _v: Date.now() });
                             } catch (err) {
-                              setPracticeError(err.message || 'Gagal memuat soal latihan.');
+                              setPracticeError(err.message || t('studyPlanPage.questionsFailed'));
                             } finally {
                               setLoadingItemId(null);
                             }
@@ -848,8 +842,8 @@ function StudyPlanTab({ plan, sessionId, onToggle, onPlanSaved,
                           className="text-3xs px-2 py-1 rounded bg-primary text-white font-bold
                                      hover:bg-primary-hover transition-colors shrink-0 disabled:opacity-50 flex items-center gap-1">
                           {loadingItemId === item.id
-                            ? <><Icon name={ICONS.status.loading} size={9} className="animate-spin" /> Memuat...</>
-                            : <><Icon name={ICONS.actions.forward} size={9} /> Mulai Latihan</>}
+                            ? <><Icon name={ICONS.status.loading} size={9} className="animate-spin" /> {t('common.loading')}</>
+                            : <><Icon name={ICONS.actions.forward} size={9} /> {t('common.startPractice')}</>}
                         </button>
                       )}
                     </div>
@@ -859,7 +853,7 @@ function StudyPlanTab({ plan, sessionId, onToggle, onPlanSaved,
                   <button type="button" onClick={() => onToggle(item.id)}
                     className="text-3xs px-2 py-0.5 rounded border border-border text-text-muted
                                hover:border-warning/40 hover:text-warning transition-colors shrink-0">
-                    Lewati
+                    {t('common.skip')}
                   </button>
                 )}
               </div>
@@ -883,10 +877,10 @@ function StudyPlanTab({ plan, sessionId, onToggle, onPlanSaved,
                     try {
                       const r = await sessionsAPI.fetchPracticeQuestions(sessionId, topic);
                       if (r.data?.detail) throw new Error(r.data.detail);
-                      if (!r.data?.questions?.length) throw new Error('Tidak ada soal tersedia untuk topik ini.');
+                      if (!r.data?.questions?.length) throw new Error(t('studyPlanPage.noQuestions'));
                       setPracticeMode({ itemId: item.id, topic, questions: r.data.questions, _v: Date.now() });
                     } catch (err) {
-                      setPracticeError(err.message || 'Gagal memuat soal.');
+                      setPracticeError(err.message || t('studyPlanPage.questionsFailed'));
                     }
                   }}
                 />
@@ -900,7 +894,8 @@ function StudyPlanTab({ plan, sessionId, onToggle, onPlanSaved,
 }
 
 function AttemptsTab({ attempts }) {
-  if (!attempts.length) return <p className="text-text-muted text-sm py-8 text-center">Belum ada attempt.</p>;
+  const { t } = useTranslation();
+  if (!attempts.length) return <p className="text-text-muted text-sm py-8 text-center">{t('exam.detail.noAttempts')}</p>;
 
   return (
     <div className="space-y-3">
@@ -920,7 +915,7 @@ function AttemptsTab({ attempts }) {
               <div className="flex items-center gap-2 mb-1">
                 <span className={cn('text-2xl font-black', gradeC)}>{a.score ?? '--'}</span>
                 <span className={cn('text-sm font-bold', gradeC)}>Grade {a.grade || '?'}</span>
-                {isLatest && <Chip label="Terbaru" size="xs" color="primary" />}
+                {isLatest && <Chip label={t('exam.detail.latest')} size="xs" color="primary" />}
                 {delta !== null && (
                   <span className={cn('text-xs font-semibold flex items-center gap-0.5',
                     delta > 0 ? 'text-success' : delta < 0 ? 'text-danger' : 'text-text-muted')}>
@@ -930,8 +925,8 @@ function AttemptsTab({ attempts }) {
                 )}
               </div>
               <div className="flex gap-3 text-xs text-text-muted">
-                <span className="flex items-center gap-1"><Icon name={ICONS.status.success} size={10} className="text-success"/>{a.total_correct} benar</span>
-                <span className="flex items-center gap-1"><Icon name={ICONS.status.error} size={10} className="text-danger"/>{a.total_wrong} salah</span>
+                <span className="flex items-center gap-1"><Icon name={ICONS.status.success} size={10} className="text-success"/>{t('exam.detail.correctCount', { count: a.total_correct })}</span>
+                <span className="flex items-center gap-1"><Icon name={ICONS.status.error} size={10} className="text-danger"/>{t('exam.detail.wrongCount', { count: a.total_wrong })}</span>
                 {a.duration_seconds && (
                   <span className="flex items-center gap-1"><Icon name={ICONS.learning.clock} size={10}/>
                     {Math.floor(a.duration_seconds/60)}:{String(a.duration_seconds%60).padStart(2,'0')}
@@ -948,6 +943,7 @@ function AttemptsTab({ attempts }) {
 }
 
 function RetryButton({ historySessionId, sessionData, onClose, onResume }) {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState('');
   const [selectedQType, setSelectedQType] = useState(sessionData.question_type || 'mixed');
@@ -959,11 +955,11 @@ function RetryButton({ historySessionId, sessionData, onClose, onResume }) {
       const payload = selectedQType !== sessionData.question_type ? { question_type: selectedQType } : {};
       const r = await sessionsAPI.retryInplace(historySessionId, payload);
       if (r.data?.detail) throw new Error(r.data.detail);
-      if (!r.data?.session_id) throw new Error('Sesi latihan gagal disiapkan.');
+      if (!r.data?.session_id) throw new Error(t('exam.detail.sessionPrepareFailed'));
       onClose();
       onResume({ ...r.data, subject_id: sessionData.subject_id, subject_name: sessionData.subject_name });
     } catch (e) {
-      setError(e.response?.data?.detail || e.message || 'Gagal memulai latihan ulang.');
+      setError(e.response?.data?.detail || e.message || t('exam.detail.retryFailed'));
     } finally { setLoading(false); }
   };
 
@@ -978,24 +974,24 @@ function RetryButton({ historySessionId, sessionData, onClose, onResume }) {
           disabled={loading}
           className="px-2.5 py-1.5 bg-card border border-border rounded-lg text-xs text-text focus:outline-none focus:border-primary disabled:opacity-50"
         >
-          <option value="mixed">Campuran</option>
-          <option value="mcq">Pilihan Ganda</option>
-          <option value="truefalse">Benar / Salah</option>
-          <option value="short_answer">Isian Singkat</option>
-          <option value="essay">Essay</option>
-          <option value="case_study">Studi Kasus</option>
-          <option value="analysis">Analisis</option>
-          <option value="calculation">Perhitungan</option>
+          <option value="mixed">{t('exam.config.typeMixed')}</option>
+          <option value="mcq">{t('exam.config.typeMcq')}</option>
+          <option value="truefalse">{t('exam.config.typeTrueFalse')}</option>
+          <option value="short_answer">{t('exam.config.typeShortAnswer')}</option>
+          <option value="essay">{t('exam.config.typeEssay')}</option>
+          <option value="case_study">{t('exam.config.typeCaseStudy')}</option>
+          <option value="analysis">{t('exam.config.typeAnalysis')}</option>
+          <option value="calculation">{t('exam.config.typeCalculation')}</option>
         </select>
         <Button type="button" onClick={handleRetry} disabled={loading} className="text-sm flex items-center gap-1.5" variant="primary">
           {loading
-            ? <><Icon name={ICONS.status.loading} size={13} className="animate-spin"/> Menyiapkan...</>
-            : <><Icon name={ICONS.actions.replay} size={13}/> {isDifferentType ? 'Buat Baru' : 'Latihan Lagi'}</>}
+            ? <><Icon name={ICONS.status.loading} size={13} className="animate-spin"/> {t('exam.detail.preparing')}</>
+            : <><Icon name={ICONS.actions.replay} size={13}/> {isDifferentType ? t('exam.detail.createNew') : t('exam.history.retry')}</>}
         </Button>
       </div>
       {isDifferentType && !error && (
         <p className="text-xs text-warning flex items-center gap-1">
-          <Icon name={ICONS.status.error} size={11}/> Jenis soal berbeda — akan membuat history baru
+          <Icon name={ICONS.status.error} size={11}/> {t('exam.detail.differentTypeWarning')}
         </p>
       )}
       {error && <p className="text-danger text-xs">{error}</p>}

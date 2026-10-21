@@ -254,7 +254,7 @@ export default function QuizPage() {
                 {diffFilter === d && (
                   <motion.span layoutId="quiz-difficulty-indicator" transition={springWave} className="absolute inset-0 bg-primary/10 rounded-lg" />
                 )}
-                <span className="relative">{d === 'all' ? t('common.all') : t(`quiz.${d}`)}</span>
+                <span className="relative">{d === 'all' ? t('common.all') : t(DIFFICULTY_BADGE[d]?.label || d)}</span>
               </button>
             ))}
             <div className="w-px h-4 bg-border mx-1" />

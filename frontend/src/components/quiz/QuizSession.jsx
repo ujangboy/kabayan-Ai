@@ -90,8 +90,8 @@ export function QuizSession({ quizId, onClose }) {
     return (
       <ViewShell view="error">
         <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-          <p className="text-danger mb-4">Gagal memuat quiz: {error?.message || 'Unknown error'}</p>
-          <Button onClick={onClose} className="border border-border" variant="ghost">Kembali</Button>
+          <p className="text-danger mb-4">{t('quiz.loadFailed', { error: error?.message || t('common.unknownError') })}</p>
+          <Button onClick={onClose} className="border border-border" variant="ghost">{t('common.back')}</Button>
         </div>
       </ViewShell>
     );
@@ -108,8 +108,8 @@ export function QuizSession({ quizId, onClose }) {
     return (
       <ViewShell view="empty">
         <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-          <p className="text-text-muted mb-4">Quiz kosong atau soal belum tersedia.</p>
-          <Button onClick={onClose} className="border border-border" variant="ghost">Kembali</Button>
+          <p className="text-text-muted mb-4">{t('quiz.emptySession')}</p>
+          <Button onClick={onClose} className="border border-border" variant="ghost">{t('common.back')}</Button>
         </div>
       </ViewShell>
     );
@@ -172,8 +172,8 @@ export function QuizSession({ quizId, onClose }) {
         <div className="flex-1 overflow-y-auto p-6 md:p-10">
         <div className="w-full space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-text">Review Jawaban</h2>
-            <Button onClick={onClose} className="text-sm" variant="ghost">{t('common.close', 'Tutup')}</Button>
+            <h2 className="text-xl font-bold text-text">{t('common.reviewAnswers')}</h2>
+            <Button onClick={onClose} className="text-sm" variant="ghost">{t('common.close')}</Button>
           </div>
 
           {questions.map((q, idx) => {
@@ -188,9 +188,9 @@ export function QuizSession({ quizId, onClose }) {
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <p className="text-sm font-semibold text-text-secondary">Soal {idx + 1}</p>
+                      <p className="text-sm font-semibold text-text-secondary">{t('quiz.questionN', { n: idx + 1 })}</p>
                       <span className="text-2xs px-1.5 py-0.5 rounded bg-surface border-strong text-text-secondary">
-                        {isEssay ? 'Essay (tidak dinilai otomatis)' : 'Pilihan Ganda'}
+                        {isEssay ? t('quiz.essayNotGraded') : t('quiz.qtypeMcq')}
                       </span>
                     </div>
                     <MathMarkdown className="text-text font-medium mb-3">{q.question}</MathMarkdown>
@@ -198,22 +198,22 @@ export function QuizSession({ quizId, onClose }) {
                     <div className="space-y-2 text-base">
                       {isEssay ? (
                         <div>
-                          <span className="text-text-secondary">Jawaban Anda: </span>
+                          <span className="text-text-secondary">{t('quiz.yourAnswer')} </span>
                           <div className="mt-1 p-3 bg-background rounded-lg border border-border">
-                            <MathMarkdown className="text-base">{userAnswer || '(Tidak dijawab)'}</MathMarkdown>
+                            <MathMarkdown className="text-base">{userAnswer || t('quiz.notAnswered')}</MathMarkdown>
                           </div>
                         </div>
                       ) : (
                         <>
                           <div>
-                            <span className="text-text-secondary">Jawaban Anda: </span>
+                            <span className="text-text-secondary">{t('quiz.yourAnswer')} </span>
                             <span className={isCorrect ? 'text-success font-medium' : 'text-danger font-medium'}>
-                              {userAnswer ? <MathMarkdown className="inline">{userAnswer}</MathMarkdown> : '(Tidak dijawab)'}
+                              {userAnswer ? <MathMarkdown className="inline">{userAnswer}</MathMarkdown> : t('quiz.notAnswered')}
                             </span>
                           </div>
                           {!isCorrect && (
                             <div>
-                              <span className="text-text-secondary">Jawaban Benar: </span>
+                              <span className="text-text-secondary">{t('quiz.correctAnswer')} </span>
                               <span className="text-success font-medium"><MathMarkdown className="inline">{q.answer}</MathMarkdown></span>
                             </div>
                           )}
@@ -221,7 +221,7 @@ export function QuizSession({ quizId, onClose }) {
                       )}
                       {q.explanation && (
                         <div className="mt-2 p-3 bg-background rounded-lg border border-border">
-                          <p className="text-xs font-semibold text-text-secondary mb-1">Penjelasan:</p>
+                          <p className="text-xs font-semibold text-text-secondary mb-1">{t('quiz.explanationLabel')}</p>
                           <MathMarkdown className="text-base">{q.explanation}</MathMarkdown>
                         </div>
                       )}
@@ -242,29 +242,29 @@ export function QuizSession({ quizId, onClose }) {
     const { correct, wrong } = computeScore();
     const recommendation =
       score >= 70
-        ? { Icon: ICONS.learning.celebration, text: 'Bagus! Penguasaan materi sudah baik. Lanjut ke topik berikutnya atau coba soal yang lebih sulit.' }
+        ? { Icon: ICONS.learning.celebration, text: t('quiz.recommendationHigh') }
         : score >= 50
-          ? { Icon: ICONS.nav.subjects, text: 'Cukup baik. Review jawaban yang salah untuk memperkuat pemahaman, lalu coba lagi.' }
-          : { Icon: ICONS.learning.practice, text: 'Masih perlu banyak latihan. Pelajari kembali materi terkait, lalu ulangi quiz ini.' };
+          ? { Icon: ICONS.nav.subjects, text: t('quiz.recommendationMedium') }
+          : { Icon: ICONS.learning.practice, text: t('quiz.recommendationLow') };
     return (
       <ViewShell view="result">
         <div className="flex-1 flex items-center justify-center p-6">
         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="card-base text-center max-w-md w-full p-8">
           <Icon name={ICONS.learning.trophy} size={48} className="mx-auto text-warning mb-4" />
-          <h2 className="text-2xl font-bold text-text mb-2">Quiz Selesai!</h2>
+          <h2 className="text-2xl font-bold text-text mb-2">{t('quiz.completedTitle')}</h2>
           <div className="text-6xl font-bold text-primary my-4">{score}</div>
           <p className="text-xs text-text-muted mb-4">
-            {mcqTotal > 0 ? `Nilai dari ${mcqTotal} soal pilihan ganda` : 'Semua soal essay (tidak dinilai otomatis)'}
-            {timeTaken > 0 && ` • waktu ${formatDuration(timeTaken, t)}`}
+            {mcqTotal > 0 ? t('quiz.scoreOfMcq', { count: mcqTotal }) : t('quiz.allEssay')}
+            {timeTaken > 0 && ` • ${t('quiz.timeTaken', { duration: formatDuration(timeTaken, t) })}`}
           </p>
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div className="p-3 bg-success/10 rounded-xl border border-success/20">
               <div className="text-2xl font-bold text-success">{correct}</div>
-              <div className="text-xs text-text-secondary">Benar</div>
+              <div className="text-xs text-text-secondary">{t('common.correct')}</div>
             </div>
             <div className="p-3 bg-danger/10 rounded-xl border border-danger/20">
               <div className="text-2xl font-bold text-danger">{wrong}</div>
-              <div className="text-xs text-text-secondary">Salah</div>
+              <div className="text-xs text-text-secondary">{t('common.wrong')}</div>
             </div>
           </div>
           <div className="p-3 bg-background rounded-xl border border-border mb-6 text-sm text-text-secondary">
@@ -273,10 +273,10 @@ export function QuizSession({ quizId, onClose }) {
           </div>
           <div className="flex gap-2">
             <Button onClick={() => setShowReview(true)} className="flex-1 justify-center text-sm" variant="primary">
-              Review Jawaban
+              {t('common.reviewAnswers')}
             </Button>
             <Button onClick={onClose} className="flex-1 justify-center text-sm border border-border" variant="ghost">
-              Kembali
+              {t('common.back')}
             </Button>
           </div>
         </motion.div>
@@ -290,7 +290,7 @@ export function QuizSession({ quizId, onClose }) {
     <ViewShell view="question">
       <div className="flex-1 flex flex-col w-full p-6 md:p-10">
         <div className="flex items-center justify-between gap-4 mb-6">
-          <h2 className="text-lg font-semibold text-text truncate">{quizData.title || 'Quiz'}</h2>
+          <h2 className="text-lg font-semibold text-text truncate">{quizData.title || t('quiz.title')}</h2>
           <QuizTimer totalSeconds={timerSeconds} onTimeUp={handleTimeUp} isActive={!isFinished} />
         </div>
 
@@ -321,7 +321,7 @@ export function QuizSession({ quizId, onClose }) {
                   value={answers[currentIdx] || ''}
                   onChange={(e) => handleEssayChange(e.target.value)}
                   rows={7}
-                  placeholder="Tulis jawaban Anda di sini..."
+                  placeholder={t('quiz.answerPlaceholder')}
                    className="w-full px-4 py-3 bg-surface border-strong rounded-xl text-base text-text focus:outline-none focus:border-primary transition-colors resize-y"
                 />
               ) : (
@@ -352,13 +352,13 @@ export function QuizSession({ quizId, onClose }) {
         </div>
 
         <div className="flex justify-between mt-10">
-          <Button onClick={onClose} className="text-danger" variant="ghost">Keluar</Button>
+          <Button onClick={onClose} className="text-danger" variant="ghost">{t('common.exit')}</Button>
           <Button
             onClick={handleNext}
             disabled={!answers[currentIdx] && currentQ.qtype === 'mcq'}
             className="disabled:opacity-40"
            variant="primary">
-            {currentIdx === total - 1 ? 'Selesai' : 'Lanjut'}
+            {currentIdx === total - 1 ? t('common.finish') : t('common.next')}
           </Button>
         </div>
       </div>

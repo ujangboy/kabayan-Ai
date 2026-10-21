@@ -10,13 +10,14 @@ import { useToast } from '@/components/Toast';
 import { usePageState } from '@/hooks/usePageState';
 import { springWave } from '@/lib/motion';
 import { Button, Textarea, Icon } from '@/components/ui';
-import { TYPE_META, formatItemDate, formatRealDate } from './shared';
+import { TYPE_META, formatRealDate } from './shared';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Inline quiz practice dengan submit ke PracticeResult
 // ─────────────────────────────────────────────────────────────────────────────
 export default function InlinePlanPractice({ item, practiceState, onClose, onSubmitted }) {
   const { toast } = useToast();
+  const { t } = useTranslation();
   const practiceKey = `practice-${item.id}`;
   const { restore: restorePractice, persist: persistPractice } = usePageState(practiceKey);
 
@@ -74,7 +75,7 @@ export default function InlinePlanPractice({ item, practiceState, onClose, onSub
         correct_count: correctCount,
       };
       await sessionsAPI.submitPlanQuiz(item.id, payload);
-      toast.success(`Latihan selesai — skor ${score}!`);
+      toast.success(t('studyPlanPage.practiceDone', { score }));
       onSubmitted();
     } catch (err) {
       toast.error(extractErrorMessage(err));
@@ -89,7 +90,7 @@ export default function InlinePlanPractice({ item, practiceState, onClose, onSub
         <div className="text-center">
           <p className="text-3xl font-black text-text">{score}%</p>
           <p className={`text-sm font-semibold ${score >= 70 ? 'text-success' : score >= 50 ? 'text-warning' : 'text-danger'}`}>
-            {correctCount} dari {total} soal benar
+            {t('studyPlanPage.correctOf', { correct: correctCount, total })}
           </p>
         </div>
         <div className="space-y-1">
@@ -104,21 +105,21 @@ export default function InlinePlanPractice({ item, practiceState, onClose, onSub
                 ) : (
                   <Icon name={ICONS.status.error} size={12} className="text-danger shrink-0" />
                 )}
-                <span className="text-text-muted">Soal {i + 1}</span>
+                <span className="text-text-muted">{t('studyPlanPage.questionN', { n: i + 1 })}</span>
                 <span className="text-text-secondary truncate flex-1">{question.topic}</span>
-                {isCorrect === false && <span className="text-danger text-3xs">Jawaban: {question.answer}</span>}
+                {isCorrect === false && <span className="text-danger text-3xs">{t('studyPlanPage.answerLabel', { answer: question.answer })}</span>}
               </div>
             );
           })}
         </div>
         <div className="flex gap-2 justify-end">
-          <Button onClick={onClose} className="text-sm border border-border" variant="ghost">Tutup</Button>
+          <Button onClick={onClose} className="text-sm border border-border" variant="ghost">{t('common.close')}</Button>
           <Button
             onClick={handleSubmit}
             disabled={submitting}
             className="text-sm flex items-center gap-1.5"
            variant="primary">
-            {submitting ? <><Icon name={ICONS.status.loading} size={13} className="animate-spin" /> Menyimpan...</> : <><Icon name={ICONS.status.completed} size={13} /> Simpan Hasil & Tandai Selesai</>}
+            {submitting ? <><Icon name={ICONS.status.loading} size={13} className="animate-spin" /> {t('common.saving')}</> : <><Icon name={ICONS.status.completed} size={13} /> {t('studyPlanPage.saveResult')}</>}
           </Button>
         </div>
       </div>
@@ -132,7 +133,7 @@ export default function InlinePlanPractice({ item, practiceState, onClose, onSub
   return (
     <div className="p-4 bg-background border-t border-primary/10">
       <div className="flex items-center justify-between mb-3">
-        <span className="text-xs font-semibold text-text-secondary">Latihan: {practiceState.topic}</span>
+        <span className="text-xs font-semibold text-text-secondary">{t('studyPlanPage.practiceLabel', { topic: practiceState.topic })}</span>
         <span className="px-2.5 py-1 bg-card rounded-full text-xs font-medium text-text-secondary border border-border">
           {idx + 1} / {total}
         </span>
@@ -177,7 +178,7 @@ export default function InlinePlanPractice({ item, practiceState, onClose, onSub
               value={userAnswer}
               onChange={(e) => selectAnswer(e.target.value)}
               rows={3}
-              placeholder="Tulis jawaban Anda..."
+              placeholder={t('quiz.answerPlaceholder')}
               className="w-full resize-y"
             />
           )}
@@ -186,7 +187,7 @@ export default function InlinePlanPractice({ item, practiceState, onClose, onSub
 
       <div className="flex justify-end mt-4">
         {isObjective && !userAnswer ? (
-          <Button onClick={() => selectAnswer('')} className="text-sm text-danger" variant="ghost">Lewati (anggap salah)</Button>
+          <Button onClick={() => selectAnswer('')} className="text-sm text-danger" variant="ghost">{t('studyPlanPage.skipWrong')}</Button>
         ) : (
           <Button
             onClick={() => {
@@ -200,7 +201,7 @@ export default function InlinePlanPractice({ item, practiceState, onClose, onSub
             }}
             className="text-sm"
            variant="primary">
-            {idx === total - 1 ? 'Lihat Hasil' : 'Jawab & Lanjut'}
+            {idx === total - 1 ? t('common.viewResult') : t('studyPlanPage.answerNext')}
           </Button>
         )}
       </div>
@@ -221,8 +222,8 @@ export function StudyPlanItem({
   // Tanggal real: pakai created_at materi jika ada, bukan plan.start_date imajiner.
   const realCreatedAt = item.material_created_at || (planStartDate || null);
   const dateLabel = realCreatedAt
-    ? formatRealDate(realCreatedAt)
-    : (item.day_label || `Hari ${item.order_number + 1}`);
+    ? formatRealDate(realCreatedAt, t)
+    : (item.day_label || t('studyPlanPage.day', { n: item.order_number + 1 }));
   const latestResult = item.practice_results?.[item.practice_results.length - 1];
 
   return (
@@ -243,10 +244,10 @@ export function StudyPlanItem({
           <div className="flex items-center gap-2 mb-1 flex-wrap">
             <span className="text-xs font-semibold text-text-muted">{dateLabel}</span>
             {item.time_slot && <span className="text-3xs text-text-muted">{item.time_slot}</span>}
-            <span className={`text-3xs px-1.5 py-0.5 rounded border ${meta.cls}`}>{meta.label}</span>
+            <span className={`text-3xs px-1.5 py-0.5 rounded border ${meta.cls}`}>{t(meta.labelKey)}</span>
             {item.duration_minutes && (
               <span className="text-3xs text-text-muted flex items-center gap-0.5">
-                <Icon name={ICONS.learning.clock} size={9} /> {item.duration_minutes}m
+                <Icon name={ICONS.learning.clock} size={9} /> {item.duration_minutes}{t('studyPlan.minutesShort')}
               </span>
             )}
           </div>
@@ -274,13 +275,13 @@ export function StudyPlanItem({
                 <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-warning/10 border border-warning/20">
                   <Icon name={ICONS.learning.trophy} size={11} className="text-warning" />
                   <span className="font-bold text-warning">{latestResult.score}</span>
-                  <span className="text-text-muted">latihan quiz terakhir {latestResult.created_at ? new Date(latestResult.created_at).toLocaleDateString('id-ID') : ''}</span>
+                  <span className="text-text-muted">{t('studyPlanPage.lastQuizPractice', { date: latestResult.created_at ? new Date(latestResult.created_at).toLocaleDateString() : '' })}</span>
                 </span>
               ) : (
                 <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-accent-purple/10 border border-accent-purple/20">
                   <Icon name={ICONS.learning.brain} size={11} className="text-accent-purple" />
-                  <span className="text-accent-purple font-semibold">{latestResult.flashcard_reviewed} kartu</span>
-                  <span className="text-text-muted">flashcard direview {latestResult.created_at ? new Date(latestResult.created_at).toLocaleDateString('id-ID') : ''}</span>
+                  <span className="text-accent-purple font-semibold">{t('studyPlanPage.cardsReviewed', { count: latestResult.flashcard_reviewed })}</span>
+                  <span className="text-text-muted">{t('studyPlanPage.flashcardReviewed', { date: latestResult.created_at ? new Date(latestResult.created_at).toLocaleDateString() : '' })}</span>
                 </span>
               )}
             </div>
@@ -294,7 +295,7 @@ export function StudyPlanItem({
                 onClick={() => onOpenPractice(item)}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-white text-2xs font-bold hover:bg-primary-hover transition-colors disabled:opacity-40"
               >
-                <Icon name={ICONS.media.play} size={11} /> Latihan Quiz
+                <Icon name={ICONS.media.play} size={11} /> {t('studyPlanPage.practiceQuiz')}
               </button>
             )}
             {subjectId && (
@@ -308,11 +309,11 @@ export function StudyPlanItem({
                 }`}
               >
                 {generating ? (
-                  <><Icon name={ICONS.status.loading} size={11} className="animate-spin" /> Menyusun...</>
+                  <><Icon name={ICONS.status.loading} size={11} className="animate-spin" /> {t('studyPlanPage.composing')}</>
                 ) : summary ? (
-                  <><Icon name={ICONS.status.success} size={11} /> Lihat Rangkuman</>
+                  <><Icon name={ICONS.status.success} size={11} /> {t('common.viewSummary')}</>
                 ) : (
-                  <><Icon name={ICONS.files.document} size={11} /> Lihat Rangkuman</>
+                  <><Icon name={ICONS.files.document} size={11} /> {t('common.viewSummary')}</>
                 )}
               </button>
             )}
@@ -321,7 +322,7 @@ export function StudyPlanItem({
                 onClick={() => onAskTutor(item)}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-accent-blue/40 text-accent-blue text-2xs font-semibold hover:bg-accent-blue/10 transition-colors"
               >
-                <Icon name={ICONS.communication.chat} size={11} /> Tanya Tutor
+                <Icon name={ICONS.communication.chat} size={11} /> {t('studyPlanPage.askTutor')}
               </button>
             )}
           </div>

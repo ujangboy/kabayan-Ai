@@ -159,8 +159,8 @@ export default function StudyPlanPage() {
     return (
       <AnimatePresence mode="wait" initial={false}>
         <motion.div key="error" {...fadeSlide} className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-          <p className="text-danger mb-4">Gagal memuat rencana belajar: {extractErrorMessage(error)}</p>
-          <Button onClick={() => navigate('/exam-analyzer')} className="border border-border" variant="ghost">Kembali</Button>
+          <p className="text-danger mb-4">{t('studyPlanPage.loadFailed', { error: extractErrorMessage(error) })}</p>
+          <Button onClick={() => navigate('/exam-analyzer')} className="border border-border" variant="ghost">{t('common.back')}</Button>
         </motion.div>
       </AnimatePresence>
     );
@@ -172,7 +172,7 @@ export default function StudyPlanPage() {
         <motion.div key="noplan" {...fadeSlide} className="flex-1 flex flex-col items-center justify-center p-6 text-center">
           <EmptyState
             title={t('studyPlanPage.noPlan')}
-            action={<Button onClick={() => navigate('/exam-analyzer')} className="border border-border" variant="ghost">Kembali</Button>}
+            action={<Button onClick={() => navigate('/exam-analyzer')} className="border border-border" variant="ghost">{t('common.back')}</Button>}
           />
         </motion.div>
       </AnimatePresence>
@@ -186,10 +186,10 @@ export default function StudyPlanPage() {
     try {
       const r = await sessionsAPI.fetchPracticeQuestions(sessionId, item.topic);
       if (r.data?.detail) throw new Error(r.data.detail);
-      if (!r.data?.questions?.length) throw new Error('Tidak ada soal tersedia untuk topik ini.');
+      if (!r.data?.questions?.length) throw new Error(t('studyPlanPage.noQuestions'));
       setPracticeState({ itemId: item.id, topic: item.topic, questions: r.data.questions });
     } catch (err) {
-      toast.error(err.response?.data?.detail || err.message || 'Gagal memuat soal latihan.');
+      toast.error(err.response?.data?.detail || err.message || t('studyPlanPage.questionsFailed'));
     }
   };
 
@@ -212,10 +212,10 @@ export default function StudyPlanPage() {
         setSummaryTopic(sumTopic);
         setSummaryModalOpen(true);
       } else {
-        throw new Error('Rangkuman kosong.');
+        throw new Error(t('studyPlanPage.summaryEmpty'));
       }
     } catch (err) {
-      toast.error(err.response?.data?.detail || err.message || 'Gagal membuat rangkuman.');
+      toast.error(err.response?.data?.detail || err.message || t('studyPlanPage.summaryFailed'));
     } finally {
       setIsGeneratingSummary(null);
     }
@@ -240,16 +240,16 @@ export default function StudyPlanPage() {
         {/* Header */}
         <div className="flex items-center gap-3 flex-wrap">
           <Button onClick={() => navigate('/exam-analyzer')} className="px-3 py-2 rounded-xl text-sm" variant="ghost">
-            <Icon name={ICONS.actions.back} size={16} /> Kembali
+            <Icon name={ICONS.actions.back} size={16} /> {t('common.back')}
           </Button>
           <div className="flex-1 min-w-[200px]">
             <h1 className="text-2xl font-bold text-text flex items-center gap-2">
-              {plan.title || 'Rencana Belajar'}
+              {plan.title || t('nav.studyPlan')}
               <HelpTip label={t('help.studyPlan')} />
             </h1>
             <p className="text-text-secondary text-sm mt-0.5">
-              {data.subject_name || 'Mata Kuliah'}
-              {plan.start_date ? ` • mulai ${formatItemDate(plan.start_date, 0)}` : ''}
+              {data.subject_name || t('nav.subjects')}
+              {plan.start_date ? ` • ${t('studyPlanPage.startDate', { date: formatItemDate(plan.start_date, 0) })}` : ''}
               {(data.created_at || data.started_at) ? ` • ${t('studyPlanPage.createdOn', {
                 date: new Date(data.created_at || data.started_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
               })}` : ''}
@@ -278,10 +278,10 @@ export default function StudyPlanPage() {
           <div className="flex justify-between text-xs text-text-muted mb-2">
             <span className="flex items-center gap-1.5">
               <Icon name={ICONS.learning.target} size={12} className="text-primary" />
-              Progress Rencana Belajar
+              {t('studyPlanPage.progressTitle')}
             </span>
             <span className="font-semibold text-text-secondary">
-              {progress >= 100 ? <span className="flex items-center gap-1"><Icon name={ICONS.learning.certificate} size={12} className="text-success" /> Rencana Selesai!</span> : `${completedItems}/${totalItems} hari · ${progress}%`}
+              {progress >= 100 ? <span className="flex items-center gap-1"><Icon name={ICONS.learning.certificate} size={12} className="text-success" /> {t('studyPlanPage.completedTitle')}</span> : t('studyPlanPage.dayProgress', { completed: completedItems, total: totalItems, progress })}
             </span>
           </div>
           <div className="h-3 bg-background rounded-full overflow-hidden border border-border">
@@ -294,7 +294,7 @@ export default function StudyPlanPage() {
           </div>
           {(plan.priority_actions || []).length > 0 && (
             <div className="mt-4 pt-4 border-t border-border space-y-1.5">
-              <p className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-1">Aksi Prioritas</p>
+              <p className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-1">{t('common.priorityActions')}</p>
               {(plan.priority_actions || []).map((a, i) => (
                 <p key={i} className="text-xs text-text flex items-start gap-2">
                   <span className="w-4 h-4 rounded-full bg-primary/10 text-primary flex items-center justify-center text-2xs font-bold shrink-0 mt-0.5">{i + 1}</span>
@@ -338,8 +338,8 @@ export default function StudyPlanPage() {
         open={summaryModalOpen}
         onClose={() => setSummaryModalOpen(false)}
         size="lg"
-        title={<span className="flex items-center gap-2"><Icon name={ICONS.files.document} size={16} className="text-accent-blue" />Rangkuman: {summaryTopic}</span>}
-        footer={<Button onClick={() => setSummaryModalOpen(false)}>Tutup</Button>}
+        title={<span className="flex items-center gap-2"><Icon name={ICONS.files.document} size={16} className="text-accent-blue" />{t('studyPlanPage.summaryTitle', { topic: summaryTopic })}</span>}
+        footer={<Button onClick={() => setSummaryModalOpen(false)}>{t('common.close')}</Button>}
       >
         <div className="prose prose-sm prose-invert max-w-none leading-relaxed text-text-secondary">
           <MathMarkdown>{summaryData || ''}</MathMarkdown>

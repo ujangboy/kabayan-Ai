@@ -8,10 +8,10 @@ import { cn } from '@/utils';
 import { useToast } from '@/components/Toast';
 
 const QUICK_PROMPTS = [
-  { icon: ICONS.learning.bookOpen, label: 'Ringkas materi', prompt: 'Tolong ringkas materi ini dengan poin-poin penting.' },
-  { icon: ICONS.ui.help, label: 'Buat soal', prompt: 'Buatkan 3 soal latihan beserta pembahasannya.' },
-  { icon: ICONS.learning.network, label: 'Jelaskan konsep', prompt: 'Jelaskan konsep ini seperti sedang mengajarkan pemula.' },
-  { icon: ICONS.learning.brain, label: 'Quiz cepat', prompt: 'Berikan kuis cepat 5 pertanyaan untuk menguji pemahaman saya.' },
+  { icon: ICONS.learning.bookOpen, labelKey: 'chat.quickSummarize', promptKey: 'chat.quickSummarizePrompt' },
+  { icon: ICONS.ui.help, labelKey: 'chat.quickMakeQuiz', promptKey: 'chat.quickMakeQuizPrompt' },
+  { icon: ICONS.learning.network, labelKey: 'chat.quickExplain', promptKey: 'chat.quickExplainPrompt' },
+  { icon: ICONS.learning.brain, labelKey: 'chat.quickQuiz', promptKey: 'chat.quickQuizPrompt' },
 ];
 
 const MAX_TEXTAREA_HEIGHT = 144;
@@ -77,11 +77,11 @@ export default function ChatComposer({ onSend, isStreaming, onStop, tutorMode, o
             <div className="rounded-2xl border border-border bg-popover shadow-modal p-2 flex flex-col gap-1 w-[280px]">
               {QUICK_PROMPTS.map((q) => (
                 <motion.button
-                  key={q.label}
+                  key={q.labelKey}
                   whileHover={{ scale: 1.01 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => {
-                    onSend(q.prompt);
+                    onSend(t(q.promptKey));
                     setShowQuickPrompts(false);
                   }}
                   className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-text hover:bg-card-hover transition-all duration-150 text-left group border border-transparent hover:border-border"
@@ -89,7 +89,7 @@ export default function ChatComposer({ onSend, isStreaming, onStop, tutorMode, o
                   <span className="w-8 h-8 rounded-lg bg-primary/10 text-primary-light flex items-center justify-center shrink-0 border border-primary/15">
                     <Icon name={q.icon} size={16} />
                   </span>
-                  <span className="truncate font-medium">{q.label}</span>
+                  <span className="truncate font-medium">{t(q.labelKey)}</span>
                 </motion.button>
               ))}
 
@@ -111,11 +111,11 @@ export default function ChatComposer({ onSend, isStreaming, onStop, tutorMode, o
                     : <Icon name={ICONS.files.document} size={16} />}
                 </span>
                 <span className="truncate font-medium">
-                  {isNoteSaving ? 'Menyimpan catatan…' : 'Simpan ke Notebook'}
+                  {isNoteSaving ? t('chat.savingToNotebook') : t('chat.quickSimpanKeNotebook')}
                 </span>
               </motion.button>
               <p className="px-3 pt-1 text-3xs text-text-muted leading-snug">
-                Jawaban terakhir AI akan disimpan sebagai catatan.
+                {t('chat.noteSaveHint')}
               </p>
             </div>
           </motion.div>
@@ -184,7 +184,7 @@ export default function ChatComposer({ onSend, isStreaming, onStop, tutorMode, o
               transition={{ duration: 0.15 }}
               onClick={onStop}
               className="flex h-8 w-8 items-center justify-center rounded-full bg-danger text-white hover:bg-danger/80 transition-all duration-150 shrink-0 mb-1"
-              aria-label="Stop"
+              aria-label={t('chat.stopAI')}
             >
               <Icon name={ICONS.ui.square} size={14} />
             </motion.button>
@@ -199,7 +199,7 @@ export default function ChatComposer({ onSend, isStreaming, onStop, tutorMode, o
               disabled={!input.trim()}
               whileTap={{ scale: 0.9 }}
               className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white hover:bg-primary-hover disabled:opacity-35 disabled:cursor-not-allowed transition-all duration-150 shrink-0 mb-1 shadow-card"
-              aria-label="Send"
+              aria-label={t('chat.send')}
             >
               <Icon name={ICONS.actions.send} size={14} className="ml-px" />
             </motion.button>

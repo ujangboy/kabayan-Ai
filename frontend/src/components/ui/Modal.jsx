@@ -1,4 +1,5 @@
 import * as Dialog from '@radix-ui/react-dialog';
+import { useTranslation } from 'react-i18next';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Icon } from './Icon';
 import { ICONS } from '@/lib/icons';
@@ -27,6 +28,7 @@ export function Modal({
   contentClassName,
   bodyClassName,
 }) {
+  const { t } = useTranslation();
   const isOpen = open ?? true;
 
   const handleOpenChange = (v) => {
@@ -80,7 +82,7 @@ export function Modal({
                       <Dialog.Close asChild>
                         <button
                           type="button"
-                          aria-label="Tutup"
+                          aria-label={t('common.close')}
                           className="text-text-muted hover:text-text transition-colors rounded-btn p-1 hover:bg-wash shrink-0"
                         >
                           <Icon name={ICONS.actions.close} size={18} />
@@ -95,7 +97,7 @@ export function Modal({
                       <Dialog.Close asChild>
                         <button
                           type="button"
-                          aria-label="Tutup"
+                          aria-label={t('common.close')}
                           className="absolute right-3 top-3 z-10 text-text-muted hover:text-text transition-colors rounded-btn p-1 hover:bg-wash"
                         >
                           <Icon name={ICONS.actions.close} size={18} />

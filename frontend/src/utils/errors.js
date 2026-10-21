@@ -7,38 +7,44 @@
  *   - Technical details stay in the browser console (dev only).
  */
 
-// ─── HTTP status → user-friendly message ─────────────────────────────────────
-const HTTP_MESSAGES = {
-  400: 'Data yang dikirim tidak valid.',
-  401: 'Silakan login kembali.',
-  403: 'Anda tidak memiliki akses ke fitur ini.',
-  404: 'Data tidak ditemukan.',
-  408: 'Koneksi timeout. Silakan coba lagi.',
-  422: 'Data yang dimasukkan belum valid.',
-  429: 'Terlalu banyak permintaan. Silakan tunggu beberapa saat.',
-  500: 'Terjadi kesalahan pada server.',
-  502: 'Server tidak merespons. Coba lagi nanti.',
-  503: 'Layanan sedang tidak tersedia.',
-  504: 'Koneksi timeout. Silakan coba lagi.',
+import i18n from '@/i18n';
+
+// ─── HTTP status → translation key ───────────────────────────────────────────
+const HTTP_MESSAGE_KEYS = {
+  400: 'errors.http400',
+  401: 'errors.http401',
+  403: 'errors.http403',
+  404: 'errors.http404',
+  408: 'errors.http408',
+  422: 'errors.http422',
+  429: 'errors.http429',
+  500: 'errors.http500',
+  502: 'errors.http502',
+  503: 'errors.http503',
+  504: 'errors.http504',
 };
 
-// ─── Backend error code → user-friendly message ───────────────────────────────
-const CODE_MESSAGES = {
-  AI_LOOP_GUARD:       'Sistem anti-spam aktif. Tunggu sekitar 1 menit.',
-  AI_RATE_LIMIT:       'Kuota AI sedang mencapai batas. Coba beberapa menit lagi.',
-  TIMEOUT:             'Koneksi timeout. Silakan coba lagi.',
-  SERVICE_UNAVAILABLE: 'Layanan sedang tidak tersedia.',
-  DB_ERROR:            'Gagal memproses data.',
-  FILE_ERROR:          'Gagal memproses file.',
-  VALIDATION_ERROR:    'Data yang dimasukkan belum valid.',
-  PARSE_ERROR:         'Terjadi kesalahan saat memproses respons AI.',
-  NOT_FOUND:           'Data tidak ditemukan.',
-  UNAUTHORIZED:        'Silakan login kembali.',
-  INTERNAL_ERROR:      'Terjadi kesalahan pada sistem.',
+// ─── Backend error code → translation key ────────────────────────────────────
+const CODE_MESSAGE_KEYS = {
+  AI_LOOP_GUARD:       'errors.codeAiLoopGuard',
+  AI_RATE_LIMIT:       'errors.codeAiRateLimit',
+  TIMEOUT:             'errors.codeTimeout',
+  SERVICE_UNAVAILABLE: 'errors.codeServiceUnavailable',
+  DB_ERROR:            'errors.codeDbError',
+  FILE_ERROR:          'errors.codeFileError',
+  VALIDATION_ERROR:    'errors.codeValidationError',
+  PARSE_ERROR:         'errors.codeParseError',
+  NOT_FOUND:           'errors.codeNotFound',
+  UNAUTHORIZED:        'errors.codeUnauthorized',
+  INTERNAL_ERROR:      'errors.codeInternalError',
 };
 
-const NETWORK_MESSAGE = 'Tidak dapat terhubung ke server. Periksa koneksi internet Anda.';
-const FALLBACK_MESSAGE = 'Terjadi kesalahan yang tidak diketahui.';
+function tr(key, options) {
+  return i18n.t(key, options);
+}
+
+const NETWORK_KEY = 'errors.network';
+const FALLBACK_KEY = 'errors.fallback';
 
 // ─── Core extractor ───────────────────────────────────────────────────────────
 
@@ -56,7 +62,7 @@ const FALLBACK_MESSAGE = 'Terjadi kesalahan yang tidak diketahui.';
  * @returns {string}        — safe message to show the user
  */
 export function extractErrorMessage(error) {
-  if (!error) return FALLBACK_MESSAGE;
+  if (!error) return tr(FALLBACK_KEY);
 
   // ── Axios error ──────────────────────────────────────────────────────────
   if (error.response) {
@@ -64,8 +70,8 @@ export function extractErrorMessage(error) {
 
     // Structured backend error  { success, code, message }
     if (data && typeof data === 'object') {
-      if (data.code && CODE_MESSAGES[data.code]) {
-        return CODE_MESSAGES[data.code];
+      if (data.code && CODE_MESSAGE_KEYS[data.code]) {
+        return tr(CODE_MESSAGE_KEYS[data.code]);
       }
       if (data.message && typeof data.message === 'string' && data.message.length < 200) {
         return data.message;
@@ -77,15 +83,17 @@ export function extractErrorMessage(error) {
       }
     }
 
-    return HTTP_MESSAGES[status] || `Terjadi kesalahan (${status}).`;
+    return HTTP_MESSAGE_KEYS[status]
+      ? tr(HTTP_MESSAGE_KEYS[status])
+      : tr('errors.httpGeneric', { status });
   }
 
   // ── No response (network / CORS / timeout) ───────────────────────────────
   if (error.request || error.code === 'ERR_NETWORK' || error.code === 'ECONNABORTED') {
     if (error.code === 'ECONNABORTED' || (error.message || '').toLowerCase().includes('timeout')) {
-      return HTTP_MESSAGES[408];
+      return tr(HTTP_MESSAGE_KEYS[408]);
     }
-    return NETWORK_MESSAGE;
+    return tr(NETWORK_KEY);
   }
 
   // ── Plain Error object (fetch or manual throw) ───────────────────────────
@@ -93,7 +101,7 @@ export function extractErrorMessage(error) {
     const msg = error.message || '';
     // Only show if it looks like a clean user message, not a stack/technical string
     if (_isSafeMessage(msg)) return msg;
-    return FALLBACK_MESSAGE;
+    return tr(FALLBACK_KEY);
   }
 
   // ── String ───────────────────────────────────────────────────────────────
@@ -101,7 +109,7 @@ export function extractErrorMessage(error) {
     return error;
   }
 
-  return FALLBACK_MESSAGE;
+  return tr(FALLBACK_KEY);
 }
 
 // ─── Internal helpers ─────────────────────────────────────────────────────────
@@ -121,6 +129,6 @@ function _isSafeMessage(msg) {
 
 /** Strip any internal details that may have leaked into the `detail` field. */
 function _sanitizeDetail(detail) {
-  if (!_isSafeMessage(detail)) return FALLBACK_MESSAGE;
+  if (!_isSafeMessage(detail)) return tr(FALLBACK_KEY);
   return detail;
 }

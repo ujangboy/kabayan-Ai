@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { cn } from '@/utils';
 import { ICONS } from '@/lib/icons';
@@ -6,27 +7,28 @@ import { Icon } from '@/components/ui';
 const PROMPT_CARDS = [
   {
     icon: ICONS.learning.bookOpen,
-    title: 'Ringkas materi Jaringan Komputer',
-    prompt: 'Tolong ringkas materi Jaringan Komputer dengan poin-poin penting dan contoh sederhana.',
+    titleKey: 'chat.promptSummaryTitle',
+    promptKey: 'chat.promptSummaryPrompt',
   },
   {
     icon: ICONS.ui.help,
-    title: 'Buat 5 latihan soal kuis',
-    prompt: 'Buatkan 5 latihan soal kuis pilihan ganda beserta kunci jawaban dan pembahasan singkat.',
+    titleKey: 'chat.promptQuizTitle',
+    promptKey: 'chat.promptQuizPrompt',
   },
   {
     icon: ICONS.learning.network,
-    title: 'Jelaskan konsep Graf & Pohon',
-    prompt: 'Jelaskan konsep Graf dan Pohon seperti sedang mengajarkan pemula, lengkap dengan analogi dan contoh.',
+    titleKey: 'chat.promptGraphTitle',
+    promptKey: 'chat.promptGraphPrompt',
   },
   {
     icon: ICONS.learning.calendar,
-    title: 'Buat rencana belajar 7 hari',
-    prompt: 'Bantu saya menyusun rencana belajar 7 hari yang efektif untuk persiapan ujian mendatang.',
+    titleKey: 'chat.promptPlanTitle',
+    promptKey: 'chat.promptPlanPrompt',
   },
 ];
 
 export default function ChatEmptyState({ onPromptSelect }) {
+  const { t } = useTranslation();
   return (
     <div className="flex-1 flex flex-col items-center justify-center px-4 py-8 md:py-10">
       <div className="w-full max-w-xl mx-auto flex flex-col items-center text-center">
@@ -55,7 +57,7 @@ export default function ChatEmptyState({ onPromptSelect }) {
           transition={{ delay: 0.08, duration: 0.38, ease: [0.16, 1, 0.3, 1] }}
           className="text-xl font-semibold tracking-tight leading-snug text-text max-w-sm"
         >
-          Ada materi yang ingin kita pelajari hari ini?
+          {t('chat.emptyTitle')}
         </motion.h1>
 
         <motion.p
@@ -64,7 +66,7 @@ export default function ChatEmptyState({ onPromptSelect }) {
           transition={{ delay: 0.13, duration: 0.38, ease: [0.16, 1, 0.3, 1] }}
           className="mt-1.5 text-sm leading-relaxed text-text-secondary max-w-sm"
         >
-          Pilih topik cepat di bawah atau tanyakan apa pun kepada Kabayan AI.
+          {t('chat.emptySubtitle')}
         </motion.p>
 
         {/* Quick prompt cards */}
@@ -76,13 +78,13 @@ export default function ChatEmptyState({ onPromptSelect }) {
         >
           {PROMPT_CARDS.map((card, idx) => (
             <motion.button
-              key={card.title}
+              key={card.titleKey}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.22 + idx * 0.06, duration: 0.3 }}
               whileHover={{ scale: 1.015, y: -1 }}
               whileTap={{ scale: 0.97 }}
-              onClick={() => onPromptSelect?.(card.prompt)}
+              onClick={() => onPromptSelect?.(t(card.promptKey))}
               className={cn(
                 'group flex items-center gap-2.5 rounded-xl border p-3.5 text-left',
                 'bg-card border-border',
@@ -95,7 +97,7 @@ export default function ChatEmptyState({ onPromptSelect }) {
               </span>
               <span className="flex-1 min-w-0">
                 <span className="block text-xs font-medium leading-tight text-text group-hover:text-text line-clamp-2">
-                  {card.title}
+                  {t(card.titleKey)}
                 </span>
               </span>
             </motion.button>

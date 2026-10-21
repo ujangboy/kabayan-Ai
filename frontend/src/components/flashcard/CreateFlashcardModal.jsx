@@ -27,7 +27,7 @@ export default function CreateFlashcardModal({ open, subjects, onClose, onSucces
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: data.toString(),
       });
-      if (!res.ok) throw new Error('Gagal menyimpan flashcard.');
+      if (!res.ok) throw new Error(t('flashcard.saveFailed'));
       onSuccess();
     } catch (err) {
       setError(extractErrorMessage(err));

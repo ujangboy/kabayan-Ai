@@ -38,6 +38,22 @@ export const Q_TYPE_MAP = {
   'Perhitungan':'calculation','Campuran':'mixed',
 };
 
+const EXAM_TYPE_LABEL_KEYS = {
+  'latihan harian': 'exam.config.examDaily',
+  quiz: 'exam.config.examQuiz',
+  uts: 'exam.config.examUts',
+  uas: 'exam.config.examUas',
+  custom: 'exam.config.examCustom',
+};
+
+export function getExamTypeLabel(t, type) {
+  const raw = String(type || '').trim();
+  if (!raw) return t('exam.history.defaultExamType');
+  const normalized = raw.toLowerCase().replace(/_/g, ' ').replace(/\s+/g, ' ').trim();
+  const key = EXAM_TYPE_LABEL_KEYS[normalized];
+  return key ? t(key) : raw.toUpperCase().replace(/_/g, ' ');
+}
+
 // Reverse map: kode → label yang readable
 export const Q_TYPE_LABEL = {
   mcq:          'Pilihan Ganda',
@@ -100,17 +116,17 @@ export function SectionHeader({ icon, title, subtitle, action }) {
 
 // ─── Shared status helpers ────────────────────────────────────────────────────
 export const STATUS_META = {
-  mastered:       { label: 'Mastered',        color: 'success', border: 'border-success/40',  bg: 'bg-success/5'  },
-  completed:      { label: 'Selesai',          color: 'primary', border: 'border-primary/30',  bg: 'bg-primary/5'  },
-  active:        { label: 'Sedang Belajar',   color: 'blue',    border: 'border-accent-blue/30', bg: 'bg-accent-blue/5' },
-  archived:       { label: 'Arsip',            color: 'teal',    border: 'border-accent-teal/30', bg: 'bg-accent-teal/5' },
+  mastered:       { labelKey: 'exam.statusMastered', color: 'success', border: 'border-success/40',  bg: 'bg-success/5'  },
+  completed:      { labelKey: 'exam.statusCompleted', color: 'primary', border: 'border-primary/30',  bg: 'bg-primary/5'  },
+  active:        { labelKey: 'exam.statusActive', color: 'blue',    border: 'border-accent-blue/30', bg: 'bg-accent-blue/5' },
+  archived:       { labelKey: 'exam.statusArchived', color: 'teal',    border: 'border-accent-teal/30', bg: 'bg-accent-teal/5' },
 };
 
 const BADGE_META = {
-  90: { label: 'Excellent',         color: 'success' },
-  80: { label: 'Very Good',         color: 'primary' },
-  70: { label: 'Good',              color: 'blue'    },
-  0:  { label: 'Need Improvement',  color: 'danger'  },
+  90: { labelKey: 'exam.badgeExcellent', color: 'success' },
+  80: { labelKey: 'exam.badgeVeryGood', color: 'primary' },
+  70: { labelKey: 'exam.badgeGood', color: 'blue'    },
+  0:  { labelKey: 'exam.badgeNeedsImprovement', color: 'danger'  },
 };
 
 export function getBadge(score) {

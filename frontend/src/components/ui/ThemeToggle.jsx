@@ -1,4 +1,5 @@
 import { forwardRef, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 function SunIcon() {
   return (
@@ -18,6 +19,7 @@ function MoonIcon() {
 }
 
 export const ThemeToggle = forwardRef(function ThemeToggle({ className = '', ...props }, ref) {
+  const { t } = useTranslation();
   const [theme, setTheme] = useState(() =>
     document.documentElement.classList.contains('dark') ? 'dark' : 'light'
   );
@@ -39,7 +41,7 @@ export const ThemeToggle = forwardRef(function ThemeToggle({ className = '', ...
         setTheme((t) => (t === 'dark' ? 'light' : 'dark'));
       }}
       className={`relative z-[11] rounded-xl p-2 text-text-secondary transition-[background-color,color] duration-150 hover:bg-wash hover:text-text active:scale-[0.98] ${className}`}
-      aria-label={theme === 'dark' ? 'Ganti ke mode terang' : 'Ganti ke mode gelap'}
+      aria-label={theme === 'dark' ? t('settings.themeSwitchToLight') : t('settings.themeSwitchToDark')}
     >
       {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
     </button>

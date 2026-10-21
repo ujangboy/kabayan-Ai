@@ -207,9 +207,9 @@ export default function DashboardPage() {
                 <div className="overflow-x-auto"><table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border">
-                      <th className="px-4 py-2.5 text-left text-xs font-medium text-text-muted">File</th>
-                      <th className="px-4 py-2.5 text-left text-xs font-medium text-text-muted">Mata Pelajaran</th>
-                      <th className="px-4 py-2.5 text-left text-xs font-medium text-text-muted">Status</th>
+                      <th className="px-4 py-2.5 text-left text-xs font-medium text-text-muted">{t('common.file')}</th>
+                      <th className="px-4 py-2.5 text-left text-xs font-medium text-text-muted">{t('dashboard.colSubject')}</th>
+                      <th className="px-4 py-2.5 text-left text-xs font-medium text-text-muted">{t('common.status')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -257,9 +257,9 @@ export default function DashboardPage() {
                 <div className="overflow-x-auto"><table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border">
-                      <th className="px-4 py-2.5 text-left text-xs font-medium text-text-muted">Judul Quiz</th>
-                      <th className="px-4 py-2.5 text-right text-xs font-medium text-text-muted">Skor</th>
-                      <th className="px-4 py-2.5 text-right text-xs font-medium text-text-muted">Tanggal</th>
+                      <th className="px-4 py-2.5 text-left text-xs font-medium text-text-muted">{t('dashboard.colQuizTitle')}</th>
+                      <th className="px-4 py-2.5 text-right text-xs font-medium text-text-muted">{t('common.score')}</th>
+                      <th className="px-4 py-2.5 text-right text-xs font-medium text-text-muted">{t('common.date')}</th>
                     </tr>
                   </thead>
                   <tbody>

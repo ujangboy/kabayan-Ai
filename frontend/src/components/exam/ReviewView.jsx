@@ -38,7 +38,7 @@ export default function ReviewView({ sessionData, evalData }) {
     } catch {
       setExplanations(prev => ({
         ...prev,
-        [i]: { loading: false, text: '', error: 'Gagal memuat penjelasan.' },
+        [i]: { loading: false, text: '', error: t('exam.detail.explanationError') },
       }));
     }
   };
@@ -46,14 +46,14 @@ export default function ReviewView({ sessionData, evalData }) {
   return (
     <div className="space-y-5">
       <div className="card-base p-5">
-        <SectionHeader icon={ICONS.learning.bookOpen} title="Review Jawaban"
-          subtitle={`${questions.length} soal · Klik untuk melihat penjelasan`} />
+        <SectionHeader icon={ICONS.learning.bookOpen} title={t('common.reviewAnswers')}
+          subtitle={t('exam.review.subtitle', { count: questions.length })} />
 
         <div className="space-y-3">
           {questions.map((q, i) => {
             const fb         = getFb(q.id);
             const isCorrect  = fb?.is_correct;
-            const userAns    = fb?.user_answer || answers[String(q.id)] || '(Tidak dijawab)';
+            const userAns    = fb?.user_answer || answers[String(q.id)] || '';
             const correctAns = fb?.correct_answer || q.answer || '';
             const isOpen     = expandedIdx === i;
             const expl       = explanations[i];
@@ -73,7 +73,7 @@ export default function ReviewView({ sessionData, evalData }) {
                                           <span className="text-3xs font-bold text-text">?</span>}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs text-text-muted mb-0.5">Soal {i+1} · {q.topic} · {q.type}</p>
+                    <p className="text-xs text-text-muted mb-0.5">{t('exam.detail.questionProgress', { current: i + 1, total: questions.length })} · {q.topic} · {q.type}</p>
                     <div className="text-base text-text font-medium line-clamp-2">
                       <MathMarkdown>{q.question}</MathMarkdown>
                     </div>
@@ -89,14 +89,14 @@ export default function ReviewView({ sessionData, evalData }) {
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                           <div className="p-3 rounded-lg bg-background">
-                            <p className="text-xs font-semibold text-text-muted mb-1">Jawaban Kamu</p>
+                            <p className="text-xs font-semibold text-text-muted mb-1">{t('exam.detail.yourAnswer')}</p>
                             <div className={cn('font-medium', isCorrect ? 'text-success' : 'text-danger')}>
-                              <MathMarkdown>{userAns || '(Tidak dijawab)'}</MathMarkdown>
+                              <MathMarkdown>{userAns || t('quiz.notAnswered')}</MathMarkdown>
                             </div>
                           </div>
                           {!isCorrect && (
                             <div className="p-3 rounded-lg bg-success/5 border border-success/15">
-                              <p className="text-xs font-semibold text-text-muted mb-1">Jawaban Benar</p>
+                              <p className="text-xs font-semibold text-text-muted mb-1">{t('exam.detail.correctAnswer')}</p>
                               <div className="font-medium text-success">
                                 <MathMarkdown>{correctAns}</MathMarkdown>
                               </div>
@@ -106,7 +106,7 @@ export default function ReviewView({ sessionData, evalData }) {
 
                         {fb?.feedback && (
                           <div className="p-3 rounded-lg bg-primary/5 border border-primary/15">
-                            <p className="text-xs font-semibold text-primary mb-1">Feedback AI</p>
+                            <p className="text-xs font-semibold text-primary mb-1">{t('exam.detail.aiFeedback')}</p>
                             <MathMarkdown>{fb.feedback}</MathMarkdown>
                           </div>
                         )}
@@ -122,7 +122,7 @@ export default function ReviewView({ sessionData, evalData }) {
                           >
                             {q.explanation && !expl?.text && (
                               <div className="p-3 rounded-lg bg-background border border-border">
-                                <p className="text-xs font-semibold text-text-muted mb-1">Penjelasan</p>
+                                <p className="text-xs font-semibold text-text-muted mb-1">{t('common.explanation')}</p>
                                 <MathMarkdown>{q.explanation}</MathMarkdown>
                               </div>
                             )}
@@ -130,7 +130,7 @@ export default function ReviewView({ sessionData, evalData }) {
                             {expl?.text && (
                               <div className="p-3 rounded-lg bg-accent-teal/5 border border-accent-teal/20">
                                 <p className="text-xs font-semibold text-accent-teal mb-1 flex items-center gap-1">
-                                  <Icon name={ICONS.learning.lightbulb} size={11} /> Penjelasan AI
+                                  <Icon name={ICONS.learning.lightbulb} size={11} /> {t('exam.detail.aiExplanation')}
                                 </p>
                                 <MathMarkdown>{expl.text}</MathMarkdown>
                               </div>
@@ -160,8 +160,8 @@ export default function ReviewView({ sessionData, evalData }) {
                               className="ml-auto flex items-center gap-1 px-2.5 py-1 rounded-lg bg-accent-teal/10 text-accent-teal border border-accent-teal/20 hover:bg-accent-teal/20 transition-colors disabled:opacity-50"
                             >
                               {expl?.loading
-                                ? <><Icon name={ICONS.status.loading} size={11} className="animate-spin" /> Memuat...</>
-                                : <><Icon name={ICONS.learning.lightbulb} size={11} /> Jelaskan</>}
+                                ? <><Icon name={ICONS.status.loading} size={11} className="animate-spin" /> {t('common.loading')}</>
+                                : <><Icon name={ICONS.learning.lightbulb} size={11} /> {t('exam.detail.explainBtn')}</>}
                             </button>
                           )}
                           
@@ -169,7 +169,7 @@ export default function ReviewView({ sessionData, evalData }) {
                           {(!q.is_correct || expl?.text || q.explanation) && (
                             <button
                               onClick={() => {
-                                const topic = q.topic || 'Review Soal';
+                                const topic = q.topic || t('exam.detail.review');
                                 const sessionId = sessionData?.id;
                                 const subjectName = sessionData?.subject_name || '';
                                 navigate(`/chat?tutor=1&exam=${sessionId}&subject=${encodeURIComponent(subjectName)}&topic=${encodeURIComponent(topic)}`);
@@ -180,7 +180,7 @@ export default function ReviewView({ sessionData, evalData }) {
                                 "bg-primary/10 text-primary border-primary/20 hover:bg-primary/20"
                               )}
                             >
-                              <Icon name={ICONS.communication.chat} size={11} /> Tanya Tutor
+                              <Icon name={ICONS.communication.chat} size={11} /> {t('exam.detail.askTutor')}
                             </button>
                           )}
                         </div>

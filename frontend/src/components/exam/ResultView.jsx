@@ -29,6 +29,12 @@ function useCountUp(target, duration = 900) {
   return value;
 }
 
+const PRIORITY_KEYS = {
+  Tinggi: 'exam.result.priorityHigh',
+  Menengah: 'exam.result.priorityMedium',
+  Rendah: 'exam.result.priorityLow',
+};
+
 export default function ResultView({ evalData, onReview, onFinish, sessionId, onOpenPlanTab, subjectName = '' }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -57,6 +63,7 @@ export default function ResultView({ evalData, onReview, onFinish, sessionId, on
     overall_feedback = '' } = evalData;
 
   const scoreColor = score >= 80 ? 'text-success' : score >= 60 ? 'text-warning' : 'text-danger';
+  const localizePriority = (priority) => PRIORITY_KEYS[priority] ? t(PRIORITY_KEYS[priority]) : priority;
 
   const handleSelesai = async () => {
     if (saved) {
@@ -182,7 +189,7 @@ export default function ResultView({ evalData, onReview, onFinish, sessionId, on
                   </div>
                   
                   <div className="shrink-0 mt-0.5">
-                    <Chip label={t('exam.result.priorityLabel', { priority: topic.priority })} size="xs"
+                    <Chip label={t('exam.result.priorityLabel', { priority: localizePriority(topic.priority) })} size="xs"
                       color={topic.priority === 'Tinggi' ? 'danger' : topic.priority === 'Menengah' ? 'warning' : 'teal'} />
                   </div>
                 </div>
@@ -231,7 +238,7 @@ export default function ResultView({ evalData, onReview, onFinish, sessionId, on
           <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
             {(planPreview.study_plan || []).map((item, i) => (
               <div key={i} className="flex items-start gap-2 p-2 rounded-lg bg-background/50 border border-border text-xs">
-                <span className="text-text-muted font-mono shrink-0 w-12">H{i+1}</span>
+                <span className="text-text-muted font-mono shrink-0 w-12">{t('exam.result.dayShort', { n: i + 1 })}</span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 mb-0.5">
                     <span className="font-medium text-text">{item.topic}</span>
@@ -240,7 +247,7 @@ export default function ResultView({ evalData, onReview, onFinish, sessionId, on
                   <p className="text-text-secondary">{item.activity}</p>
                   {item.resources && <p className="text-primary/80 mt-0.5">{item.resources}</p>}
                 </div>
-                <span className="text-text-muted shrink-0">{item.duration_minutes}m</span>
+                <span className="text-text-muted shrink-0">{item.duration_minutes}{t('studyPlan.minutesShort')}</span>
               </div>
             ))}
           </div>

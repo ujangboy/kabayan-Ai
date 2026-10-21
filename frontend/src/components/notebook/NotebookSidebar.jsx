@@ -70,14 +70,14 @@ export function NotebookSidebar({
             type="text"
             value={noteSearch}
             onChange={(e) => setNoteSearch(e.target.value)}
-            placeholder="Cari catatan..."
+            placeholder={t('notebook.searchPlaceholder')}
             className="w-full pl-7 pr-7 py-1.5 bg-popover border border-strong rounded-lg text-xs text-text placeholder-text-secondary focus:outline-none focus:border-primary transition-colors"
           />
           {noteSearch && (
-            <Tooltip label="Bersihkan pencarian">
+            <Tooltip label={t('common.clearSearch')}>
               <button
                 onClick={() => setNoteSearch('')}
-                aria-label="Bersihkan pencarian"
+                aria-label={t('common.clearSearch')}
                 className="absolute right-2 top-1/2 -translate-y-1/2 text-text-muted hover:text-text transition-colors"
               >
                 <Icon name={ICONS.actions.close} size={11} />
@@ -114,7 +114,7 @@ export function NotebookSidebar({
         ) : filteredNotes.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <Icon name={ICONS.actions.search} size={20} className="text-text-muted mb-2 opacity-50" />
-            <p className="text-xs text-text-muted">Tidak ada catatan yang cocok</p>
+            <p className="text-xs text-text-muted">{t('notebook.noMatch')}</p>
           </div>
         ) : (
           <>

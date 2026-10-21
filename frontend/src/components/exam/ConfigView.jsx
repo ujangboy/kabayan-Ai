@@ -29,6 +29,34 @@ export default function ConfigView({ subjectId, analysis, onDone }) {
 
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
 
+  const OPTION_KEYS = {
+    'Latihan Harian': 'exam.config.examDaily',
+    'Quiz': 'exam.config.examQuiz',
+    'UTS': 'exam.config.examUts',
+    'UAS': 'exam.config.examUas',
+    'Custom': 'exam.config.examCustom',
+    'Pemula': 'exam.config.difficultyBeginner',
+    'Menengah': 'exam.config.difficultyIntermediate',
+    'Sulit': 'exam.config.difficultyHard',
+    'Campuran': 'exam.config.typeMixed',
+    'Pilihan Ganda': 'exam.config.typeMcq',
+    'Benar / Salah': 'exam.config.typeTrueFalse',
+    'Isian Singkat': 'exam.config.typeShortAnswer',
+    'Essay': 'exam.config.typeEssay',
+    'Studi Kasus': 'exam.config.typeCaseStudy',
+    'Analisis': 'exam.config.typeAnalysis',
+    'Perhitungan': 'exam.config.typeCalculation',
+    'Semua Materi': 'exam.config.focusAll',
+    'Bab Tertentu': 'exam.config.focusChapter',
+    'Topik Tertentu': 'exam.config.focusTopic',
+    'Materi Lemah': 'exam.config.focusWeak',
+    'Materi Favorit': 'exam.config.focusFavorite',
+  };
+  const localizeOption = (opt) => {
+    const key = OPTION_KEYS[String(opt)];
+    return key ? t(key) : String(opt);
+  };
+
   const handleSubmit = async () => {
     if (!subjectId) return setError(t('exam.config.selectSubjectFirst'));
     if (selectedMaterialIds.length === 0) return setError(t('exam.config.selectMaterialFirst'));
@@ -84,7 +112,7 @@ export default function ConfigView({ subjectId, analysis, onDone }) {
       <SectionHeader icon={ICONS.status.pending} title={t('exam.config.title')}
         subtitle={t('exam.config.subtitle')} />
 
-      <OptionGroup label={t('exam.config.examTypeLabel')} options={EXAM_TYPES} field="exam_type" />
+      <OptionGroup label={t('exam.config.examTypeLabel')} options={EXAM_TYPES} field="exam_type" renderLabel={localizeOption} />
       <div>
         <p className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">{t('exam.config.questionCountLabel')}</p>
         <div className="flex flex-wrap gap-2">
@@ -92,7 +120,7 @@ export default function ConfigView({ subjectId, analysis, onDone }) {
             <button key={c} onClick={() => set('total_questions', c)}
               className={cn('px-3 py-1.5 rounded-lg text-xs font-medium border transition-all',
                 form.total_questions === c ? 'bg-primary text-white border-primary' : 'bg-card text-text border-border hover:border-primary/40')}>
-              {c === 'custom' ? 'Custom' : c}
+              {c === 'custom' ? t('exam.config.countCustom') : c}
             </button>
           ))}
         </div>
@@ -103,12 +131,12 @@ export default function ConfigView({ subjectId, analysis, onDone }) {
             className="mt-2 w-32 input-base" />
         )}
       </div>
-      <OptionGroup label={t('exam.config.difficultyLabel')} options={DIFFICULTIES} field="difficulty" />
-      <OptionGroup label={t('exam.config.bloomLabel')} options={BLOOMS} field="bloom_level" />
-      <OptionGroup label={t('exam.config.questionTypeLabel')} options={Q_TYPES} field="question_type" />
-      <OptionGroup label={t('exam.config.focusLabel')} options={FOCUSES} field="focus_material" />
+      <OptionGroup label={t('exam.config.difficultyLabel')} options={DIFFICULTIES} field="difficulty" renderLabel={localizeOption} />
+      <OptionGroup label={t('exam.config.bloomLabel')} options={BLOOMS} field="bloom_level" renderLabel={opt => t(`exam.config.bloom${opt}`)} />
+      <OptionGroup label={t('exam.config.questionTypeLabel')} options={Q_TYPES} field="question_type" renderLabel={localizeOption} />
+      <OptionGroup label={t('exam.config.focusLabel')} options={FOCUSES} field="focus_material" renderLabel={localizeOption} />
       <OptionGroup label={t('exam.config.durationLabel')} options={DURATIONS} field="duration"
-        renderLabel={d => d.label} />
+        renderLabel={d => t(`exam.config.duration${d.value ?? 'Unlimited'}`)} />
 
       <MaterialPicker
         subjectId={subjectId}

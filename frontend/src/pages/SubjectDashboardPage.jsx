@@ -250,8 +250,8 @@ export default function SubjectDashboardPage() {
               {/* Tabs */}
               <div className="flex items-center gap-1 px-2 pt-2 border-b border-border bg-surface">
                 {[
-                  { key: 'files', label: 'Berkas & Materi', icon: ICONS.files.document },
-                  { key: 'analytics', label: 'Riwayat & Analytics', icon: ICONS.learning.barChart },
+                  { key: 'files', label: t('subjectDashboard.tabFiles'), icon: ICONS.files.document },
+                  { key: 'analytics', label: t('subjectDashboard.tabAnalytics'), icon: ICONS.learning.barChart },
                 ].map(tab => (
                   <button
                     key={tab.key}

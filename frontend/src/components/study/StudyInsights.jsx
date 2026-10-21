@@ -173,7 +173,7 @@ export default function StudyInsights() {
             <Skeleton className="h-4 w-32 rounded-lg" />
           ) : (
             <div className="text-sm text-text space-y-1">
-              <p>{graphTopics != null ? `${graphTopics} topik` : '—'}</p>
+              <p>{graphTopics != null ? t('studyInsights.topicsCount', { count: graphTopics }) : '—'}</p>
               {graphWeak != null && graphWeak > 0 && (
                 <p className="text-xs text-warning">
                   {t('studyInsights.weakTopics', { count: graphWeak })}
