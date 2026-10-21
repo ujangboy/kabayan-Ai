@@ -4,7 +4,8 @@ import { ICONS } from '@/lib/icons';
 import { Icon, Tooltip } from '@/components/ui';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
+import { subjectAPI } from '@/services/api';
 
 // Crumb = { to, label, icon?, current? } | { ellipsis: true }
 function buildCrumbs(pathname, t, subjectName) {
@@ -64,16 +65,19 @@ function collapseCrumbs(crumbs, maxItems) {
 export default function Breadcrumbs({ maxItems = 4 }) {
   const { t } = useTranslation();
   const { pathname } = useLocation();
-  const queryClient = useQueryClient();
 
   const segs = pathname.split('/').filter(Boolean);
-  const subjectId = Number(segs[1]) || null;
+  const subjectId = segs[0] === 'subjects' ? Number(segs[1]) || null : null;
 
-  let subjectName = null;
-  if (segs[0] === 'subjects' && subjectId) {
-    const cached = queryClient.getQueryData(['subject-dashboard', subjectId]);
-    subjectName = cached?.subject?.name || null;
-  }
+  // Subscribe to the same query used by SubjectDashboardPage. Reading the
+  // query cache directly would not re-render when the dashboard request
+  // resolves, leaving the crumb stuck on "Memuat...".
+  const { data: subjectDashboard } = useQuery({
+    queryKey: ['subject-dashboard', subjectId],
+    queryFn: () => subjectAPI.getDashboard(subjectId).then((res) => res.data),
+    enabled: !!subjectId,
+  });
+  const subjectName = subjectDashboard?.subject?.name || null;
 
   const crumbs = collapseCrumbs(buildCrumbs(pathname, t, subjectName), maxItems);
   if (crumbs.length === 0) return null;
