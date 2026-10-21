@@ -15,8 +15,11 @@ sqlalchemy
 alembic
 python-multipart
 numpy
+pandas
+pyarrow
 python-pptx
 yt-dlp
+youtube-transcript-api
 fsrs
 
 # Dev
