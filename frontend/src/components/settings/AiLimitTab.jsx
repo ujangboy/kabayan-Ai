@@ -33,9 +33,17 @@ export default function AiLimitTab() {
   const { t } = useTranslation();
 
   const { data: usage, isLoading: loadingUsage } = useQuery({
-    queryKey: ['ai-usage'],
+    queryKey: ['ai-usage', '24h'],
     queryFn: () => dataAPI.usage('24h').then((r) => r.data),
     staleTime: 5_000,
+  });
+
+  // Kartu "Total Token/Panggilan" memakai akumulasi seumur hidup; batas harian
+  // dan breakdown fitur tetap memakai jendela 24 jam.
+  const { data: usageAll, isLoading: loadingAll } = useQuery({
+    queryKey: ['ai-usage', 'all'],
+    queryFn: () => dataAPI.usage('all').then((r) => r.data),
+    staleTime: 30_000,
   });
 
   const { data: stats, isLoading: loadingStats } = useQuery({
@@ -46,11 +54,12 @@ export default function AiLimitTab() {
 
   const resetsIn = useCountdown(usage?.resets_at);
 
-  if (loadingUsage && loadingStats) {
+  if (loadingUsage && loadingAll && loadingStats) {
     return <div className="text-text-muted text-sm py-10">{t('common.loading')}</div>;
   }
 
   const u = usage || {};
+  const uAll = usageAll || u;
   const s = stats || {};
 
   const limit = u.limit || 8000;
@@ -84,12 +93,12 @@ export default function AiLimitTab() {
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         <div className="card-base p-4 flex flex-col gap-1">
           <Icon name={ICONS.ui.wallet} size={16} className="text-primary" />
-          <span className="text-xl font-bold text-text">{formatNumber(u.total_tokens)}</span>
+          <span className="text-xl font-bold text-text">{formatNumber(uAll.total_tokens)}</span>
           <span className="text-xs text-text-secondary">{t('settings.aiLimit.totalTokensAll')}</span>
         </div>
         <div className="card-base p-4 flex flex-col gap-1">
           <Icon name={ICONS.status.activity} size={16} className="text-primary" />
-          <span className="text-xl font-bold text-text">{formatNumber(u.total_calls)}</span>
+          <span className="text-xl font-bold text-text">{formatNumber(uAll.total_calls)}</span>
           <span className="text-xs text-text-secondary">{t('settings.aiLimit.totalCalls')}</span>
         </div>
         <div className="card-base p-4 flex flex-col gap-1">
