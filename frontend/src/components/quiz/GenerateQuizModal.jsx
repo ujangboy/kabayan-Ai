@@ -48,14 +48,12 @@ export function GenerateQuizModal({ open, onClose, subjects, onSuccess }) {
         const msg = extractErrorMessage(err) || t('quiz.errorGenerateFailed');
         setError(msg);
         setIsGenerating(false);
-        toast.error(msg);
       },
       onDone: (result) => {
         setIsGenerating(false);
         if (!result) return;
-        if (result.detail) { setError(result.detail); toast.error(result.detail); return; }
-        if (!result.id) { const m = t('quiz.errorMissingId'); setError(m); toast.error(m); return; }
-        toast.success(t('quiz.successCreated'));
+        if (result.detail) { setError(result.detail); return; }
+        if (!result.id) { const m = t('quiz.errorMissingId'); setError(m); return; }
         onSuccess(result.id);
       },
     });

@@ -190,11 +190,12 @@ def restore_material(db: Session, material_id: int):
     if not ok:
         return False
     try:
-        from services.rag_service import rag_service
-        import threading
-        threading.Thread(target=rag_service.rebuild_index, daemon=True).start()
+        from services.material_service import material_service
+        material_service.index_material_file(db, mat)
     except Exception as exc:
-        logger.warning(f"restore_material: gagal rebuild RAG mat_{material_id}: {exc}")
+        # File tetap dipulihkan walau indexing gagal; user bisa memicu
+        # reindex ulang tanpa kehilangan materi.
+        logger.warning(f"restore_material: gagal reindex RAG mat_{material_id}: {exc}")
     return mat.subject_id
 
 

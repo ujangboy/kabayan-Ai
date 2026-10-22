@@ -72,10 +72,14 @@ function PendingBanner({ t }) {
         exit={{ opacity: 0, y: -12 }}
         transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
         className="flex items-center gap-2 px-4 py-2 bg-warning/10 border-b border-warning/25 text-warning text-xs flex-wrap"
+        role="status"
+        aria-live="polite"
       >
         <Icon name={ICONS.actions.refresh} size={12} className="animate-spin" />
         <span>
-          {ops.length === 1 ? ops[0].label : t('appLayout.opRunningMultiple', { count: ops.length })}
+          {ops.length === 1
+            ? t('appLayout.aiProcessing', { label: ops[0].label })
+            : t('appLayout.aiProcessingMultiple', { count: ops.length })}
         </span>
         <span className="text-warning/70">·</span>
         <button

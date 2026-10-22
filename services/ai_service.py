@@ -135,11 +135,15 @@ class CapabilityRouter:
 # ─── AI Service ──────────────────────────────────────────────────────────────
 class AIService:
 
-    def _get_llm(self, capability: str, temperature: float = None, max_tokens: int = 1200) -> ChatGroq:
+    def _get_llm(self, capability: str, temperature: float = None, max_tokens: int = None) -> ChatGroq:
         global_rate_limiter.check_limit(capability)
         # Exam-related capabilities need longer timeout (multi-topic generation)
         exam_caps = {"exam_analysis", "exam_blueprint", "exam_question", "exam_evaluate", "reasoning", "quiz"}
         timeout = 90.0 if capability in exam_caps else 30.0
+        if max_tokens is None:
+            # Output JSON exam/quiz sangat panjang (soal + opsi + pembahasan).
+            # 1200 token membuat respons terpotong dan JSON tidak bisa diparse.
+            max_tokens = 4096 if capability in exam_caps else 1200
         return ChatGroq(
             api_key=config.GROQ_API_KEY,
             model_name=CapabilityRouter.get_model(capability),
@@ -157,6 +161,7 @@ class AIService:
         use_cache: bool = True,
         output_schema: Opt[Type[BaseModel]] = None,
         temperature: float = None,
+        max_tokens: Opt[int] = None,
     ) -> str | dict | list:
         if "context" in input_variables:
             input_variables = {
@@ -174,7 +179,7 @@ class AIService:
                 if cached:
                     return cached
 
-            llm = self._get_llm(capability, temperature=temperature)
+            llm = self._get_llm(capability, temperature=temperature, max_tokens=max_tokens)
 
             # If output_schema provided, try structured output first
             if output_schema:

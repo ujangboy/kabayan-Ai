@@ -5,9 +5,11 @@ import { ICONS } from '@/lib/icons';
 import { materiAPI } from '@/services/api';
 import { Modal, Button, Select, Input , Icon } from '@/components/ui';
 import { extractErrorMessage } from '@/utils/errors';
+import { usePendingOperation } from '@/hooks/usePendingOperation';
 
 export function UploadModal({ open, onClose, subjects, onSuccess }) {
   const { t } = useTranslation();
+  const processOp = usePendingOperation('process');
   const [file, setFile] = useState(null);
   const [subjectId, setSubjectId] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -25,7 +27,10 @@ export function UploadModal({ open, onClose, subjects, onSuccess }) {
     try {
       const res = await materiAPI.upload(formData);
       if (res.data?.detail) throw new Error(res.data.detail);
-      onSuccess();
+      if (res.data?.material_id) {
+        processOp.start(`process-${res.data.material_id}`);
+      }
+      onSuccess?.(res.data);
     } catch (err) {
       setError(extractErrorMessage(err) || t('materi.uploadFailedRetry'));
       setIsSubmitting(false);

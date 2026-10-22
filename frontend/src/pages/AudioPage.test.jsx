@@ -1,10 +1,11 @@
 // @vitest-environment jsdom
-import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, render, waitFor } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, useLocation } from 'react-router-dom';
 import '@/i18n';
 import { ToastProvider } from '@/components/Toast';
+import { useUiStore } from '@/store';
 import AudioPage from './AudioPage';
 
 const { mockAudio, mockMateri, mockSubjects } = vi.hoisted(() => ({
@@ -19,7 +20,18 @@ vi.mock('@/services/api', () => ({
   subjectAPI: mockSubjects,
 }));
 
+function LocationProbe() {
+  const location = useLocation();
+  return <div data-testid="location-search">{location.search}</div>;
+}
+
 describe('AudioPage', () => {
+  beforeEach(() => {
+    mockAudio.list.mockResolvedValue({ audio: [] });
+    mockMateri.getAll.mockResolvedValue({ data: { materials: [] } });
+    mockSubjects.getAll.mockResolvedValue({ data: { subjects: [] } });
+  });
+
   afterEach(() => {
     cleanup();
     vi.restoreAllMocks();
@@ -41,5 +53,27 @@ describe('AudioPage', () => {
 
     const logged = errorSpy.mock.calls.flat().join(' ');
     expect(logged).not.toContain('Query data cannot be undefined');
+  });
+
+  it('preserves subject_id and material_id when hydrating a deep link', async () => {
+    useUiStore.setState({ subjectFilterAudio: '' });
+
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <MemoryRouter initialEntries={['/audio?subject_id=2&material_id=13']}>
+          <ToastProvider>
+            <AudioPage />
+            <LocationProbe />
+          </ToastProvider>
+        </MemoryRouter>
+      </QueryClientProvider>
+    );
+
+    await waitFor(() => {
+      const search = screen.getByTestId('location-search').textContent;
+      expect(search).toContain('subject_id=2');
+      expect(search).toContain('material_id=13');
+    });
+    expect(useUiStore.getState().subjectFilterAudio).toBe('2');
   });
 });

@@ -93,7 +93,14 @@ async def upload_material(
         # ditulis ke disk (bukan dari stream upload) — lebih aman (stream hanya
         # dibaca sekali) dan mendukung file yang punya preamble kecil (mis. BOM).
         filepath, mat_id = material_service.upload_material_sync(db, subject_id, file)
-        return JSONResponse({"status": "success", "message": "Material uploaded, waiting for processing"})
+        # ID dikembalikan agar frontend bisa langsung mendaftarkan operasi
+        # pemrosesan global; tanpa ini file yang selesai cepat tidak pernah
+        # memunculkan banner/toast karena polling pertama sudah melihat Ready.
+        return JSONResponse({
+            "status": "success",
+            "message": "Material uploaded, waiting for processing",
+            "material_id": mat_id,
+        })
     except ValueError as e:
         # Batas 50MB ditegakkan streaming di service layer
         return JSONResponse(status_code=400, content={"detail": str(e)})

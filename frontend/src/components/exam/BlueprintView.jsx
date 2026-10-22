@@ -4,10 +4,19 @@ import { ICONS } from '@/lib/icons';
 import { Icon , Button} from '@/components/ui';
 
 import { examAPI } from '@/services/api';
-import { Chip, SectionHeader } from './shared';
+import { useBackgroundJob } from '@/hooks/useBackgroundJob';
+import { useJobStore } from '@/store/jobStore';
+import { usePageStateStore } from '@/store/pageStateStore';
+import { Chip, SectionHeader, VIEW, unwrapJobPayload } from './shared';
+
+const PAGE_KEY = 'exam-analyzer';
+const JOB_KEY = 'exam-questions';
 
 export default function BlueprintView({ blueprint, onGenerate, onGenerating, onBack }) {
   const { t } = useTranslation();
+  const { run: runJob } = useBackgroundJob();
+  const jobRunning = useJobStore((s) => Boolean(s.jobs[JOB_KEY]));
+  const questionsResult = useJobStore((s) => s.results[JOB_KEY]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState('');
   const [progress, setProgress] = useState(0);
@@ -15,6 +24,38 @@ export default function BlueprintView({ blueprint, onGenerate, onGenerating, onB
 
   const items = blueprint?.blueprint_items || [];
   const totalW = items.reduce((s, i) => s + (i.weight_percent || 0), 0);
+
+  useEffect(() => {
+    if (jobRunning) setIsGenerating(true);
+  }, [jobRunning]);
+
+  useEffect(() => {
+    if (!questionsResult) return;
+    const entry = useJobStore.getState().takeResult(JOB_KEY);
+    if (!entry) return;
+    setIsGenerating(false);
+    if (entry.status !== 'success') {
+      setError(entry.result?.message || t('exam.blueprint.failedGenerate'));
+      return;
+    }
+    const data = unwrapJobPayload(entry.result);
+    if (data?.detail) {
+      setError(data.detail);
+      return;
+    }
+    const store = usePageStateStore.getState();
+    const saved = store.load(PAGE_KEY) || {};
+    store.save(PAGE_KEY, {
+      ...saved,
+      blueprintModal: null,
+      configOpen: false,
+      sessionData: data,
+      quizClockStart: Date.now(),
+      view: VIEW.QUIZ,
+      updatedAt: Date.now(),
+    });
+    onGenerate?.(data);
+  }, [questionsResult, onGenerate, t]);
 
   useEffect(() => {
     if (!isGenerating) return;
@@ -28,18 +69,17 @@ export default function BlueprintView({ blueprint, onGenerate, onGenerating, onB
     return () => clearInterval(progressRef.current);
   }, [isGenerating]);
 
-  const handleGenerate = async () => {
+  const handleGenerate = () => {
     setError(''); setIsGenerating(true); setProgress(0);
     if (onGenerating) onGenerating();
-    try {
-      const r = await examAPI.generateQuestions(blueprint.blueprint_id);
-      if (r.data?.detail) throw new Error(r.data.detail);
-      setProgress(100);
-      onGenerate(r.data);
-    } catch (e) {
-      setError(e.response?.data?.detail || e.message || t('exam.blueprint.failedGenerate'));
-      setIsGenerating(false);
-    }
+    runJob(JOB_KEY, t('appLayout.opExamQuestions'), (signal) =>
+      examAPI.generateQuestions(blueprint.blueprint_id, { signal }), {
+      storeResult: true,
+      onError: (e) => {
+        setError(e.response?.data?.detail || e.message || t('exam.blueprint.failedGenerate'));
+        setIsGenerating(false);
+      },
+    }).catch(() => { /* error sudah ditangani onError */ });
   };
 
   if (isGenerating) {

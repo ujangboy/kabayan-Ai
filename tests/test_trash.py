@@ -96,6 +96,28 @@ def test_restore_material_returns_file_and_status(db_session, make_subject, make
     assert db_session.query(TrashItem).count() == 0
 
 
+def test_restore_material_reindexes_rag_chunks(
+    db_session, make_subject, make_material, monkeypatch
+):
+    """Restore harus reindex dokumen, bukan sekadar rebuild index kosong."""
+    subject = make_subject()
+    fp = os.path.join(config.UPLOADS_DIR, "restore-reindex.txt")
+    with open(fp, "w", encoding="utf-8") as f:
+        f.write("Materi biologi sel untuk pengujian reindex setelah restore.")
+    mat = make_material(subject.id, status="Ready", filepath=fp)
+    material_service.delete(db_session, mat.id)
+
+    indexed = []
+    monkeypatch.setattr(
+        material_service,
+        "index_material_file",
+        lambda db, material: indexed.append(material.id) or True,
+    )
+
+    assert restore_material(db_session, mat.id) == subject.id
+    assert indexed == [mat.id]
+
+
 def test_delete_material_permanent_removes_record_and_file(db_session, make_subject, make_material):
     """Hapus permanen: file trunk hilang, TrashItem hilang, record hilang."""
     subject = make_subject()

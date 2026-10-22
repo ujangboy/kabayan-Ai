@@ -16,11 +16,14 @@ import os
 import re
 import uuid
 import asyncio
+import logging
 import threading
 import tempfile
 import subprocess
 
 import edge_tts
+import edge_tts.communicate as edge_communicate
+from edge_tts.constants import TRUSTED_CLIENT_TOKEN
 from imageio_ffmpeg import get_ffmpeg_exe
 
 from database import SessionLocal
@@ -33,6 +36,38 @@ AUDIO_DIR = os.path.join(config.STORAGE_DIR, "static", "audio")
 os.makedirs(AUDIO_DIR, exist_ok=True)
 
 FFMPEG = get_ffmpeg_exe()
+logger = logging.getLogger(__name__)
+
+# Microsoft memindahkan endpoint sintesis Edge Read Aloud dari
+# speech.platform.bing.com ke api.msedgeservices.com. edge-tts 7.3.1 masih
+# memakai host lama dan menerima HTTP 403 pada handshake WebSocket.
+# Override ini bisa dimatikan/diubah lewat env untuk deployment yang memakai
+# gateway TTS sendiri.
+_EDGE_TTS_LEGACY_HOST = "speech.platform.bing.com"
+_EDGE_TTS_WSS_URL = (
+    "wss://api.msedgeservices.com/tts/cognitiveservices/websocket/v1"
+)
+
+
+def resolve_edge_tts_endpoint(current_url, override=None, token=None):
+    """Pilih endpoint WebSocket TTS yang kompatibel.
+
+    Fungsi murni agar perilaku override bisa diuji tanpa membuka koneksi.
+    """
+    override = (override or "").strip()
+    if override:
+        return override
+    if _EDGE_TTS_LEGACY_HOST in (current_url or ""):
+        return f"{_EDGE_TTS_WSS_URL}?Ocp-Apim-Subscription-Key={token or TRUSTED_CLIENT_TOKEN}"
+    return current_url
+
+
+_endpoint = resolve_edge_tts_endpoint(
+    getattr(edge_communicate, "WSS_URL", ""),
+    os.getenv("EDGE_TTS_WSS_URL", ""),
+)
+if _endpoint and _endpoint != getattr(edge_communicate, "WSS_URL", ""):
+    edge_communicate.WSS_URL = _endpoint
 
 # Voice yang tersedia (3 pilihan sesuai keputusan user).
 VOICES = [
@@ -188,6 +223,7 @@ def _run(rec_id, text, voice, file_path):
         chunks = _split_text(text)
         total = len(chunks)
         tmp_files = []
+        errors = []
         for i, chunk in enumerate(chunks):
             if _cancel_flags.get(rec_id) and _cancel_flags[rec_id].is_set():
                 rec.status = "Cancelled"
@@ -197,8 +233,12 @@ def _run(rec_id, text, voice, file_path):
             tmp = os.path.join(tempfile.gettempdir(), f"audio_{rec_id}_{i}.mp3")
             try:
                 asyncio.run(_speak(chunk, voice, tmp))
-            except Exception:
-                # chunk gagal -> lanjut chunk berikutnya agar tidak hang
+            except Exception as exc:
+                # Satu potongan gagal tidak boleh membuat seluruh job hang.
+                # Simpan alasan terakhir agar UI tidak hanya menampilkan pesan
+                # generik tanpa petunjuk tindakan.
+                errors.append(str(exc))
+                logger.warning("Audio %s chunk %s/%s gagal: %s", rec_id, i + 1, total, exc)
                 continue
             if os.path.exists(tmp) and os.path.getsize(tmp) > 0:
                 tmp_files.append(tmp)
@@ -208,19 +248,24 @@ def _run(rec_id, text, voice, file_path):
 
         if not tmp_files:
             rec.status = "Failed"
-            rec.error = "Gagal menghasilkan audio (tidak ada potongan yang berhasil)."
+            detail = errors[-1][:240] if errors else "tidak ada potongan yang berhasil"
+            rec.error = (
+                "Gagal menghasilkan audio. Layanan TTS tidak merespons dengan benar "
+                f"({detail}). Silakan coba lagi beberapa saat lagi."
+            )
             rec.stage = "Gagal"
             db.commit()
+            _remove_if_exists(file_path)
             return
 
         rec.stage = "Menggabungkan audio..."
         db.commit()
         _concat(tmp_files, file_path)
         for tf in tmp_files:
-            try:
-                os.remove(tf)
-            except Exception:
-                pass
+            _remove_if_exists(tf)
+
+        if not os.path.exists(file_path) or os.path.getsize(file_path) == 0:
+            raise RuntimeError("File audio hasil penggabungan kosong.")
 
         rec.status = "Ready"
         rec.progress = 100
@@ -234,12 +279,21 @@ def _run(rec_id, text, voice, file_path):
             rec.error = str(e)[:500]
             rec.stage = "Gagal"
             db.commit()
+        _remove_if_exists(file_path)
     finally:
         _cancel_flags.pop(rec_id, None)
         db.close()
 
 
-async def _speak(text, voice, out_path):
+def _remove_if_exists(path):
+    try:
+        if path and os.path.exists(path):
+            os.remove(path)
+    except OSError:
+        logger.warning("Gagal menghapus file audio sementara: %s", path)
+
+
+async def _speak_once(text, voice, out_path):
     communicate = edge_tts.Communicate(text, voice)
     with open(out_path, "wb") as f:
         async for chunk in communicate.stream():
@@ -247,17 +301,52 @@ async def _speak(text, voice, out_path):
                 f.write(chunk["data"])
 
 
+async def _speak(text, voice, out_path, attempts=3):
+    """Sintesis satu potongan dengan retry untuk 403/429/error jaringan.
+
+    Endpoint Edge TTS baru membatasi laju handshake; retry pendek dengan
+    backoff membuat job audio tetap selesai saat satu percobaan kena rate
+    limit atau node regional yang belum menerima token lama.
+    """
+    last_error = None
+    for attempt in range(attempts):
+        try:
+            _remove_if_exists(out_path)
+            await _speak_once(text, voice, out_path)
+            if os.path.exists(out_path) and os.path.getsize(out_path) > 0:
+                return
+            raise RuntimeError("Edge TTS mengembalikan audio kosong.")
+        except Exception as exc:
+            last_error = exc
+            if attempt >= attempts - 1:
+                break
+            delay = 1.5 * (2 ** attempt)
+            logger.warning(
+                "Edge TTS gagal (percobaan %s/%s): %s — retry dalam %.1fs",
+                attempt + 1, attempts, exc, delay,
+            )
+            await asyncio.sleep(delay)
+            # edge-tts menangani 403 dengan menyesuaikan clock skew; pastikan
+            # file parsial dari percobaan sebelumnya tidak ikut terbaca.
+            _remove_if_exists(out_path)
+    raise RuntimeError(f"Edge TTS gagal setelah {attempts} percobaan: {last_error}")
+
+
 def _concat(paths, out):
-    listfile = os.path.join(tempfile.gettempdir(), "audio_concat_list.txt")
-    with open(listfile, "w") as f:
-        for p in paths:
-            f.write(f"file '{p}'\n")
-    subprocess.run(
-        [FFMPEG, "-y", "-f", "concat", "-safe", "0", "-i", listfile, "-c", "copy", out],
-        check=True,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-    )
+    listfile = os.path.join(tempfile.gettempdir(), f"audio_concat_{uuid.uuid4().hex}.txt")
+    try:
+        with open(listfile, "w", encoding="utf-8") as f:
+            for p in paths:
+                safe_path = os.path.abspath(p).replace("'", "'\\''")
+                f.write(f"file '{safe_path}'\n")
+        subprocess.run(
+            [FFMPEG, "-y", "-f", "concat", "-safe", "0", "-i", listfile, "-c", "copy", out],
+            check=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+    finally:
+        _remove_if_exists(listfile)
 
 
 def _duration_sec(path):

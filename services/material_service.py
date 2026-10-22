@@ -14,6 +14,39 @@ from parsers.document_parser import extract_text
 
 logger = logging.getLogger(__name__)
 
+
+def chunk_text(text: str) -> list:
+    """Pecah teks menjadi chunk dengan overlap, dipakai upload & reindex."""
+    paragraphs = text.split("\n\n")
+    chunks = []
+    current_chunk = []
+    current_word_count = 0
+    target_words = config.CHUNK_SIZE
+    overlap_words = config.CHUNK_OVERLAP
+
+    for para in paragraphs:
+        para = para.strip()
+        if not para:
+            continue
+        word_count = len(para.split())
+        if current_word_count + word_count > target_words and current_chunk:
+            chunks.append("\n\n".join(current_chunk))
+            overlap_text = " ".join(current_chunk).split()
+            if overlap_words > 0 and len(overlap_text) > overlap_words:
+                current_chunk = [" ".join(overlap_text[-overlap_words:]) + " " + para]
+                current_word_count = overlap_words + word_count
+            else:
+                current_chunk = [para]
+                current_word_count = word_count
+        else:
+            current_chunk.append(para)
+            current_word_count += word_count
+
+    if current_chunk:
+        chunks.append("\n\n".join(current_chunk))
+    return chunks
+
+
 class MaterialService:
     EXT_TYPE_MAP = {
         '.pdf': MaterialType.PDF,
@@ -125,34 +158,7 @@ class MaterialService:
                         db.commit()
                 return
                 
-            paragraphs = text.split('\n\n')
-            chunks = []
-            current_chunk = []
-            current_word_count = 0
-            target_words = config.CHUNK_SIZE
-            overlap_words = config.CHUNK_OVERLAP
-
-            for para in paragraphs:
-                para = para.strip()
-                if not para:
-                    continue
-                word_count = len(para.split())
-                if current_word_count + word_count > target_words and current_chunk:
-                    chunks.append("\n\n".join(current_chunk))
-                    # Overlap: keep last `overlap_words` words for next chunk
-                    overlap_text = " ".join(current_chunk).split()
-                    if overlap_words > 0 and len(overlap_text) > overlap_words:
-                        current_chunk = [" ".join(overlap_text[-overlap_words:]) + " " + para]
-                        current_word_count = overlap_words + word_count
-                    else:
-                        current_chunk = [para]
-                        current_word_count = word_count
-                else:
-                    current_chunk.append(para)
-                    current_word_count += word_count
-                    
-            if current_chunk:
-                chunks.append("\n\n".join(current_chunk))
+            chunks = chunk_text(text)
 
             self._set_progress(db, material_id, 70, "Membuat potongan materi...")
 
@@ -179,6 +185,27 @@ class MaterialService:
                     pass
         finally:
             db.close()
+
+    def index_material_file(self, db: Session, material) -> bool:
+        """(Re)index satu materi yang sudah punya file di disk.
+
+        Dipakai saat restore dari trash. Sebelumnya restore hanya memanggil
+        rebuild_index() yang membangun ulang dari metadata in-memory — padahal
+        chunk materi yang di-trash sudah dihapus fisik, sehingga materi yang
+        dipulihkan tidak pernah kembali ke index RAG.
+        """
+        if not material or not material.filepath:
+            return False
+        path = material.filepath
+        if not os.path.isabs(path):
+            path = os.path.join(config.BASE_DIR, path)
+        if not os.path.isfile(path):
+            return False
+        text = extract_text(path)
+        if not text:
+            return False
+        rag_service.index_document(f"mat_{material.id}", chunk_text(text))
+        return True
 
     def cancel(self, db: Session, id: int) -> bool:
         mat = material_repository.get(db, id)

@@ -5,10 +5,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { subjectAPI, sessionsAPI } from '@/services/api';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useUiStore } from '@/store';
+import { useJobStore } from '@/store/jobStore';
 import { cn } from '@/utils';
 import { springWave } from '@/lib/motion';
 import { usePageState } from '@/hooks/usePageState';
-import { VIEW, deriveBlueprintItems } from '@/components/exam/shared';
+import { VIEW, buildRetryBlueprint } from '@/components/exam/shared';
 import { Modal } from '@/components/ui';
 import { useToast } from '@/components/Toast';
 import DashboardView from '@/components/exam/DashboardView';
@@ -89,6 +90,8 @@ export default function ExamAnalyzerPage() {
       if (saved.recommend != null) setRecommend(saved.recommend);
       if (saved.generating) setGenerating(saved.generating);
       if (saved.quizClockStart) setQuizClockStart(saved.quizClockStart);
+      if (saved.configOpen) setConfigOpen(true);
+      if (saved.blueprintModal != null) setBlueprintModal(saved.blueprintModal);
 
       // Expired generating → clear
       if (saved.generating?.startedAt && Date.now() - saved.generating.startedAt > GENERATE_TIMEOUT_MS) {
@@ -113,8 +116,8 @@ export default function ExamAnalyzerPage() {
   // ── Persist state on every change ──
   useEffect(() => {
     if (!restored) return;
-    persist({ view, analysis, blueprint, sessionData, evalData, detailId, pendingPlanTab, recommend, generating, quizClockStart });
-  }, [restored, view, analysis, blueprint, sessionData, evalData, detailId, pendingPlanTab, recommend, generating, quizClockStart]);
+    persist({ view, analysis, blueprint, sessionData, evalData, detailId, pendingPlanTab, recommend, generating, quizClockStart, configOpen, blueprintModal });
+  }, [restored, view, analysis, blueprint, sessionData, evalData, detailId, pendingPlanTab, recommend, generating, quizClockStart, configOpen, blueprintModal]);
 
   // ── Polling legacy (tidak dipakai di alur modal, tetap dipertahankan sebagai guard) ──
   useEffect(() => {
@@ -167,12 +170,18 @@ export default function ExamAnalyzerPage() {
   };
 
   // ── Modal handlers (Config + Blueprint sebagai modal/drawer) ──
-  const clearAll = () => { setAnalysis(null); setBlueprint(null); setSessionData(null); setEvalData(null); setGenerating(null); setQuizClockStart(null); setRecommend(null); clear(); };
+  const clearAll = () => { setAnalysis(null); setBlueprint(null); setSessionData(null); setEvalData(null); setGenerating(null); setQuizClockStart(null); setRecommend(null); setConfigOpen(false); setBlueprintModal(null); clear(); };
+
+  const clearStaleJobResults = () => {
+    const jobs = useJobStore.getState().jobs;
+    if (!jobs['exam-blueprint']) useJobStore.getState().clearResult('exam-blueprint');
+    if (!jobs['exam-questions']) useJobStore.getState().clearResult('exam-questions');
+  };
 
   const openConfig = (id) => {
     if (id) setSubjectId(id);
     clearAll();
-    setBlueprintModal(null);
+    clearStaleJobResults();
     setConfigOpen(true);
   };
   const closeConfig = () => setConfigOpen(false);
@@ -222,6 +231,7 @@ export default function ExamAnalyzerPage() {
 
   // "Latihan Lagi" dari kartu riwayat → modal blueprint (reuse blueprint_id sesi).
   const handleRetry = async (session) => {
+    clearStaleJobResults();
     if (!session.blueprint_id) {
       toast.info(t('exam.history.retryNoBlueprintDesc') || 'Buat simulasi baru untuk memulai.');
       openConfig(session.subject_id || subjectId);
@@ -229,8 +239,7 @@ export default function ExamAnalyzerPage() {
     }
     try {
       const d = (await sessionsAPI.detail(session.id)).data;
-      const items = deriveBlueprintItems(d.questions_json || []);
-      setBlueprintModal({ blueprint_id: session.blueprint_id, title: d.title || session.title, blueprint_items: items });
+      setBlueprintModal(buildRetryBlueprint(session, d));
     } catch {
       openConfig(session.subject_id || subjectId);
     }
@@ -304,22 +313,27 @@ export default function ExamAnalyzerPage() {
 
       </div>
 
-      {/* ── Config modal ── */}
-      <Modal open={configOpen} onClose={closeConfig} title={t('exam.config.title')} size="lg">
-        {configOpen && <ConfigView subjectId={subjectId} analysis={analysis} onDone={handleConfigDone} />}
-      </Modal>
+      {/* Modal baru dirender setelah restore state selesai. Tanpa guard ini,
+          effect child (Blueprint/Config) bisa mengonsumsi hasil job dan
+          mengganti view, lalu restore parent menimpanya kembali ke history. */}
+      {restored && (
+        <Modal open={configOpen} onClose={closeConfig} title={t('exam.config.title')} size="lg">
+          {configOpen && <ConfigView subjectId={subjectId} analysis={analysis} onDone={handleConfigDone} />}
+        </Modal>
+      )}
 
-      {/* ── Blueprint modal ── */}
-      <Modal open={!!blueprintModal} onClose={() => setBlueprintModal(null)} title={blueprintModal?.title || t('exam.blueprint.title')} size="xl">
-        {blueprintModal && (
-          <BlueprintView
-            blueprint={blueprintModal}
-            onGenerate={handleBlueprintGenerate}
-            onGenerating={handleGenerating}
-            onBack={handleBlueprintBack}
-          />
-        )}
-      </Modal>
+      {restored && (
+        <Modal open={!!blueprintModal} onClose={() => setBlueprintModal(null)} title={blueprintModal?.title || t('exam.blueprint.title')} size="xl">
+          {blueprintModal && (
+            <BlueprintView
+              blueprint={blueprintModal}
+              onGenerate={handleBlueprintGenerate}
+              onGenerating={handleGenerating}
+              onBack={handleBlueprintBack}
+            />
+          )}
+        </Modal>
+      )}
     </div>
   );
 }

@@ -358,6 +358,7 @@ class ExamService:
             if len(bank_rows) >= max(1, int(needed * BANK_MIN_RATIO)):
                 # Enough in bank — use them, no AI call
                 question_bank_repository.increment_used(db, [r.id for r in bank_rows])
+                db.commit()
                 for row in bank_rows:
                     q = _bank_row_to_question(row, question_id_offset)
                     all_questions.append(q)
@@ -373,6 +374,9 @@ class ExamService:
                     materials = [m for m in materials if m.id in ids]
             full_ctx  = _gather_context(db, blueprint.subject_id, materials)
             context   = " ".join(full_ctx.split()[:1500])
+            # Lepaskan read transaction sebelum menunggu AI. Tanpa ini,
+            # penulisan usage log dari session lain bisa terkena lock SQLite.
+            db.commit()
 
             capped = min(needed, 8)
             try:
@@ -399,6 +403,7 @@ class ExamService:
                     },
                     use_cache=False,
                     temperature=0.7,
+                    max_tokens=min(8192, max(2400, capped * 1200)),
                 )
                 if not response or not str(response).strip():
                     logger.warning(f"Empty AI response for topic '{topic}' — using bank")
@@ -427,6 +432,7 @@ class ExamService:
                 question_bank_repository.bulk_insert(
                     db, blueprint.subject_id, blueprint_id, new_qs
                 )
+                db.commit()
 
                 for q in new_qs:
                     q["id"] = question_id_offset

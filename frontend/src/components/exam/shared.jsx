@@ -54,6 +54,24 @@ export function getExamTypeLabel(t, type) {
   return key ? t(key) : raw.toUpperCase().replace(/_/g, ' ');
 }
 
+// Job background menyimpan hasil mentah dari axios (AxiosResponse), bukan
+// payload JSON-nya. Tanpa unwrap, modal blueprint menerima objek response
+// sehingga `blueprint_items` tidak ditemukan dan tabel tampil kosong.
+export function unwrapJobPayload(result) {
+  return result && typeof result === 'object' && 'data' in result
+    ? result.data
+    : result;
+}
+
+// Rata-rata hanya dari sesi yang sudah punya nilai. Sesi yang belum
+// dikerjakan tidak boleh dihitung sebagai 0.
+export function averageSessionScore(sessions = []) {
+  const scored = sessions.filter((s) => s?.best_score != null);
+  if (!scored.length) return 0;
+  const total = scored.reduce((sum, s) => sum + Number(s.best_score || 0), 0);
+  return Math.round(total / scored.length);
+}
+
 // Reverse map: kode → label yang readable
 export const Q_TYPE_LABEL = {
   mcq:          'Pilihan Ganda',
@@ -167,7 +185,10 @@ export function deriveBlueprintItems(questions = []) {
     }
     const e = map.get(topic);
     e.question_count += 1;
-    if (q.question_type) e.question_types.add(q.question_type);
+    // API detail sesi memakai `type`; sebagian payload lama memakai
+    // `question_type`. Keduanya harus terbaca agar chip tipe tidak kosong.
+    const qtype = q.question_type || q.type;
+    if (qtype) e.question_types.add(qtype);
   });
   const total = questions.length || 1;
   return [...map.values()].map((e) => ({
@@ -178,4 +199,15 @@ export function deriveBlueprintItems(questions = []) {
     difficulty: e.difficulty,
     weight_percent: Math.round((e.question_count / total) * 100),
   }));
+}
+
+// Payload detail sesi mengembalikan `questions`; endpoint/versi lama memakai
+// `questions_json`. Helper ini menjaga "Latihan Lagi" tetap punya preview.
+export function buildRetryBlueprint(session, detail) {
+  const questions = detail?.questions || detail?.questions_json || [];
+  return {
+    blueprint_id: session?.blueprint_id,
+    title: detail?.title || session?.title || '',
+    blueprint_items: deriveBlueprintItems(questions),
+  };
 }

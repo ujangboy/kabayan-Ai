@@ -2,14 +2,21 @@ import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ICONS } from '@/lib/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { springWave, springLift } from '@/lib/motion';
 
 import { materiAPI, sessionsAPI, subjectAPI } from '@/services/api';
 import { cn, formatDate, formatTimeOnly } from '@/utils';
 import DetailModal from './DetailModal';
-import { Chip, ProgressBar, STATUS_META, getBadge, getGradeColor, getExamTypeLabel } from './shared';
+import {
+  Chip,
+  ProgressBar,
+  STATUS_META,
+  averageSessionScore,
+  getBadge,
+  getGradeColor,
+  getExamTypeLabel,
+} from './shared';
 import { Tooltip } from '@/components/ui/Tooltip';
 import { SubjectBadge , Icon , Button} from '@/components/ui';
 import { useToast } from '@/components/Toast';
@@ -227,7 +234,6 @@ function SubjectCard({ subject, onSelectSubject, onStartConfig, onDelete, t, ton
 export default function HistoryView({ subjectId, subjects, onSelectSubject, onStartConfig, onRetry, onResume, detailId, setDetailId, pendingPlanTab, setPendingPlanTab }) {
   const { t } = useTranslation();
   const { toast } = useToast();
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [search,    setSearch]    = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
@@ -286,6 +292,8 @@ export default function HistoryView({ subjectId, subjects, onSelectSubject, onSt
   if (isLoading) {
     return <div className="card-base p-10 text-center"><Icon name={ICONS.status.loading} size={28} className="animate-spin text-primary mx-auto" /></div>;
   }
+
+  const avgScore = averageSessionScore(sessions);
 
    if (sessions.length === 0) {
      return (
@@ -365,7 +373,7 @@ export default function HistoryView({ subjectId, subjects, onSelectSubject, onSt
           {[
             { label: t('exam.history.totalSimulations'), value: sessions.length,                              icon: ICONS.learning.history,   color:'text-primary' },
             { label: t('exam.history.mastered'),       value: sessions.filter(s=>s.status==='mastered').length, icon: ICONS.learning.certificate,  color:'text-success' },
-            { label: t('exam.history.avgScore'),value: Math.round(sessions.reduce((a,s)=>a+(s.best_score||0),0)/sessions.length)||0, icon: ICONS.learning.barChart, color:'text-warning' },
+            { label: t('exam.history.avgScore'), value: avgScore, icon: ICONS.learning.barChart, color:'text-warning' },
             { label: t('exam.history.totalAttempts'),  value: sessions.reduce((a,s)=>a+(s.attempt_count||0),0), icon: ICONS.actions.replay, color:'text-accent-blue' },
            ].map(({ label, value, icon, color }) => (
             <motion.div key={label} whileHover={{ y: -3 }} transition={springLift} className="card-base p-4 flex items-center gap-3 hover:border-primary/40">

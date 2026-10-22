@@ -13,6 +13,8 @@ from __future__ import annotations
 
 import json
 import datetime
+import re
+from difflib import SequenceMatcher
 from typing import List, Dict, Optional, Tuple
 
 from models import QuestionBank, Material
@@ -39,6 +41,30 @@ def _normalize_answer(ans: str) -> str:
     """Strip, uppercase, take first non-space char for MCQ letter comparison."""
     ans = (ans or "").strip().upper()
     return ans[:1] if ans else ""
+
+
+def _normalize_free_text(text: str) -> str:
+    """Normalisasi teks bebas untuk fallback penilaian deterministik."""
+    text = (text or "").lower()
+    text = re.sub(r"[^\w\s]", " ", text, flags=re.UNICODE)
+    return " ".join(text.split())
+
+
+def _fallback_subjective_correct(user_answer: str, ideal_answer: str) -> bool:
+    """Anggap benar bila jawaban user identik/mirip dengan jawaban ideal.
+
+    Dipakai hanya ketika AI evaluator tidak memberi feedback (mis. rate limit).
+    Tanpa fallback ini jawaban yang persis sama pun dihitung salah.
+    """
+    user = _normalize_free_text(user_answer)
+    ideal = _normalize_free_text(ideal_answer)
+    if not user or not ideal:
+        return False
+    if user == ideal:
+        return True
+    if min(len(user), len(ideal)) < 40:
+        return False
+    return SequenceMatcher(None, user, ideal).ratio() >= 0.92
 
 
 # ─── Core scorer ─────────────────────────────────────────────────────────────
@@ -200,9 +226,21 @@ def assemble_evaluation(
                 else:
                     wrong += 1
             else:
-                fb["is_correct"] = False
-                fb["feedback"]   = "Evaluasi tidak tersedia (AI tidak merespons)."
-                wrong += 1
+                # AI bisa gagal karena rate limit. Jangan hukum jawaban yang
+                # persis sama dengan kunci jawaban ideal.
+                fallback_correct = _fallback_subjective_correct(
+                    fb.get("user_answer", ""), fb.get("correct_answer", "")
+                )
+                fb["is_correct"] = fallback_correct
+                fb["feedback"] = (
+                    "Jawaban cocok dengan kunci jawaban ideal."
+                    if fallback_correct
+                    else "Evaluasi tidak tersedia (AI tidak merespons)."
+                )
+                if fallback_correct:
+                    correct += 1
+                else:
+                    wrong += 1
             fb.pop("_pending_ai", None)
 
     total_q = len(questions)

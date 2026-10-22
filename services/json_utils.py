@@ -61,7 +61,9 @@ def sanitize_json_str(s: str) -> str:
     max_passes = 30
     for _ in range(max_passes):
         try:
-            json.loads(s)
+            # strict=False mengizinkan newline literal di dalam string JSON.
+            # Model kadang menulis paragraf soal tanpa escape \n.
+            json.loads(s, strict=False)
             return s
         except json.JSONDecodeError as e:
             if "escape" not in str(e).lower():
@@ -80,26 +82,56 @@ def sanitize_json_str(s: str) -> str:
 
 
 def extract_json(raw: str) -> str:
-    """Extract JSON array or object from AI response using bracket counting."""
+    """Extract the outermost JSON object/array from an AI response.
+
+    Model sering membungkus JSON dengan ```json atau teks pembuka. Pemilihan
+    bracket harus memakai bracket pertama yang muncul, bukan selalu array:
+    objek ``{"items": [...]}`` sebelumnya salah dipotong menjadi array di
+    dalamnya. Brace di dalam string juga tidak boleh dihitung.
+    """
     s = raw.strip()
     for pat in [r'```json\s*([\s\S]*?)\s*```', r'```\s*([\s\S]*?)\s*```']:
         m = re.search(pat, s)
         if m:
-            return m.group(1).strip()
-    for start_char, end_char in [('[', ']'), ('{', '}')]:
-        start = s.find(start_char)
-        if start >= 0:
-            depth = 0
-            for i, ch in enumerate(s[start:], start):
-                if ch == start_char: depth += 1
-                elif ch == end_char: depth -= 1
-                if depth == 0:
-                    return s[start:i + 1]
-    return s
+            s = m.group(1).strip()
+            break
+
+    start = next((i for i, ch in enumerate(s) if ch in "[{"), None)
+    if start is None:
+        return s
+
+    opening = s[start]
+    closing = "}" if opening == "{" else "]"
+    depth = 0
+    in_string = False
+    escaped = False
+
+    for i in range(start, len(s)):
+        ch = s[i]
+        if in_string:
+            if escaped:
+                escaped = False
+            elif ch == "\\":
+                escaped = True
+            elif ch == '"':
+                in_string = False
+            continue
+
+        if ch == '"':
+            in_string = True
+        elif ch == opening:
+            depth += 1
+        elif ch == closing:
+            depth -= 1
+            if depth == 0:
+                return s[start:i + 1]
+
+    # JSON terpotong / tidak seimbang — biarkan parser pelapor error yang jelas.
+    return s[start:]
 
 
 def parse_ai_json(response, label: str = "AI") -> dict | list:
     json_str = extract_json(str(response))
     json_str = sanitize_json_str(json_str)
-    data = json.loads(json_str)
+    data = json.loads(json_str, strict=False)
     return sanitize_all_strings(data)

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ICONS } from '@/lib/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -9,7 +9,16 @@ import { audioAPI, materiAPI, subjectAPI } from '@/services/api';
 import { Button, Icon, Select } from '@/components/ui';
 import { useUiStore } from '@/store';
 import { useJobStore } from '@/store/jobStore';
+import { useBackgroundJob } from '@/hooks/useBackgroundJob';
 import { useToast } from '@/components/Toast';
+
+let audioRequestSeq = 0;
+
+const VOICE_LABEL_KEYS = {
+  'id-ID-ArdiNeural': 'audioPage.voiceArdi',
+  'id-ID-GadisNeural': 'audioPage.voiceGadis',
+  'en-US-JennyNeural': 'audioPage.voiceJenny',
+};
 
 export default function AudioPage() {
   const { t } = useTranslation();
@@ -25,6 +34,7 @@ export default function AudioPage() {
 
   const [generatingId, setGeneratingId] = useState(null);
   const [preselectedMaterialId, setPreselectedMaterialId] = useState(null);
+  const hydratingSubjectFromUrl = useRef(false);
 
   const { data: subjectData } = useQuery({
     queryKey: ['subjects'],
@@ -69,22 +79,7 @@ export default function AudioPage() {
     return materials.filter((m) => (m.filename || '').toLowerCase().includes(q));
   }, [materials, materialQuery]);
 
-  const generateMutation = useMutation({
-    mutationFn: ({ material_id, voice }) => audioAPI.generate({ material_id, voice }),
-    onSuccess: (rec) => {
-      setGeneratingId(null);
-      // Daftarkan ke banner global agar tetap tampil walau pindah menu.
-      if (rec?.id) {
-        useJobStore.getState().setAudioJob(`audio-${rec.id}`, rec.id, t('audioPage.generateShort'));
-      }
-      queryClient.invalidateQueries(['audio', subjectFilter]);
-      toast.success(t('audioStatus.processing'));
-    },
-    onError: (err) => {
-      setGeneratingId(null);
-      toast.error(err?.response?.data?.detail || err?.message || t('audioStatus.failed'));
-    },
-  });
+  const { run: runJob } = useBackgroundJob();
 
   const cancelMutation = useMutation({
     mutationFn: (id) => audioAPI.cancel(id),
@@ -108,7 +103,31 @@ export default function AudioPage() {
       return;
     }
     setGeneratingId(materialId);
-    generateMutation.mutate({ material_id: materialId, voice: audioVoice });
+    audioRequestSeq += 1;
+    const requestKey = `audio-request-${materialId}-${audioRequestSeq}`;
+    runJob(requestKey, t('appLayout.opAudio'), (signal) =>
+      audioAPI.generate({ material_id: materialId, voice: audioVoice }, { signal }), {
+      // Request ini hanya membuat record; TTS tetap berjalan di server.
+      // Notifikasi selesai yang benar berasal dari job audio-<id>.
+      notify: false,
+      onDone: (rec) => {
+        setGeneratingId(null);
+        if (rec?.id) {
+          useJobStore.getState().setAudioJob(
+            `audio-${rec.id}`,
+            rec.id,
+            t('appLayout.opAudio')
+          );
+        }
+        queryClient.invalidateQueries(['audio', subjectFilter]);
+        queryClient.invalidateQueries(['audio-bg-sync']);
+        toast.info(t('appLayout.aiProcessing', { label: t('appLayout.opAudio') }));
+      },
+      onError: (err) => {
+        setGeneratingId(null);
+        toast.error(err?.response?.data?.detail || err?.message || t('audioStatus.failed'));
+      },
+    }).catch(() => { /* error sudah ditangani onError */ });
   };
 
   const handleCancel = (id) => {
@@ -126,21 +145,28 @@ export default function AudioPage() {
     });
   };
 
-  // URL sync agar konteks mata kuliah bertahan saat pindah menu.
+  // URL sync agar konteks mata kuliah + materi bertahan saat pindah menu.
+  // Ref mencegah effect sync menghapus subject_id dari URL sebelum nilai dari
+  // URL sempat dihidrasi ke store (deep-link ?subject_id=...&material_id=...).
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const sid = params.get('subject_id');
-    if (sid) setSubjectFilter('audio', sid);
-  }, [location.search]);
+    const sid = new URLSearchParams(location.search).get('subject_id');
+    if (!sid || sid === subjectFilter) return;
+    hydratingSubjectFromUrl.current = true;
+    setSubjectFilter('audio', sid);
+  }, [location.search, subjectFilter, setSubjectFilter]);
 
   useEffect(() => {
+    if (hydratingSubjectFromUrl.current) {
+      hydratingSubjectFromUrl.current = false;
+      return;
+    }
     const params = new URLSearchParams(location.search);
     const cur = params.get('subject_id') || '';
-    if (cur === subjectFilter) return;
+    if (cur === (subjectFilter || '')) return;
     if (subjectFilter) params.set('subject_id', subjectFilter);
     else params.delete('subject_id');
     navigate(`/audio?${params.toString()}`, { replace: true });
-  }, [subjectFilter]);
+  }, [subjectFilter, location.search, navigate]);
 
   // Preselect materi dari deep-link (?material_id) — sorot kartu & scroll.
   useEffect(() => {
@@ -195,9 +221,9 @@ export default function AudioPage() {
             <div className="flex-1">
               <label className="block text-xs font-medium text-text-secondary mb-1">{t('audioPage.voiceLabel')}</label>
               <Select value={audioVoice} onChange={(e) => setAudioVoice(e.target.value)}>
-                <option value="id-ID-ArdiNeural">Ardi · Male</option>
-                <option value="id-ID-GadisNeural">Gadis · Female</option>
-                <option value="en-US-JennyNeural">Jenny · Female (EN)</option>
+                <option value="id-ID-ArdiNeural">{t('audioPage.voiceArdi')}</option>
+                <option value="id-ID-GadisNeural">{t('audioPage.voiceGadis')}</option>
+                <option value="en-US-JennyNeural">{t('audioPage.voiceJenny')}</option>
               </Select>
             </div>
           </div>
@@ -343,7 +369,11 @@ function AudioItem({ audio, onCancel, onDelete }) {
         <div className="flex items-center gap-2 min-w-0">
           <Icon name={ICONS.nav.audio} size={18} className="text-primary shrink-0" />
           <div className="min-w-0">
-            <p className="text-sm font-medium text-text truncate">{audio.voice}</p>
+            <p className="text-sm font-medium text-text truncate">
+              {VOICE_LABEL_KEYS[audio.voice]
+                ? t(VOICE_LABEL_KEYS[audio.voice])
+                : audio.voice}
+            </p>
             <p className="text-3xs text-text-muted">
               {isProcessing ? audio.stage || t('audioStatus.processing') : new Date(audio.created_at).toLocaleString()}
             </p>

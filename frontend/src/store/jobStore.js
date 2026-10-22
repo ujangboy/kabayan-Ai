@@ -17,24 +17,109 @@ const controllers = new Map();
 
 export const useJobStore = create((set, get) => ({
   jobs: {}, // key -> { key, type, label, startedAt, status: 'running', audioId? }
+  // Job yang baru selesai. Dikonsumsi BackgroundProcessSync untuk toast global,
+  // lalu di-ack agar tidak muncul lagi saat komponen remount.
+  completed: [], // key -> { key, type, label, status, completedAt, completedId, ... }
+  // Hasil job terakhir per key (mis. payload exam) agar komponen yang
+  // di-unmount saat job selesai tetap bisa mengambil hasilnya saat kembali.
+  results: {}, // key -> { status, result, at }
 
   startJob: (key, meta = {}) =>
-    set((s) => ({
-      jobs: { ...s.jobs, [key]: { key, startedAt: Date.now(), status: 'running', ...meta } },
-    })),
-
-  finishJob: (key) =>
     set((s) => {
-      if (!s.jobs[key]) return s;
-      const { [key]: _drop, ...rest } = s.jobs;
-      return { jobs: rest };
+      const existing = s.jobs[key];
+      const restResults = Object.fromEntries(
+        Object.entries(s.results || {}).filter(([resultKey]) => resultKey !== key)
+      );
+      return {
+        jobs: {
+          ...s.jobs,
+          [key]: {
+            key,
+            // Jangan reset timer saat polling memperbarui job yang sama.
+            startedAt: existing?.startedAt || Date.now(),
+            status: 'running',
+            ...meta,
+          },
+        },
+        results: restResults,
+      };
     }),
 
-  // Penanda job audio agar banner tahu caranya membatalkan (via API, bukan fetch).
-  setAudioJob: (key, audioId, label) =>
+  finishJob: (key, meta = {}) =>
+    set((s) => {
+      const job = s.jobs[key];
+      if (!job) return s;
+      const { [key]: _drop, ...rest } = s.jobs;
+      const hasResult = Object.prototype.hasOwnProperty.call(meta, 'result');
+      return {
+        jobs: rest,
+        completed: [
+          ...(s.completed || []),
+          {
+            ...job,
+            ...meta,
+            completedAt: Date.now(),
+            completedId: `${key}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          },
+        ].slice(-20),
+        results: hasResult
+          ? {
+              ...(s.results || {}),
+              [key]: { status: meta.status || 'success', result: meta.result, at: Date.now() },
+            }
+          : s.results || {},
+      };
+    }),
+
+  takeResult: (key, maxAgeMs = 15 * 60 * 1000) => {
+    const entry = get().results?.[key];
+    if (!entry) return null;
+    if (Date.now() - entry.at > maxAgeMs) {
+      set((s) => {
+        const { [key]: _drop, ...rest } = s.results || {};
+        return { results: rest };
+      });
+      return null;
+    }
+    set((s) => {
+      const { [key]: _drop, ...rest } = s.results || {};
+      return { results: rest };
+    });
+    return entry;
+  },
+
+  clearResult: (key) =>
+    set((s) => {
+      if (!s.results?.[key]) return s;
+      const { [key]: _drop, ...rest } = s.results;
+      return { results: rest };
+    }),
+
+  ackCompleted: (completedIds = []) =>
     set((s) => ({
-      jobs: { ...s.jobs, [key]: { key, type: 'audio', label, startedAt: Date.now(), status: 'running', audioId } },
+      completed: (s.completed || []).filter((job) => !completedIds.includes(job.completedId)),
     })),
+
+  // Penanda job audio agar banner tahu caranya membatalkan (via API, bukan fetch).
+  setAudioJob: (key, audioId, label, meta = {}) =>
+    set((s) => {
+      const existing = s.jobs[key];
+      return {
+        jobs: {
+          ...s.jobs,
+          [key]: {
+            ...existing,
+            key,
+            type: 'audio',
+            label,
+            audioId,
+            startedAt: existing?.startedAt || Date.now(),
+            status: 'running',
+            ...meta,
+          },
+        },
+      };
+    }),
 
   removeJob: (key) =>
     set((s) => {

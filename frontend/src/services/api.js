@@ -226,7 +226,7 @@ export const tutorAPI = {
 
 // --- AUDIO (TTS materi penuh) ---
 export const audioAPI = {
-  generate: (payload) => api.post('/audio/generate', payload, { timeout: 120000 }).then(r => r.data),
+  generate: (payload, config) => api.post('/audio/generate', payload, { ...config, timeout: 120000 }).then(r => r.data),
   list: (subjectId) => api.get('/audio', { params: subjectId ? { subject_id: subjectId } : {} }).then(r => r.data),
   status: (id) => api.get(`/audio/${id}/status`).then(r => r.data),
   cancel: (id) => api.post(`/audio/${id}/cancel`).then(r => r.data),

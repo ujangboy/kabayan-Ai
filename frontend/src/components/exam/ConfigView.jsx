@@ -1,18 +1,27 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ICONS } from '@/lib/icons';
 import { Icon , Button} from '@/components/ui';
 
 import { examAPI } from '@/services/api';
+import { useBackgroundJob } from '@/hooks/useBackgroundJob';
+import { useJobStore } from '@/store/jobStore';
+import { usePageStateStore } from '@/store/pageStateStore';
 import { cn } from '@/utils';
 import MaterialPicker from '@/components/MaterialPicker';
 import {
   EXAM_TYPES, COUNTS, DIFFICULTIES, BLOOMS, Q_TYPES, FOCUSES,
-  DURATIONS, Q_TYPE_MAP, SectionHeader,
+  DURATIONS, Q_TYPE_MAP, SectionHeader, unwrapJobPayload,
 } from './shared';
+
+const PAGE_KEY = 'exam-analyzer';
+const JOB_KEY = 'exam-blueprint';
 
 export default function ConfigView({ subjectId, analysis, onDone }) {
   const { t } = useTranslation();
+  const { run: runJob } = useBackgroundJob();
+  const jobRunning = useJobStore((s) => Boolean(s.jobs[JOB_KEY]));
+  const blueprintResult = useJobStore((s) => s.results[JOB_KEY]);
   const [form, setForm] = useState({
     exam_type: 'UTS',
     total_questions: 20,
@@ -26,6 +35,38 @@ export default function ConfigView({ subjectId, analysis, onDone }) {
   const [selectedMaterialIds, setSelectedMaterialIds] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Kalau user kembali ke modal ini saat job masih berjalan, tampilkan state loading.
+  useEffect(() => {
+    if (jobRunning) setIsLoading(true);
+  }, [jobRunning]);
+
+  // Hasil disimpan di jobStore agar tetap bisa diambil setelah komponen unmount.
+  useEffect(() => {
+    if (!blueprintResult) return;
+    const entry = useJobStore.getState().takeResult(JOB_KEY);
+    if (!entry) return;
+    setIsLoading(false);
+    if (entry.status !== 'success') {
+      setError(entry.result?.message || t('exam.config.failedBlueprint'));
+      return;
+    }
+    const data = unwrapJobPayload(entry.result);
+    if (data?.detail) {
+      setError(data.detail);
+      return;
+    }
+    const store = usePageStateStore.getState();
+    const saved = store.load(PAGE_KEY) || {};
+    store.save(PAGE_KEY, {
+      ...saved,
+      blueprint: data,
+      blueprintModal: data,
+      configOpen: false,
+      updatedAt: Date.now(),
+    });
+    onDone?.(data);
+  }, [blueprintResult, onDone, t]);
 
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
 
@@ -57,33 +98,38 @@ export default function ConfigView({ subjectId, analysis, onDone }) {
     return key ? t(key) : String(opt);
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!subjectId) return setError(t('exam.config.selectSubjectFirst'));
     if (selectedMaterialIds.length === 0) return setError(t('exam.config.selectMaterialFirst'));
     setError(''); setIsLoading(true);
-    try {
-      const totalQ = form.total_questions === 'custom'
-        ? parseInt(form.custom_count) || 10
-        : form.total_questions;
 
-      const payload = {
-        subject_id: subjectId,
-        exam_type: form.exam_type.toLowerCase().replace(' ', '_'),
-        total_questions: totalQ,
-        difficulty: form.difficulty.toLowerCase(),
-        bloom_level: form.bloom_level.toLowerCase(),
-        question_type: Q_TYPE_MAP[form.question_type] || 'mixed',
-        focus_material: form.focus_material,
-        duration_minutes: form.duration.value,
-        analysis_json: analysis ? JSON.stringify(analysis) : undefined,
-        material_ids: selectedMaterialIds.length > 0 ? selectedMaterialIds.join(',') : undefined,
-      };
-      const r = await examAPI.generateBlueprint(payload);
-      if (r.data?.detail) throw new Error(r.data.detail);
-      onDone(r.data);
-    } catch (e) {
-      setError(e.response?.data?.detail || e.message || t('exam.config.failedBlueprint'));
-    } finally { setIsLoading(false); }
+    const totalQ = form.total_questions === 'custom'
+      ? parseInt(form.custom_count) || 10
+      : form.total_questions;
+
+    const payload = {
+      subject_id: subjectId,
+      exam_type: form.exam_type.toLowerCase().replace(' ', '_'),
+      total_questions: totalQ,
+      difficulty: form.difficulty.toLowerCase(),
+      bloom_level: form.bloom_level.toLowerCase(),
+      question_type: Q_TYPE_MAP[form.question_type] || 'mixed',
+      focus_material: form.focus_material,
+      duration_minutes: form.duration.value,
+      analysis_json: analysis ? JSON.stringify(analysis) : undefined,
+      material_ids: selectedMaterialIds.length > 0 ? selectedMaterialIds.join(',') : undefined,
+    };
+
+    // Job berjalan di store global: pindah menu tidak membatalkan request.
+    useJobStore.getState().clearResult('exam-questions');
+    runJob(JOB_KEY, t('appLayout.opExamBlueprint'), (signal) =>
+      examAPI.generateBlueprint(payload, { signal }), {
+      storeResult: true,
+      onError: (e) => {
+        setIsLoading(false);
+        setError(e.response?.data?.detail || e.message || t('exam.config.failedBlueprint'));
+      },
+    }).catch(() => { /* error sudah ditangani onError */ });
   };
 
   const OptionGroup = ({ label, options, field, renderLabel }) => (
