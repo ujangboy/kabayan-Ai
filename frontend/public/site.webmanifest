@@ -1,0 +1,21 @@
+{
+  "name": "Kabayan AI",
+  "short_name": "Kabayan",
+  "description": "Ruang belajar cerdas dengan AI",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f7f9f5",
+  "theme_color": "#0d7a58",
+  "icons": [
+    {
+      "src": "/favicon-256x256.png",
+      "sizes": "256x256",
+      "type": "image/png"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}
