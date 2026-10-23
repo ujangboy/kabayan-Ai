@@ -1,14 +1,31 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { materiAPI } from '@/services/api';
 import { Tooltip } from '@/components/ui';
 import { getMaterialStatusLabel } from '@/utils/status';
 
-export default function MaterialPicker({ subjectId, selectedMaterialIds, onSelectionChange }) {
+export default function MaterialPicker({
+  subjectId,
+  selectedMaterialIds,
+  onSelectionChange,
+  autoSelectReady = false,
+}) {
   const { t } = useTranslation();
   const [materials, setMaterials] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const previousSubjectRef = useRef(subjectId);
+  const autoSelectedForRef = useRef(null);
+
+  // Saat mata kuliah berganti, buang pilihan lama agar ID materi tidak
+  // tercampur antar-subject.
+  useEffect(() => {
+    if (previousSubjectRef.current !== subjectId) {
+      previousSubjectRef.current = subjectId;
+      autoSelectedForRef.current = null;
+      onSelectionChange([]);
+    }
+  }, [subjectId, onSelectionChange]);
 
   useEffect(() => {
     if (!subjectId) {
@@ -25,6 +42,17 @@ export default function MaterialPicker({ subjectId, selectedMaterialIds, onSelec
       .catch((err) => setError(err.message || t('materialPicker.errorLoad')))
       .finally(() => setLoading(false));
   }, [subjectId]);
+
+  // Alur ujian: materi yang sudah siap dipilih otomatis supaya pengguna tidak
+  // perlu mencentang satu per satu. Tetap bisa diubah manual setelahnya.
+  useEffect(() => {
+    if (!autoSelectReady || !subjectId || loading) return;
+    const readyIds = materials.filter((m) => m.status === 'Ready').map((m) => String(m.id));
+    if (!readyIds.length || autoSelectedForRef.current === subjectId) return;
+    if (selectedMaterialIds.length > 0) return;
+    autoSelectedForRef.current = subjectId;
+    onSelectionChange(readyIds);
+  }, [autoSelectReady, subjectId, loading, materials, selectedMaterialIds.length, onSelectionChange]);
 
   const toggle = (id) => {
     const next = selectedMaterialIds.includes(String(id))

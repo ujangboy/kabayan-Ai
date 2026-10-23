@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ICONS } from '@/lib/icons';
-import { Icon , Button} from '@/components/ui';
+import { Icon, Button, Select } from '@/components/ui';
 
 import { examAPI } from '@/services/api';
 import { useBackgroundJob } from '@/hooks/useBackgroundJob';
@@ -17,7 +17,14 @@ import {
 const PAGE_KEY = 'exam-analyzer';
 const JOB_KEY = 'exam-blueprint';
 
-export default function ConfigView({ subjectId, analysis, onDone }) {
+export default function ConfigView({
+  subjectId,
+  subjects = [],
+  analysis,
+  onDone,
+  onSubjectChange,
+  onRequestCreateSubject,
+}) {
   const { t } = useTranslation();
   const { run: runJob } = useBackgroundJob();
   const jobRunning = useJobStore((s) => Boolean(s.jobs[JOB_KEY]));
@@ -158,6 +165,33 @@ export default function ConfigView({ subjectId, analysis, onDone }) {
       <SectionHeader icon={ICONS.status.pending} title={t('exam.config.title')}
         subtitle={t('exam.config.subtitle')} />
 
+      <div>
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-text-secondary">
+          {t('exam.config.subjectLabel', 'Mata Kuliah')}
+        </p>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Select
+            value={subjectId || ''}
+            onChange={(e) => onSubjectChange?.(e.target.value ? Number(e.target.value) : null)}
+            className="sm:max-w-md"
+            aria-label={t('exam.config.subjectLabel', 'Mata Kuliah')}
+          >
+            <option value="">{t('exam.config.subjectPlaceholder', 'Pilih mata kuliah...')}</option>
+            {subjects.map((s) => (
+              <option key={s.id} value={s.id}>{s.name}</option>
+            ))}
+          </Select>
+          <Button type="button" variant="secondary" onClick={onRequestCreateSubject} className="inline-flex shrink-0 items-center justify-center gap-1.5">
+            <Icon name={ICONS.actions.addOutline} size={14} /> {t('exam.history.addSubject')}
+          </Button>
+        </div>
+        {!subjectId && (
+          <p className="mt-2 text-xs text-text-muted">
+            {t('exam.config.subjectHint', 'Pilih mata kuliah yang sudah punya materi, atau tambah mata kuliah baru.')}
+          </p>
+        )}
+      </div>
+
       <OptionGroup label={t('exam.config.examTypeLabel')} options={EXAM_TYPES} field="exam_type" renderLabel={localizeOption} />
       <div>
         <p className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-2">{t('exam.config.questionCountLabel')}</p>
@@ -188,6 +222,7 @@ export default function ConfigView({ subjectId, analysis, onDone }) {
         subjectId={subjectId}
         selectedMaterialIds={selectedMaterialIds}
         onSelectionChange={setSelectedMaterialIds}
+        autoSelectReady
       />
 
       {error && <p className="text-danger text-sm">{error}</p>}

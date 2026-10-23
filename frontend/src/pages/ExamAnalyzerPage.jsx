@@ -20,6 +20,7 @@ import ResultView from '@/components/exam/ResultView';
 import ReviewView from '@/components/exam/ReviewView';
 import HistoryView from '@/components/exam/HistoryView';
 import ExamHeader from '@/components/exam/ExamHeader';
+import CreateSubjectModal from '@/components/subjects/CreateSubjectModal';
 
 const PAGE_KEY = 'exam-analyzer';
 const GENERATE_TIMEOUT_MS = 10 * 60 * 1000;
@@ -50,6 +51,7 @@ export default function ExamAnalyzerPage() {
   // ── Modal state untuk Config & Blueprint (sesuai proposal unifikasi) ──
   const [configOpen, setConfigOpen]       = useState(false);
   const [blueprintModal, setBlueprintModal] = useState(null);
+  const [createSubjectOpen, setCreateSubjectOpen] = useState(false);
 
   // Guard untuk efek reset klik-menu (lihat efek location.key di bawah)
   const suppressHomeResetRef   = useRef(false);
@@ -227,12 +229,24 @@ export default function ExamAnalyzerPage() {
   };
 
   const openConfig = (id) => {
-    if (id) setSubjectId(id);
+    if (id) setSubjectId(String(id));
+    else if (!subjectId && subjects.length === 1) setSubjectId(String(subjects[0].id));
     clearAll();
     clearStaleJobResults();
     setConfigOpen(true);
   };
   const closeConfig = () => setConfigOpen(false);
+
+  const handleSubjectCreated = (subject) => {
+    setCreateSubjectOpen(false);
+    queryClient.invalidateQueries({ queryKey: ['subjects'] });
+    if (subject?.id) {
+      setSubjectId(String(subject.id));
+      clearAll();
+      clearStaleJobResults();
+      setConfigOpen(true);
+    }
+  };
 
   const handleConfigDone = (data) => {
     setBlueprint(data);
@@ -333,15 +347,13 @@ export default function ExamAnalyzerPage() {
           onBack={handleExit}
           onSubjectChange={(e) => { setSubjectId(e.target.value); setAnalysis(null); setBlueprint(null); setSessionData(null); setEvalData(null); setRecommend(null); go(VIEW.HISTORY); }}
           onCreate={() => {
-            if (subjectId) return openConfig();
-            if (subjects.length === 1) return openConfig(String(subjects[0].id));
+            if (subjectId) return openConfig(subjectId);
             if (subjects.length === 0) {
-              toast.info(t('exam.config.selectSubjectFirst'));
-              navigate('/materi');
+              setCreateSubjectOpen(true);
               return;
             }
-            toast.info(t('exam.config.selectSubjectFirst'));
-            document.getElementById('subject-picker')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            // Selalu buka config; di dalamnya ada pemilih mata kuliah.
+            openConfig();
           }}
         />
 
@@ -392,8 +404,29 @@ export default function ExamAnalyzerPage() {
           mengganti view, lalu restore parent menimpanya kembali ke history. */}
       {restored && (
         <Modal open={configOpen} onClose={closeConfig} title={t('exam.config.title')} size="lg">
-          {configOpen && <ConfigView subjectId={subjectId} analysis={analysis} onDone={handleConfigDone} />}
+          {configOpen && (
+            <ConfigView
+              subjectId={subjectId}
+              subjects={subjects}
+              analysis={analysis}
+              onDone={handleConfigDone}
+              onSubjectChange={(id) => {
+                setSubjectId(id ? String(id) : '');
+                setAnalysis(null);
+                setBlueprint(null);
+              }}
+              onRequestCreateSubject={() => setCreateSubjectOpen(true)}
+            />
+          )}
         </Modal>
+      )}
+
+      {restored && (
+        <CreateSubjectModal
+          open={createSubjectOpen}
+          onClose={() => setCreateSubjectOpen(false)}
+          onSuccess={handleSubjectCreated}
+        />
       )}
 
       {restored && (

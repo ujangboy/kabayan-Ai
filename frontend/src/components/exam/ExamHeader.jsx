@@ -40,11 +40,7 @@ export default function ExamHeader({ view, subjectId, subjects, canCreate, onBac
           {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
         </Select>
         {canCreate && (
-          <Button
-            onClick={onCreate}
-            disabled={!subjects.length}
-            className="disabled:opacity-40 disabled:cursor-not-allowed"
-           variant="primary">
+          <Button onClick={onCreate} className="shrink-0" variant="primary">
             {t('exam.createSimulation')}
           </Button>
         )}

@@ -8,8 +8,9 @@ import { motion } from 'framer-motion';
 
 import { subjectAPI } from '@/services/api';
 import { cn, formatDate, formatTimeOnly } from '@/utils';
-import { Tooltip, Modal, Button, Input, Textarea, Select, EmptyState, Skeleton, SubjectBadge, getSubjectPalette, Icon } from '@/components/ui';
+import { Tooltip, Button, Select, EmptyState, Skeleton, SubjectBadge, getSubjectPalette, Icon } from '@/components/ui';
 import { useToast } from '@/components/Toast';
+import CreateSubjectModal from '@/components/subjects/CreateSubjectModal';
 
 export default function SubjectsPage() {
   const { t } = useTranslation();
@@ -203,92 +204,5 @@ export default function SubjectsPage() {
         }}
       />
     </div>
-  );
-}
-
-function CreateSubjectModal({ open, onClose, onSuccess }) {
-  const { t } = useTranslation();
-  const { toast } = useToast();
-  const [formData, setFormData] = useState({ name: '', semester: '', lecturer: '', description: '' });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!formData.name) return;
-    
-    setIsSubmitting(true);
-    const data = new URLSearchParams();
-    data.append('name', formData.name);
-    data.append('semester', formData.semester);
-    data.append('lecturer', formData.lecturer);
-    data.append('description', formData.description);
-
-    try {
-      const res = await subjectAPI.create(formData);
-      if (res.data?.detail) throw new Error(res.data.detail);
-      onSuccess();
-    } catch (err) {
-      toast.error(err.message);
-      setIsSubmitting(false);
-    }
-  };
-
-  return (
-    <Modal
-      open={open}
-      onClose={onClose}
-      title={t('subjects.addNew')}
-      size="md"
-      footer={
-        <>
-          <Button variant="ghost" onClick={onClose} disabled={isSubmitting}>{t('common.cancel')}</Button>
-          <Button type="submit" form="create-subject-form" loading={isSubmitting} disabled={!formData.name}>
-            {t('common.save')}
-          </Button>
-        </>
-      }
-    >
-      <form id="create-subject-form" onSubmit={handleSubmit} className="space-y-4 p-5">
-        <div>
-          <label className="mb-1 block text-xs font-medium text-text-secondary">{t('subjects.formNameLabel')}</label>
-          <Input
-            type="text"
-            required
-            value={formData.name}
-            onChange={(e) => setFormData(p => ({ ...p, name: e.target.value }))}
-            placeholder={t('subjects.formNamePlaceholder')}
-          />
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="mb-1 block text-xs font-medium text-text-secondary">{t('subjects.formSemesterLabel')}</label>
-            <Input
-              type="text"
-              value={formData.semester}
-              onChange={(e) => setFormData(p => ({ ...p, semester: e.target.value }))}
-              placeholder={t('subjects.formSemesterPlaceholder')}
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-xs font-medium text-text-secondary">{t('subjects.formLecturerLabel')}</label>
-            <Input
-              type="text"
-              value={formData.lecturer}
-              onChange={(e) => setFormData(p => ({ ...p, lecturer: e.target.value }))}
-              placeholder={t('subjects.formLecturerPlaceholder')}
-            />
-          </div>
-        </div>
-        <div>
-          <label className="mb-1 block text-xs font-medium text-text-secondary">{t('subjects.formNotesLabel')}</label>
-          <Textarea
-            value={formData.description}
-            onChange={(e) => setFormData(p => ({ ...p, description: e.target.value }))}
-            rows={2}
-            placeholder={t('subjects.formNotesPlaceholder')}
-          />
-        </div>
-      </form>
-    </Modal>
   );
 }

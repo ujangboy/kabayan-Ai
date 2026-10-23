@@ -1,5 +1,4 @@
 import { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ICONS } from '@/lib/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -21,12 +20,13 @@ import {
 import { Tooltip } from '@/components/ui/Tooltip';
 import { SubjectBadge, getSubjectPalette, Icon, Button } from '@/components/ui';
 import { useToast } from '@/components/Toast';
+import CreateSubjectModal from '@/components/subjects/CreateSubjectModal';
 
 // ─── Subject picker (shown when no subject selected) ──────────────────────────
 function SubjectPicker({ subjects, onSelectSubject, onStartConfig, t }) {
-   const navigate = useNavigate();
    const { toast } = useToast();
    const queryClient = useQueryClient();
+   const [createOpen, setCreateOpen] = useState(false);
 
    const deleteMutation = useMutation({
      mutationFn: (id) => subjectAPI.delete(id),
@@ -61,27 +61,43 @@ function SubjectPicker({ subjects, onSelectSubject, onStartConfig, t }) {
       });
     };
 
+   const handleCreated = (subject) => {
+     setCreateOpen(false);
+     queryClient.invalidateQueries(['subjects']);
+     if (subject?.id) onStartConfig?.(subject.id);
+   };
+
    if (!subjects.length) {
      return (
-       <div className="card-base p-16 text-center">
-         <Icon name={ICONS.learning.bookOpen} size={48} className="mx-auto mb-4 text-primary opacity-40" />
-         <h3 className="text-lg font-semibold text-text mb-2">{t('exam.history.noSubjects')}</h3>
-         <p className="text-text-muted text-sm max-w-md mx-auto mb-5">
-           {t('exam.history.noSubjectsDesc')}
-         </p>
-         <Button onClick={() => navigate('/materi')} className="text-sm" variant="primary">
-           <Icon name={ICONS.learning.bookOpen} size={14} /> {t('exam.history.addSubject')}
-         </Button>
-       </div>
+       <>
+         <div className="card-base p-16 text-center">
+           <Icon name={ICONS.learning.bookOpen} size={48} className="mx-auto mb-4 text-primary opacity-40" />
+           <h3 className="text-lg font-semibold text-text mb-2">{t('exam.history.noSubjects')}</h3>
+           <p className="text-text-muted text-sm max-w-md mx-auto mb-5">
+             {t('exam.history.noSubjectsDesc')}
+           </p>
+           <Button onClick={() => setCreateOpen(true)} className="text-sm" variant="primary">
+             <Icon name={ICONS.actions.addOutline} size={14} /> {t('exam.history.addSubject')}
+           </Button>
+         </div>
+         <CreateSubjectModal open={createOpen} onClose={() => setCreateOpen(false)} onSuccess={handleCreated} />
+       </>
      );
    }
 
    return (
      <div>
-       <h2 className="text-lg font-semibold text-text mb-1">{t('exam.history.selectSubject')}</h2>
-       <p className="text-text-muted text-sm mb-5">
-         {t('exam.history.selectSubjectDesc')}
-       </p>
+       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+         <div>
+           <h2 className="text-lg font-semibold text-text mb-1">{t('exam.history.selectSubject')}</h2>
+           <p className="text-text-muted text-sm">
+             {t('exam.history.selectSubjectDesc')}
+           </p>
+         </div>
+         <Button onClick={() => setCreateOpen(true)} className="inline-flex shrink-0 items-center justify-center gap-1.5 text-sm" variant="secondary">
+           <Icon name={ICONS.actions.addOutline} size={14} /> {t('exam.history.addSubject')}
+         </Button>
+       </div>
       <div id="subject-picker" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {subjects.map((s) => (
           <SubjectCard
@@ -93,7 +109,19 @@ function SubjectPicker({ subjects, onSelectSubject, onStartConfig, t }) {
             t={t}
           />
         ))}
+        <button
+          type="button"
+          onClick={() => setCreateOpen(true)}
+          className="flex min-h-[220px] flex-col items-center justify-center gap-3 rounded-card border-2 border-dashed border-border bg-wash p-5 text-center text-text-muted transition-colors hover:border-primary/40 hover:bg-primary/5 hover:text-primary-light"
+        >
+          <span className="flex h-12 w-12 items-center justify-center rounded-full border border-border bg-surface">
+            <Icon name={ICONS.actions.addOutline} size={24} />
+          </span>
+          <span className="text-sm font-semibold">{t('exam.history.addSubject')}</span>
+          <span className="max-w-[180px] text-xs">{t('exam.history.addSubjectHint', 'Buat mata kuliah baru untuk mulai simulasi.')}</span>
+        </button>
       </div>
+      <CreateSubjectModal open={createOpen} onClose={() => setCreateOpen(false)} onSuccess={handleCreated} />
     </div>
   );
 }
