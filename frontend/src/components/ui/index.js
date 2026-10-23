@@ -4,7 +4,7 @@ export { Modal, ModalClose } from './Modal';
 export { ConfirmDialog } from './ConfirmDialog';
 export { Input, Textarea, Select } from './Input';
 export { Badge } from './Badge';
-export { SubjectBadge, getSubjectPalette } from './SubjectBadge';
+export { SubjectBadge, getSubjectPalette, getCardTone } from './SubjectBadge';
 export { Spinner } from './Spinner';
 export { Skeleton } from './Skeleton';
 export { EmptyState } from './EmptyState';

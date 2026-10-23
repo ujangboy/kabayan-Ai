@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { studyAPI } from '@/services/api';
-import { Card, Skeleton, Icon } from '@/components/ui';
+import { Card, Skeleton, Icon, getCardTone } from '@/components/ui';
 import { ICONS } from '@/lib/icons';
 
 function Tile({ icon, label, value, sub, tone }) {
@@ -12,8 +12,10 @@ function Tile({ icon, label, value, sub, tone }) {
     purple: 'bg-primary/10 text-primary-light border-primary/20',
     teal: 'bg-sun/10 text-warning border-sun/25',
   };
+  const palette = getCardTone(tone);
   return (
-    <Card className="p-card">
+    <Card className={`relative overflow-hidden p-card ${palette.card}`}>
+      <span aria-hidden className={`absolute inset-x-0 top-0 h-1 ${palette.bar}`} />
       <div className={`w-9 h-9 rounded-lg flex items-center justify-center border mb-3 ${tones[tone]}`}>
         <Icon name={icon} size={16} />
       </div>
@@ -110,7 +112,8 @@ export default function StudyInsights() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <Card className="p-card">
+        <Card className={`relative overflow-hidden p-card ${getCardTone('green').card}`}>
+          <span aria-hidden className={`absolute inset-x-0 top-0 h-1 ${getCardTone('green').bar}`} />
           <div className="flex items-center gap-2 mb-2">
             <Icon name={ICONS.learning.calendar} size={14} className="text-text-secondary" />
             <span className="text-xs font-semibold text-text-secondary uppercase tracking-wider">
@@ -136,7 +139,8 @@ export default function StudyInsights() {
           )}
         </Card>
 
-        <Card className="p-card">
+        <Card className={`relative overflow-hidden p-card ${getCardTone('blue').card}`}>
+          <span aria-hidden className={`absolute inset-x-0 top-0 h-1 ${getCardTone('blue').bar}`} />
           <div className="flex items-center gap-2 mb-2">
             <Icon name={ICONS.learning.target} size={14} className="text-text-secondary" />
             <span className="text-xs font-semibold text-text-secondary uppercase tracking-wider">
@@ -162,7 +166,8 @@ export default function StudyInsights() {
           )}
         </Card>
 
-        <Card className="p-card">
+        <Card className={`relative overflow-hidden p-card ${getCardTone('purple').card}`}>
+          <span aria-hidden className={`absolute inset-x-0 top-0 h-1 ${getCardTone('purple').bar}`} />
           <div className="flex items-center gap-2 mb-2">
             <Icon name={ICONS.learning.network} size={14} className="text-text-secondary" />
             <span className="text-xs font-semibold text-text-secondary uppercase tracking-wider">

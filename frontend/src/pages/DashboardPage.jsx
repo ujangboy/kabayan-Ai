@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useChatStore } from '@/store';
 import { formatDate, formatBytes } from '@/utils';
 import { getMaterialStatusLabel } from '@/utils/status';
-import { EmptyState, Skeleton, HelpTip, Icon , Button} from '@/components/ui';
+import { EmptyState, Skeleton, HelpTip, Icon, Button, getCardTone } from '@/components/ui';
 import { ICONS } from '@/lib/icons';
 import FileTypeIcon from '@/components/FileTypeIcon';
 import StudyInsights from '@/components/study/StudyInsights';
@@ -13,10 +13,10 @@ import { KabayanMark } from '@/components/brand/KabayanLogo';
 import api from '@/services/api';
 
 const QUICK_ACTIONS = (t) => [
-  { icon: ICONS.communication.chat, label: t('dashboard.quickChat'),       desc: t('dashboard.quickChatDesc'),     to: '/chat',             color: 'bg-primary-solid text-white',        shadow: 'shadow-card' },
-  { icon: ICONS.files.document,      label: t('dashboard.quickUpload'),     desc: t('dashboard.quickUploadDesc'),    to: '/materi?upload=1', color: 'bg-sun/15 text-warning',             shadow: '' },
-  { icon: ICONS.nav.flashcard,       label: t('dashboard.quickFlashcard'),  desc: t('dashboard.quickFlashcardDesc'), to: '/flashcard',        color: 'bg-primary/10 text-primary-light',  shadow: '' },
-  { icon: ICONS.ui.help,             label: t('dashboard.quickQuiz'),       desc: t('dashboard.quickQuizDesc'),      to: '/quiz',             color: 'bg-info/10 text-info',              shadow: '' },
+  { icon: ICONS.communication.chat, label: t('dashboard.quickChat'),       desc: t('dashboard.quickChatDesc'),     to: '/chat',             color: 'bg-primary-solid text-white',        shadow: 'shadow-card', tone: 'green' },
+  { icon: ICONS.files.document,      label: t('dashboard.quickUpload'),     desc: t('dashboard.quickUploadDesc'),    to: '/materi?upload=1', color: 'bg-sun/15 text-warning',             shadow: '', tone: 'sun' },
+  { icon: ICONS.nav.flashcard,       label: t('dashboard.quickFlashcard'),  desc: t('dashboard.quickFlashcardDesc'), to: '/flashcard',        color: 'bg-primary/10 text-primary-light',  shadow: '', tone: 'purple' },
+  { icon: ICONS.ui.help,             label: t('dashboard.quickQuiz'),       desc: t('dashboard.quickQuizDesc'),      to: '/quiz',             color: 'bg-info/10 text-info',              shadow: '', tone: 'blue' },
 ];
 
 const STAT_TONES = {
@@ -37,8 +37,10 @@ const item = {
 };
 
 function StatCard({ icon, label, value, tone, loading }) {
+  const palette = getCardTone(tone);
   return (
-    <motion.div variants={item} className="card-base card-hoverable relative flex items-center gap-3.5 overflow-hidden p-4">
+    <motion.div variants={item} className={`card-base card-hoverable relative flex items-center gap-3.5 overflow-hidden p-4 ${palette.card}`}>
+      {palette && <span aria-hidden className={`absolute inset-x-0 top-0 h-1 ${palette.bar}`} />}
       <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border ${STAT_TONES[tone]}`}>
         <Icon name={icon} size={18} />
       </div>
@@ -132,23 +134,27 @@ export default function DashboardPage() {
             <h2 className="font-display text-[11px] font-bold uppercase tracking-[0.14em] text-text-muted">{t('dashboard.sectionQuickActions')}</h2>
           </motion.div>
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            {QUICK_ACTIONS(t).map(({ icon, label, desc, to, color, shadow }) => (
-              <motion.button
-                key={to}
-                variants={item}
-                whileTap={{ scale: 0.985 }}
-                onClick={() => handleQuickAction(to)}
-                className="card-base card-hoverable flex cursor-pointer items-center gap-3.5 p-4 text-left hover:border-primary/25"
-              >
-                <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${color} ${shadow}`}>
-                  <Icon name={icon} size={18} />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-[12.5px] font-semibold leading-tight text-text sm:truncate sm:text-[13.5px]">{label}</p>
-                  <p className="mt-0.5 hidden truncate text-[11.5px] text-text-muted sm:block">{desc}</p>
-                </div>
-              </motion.button>
-            ))}
+            {QUICK_ACTIONS(t).map(({ icon, label, desc, to, color, shadow, tone }) => {
+              const palette = getCardTone(tone);
+              return (
+                <motion.button
+                  key={to}
+                  variants={item}
+                  whileTap={{ scale: 0.985 }}
+                  onClick={() => handleQuickAction(to)}
+                  className={`card-base card-hoverable relative flex cursor-pointer items-center gap-3.5 overflow-hidden p-4 text-left ${palette.card}`}
+                >
+                  {palette && <span aria-hidden className={`absolute inset-x-0 top-0 h-1 ${palette.bar}`} />}
+                  <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${color} ${shadow}`}>
+                    <Icon name={icon} size={18} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[12.5px] font-semibold leading-tight text-text sm:truncate sm:text-[13.5px]">{label}</p>
+                    <p className="mt-0.5 hidden truncate text-[11.5px] text-text-muted sm:block">{desc}</p>
+                  </div>
+                </motion.button>
+              );
+            })}
           </div>
         </motion.section>
 
@@ -203,7 +209,8 @@ export default function DashboardPage() {
                 {t('dashboard.viewAll')}
               </button>
             </div>
-            <div className="card-base overflow-hidden p-0">
+            <div className={`card-base relative overflow-hidden p-0 ${getCardTone('blue').card}`}>
+              <span aria-hidden className={`absolute inset-x-0 top-0 h-1 ${getCardTone('blue').bar}`} />
               {isLoading ? (
                 <div className="p-5 space-y-3">
                   {[1,2,3].map(i => <Skeleton key={i} className="h-4 w-full rounded-lg" />)}
@@ -253,7 +260,8 @@ export default function DashboardPage() {
                 {t('dashboard.viewAll')}
               </button>
             </div>
-            <div className="card-base overflow-hidden p-0">
+            <div className={`card-base relative overflow-hidden p-0 ${getCardTone('sun').card}`}>
+              <span aria-hidden className={`absolute inset-x-0 top-0 h-1 ${getCardTone('sun').bar}`} />
               {isLoading ? (
                 <div className="p-5 space-y-3">
                   {[1,2,3].map(i => <Skeleton key={i} className="h-4 w-full rounded-lg" />)}

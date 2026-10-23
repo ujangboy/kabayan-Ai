@@ -85,6 +85,28 @@ export function getSubjectPaletteIndex({ subjectId, tone, name } = {}) {
   return getSubjectColorIndex(name);
 }
 
+const TONE_INDEX = {
+  teal: 0,
+  green: 0,
+  success: 0,
+  blue: 1,
+  info: 1,
+  purple: 2,
+  primary: 2,
+  pink: 3,
+  rose: 3,
+  sun: 4,
+  warning: 4,
+};
+
+/** Palet kartu untuk tone semantik (dipakai Dashboard/Settings). */
+export function getCardTone(tone) {
+  if (typeof tone === 'number') {
+    return PALETTE[((tone % PALETTE.length) + PALETTE.length) % PALETTE.length];
+  }
+  return PALETTE[TONE_INDEX[String(tone || '').toLowerCase()] ?? 0];
+}
+
 export function SubjectBadge({ name, className, size = 'md', tone, subjectId }) {
   const idx = getSubjectPaletteIndex({ subjectId, tone, name });
   return (
