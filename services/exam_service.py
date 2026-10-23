@@ -17,6 +17,14 @@ from fastapi import HTTPException, status
 from services.ai_service import ai_service
 from services.token_budget import exam_question_context_chars, exam_question_output_tokens
 from services.assessment_engine import assemble_evaluation, generate_study_plan, fallback_activity_description, TIME_SLOTS
+from services.exam_builder import (
+    dedupe_questions,
+    normalize_blueprint_items,
+    normalize_question,
+    normalize_type,
+    order_objective_first,
+    question_key,
+)
 from repositories.exam_repository import exam_blueprint_repository, exam_session_repository
 from repositories.question_bank_repository import question_bank_repository
 from repositories.exam_history_repository import exam_attempt_repo, study_plan_repo, study_plan_item_repo
@@ -31,8 +39,6 @@ from prompts.exam_analyzer import (
 
 logger = logging.getLogger(__name__)
 MAX_CONTEXT_WORDS = 1500
-# Minimum questions in bank before we skip AI generation
-BANK_MIN_RATIO = 0.8   # need ≥ 80% of requested questions already in bank
 
 
 # ─── History Helpers ─────────────────────────────────────────────────────────
@@ -301,6 +307,17 @@ class ExamService:
         if "title" not in blueprint_data:
             blueprint_data["title"] = f"Blueprint {exam_type.upper()} - {subject.name}"
 
+        # Pastikan jumlah soal per topik selalu berjumlah tepat total_questions.
+        # AI kadang mengembalikan 18/20, 22/20, atau topik duplikat.
+        blueprint_data["blueprint_items"] = normalize_blueprint_items(
+            blueprint_data.get("blueprint_items", []),
+            total_questions,
+            default_question_types=[question_type],
+            default_difficulty=difficulty,
+            default_bloom=bloom_level,
+        )
+        blueprint_data["total_questions"] = total_questions
+
         # Attach multi-subject metadata if provided
         if subject_ids:
             blueprint_data["subject_ids"] = subject_ids
@@ -323,145 +340,329 @@ class ExamService:
         return {"blueprint_id": record.id, **blueprint_data}
 
 
-    # ── 3. Generate Questions — Question Bank first, AI only if needed ─────────
-    def generate_questions(self, db: Session, blueprint_id: int) -> dict:
+    # ── 3. Generate Questions — bank first, AI untuk kekurangan, exact count ─
+    def _exam_context(self, db: Session, blueprint, blueprint_data: dict) -> str:
+        """Ambil konteks materi sekali saja, dipakai untuk semua batch AI."""
         from services.material_service import material_service
 
+        materials = material_service.get_by_subject(db, blueprint.subject_id)
+        material_ids = blueprint_data.get("material_ids")
+        if material_ids:
+            try:
+                ids = {
+                    int(x.strip())
+                    for x in str(material_ids).split(",")
+                    if str(x).strip().isdigit()
+                }
+                if ids:
+                    materials = [m for m in materials if m.id in ids]
+            except (TypeError, ValueError):
+                pass
+        full_ctx = _gather_context(db, blueprint.subject_id, materials)
+        return " ".join(full_ctx.split()[:1500])
+
+    def _select_bank_questions(
+        self,
+        rows,
+        needed: int,
+        used_bank_ids: set,
+        seen_keys: set,
+        *,
+        default_topic: str,
+        default_type: str,
+        default_difficulty: str,
+        default_bloom: str,
+    ) -> list[dict]:
+        """Pilih baris bank yang valid, unik, dan belum dipakai."""
+        selected = []
+        for row in rows:
+            if row.id in used_bank_ids:
+                continue
+            raw = _bank_row_to_question(row, 0)
+            question = normalize_question(
+                raw,
+                default_type=default_type,
+                default_topic=default_topic,
+                default_difficulty=default_difficulty,
+                default_bloom=default_bloom,
+            )
+            if not question:
+                continue
+            key = question_key(question)
+            if not key or key in seen_keys:
+                continue
+            seen_keys.add(key)
+            used_bank_ids.add(row.id)
+            selected.append(question)
+            if len(selected) >= needed:
+                break
+        return selected
+
+    def _generate_ai_question_batch(
+        self,
+        db: Session,
+        blueprint,
+        context: str,
+        *,
+        topic: str,
+        count: int,
+        qtypes,
+        bloom: str,
+        difficulty: str,
+        key_concepts: str,
+    ) -> list[dict]:
+        """Minta satu batch soal ke AI, validasi, simpan ke bank."""
+        if count <= 0 or not context.strip():
+            return []
+        capped = max(1, min(int(count), 10))
+        default_type = normalize_type(qtypes[0]) if qtypes else "mcq"
+        if default_type == "mixed":
+            default_type = "mcq"
+        try:
+            response = ai_service.generate(
+                capability="quiz",
+                prompt_template=QUESTION_GEN_PROMPT,
+                input_variables={
+                    "context": context,
+                    "topic": topic,
+                    "question_count": capped,
+                    "question_types": ", ".join(qtypes or [default_type]),
+                    "bloom_level": bloom,
+                    "difficulty": difficulty,
+                    "key_concepts": key_concepts,
+                    "adaptive_instructions": self._adaptive_section(db, blueprint.subject_id),
+                },
+                use_cache=False,
+                temperature=0.7,
+                max_tokens=exam_question_output_tokens(capped),
+                max_context_chars=exam_question_context_chars(capped),
+            )
+            if not response or not str(response).strip():
+                return []
+            q_data = _parse_json_response(response, f"QuestionGen[{topic}]")
+            raw_questions = q_data if isinstance(q_data, list) else q_data.get("questions", [])
+            if not isinstance(raw_questions, list):
+                return []
+
+            normalized = []
+            for raw in raw_questions:
+                question = normalize_question(
+                    raw,
+                    default_type=default_type,
+                    default_topic=topic,
+                    default_difficulty=difficulty,
+                    default_bloom=bloom,
+                )
+                if question:
+                    normalized.append(question)
+            normalized = dedupe_questions(normalized)[:capped]
+            if normalized:
+                question_bank_repository.bulk_insert(
+                    db, blueprint.subject_id, blueprint.id, normalized
+                )
+                db.commit()
+            return normalized
+        except Exception as exc:
+            logger.error("Question gen failed for topic '%s': %s", topic, exc)
+            try:
+                db.rollback()
+            except Exception:
+                pass
+            return []
+
+    def _bank_rows_for_subjects(
+        self, db: Session, subject_ids: list[int], *, topic: str = "", difficulty=None,
+        question_type=None, limit: int = 200,
+    ):
+        rows = []
+        for subject_id in subject_ids:
+            try:
+                if topic:
+                    rows.extend(
+                        question_bank_repository.get_by_topic(
+                            db, subject_id, topic, difficulty, question_type, limit=limit
+                        )
+                    )
+                else:
+                    rows.extend(
+                        question_bank_repository.get_by_subject(
+                            db, subject_id, difficulty, question_type, limit=limit
+                        )
+                    )
+            except Exception as exc:
+                logger.warning("Gagal membaca bank subject %s: %s", subject_id, exc)
+        return rows
+
+    def generate_questions(self, db: Session, blueprint_id: int) -> dict:
         blueprint = exam_blueprint_repository.get(db, blueprint_id)
         if not blueprint:
             raise ValueError("Blueprint tidak ditemukan.")
 
         blueprint_data = _load_blueprint_json(blueprint)
-        items          = blueprint_data.get("blueprint_items", [])
-        subject_ids    = blueprint_data.get("subject_ids", [blueprint.subject_id])
+        raw_items = blueprint_data.get("blueprint_items", [])
+        target_total = max(
+            1,
+            int(blueprint.total_questions or sum(
+                int(i.get("question_count", 0) or 0)
+                for i in raw_items
+                if isinstance(i, dict)
+            ) or 1),
+        )
+        items = normalize_blueprint_items(
+            raw_items,
+            target_total,
+            default_question_types=[blueprint.question_type],
+            default_difficulty=blueprint.difficulty,
+            default_bloom=blueprint.bloom_level,
+        )
+
+        subject_ids = blueprint_data.get("subject_ids", [blueprint.subject_id])
         if isinstance(subject_ids, int):
             subject_ids = [subject_ids]
+        subject_ids = [int(s) for s in subject_ids if str(s).isdigit()]
+        if blueprint.subject_id not in subject_ids:
+            subject_ids.insert(0, blueprint.subject_id)
 
-        all_questions = []
-        question_id_offset = 1
+        all_questions: list[dict] = []
+        used_bank_ids: set[int] = set()
+        seen_keys: set[str] = set()
+        context: Optional[str] = None
+
+        def ensure_context() -> str:
+            nonlocal context
+            if context is None:
+                context = self._exam_context(db, blueprint, blueprint_data)
+                db.commit()
+            return context
 
         for item in items:
-            topic    = item.get("topic", "")
-            needed   = item.get("question_count", 1)
-            diff     = item.get("difficulty", blueprint.difficulty)
-            qtypes   = item.get("question_types", [blueprint.question_type])
-            qtype    = qtypes[0] if len(qtypes) == 1 else "mixed"
-            bloom    = item.get("bloom_level", blueprint.bloom_level)
+            topic = item.get("topic", "Umum")
+            needed = max(0, int(item.get("question_count", 0) or 0))
+            if needed <= 0:
+                continue
+            diff = item.get("difficulty", blueprint.difficulty)
+            qtypes = item.get("question_types") or [blueprint.question_type]
+            qtypes = [normalize_type(t) for t in qtypes if normalize_type(t) != "mixed"] or ["mcq"]
+            bloom = item.get("bloom_level", blueprint.bloom_level)
             concepts = ", ".join(item.get("key_concepts", [topic]))
+            default_type = qtypes[0] if len(qtypes) == 1 else "mcq"
 
-            # ── Try Question Bank first ──
-            bank_rows = question_bank_repository.get_by_topic(
-                db, blueprint.subject_id, topic, diff, qtype, limit=needed * 3
+            bank_rows = self._bank_rows_for_subjects(
+                db, subject_ids, topic=topic, difficulty=diff,
+                question_type=qtypes[0] if len(qtypes) == 1 else None,
+                limit=max(needed * 4, 20),
             )
             random.shuffle(bank_rows)
-            bank_rows = bank_rows[:needed]
+            topic_questions = self._select_bank_questions(
+                bank_rows, needed, used_bank_ids, seen_keys,
+                default_topic=topic, default_type=default_type,
+                default_difficulty=diff, default_bloom=bloom,
+            )
 
-            if len(bank_rows) >= max(1, int(needed * BANK_MIN_RATIO)):
-                # Enough in bank — use them, no AI call
-                question_bank_repository.increment_used(db, [r.id for r in bank_rows])
-                db.commit()
-                for row in bank_rows:
-                    q = _bank_row_to_question(row, question_id_offset)
-                    all_questions.append(q)
-                    question_id_offset += 1
-                continue   # ← next blueprint item
-
-            # ── Not enough in bank — call AI ──
-            materials = material_service.get_by_subject(db, blueprint.subject_id)
-            blueprint_material_ids = blueprint_data.get("material_ids")
-            if blueprint_material_ids:
-                ids = [int(x.strip()) for x in blueprint_material_ids.split(",") if x.strip()]
-                if ids:
-                    materials = [m for m in materials if m.id in ids]
-            full_ctx  = _gather_context(db, blueprint.subject_id, materials)
-            context   = " ".join(full_ctx.split()[:1500])
-            # Lepaskan read transaction sebelum menunggu AI. Tanpa ini,
-            # penulisan usage log dari session lain bisa terkena lock SQLite.
-            db.commit()
-
-            capped = min(needed, 8)
-            try:
-                if not context.strip():
-                    logger.warning(f"Empty context for topic '{topic}' — skipping AI, using bank")
-                    for row in bank_rows:
-                        q = _bank_row_to_question(row, question_id_offset)
-                        all_questions.append(q)
-                        question_id_offset += 1
-                    continue
-
-                response = ai_service.generate(
-                    capability="quiz",
-                    prompt_template=QUESTION_GEN_PROMPT,
-                    input_variables={
-                        "context":        context,
-                        "topic":          topic,
-                        "question_count": capped,
-                        "question_types": ", ".join(qtypes),
-                        "bloom_level":    bloom,
-                        "difficulty":     diff,
-                        "key_concepts":   concepts,
-                        "adaptive_instructions": self._adaptive_section(db, blueprint.subject_id),
-                    },
-                    use_cache=False,
-                    temperature=0.7,
-                    max_tokens=exam_question_output_tokens(capped),
-                    max_context_chars=exam_question_context_chars(capped),
+            # Kekurangan topik ini → generate AI dalam beberapa batch kecil.
+            attempts = 0
+            max_attempts = max(3, (needed + 9) // 10)
+            while len(topic_questions) < needed and attempts < max_attempts:
+                attempts += 1
+                deficit = needed - len(topic_questions)
+                batch = self._generate_ai_question_batch(
+                    db, blueprint, ensure_context(),
+                    topic=topic, count=deficit, qtypes=qtypes,
+                    bloom=bloom, difficulty=diff, key_concepts=concepts,
                 )
-                if not response or not str(response).strip():
-                    logger.warning(f"Empty AI response for topic '{topic}' — using bank")
-                    for row in bank_rows:
-                        q = _bank_row_to_question(row, question_id_offset)
-                        all_questions.append(q)
-                        question_id_offset += 1
-                    continue
+                if not batch:
+                    break
+                for question in batch:
+                    key = question_key(question)
+                    if not key or key in seen_keys:
+                        continue
+                    seen_keys.add(key)
+                    topic_questions.append(question)
+                    if len(topic_questions) >= needed:
+                        break
 
-                q_data = _parse_json_response(response, f"QuestionGen[{topic}]")
-                # AI might return a list directly instead of {"questions": [...]}
-                if isinstance(q_data, list):
-                    new_qs = q_data
-                else:
-                    new_qs = q_data.get("questions", [])
-
-                if not new_qs:
-                    logger.warning(f"AI returned no questions for topic '{topic}' — using bank")
-                    for row in bank_rows:
-                        q = _bank_row_to_question(row, question_id_offset)
-                        all_questions.append(q)
-                        question_id_offset += 1
-                    continue
-
-                # Save to bank for future reuse
-                question_bank_repository.bulk_insert(
-                    db, blueprint.subject_id, blueprint_id, new_qs
+            # Masih kurang → ambil dari topik lain di bank (tetap unik).
+            if len(topic_questions) < needed:
+                fallback_rows = self._bank_rows_for_subjects(
+                    db, subject_ids, limit=max(200, target_total * 10)
                 )
-                db.commit()
+                random.shuffle(fallback_rows)
+                fill = self._select_bank_questions(
+                    fallback_rows, needed - len(topic_questions), used_bank_ids, seen_keys,
+                    default_topic=topic, default_type=default_type,
+                    default_difficulty=diff, default_bloom=bloom,
+                )
+                for question in fill:
+                    if len(topic_questions) >= needed:
+                        break
+                    if question.get("topic") is None:
+                        question["topic"] = topic
+                    topic_questions.append(question)
 
-                for q in new_qs:
-                    q["id"] = question_id_offset
-                    question_id_offset += 1
-                    if q.get("type") in ("mcq", "truefalse") and isinstance(q.get("options"), dict):
-                        q["options_list"] = [f"{k}. {v}" for k, v in q["options"].items()]
-                    else:
-                        q["options_list"] = []
-                all_questions.extend(new_qs)
+            all_questions.extend(topic_questions)
 
-            except Exception as exc:
-                logger.error(f"Question gen failed for topic '{topic}': {exc}")
-                # Use whatever is in bank even if insufficient
-                for row in bank_rows:
-                    q = _bank_row_to_question(row, question_id_offset)
-                    all_questions.append(q)
-                    question_id_offset += 1
+        # Kalau blueprint masih kurang (mis. AI mengembalikan lebih sedikit dari
+        # yang diminta), lengkapi dengan batch umum sebelum menyerah.
+        attempts = 0
+        max_fill_attempts = max(3, (target_total + 9) // 10)
+        while len(all_questions) < target_total and attempts < max_fill_attempts:
+            attempts += 1
+            missing = target_total - len(all_questions)
+            batch = self._generate_ai_question_batch(
+                db, blueprint, ensure_context(),
+                topic="Campuran", count=missing, qtypes=["mixed"],
+                bloom=blueprint.bloom_level, difficulty=blueprint.difficulty,
+                key_concepts="campuran seluruh materi",
+            )
+            if not batch:
+                break
+            for question in batch:
+                key = question_key(question)
+                if not key or key in seen_keys:
+                    continue
+                seen_keys.add(key)
+                all_questions.append(question)
+                if len(all_questions) >= target_total:
+                    break
+
+        # Terakhir, coba bank lintas topik tanpa filter.
+        if len(all_questions) < target_total:
+            fallback_rows = self._bank_rows_for_subjects(
+                db, subject_ids, limit=max(200, target_total * 10)
+            )
+            random.shuffle(fallback_rows)
+            fill = self._select_bank_questions(
+                fallback_rows, target_total - len(all_questions), used_bank_ids, seen_keys,
+                default_topic="Campuran", default_type="mcq",
+                default_difficulty=blueprint.difficulty, default_bloom=blueprint.bloom_level,
+            )
+            all_questions.extend(fill)
 
         if not all_questions:
-            raise ValueError("Tidak ada soal tersedia. Coba lagi.")
+            raise ValueError("Tidak ada soal tersedia. Pastikan materi sudah Ready lalu coba lagi.")
+
+        if len(all_questions) < target_total:
+            raise ValueError(
+                f"Baru {len(all_questions)} dari {target_total} soal yang berhasil disusun. "
+                "Tambahkan materi yang sudah Ready atau kurangi jumlah soal, lalu coba lagi."
+            )
+
+        all_questions = all_questions[:target_total]
+        if used_bank_ids:
+            question_bank_repository.increment_used(db, list(used_bank_ids))
+            db.commit()
+
+        # Soal objektif selalu di depan agar pengalaman ujian konsisten.
+        all_questions = order_objective_first(all_questions)
 
         payload = {
-            "title":            blueprint_data.get("title", f"Simulasi {blueprint.exam_type.upper()}"),
+            "title":            blueprint_data.get("title", f"Simulasi {str(blueprint.exam_type or '').upper()}"),
             "exam_type":        blueprint.exam_type,
             "difficulty":       blueprint.difficulty,
             "bloom_level":      blueprint.bloom_level,
             "duration_minutes": blueprint.duration_minutes,
+            "subject_id":       blueprint.subject_id,
+            "blueprint_id":     blueprint_id,
             "questions":        all_questions,
         }
 
@@ -1214,8 +1415,12 @@ class ExamService:
                 "strong_topics": _load_topics_json(s.strong_topics_json),
                 "attempt_count": len(attempts), "attempts": attempt_list,
                 "has_study_plan": plan is not None,
+                "study_plan_title": plan.title if plan else None,
                 "study_plan_progress": plan.progress if plan else 0,
+                "study_plan_total_items": len(plan_items),
+                "study_plan_completed_items": sum(1 for it in plan_items if it.get("completed")),
                 "study_plan_start_date": plan.start_date.isoformat() if (plan and plan.start_date) else None,
+                "study_plan_updated_at": plan.updated_at.isoformat() if (plan and plan.updated_at) else None,
                 "material_names": material_names,
                 "study_plan_items": plan_items,
                 "created_at": s.started_at.isoformat() if s.started_at else None,
@@ -1520,6 +1725,41 @@ class ExamService:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Gagal menyimpan rencana belajar.",
             )
+
+    def update_study_plan_start_date(
+        self, db: Session, session_id: int, raw_date: Optional[str]
+    ) -> dict:
+        """Update hanya tanggal mulai rencana.
+
+        Memakai endpoint terpisah agar progres item dan PracticeResult tidak
+        hilang saat pengguna menggeser tanggal (save_study_plan memang
+        mengganti seluruh rencana).
+        """
+        plan = study_plan_repo.get_by_session(db, session_id)
+        if not plan:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Rencana belajar tidak ditemukan untuk sesi ini.",
+            )
+
+        start_date_val = None
+        if raw_date:
+            try:
+                start_date_val = datetime.date.fromisoformat(str(raw_date)[:10])
+            except (ValueError, TypeError):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Format tanggal tidak valid. Gunakan YYYY-MM-DD.",
+                )
+
+        plan.start_date = start_date_val
+        plan.updated_at = utcnow()
+        db.commit()
+        db.refresh(plan)
+        return {
+            "status": "updated",
+            "start_date": plan.start_date.isoformat() if plan.start_date else None,
+        }
 
     def toggle_plan_item(self, db: Session, item_id: int) -> dict:
         item = study_plan_item_repo.toggle_completed(db, item_id)

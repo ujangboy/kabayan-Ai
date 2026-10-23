@@ -270,8 +270,17 @@ async def create_subject(
     description: str = Form("", max_length=2000),
     db: Session = Depends(get_db)
 ):
-    subject_service.create(db, name, semester, lecturer, description)
-    return JSONResponse({"status": "success", "message": "Subject created"})
+    subject = subject_service.create(db, name, semester, lecturer, description)
+    return JSONResponse({
+        "status": "success",
+        "message": "Subject created",
+        "subject": {
+            "id": subject.id,
+            "name": subject.name,
+            "semester": subject.semester,
+            "lecturer": subject.lecturer,
+        },
+    })
 
 
 @router.post("/api/subjects/{subject_id}/update", response_model=StatusMessage)
