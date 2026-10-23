@@ -11,11 +11,35 @@ function dateLocale() {
   return i18n.language === 'en' ? 'en-US' : 'id-ID';
 }
 
+// Parse "YYYY-MM-DD" (start_date dari kolom Date DB, date-only) sebagai tanggal
+// LOKAL — new Date('2026-10-23') memperlakukannya UTC-tengah malam sehingga di
+// zona negatif bisa mundur sehari. Format lain → new Date() biasa.
+function parseDateOnly(s) {
+  if (!s) return null;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(String(s))) {
+    const [y, m, d] = String(s).split('-').map(Number);
+    return new Date(y, m - 1, d);
+  }
+  const d = new Date(s);
+  return isNaN(d.getTime()) ? null : d;
+}
+
 export function formatItemDate(startDateStr, orderNumber) {
-  const d = new Date(startDateStr);
+  const d = parseDateOnly(startDateStr);
+  if (!d) return '';
   d.setDate(d.getDate() + orderNumber);
   return new Intl.DateTimeFormat(dateLocale(), {
     weekday: 'long', day: 'numeric', month: 'short',
+  }).format(d);
+}
+
+// Versi ringkas untuk baris preview rencana di ResultView (muat di w-12).
+export function formatDayShort(startDateStr, orderNumber) {
+  const d = parseDateOnly(startDateStr);
+  if (!d) return '';
+  d.setDate(d.getDate() + orderNumber);
+  return new Intl.DateTimeFormat(dateLocale(), {
+    day: 'numeric', month: 'short',
   }).format(d);
 }
 

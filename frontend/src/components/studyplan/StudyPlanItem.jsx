@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ICONS } from '@/lib/icons';
 
@@ -11,7 +12,7 @@ import { useToast } from '@/components/Toast';
 import { usePageState } from '@/hooks/usePageState';
 import { springWave } from '@/lib/motion';
 import { Button, Textarea, Icon } from '@/components/ui';
-import { TYPE_META, formatRealDate } from './shared';
+import { TYPE_META, formatItemDate, formatRealDate } from './shared';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Inline quiz practice dengan submit ke PracticeResult
@@ -219,12 +220,17 @@ export function StudyPlanItem({
   practiceState, onPracticeClose, onPracticeSubmitted,
 }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const meta = TYPE_META[item.activity_type] || TYPE_META.review;
-  // Tanggal real: pakai created_at materi jika ada, bukan plan.start_date imajiner.
-  const realCreatedAt = item.material_created_at || (planStartDate || null);
-  const dateLabel = realCreatedAt
+  // Tanggal jadwal: start_date rencana (dipilih user di ResultView) + nomor
+  // hari → tiap item punya tanggal sendiri. Fallback: tanggal real materi,
+  // atau label "Hari N" bila keduanya tidak ada.
+  const realCreatedAt = item.material_created_at || null;
+  const dateLabel = item.material_created_at && !planStartDate
     ? formatRealDate(realCreatedAt, t)
-    : (item.day_label || t('studyPlanPage.day', { n: item.order_number + 1 }));
+    : planStartDate
+      ? (formatItemDate(planStartDate, item.order_number ?? item.orderNumber ?? 0) || item.day_label)
+      : (item.day_label || t('studyPlanPage.day', { n: item.order_number + 1 }));
   const latestResult = item.practice_results?.[item.practice_results.length - 1];
 
   return (
@@ -254,6 +260,7 @@ export function StudyPlanItem({
           </div>
           <p className={`text-base font-medium text-text ${item.completed ? 'line-through opacity-60' : ''}`}>{item.topic}</p>
           {item.activity && <p className="text-xs text-text-secondary mt-0.5">{item.activity}</p>}
+          {item.resources && <p className="text-3xs text-text-muted mt-1">{item.resources}</p>}
 
           {/* Materi terkait + tanggal real dibuat (bukan now) */}
           {item.material_names?.length > 0 && (
@@ -290,6 +297,15 @@ export function StudyPlanItem({
 
           {/* Action buttons */}
           <div className="flex gap-2 mt-3 flex-wrap items-center">
+            {item.activity_type === 'simulation' && subjectId && (
+              // Item Simulasi Penuh = sesi ujian yang dijadwalkan → buka simulator
+              <button
+                onClick={() => navigate(`/exam-analyzer?subject_id=${subjectId}`)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-2xs font-bold transition-colors border border-warning/40 text-warning hover:bg-warning/10"
+              >
+                <Icon name={ICONS.nav.exam} size={11} /> {t('studyPlanPage.openExam')}
+              </button>
+            )}
             {!item.completed && item.activity_type !== 'rest' && (
               <button
                 disabled={isPracticeOpen}

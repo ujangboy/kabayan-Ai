@@ -374,6 +374,36 @@ def _get_resources(db, subject_id, topic: str, subject_name: str) -> str:
         return f"Materi {subject_name} — topik {topic}"
 
 
+def _get_simulation_resources(db, subject_id) -> str:
+    """Resource untuk item Simulasi Penuh: daftar materi siap-belajar.
+
+    Sesi ujian simulasi dischedule sebagai item rencana belajar (slot 7);
+    resources-nya = nama-nama materi mata kuliah yang Ready supaya user bisa
+    membaca ulang sebelum simulasi. Frontend menampilkan daftar ini sebagai
+    teks resource item."""
+    if db is None or subject_id is None:
+        return "Kerjakan ulang Ujian Simulasi untuk menguji seluruh pemahaman"
+    try:
+        mats = (
+            db.query(Material)
+            .filter(Material.subject_id == subject_id, Material.status == "Ready")
+            .order_by(Material.created_at.desc())
+            .limit(4)
+            .all()
+        )
+        names = [m.filename for m in mats if m.filename]
+        if not names:
+            return "Kerjakan ulang Ujian Simulasi untuk menguji seluruh pemahaman"
+        shown = ", ".join(names[:3])
+        extra = len(names) - 3
+        text = f"Kerjakan ulang Ujian Simulasi dengan materi: {shown}"
+        if extra > 0:
+            text += f" (+{extra} materi lain)"
+        return text
+    except Exception:
+        return "Kerjakan ulang Ujian Simulasi untuk menguji seluruh pemahaman"
+
+
 def generate_study_plan(
     weak_topics: List[dict],
     strong_topics: List[dict],
@@ -467,13 +497,15 @@ def generate_study_plan(
         day_counter += 1
 
     # ── Always append Simulasi Penuh as 7th item ─────────────────────────────
+    # Item ke-7 = sesi ujian simulasi yang dijadwalkan; resources-nya daftar
+    # materi mata kuliah (frontend menampilkannya + tombol buka simulator).
     day_slots.append({
         "topic": "Simulasi Penuh",
         "activity": "Simulasi ujian penuh — uji seluruh kemampuan yang sudah dipelajari",
         "type": "simulation",
         "duration_minutes": 60,
         "time_slot": TIME_SLOTS[day_counter % len(TIME_SLOTS)],
-        "resources": "",
+        "resources": _get_simulation_resources(db, subject_id),
     })
 
     # ── Label each slot ───────────────────────────────────────────────────────

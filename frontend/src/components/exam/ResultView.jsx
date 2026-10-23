@@ -8,7 +8,16 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { examAPI, sessionsAPI } from '@/services/api';
 import { cn } from '@/utils';
 import { Chip, getPerformanceLabel } from './shared';
+import { formatDayShort } from '@/components/studyplan/shared';
 import { fireConfetti } from '@/utils/confetti';
+
+// Tanggal hari ini dalam zona waktu LOKAL (toISOString memakai UTC dan bisa
+// meleset sehari di zona waktu negatif), format YYYY-MM-DD untuk <input date>.
+function todayLocalISO() {
+  const d = new Date();
+  const p = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
 
 // Count-up halus untuk skor (dihormati prefers-reduced-motion).
 function useCountUp(target, duration = 900) {
@@ -46,6 +55,8 @@ export default function ResultView({ evalData, onReview, onFinish, sessionId, on
   const [planPreview, setPlanPreview]   = useState(null);
   const [planSaving, setPlanSaving]     = useState(false);
   const [planSaveError, setPlanSaveError] = useState('');
+  // Tanggal mulai rencana — default hari ini; dikirim sebagai start_date.
+  const [planStartDate, setPlanStartDate] = useState(() => todayLocalISO());
   const animatedScore = useCountUp(evalData?.score ?? 0);
 
   // Perayaan saat hasil ujian muncul dengan performa baik.
@@ -79,7 +90,8 @@ export default function ResultView({ evalData, onReview, onFinish, sessionId, on
       } catch {}
 
       if (studyPlanData) {
-        await sessionsAPI.saveStudyPlan(sessionId, studyPlanData);
+        // start_date dari date picker — Backend mem-parse ke kolom Date.
+        await sessionsAPI.saveStudyPlan(sessionId, { ...studyPlanData, start_date: planStartDate });
       }
 
       setSaved(true);
@@ -110,7 +122,7 @@ export default function ResultView({ evalData, onReview, onFinish, sessionId, on
     setPlanSaving(true);
     setPlanSaveError('');
     try {
-      await sessionsAPI.saveStudyPlan(sessionId, planPreview);
+      await sessionsAPI.saveStudyPlan(sessionId, { ...planPreview, start_date: planStartDate });
       setPlanSaved(true);
       onFinish?.();
       onOpenPlanTab?.();
@@ -234,11 +246,28 @@ export default function ResultView({ evalData, onReview, onFinish, sessionId, on
             </h3>
             <button onClick={() => setPlanPreview(null)} className="text-xs text-text-muted hover:text-text">{t('common.close')}</button>
           </div>
+          {/* Tanggal mulai rencana — dipakai untuk menghitung tanggal tiap hari */}
+          <div className="flex items-center gap-2 mb-3">
+            <label htmlFor="plan-start-date" className="text-xs text-text-secondary shrink-0">
+              {t('exam.result.startDate')}
+            </label>
+            <input
+              id="plan-start-date"
+              type="date"
+              value={planStartDate}
+              onChange={(e) => setPlanStartDate(e.target.value)}
+              className="px-2.5 py-1.5 bg-card border border-border rounded-lg text-xs text-text focus:outline-none focus:border-primary cursor-pointer"
+            />
+          </div>
           <p className="text-xs text-text-secondary mb-3">{planPreview.motivational_message}</p>
           <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
             {(planPreview.study_plan || []).map((item, i) => (
               <div key={i} className="flex items-start gap-2 p-2 rounded-lg bg-background/50 border border-border text-xs">
-                <span className="text-text-muted font-mono shrink-0 w-12">{t('exam.result.dayShort', { n: i + 1 })}</span>
+                <span className="shrink-0 w-12">
+                  <span className="block text-text-muted font-mono">{t('exam.result.dayShort', { n: i + 1 })}</span>
+                  {/* Tanggal nyata: tanggal mulai + hari ke-i */}
+                  <span className="block text-2xs text-accent-blue">{formatDayShort(planStartDate, i)}</span>
+                </span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 mb-0.5">
                     <span className="font-medium text-text">{item.topic}</span>
