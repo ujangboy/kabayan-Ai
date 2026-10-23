@@ -231,7 +231,7 @@ function SubjectCard({ subject, onSelectSubject, onStartConfig, onDelete, t, ton
     );
   }
 
-export default function HistoryView({ subjectId, subjects, onSelectSubject, onStartConfig, onRetry, onResume, detailId, setDetailId, pendingPlanTab, setPendingPlanTab }) {
+export default function HistoryView({ subjectId, subjects, onSelectSubject, onStartConfig, onRetry, onResume, onResumeActive, detailId, setDetailId, pendingPlanTab, setPendingPlanTab }) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -410,6 +410,7 @@ export default function HistoryView({ subjectId, subjects, onSelectSubject, onSt
                  onDetail={() => setDetailId(s.id)}
                  onDelete={() => handleDelete(s.id)}
                  onRetry={() => onRetry?.(s)}
+                 onResumeActive={onResumeActive}
                />
             ))}
           </AnimatePresence>
@@ -422,6 +423,7 @@ export default function HistoryView({ subjectId, subjects, onSelectSubject, onSt
         historySessionId={detailId}
         onClose={() => setDetailId(null)}
         onResume={onResume}
+        onResumeActive={onResumeActive}
         pendingPlanTab={pendingPlanTab}
         setPendingPlanTab={setPendingPlanTab}
       />
@@ -429,7 +431,7 @@ export default function HistoryView({ subjectId, subjects, onSelectSubject, onSt
   );
 }
 
-function HistoryCard({ session: s, onDetail, onDelete, onRetry, t }) {
+function HistoryCard({ session: s, onDetail, onDelete, onRetry, onResumeActive, t }) {
   const meta    = STATUS_META[s.status] || STATUS_META.completed;
   const badge   = getBadge(s.best_score || 0);
   const gradeC  = getGradeColor(s.grade);
@@ -529,18 +531,43 @@ function HistoryCard({ session: s, onDetail, onDelete, onRetry, t }) {
       </div>
 
       <div className="mt-auto flex gap-2">
-        <Button onClick={onDetail}
-          className="text-xs flex-1 justify-center" variant="primary">
-           <Icon name={ICONS.ui.chevronRight} size={12} /> {t('exam.history.detail')}
-        </Button>
-        {onRetry && (
-          <Tooltip label={t('exam.history.retry') || 'Latihan Lagi'}>
-            <button onClick={onRetry}
-              aria-label={t('exam.history.retry') || 'Latihan Lagi'}
-              className="p-2 rounded-lg border border-border bg-card text-text-secondary hover:text-primary hover:border-primary/30 transition-colors">
-              <Icon name={ICONS.actions.replay} size={13} />
-            </button>
-          </Tooltip>
+        {s.status === 'active' && !s.submitted ? (
+          // Sesi masih berjalan → aksi utama adalah melanjutkan, bukan retry
+          // (retry-inplace akan mereset jawaban yang sudah disimpan).
+          <>
+            <Button
+              onClick={() => onResumeActive?.(s)}
+              className="text-xs flex-1 justify-center"
+              variant="primary"
+            >
+              <Icon name={ICONS.media.play} size={12} /> {t('exam.history.resume')}
+            </Button>
+            <Tooltip label={t('exam.history.detail')}>
+              <button
+                onClick={onDetail}
+                aria-label={t('exam.history.detail')}
+                className="p-2 rounded-lg border border-border bg-card text-text-secondary hover:text-text hover:border-primary/30 transition-colors"
+              >
+                <Icon name={ICONS.ui.chevronRight} size={13} />
+              </button>
+            </Tooltip>
+          </>
+        ) : (
+          <>
+            <Button onClick={onDetail}
+              className="text-xs flex-1 justify-center" variant="primary">
+               <Icon name={ICONS.ui.chevronRight} size={12} /> {t('exam.history.detail')}
+            </Button>
+            {onRetry && (
+              <Tooltip label={t('exam.history.retry') || 'Latihan Lagi'}>
+                <button onClick={onRetry}
+                  aria-label={t('exam.history.retry') || 'Latihan Lagi'}
+                  className="p-2 rounded-lg border border-border bg-card text-text-secondary hover:text-primary hover:border-primary/30 transition-colors">
+                  <Icon name={ICONS.actions.replay} size={13} />
+                </button>
+              </Tooltip>
+            )}
+          </>
         )}
         <Tooltip label={t('common.delete')}>
           <button onClick={onDelete}

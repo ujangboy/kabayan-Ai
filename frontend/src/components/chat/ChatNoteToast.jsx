@@ -1,11 +1,13 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ICONS } from '@/lib/icons';
 import { Icon } from '@/components/ui';
 
 
 export default function ChatNoteToast({ noteToast }) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   return (
     <AnimatePresence>
       {noteToast && (
@@ -17,9 +19,14 @@ export default function ChatNoteToast({ noteToast }) {
         >
           <Icon name={ICONS.files.notes} size={18} className="text-primary" />
           <span className="text-base text-text">{noteToast.message}</span>
+          {/* Route wajib /notebook (bukan /notes) + bawa note_id supaya
+              Notebook membuka catatan yang baru dibuat. */}
           {noteToast.note_id && (
-            <button onClick={() => navigate('/notes')} className="text-sm font-medium text-primary hover:underline">
-              Lihat
+            <button
+              onClick={() => navigate(`/notebook?note_id=${noteToast.note_id}`)}
+              className="text-sm font-medium text-primary hover:underline"
+            >
+              {t('chat.noteView')}
             </button>
           )}
         </motion.div>

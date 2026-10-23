@@ -33,7 +33,7 @@ export default function NotebookPage() {
   const notesRef = useRef([]);
   const renameMutateRef = useRef(null);
 
-  const { data: notesData, isLoading } = useQuery({
+  const { data: notesData, isLoading, isFetching } = useQuery({
     queryKey: ['notes'],
     queryFn: () => notesAPI.getAll().then(r => r.data),
   });
@@ -46,16 +46,21 @@ export default function NotebookPage() {
   const rawNotes = notesData?.notes || [];
   const subjects = subjectData?.subjects || [];
 
-  // Buka note dari URL (klik item di ContextSidebar) — re-run saat param berubah
+  // Buka note dari URL (klik "Lihat" di toast chat / item ContextSidebar).
+  // notesData & isFetching adalah deps: setelah save-note di chat di-follow
+  // invalidateQueries(['notes']), refetch mengganti data lama dan effect ini
+  // re-run untuk menemukan catatannya — cache basi tidak lagi meloloskan.
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const nid = params.get('note_id');
     if (!nid) return;
-    if (isLoading) return;
-    const n = (notesData?.notes || []).find((x) => String(x.id) === nid);
+    if (!notesData) return;
+    const n = (notesData.notes || []).find((x) => String(x.id) === nid);
     if (n) setSelectedNote(n);
-    navigate('/notebook', { replace: true });
-  }, [location.search, isLoading, navigate]);
+    // Param hanya dibersihkan setelah catatan ditemukan, atau saat refetch
+    // benar-benar selesai (catatan tidak ada lagi) supaya tidak menggantung.
+    if (n || !isFetching) navigate('/notebook', { replace: true });
+  }, [location.search, notesData, isFetching, navigate]);
 
   const notes = [...rawNotes].sort((a, b) => {
     if (!!a.is_pinned !== !!b.is_pinned) return a.is_pinned ? -1 : 1;

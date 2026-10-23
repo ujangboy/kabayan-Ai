@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -51,6 +51,10 @@ export default function ExamAnalyzerPage() {
   const [configOpen, setConfigOpen]       = useState(false);
   const [blueprintModal, setBlueprintModal] = useState(null);
 
+  // Guard untuk efek reset klik-menu (lihat efek location.key di bawah)
+  const suppressHomeResetRef   = useRef(false);
+  const suppressedFirstKeyRef  = useRef(null);
+
   // ── Mount: restore saved state + pick up URL params (sekali saat mount) ──
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -98,6 +102,29 @@ export default function ExamAnalyzerPage() {
         setGenerating(null);
         setView(VIEW.HISTORY);
       }
+
+      // Validasi restore QUIZ terhadap backend: kuis yang sudah selesai
+      // dikerjakan (di tempat lain/tick lama) atau sesi yang hilang tidak boleh
+      // membuka layar kuis usang — kembalikan ke beranda (Riwayat).
+      if (saved.view === VIEW.QUIZ) {
+        const qid = saved.sessionData?.session_id || saved.sessionData?.id;
+        if (qid != null) {
+          sessionsAPI.detail(qid).then((d) => {
+            const st = d.data?.status || 'active';
+            if (st !== 'active' || d.data?.submitted) {
+              setView((v) => (v === VIEW.QUIZ ? VIEW.HISTORY : v));
+              setSessionData((prev) => (prev && (prev.session_id || prev.id) === qid ? null : prev));
+              setQuizClockStart((s) => (s === saved.quizClockStart ? null : s));
+              clear();
+            }
+          }).catch(() => {
+            setView((v) => (v === VIEW.QUIZ ? VIEW.HISTORY : v));
+            clear();
+          });
+        } else {
+          setView(VIEW.HISTORY);
+        }
+      }
     }
 
     setRestored(true);
@@ -110,8 +137,29 @@ export default function ExamAnalyzerPage() {
     if (!sid) return;
     setSubjectId(sid);
     // Bersihkan URL tanpa reload (seperti MateriPage)
+    suppressHomeResetRef.current = true;
     navigate('/exam-analyzer', { replace: true });
-  }, [location.search]);
+  }, [location.search, navigate]);
+
+  // ── Klik "Ujian Simulasi" dari menu saat sudah di halaman ini ──
+  // location.key berganti pada SEMUA navigasi SPA (juga route yang sama).
+  // Dengan guard suppress (untuk navigate yang kita picu sendiri), klik menu
+  // kini selalu membawa user ke beranda ujian alih-alih terjebak di view basi.
+  useEffect(() => {
+    if (suppressHomeResetRef.current) {
+      suppressHomeResetRef.current = false;
+      return;
+    }
+    if (suppressedFirstKeyRef.current === null) {
+      suppressedFirstKeyRef.current = location.key;
+      return;
+    }
+    if (location.key === suppressedFirstKeyRef.current) return;
+    if (view === VIEW.QUIZ || view === VIEW.GENERATING) return; // jangan interupsi kuis berjalan
+    clearAll();
+    go(VIEW.HISTORY);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.key]);
 
   // ── Persist state on every change ──
   useEffect(() => {
@@ -245,6 +293,32 @@ export default function ExamAnalyzerPage() {
     }
   };
 
+  // "Lanjutkan Ujian" untuk sesi active: buka QUIZ kembali dengan jawaban
+  // tersimpan; sisa waktu dihitung dari started_at (backend menyimpan UTC,
+  // jadi string naive ditandai Z agar Date.parse tidak salah zona).
+  const handleResumeActive = async (session) => {
+    try {
+      const d = (await sessionsAPI.detail(session.id)).data;
+      if (!d || (d.status || 'active') !== 'active' || d.submitted) {
+        queryClient.invalidateQueries({ queryKey: ['exam-sessions', subjectId] });
+        toast.info(t('exam.history.resumeUnavailable'));
+        return;
+      }
+      let started = Date.now();
+      if (d.started_at) {
+        const iso = /[zZ]$|[+\-]\d{2}:?\d{2}$/.test(d.started_at) ? d.started_at : `${d.started_at}Z`;
+        const parsed = Date.parse(iso);
+        if (Number.isFinite(parsed)) started = parsed;
+      }
+      setSessionData({ ...d, session_id: d.id });
+      setQuizClockStart(started);
+      queryClient.invalidateQueries({ queryKey: ['exam-sessions', subjectId] });
+      go(VIEW.QUIZ);
+    } catch (e) {
+      toast.error(e?.response?.data?.detail || t('exam.detail.retryFailed'));
+    }
+  };
+
   const showTabs = !!subjectId && (view === VIEW.HISTORY || view === VIEW.DASHBOARD);
 
   return (
@@ -304,7 +378,7 @@ export default function ExamAnalyzerPage() {
             transition={{ duration: 0.2 }}
           >
             {view === VIEW.DASHBOARD  && <DashboardView subjectId={subjectId} subjects={subjects} analysis={analysis} onAnalysisDone={handleAnalysisDone} onStartConfig={() => openConfig(subjectId)} />}
-            {view === VIEW.HISTORY    && <HistoryView subjectId={subjectId} subjects={subjects} onSelectSubject={(id) => { setSubjectId(id); go(VIEW.HISTORY); }} onStartConfig={(id) => openConfig(id)} onRetry={handleRetry} onResume={(sd) => { setSessionData(sd); setQuizClockStart(Date.now()); go(VIEW.QUIZ); }} detailId={detailId} setDetailId={setDetailId} pendingPlanTab={pendingPlanTab} setPendingPlanTab={setPendingPlanTab} />}
+            {view === VIEW.HISTORY    && <HistoryView subjectId={subjectId} subjects={subjects} onSelectSubject={(id) => { setSubjectId(id); go(VIEW.HISTORY); }} onStartConfig={(id) => openConfig(id)} onRetry={handleRetry} onResume={(sd) => { setSessionData(sd); setQuizClockStart(Date.now()); go(VIEW.QUIZ); }} onResumeActive={handleResumeActive} detailId={detailId} setDetailId={setDetailId} pendingPlanTab={pendingPlanTab} setPendingPlanTab={setPendingPlanTab} />}
             {view === VIEW.QUIZ       && <QuizView sessionData={sessionData} clockStart={quizClockStart} onDone={handleEvalDone} />}
             {view === VIEW.RESULT     && <ResultView evalData={evalData} onReview={() => go(VIEW.REVIEW)} onFinish={() => { queryClient.invalidateQueries({ queryKey: ['exam-sessions', subjectId] }); clearAll(); go(VIEW.HISTORY); }} sessionId={sessionData?.session_id} onOpenPlanTab={() => { setPendingPlanTab(true); setDetailId(sessionData?.session_id); }} subjectName={sessionData?.subject_name || ''} />}
             {view === VIEW.REVIEW     && <ReviewView sessionData={sessionData} evalData={evalData} />}

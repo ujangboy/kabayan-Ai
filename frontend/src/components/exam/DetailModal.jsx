@@ -14,7 +14,7 @@ import { Chip, ProgressBar, STATUS_META, getBadge, getGradeColor, getExamTypeLab
 import { Tooltip, Modal , Icon , Button} from '@/components/ui';
 
 // ─── Detail Modal ─────────────────────────────────────────────────────────────
-export default function DetailModal({ open = false, historySessionId, onClose, onResume, pendingPlanTab, setPendingPlanTab }) {
+export default function DetailModal({ open = false, historySessionId, onClose, onResume, onResumeActive, pendingPlanTab, setPendingPlanTab }) {
    const { t } = useTranslation();
    const queryClient = useQueryClient();
   const [tab, setTab] = useState(pendingPlanTab ? 'plan' : 'overview');
@@ -130,7 +130,11 @@ export default function DetailModal({ open = false, historySessionId, onClose, o
       </div>
 
       <div className="p-4 border-t border-border shrink-0 flex items-center gap-2 flex-wrap justify-end">
-        <RetryButton historySessionId={historySessionId} sessionData={data} onClose={onClose} onResume={onResume} />
+        {data.status === 'active' && !data.submitted ? (
+          <ResumeActiveButton sessionData={data} onResumeActive={onResumeActive} onClose={onClose} />
+        ) : (
+          <RetryButton historySessionId={historySessionId} sessionData={data} onClose={onClose} onResume={onResume} />
+        )}
          <Button type="button" onClick={onClose} className="text-sm border border-border" variant="ghost">
            {t('common.close')}
          </Button>
@@ -938,6 +942,35 @@ function AttemptsTab({ attempts }) {
           </div>
         );
       })}
+    </div>
+  );
+}
+
+function ResumeActiveButton({ sessionData, onResumeActive, onClose }) {
+  const { t } = useTranslation();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleResume = async () => {
+    setError(''); setBusy(true);
+    try {
+      await onResumeActive?.(sessionData);
+      onClose();
+    } catch (e) {
+      setError(e?.response?.data?.detail || e?.message || t('exam.detail.retryFailed'));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col items-end gap-1">
+      <Button type="button" onClick={handleResume} disabled={busy} variant="primary" className="text-sm flex items-center gap-1.5">
+        {busy
+          ? <><Icon name={ICONS.status.loading} size={13} className="animate-spin"/> {t('exam.detail.preparing')}</>
+          : <><Icon name={ICONS.media.play} size={13}/> {t('exam.history.resume')}</>}
+      </Button>
+      {error && <p className="text-danger text-xs">{error}</p>}
     </div>
   );
 }

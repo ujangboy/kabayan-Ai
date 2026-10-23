@@ -17,7 +17,11 @@ export default function QuizView({ sessionData, clockStart, onDone }) {
   const duration  = sessionData?.duration_minutes;
 
   const [idx, setIdx]         = useState(0);
-  const [answers, setAnswers] = useState({});
+  // Jawaban tersimpan (resume sesi active) di-hydrate sekali saat mount;
+  // sesi baru/retry tidak punya `answers` → tetap kosong.
+  const [answers, setAnswers] = useState(
+    () => (sessionData?.answers && typeof sessionData.answers === 'object' ? sessionData.answers : {})
+  );
   const [paused, setPaused]   = useState(false);
   const [timeLeft, setTimeLeft] = useState(() => {
     if (!duration) return null;

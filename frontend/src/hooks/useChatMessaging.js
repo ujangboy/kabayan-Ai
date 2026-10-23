@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useQueryClient } from '@tanstack/react-query';
 import { useChatStore } from '@/store';
 import { notesAPI, tutorAPI } from '@/services/api';
 import { streamChat, parseStreamContent } from '@/services/tutorStream';
@@ -9,6 +10,7 @@ import { useToast } from '@/components/Toast';
 export function useChatMessaging() {
   const { t } = useTranslation();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const chatOp = usePendingOperation();
   const notebookOp = usePendingOperation();
   const [noteToast, setNoteToast] = useState(null);
@@ -140,6 +142,9 @@ export function useChatMessaging() {
       const title = (chat.title || 'Chat Export').slice(0, 60);
       const response = await notesAPI.create(title, content);
       const noteId = response?.data?.note_id;
+      // Segarkan cache Notebook supaya klik "Lihat" menemukan catatan baru
+      // (tanpa ini daftar Notebook masih memakai cache lama).
+      queryClient.invalidateQueries({ queryKey: ['notes'] });
       state.setTutorBadge(true);
       setNoteToast({ message: t('chat.noteSaved'), note_id: noteId });
       setTimeout(() => setNoteToast(null), 3000);
