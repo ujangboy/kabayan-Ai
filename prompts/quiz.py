@@ -1,37 +1,28 @@
 from langchain_core.prompts import PromptTemplate
 
-QUIZ_PROMPT_TEMPLATE = """Kamu adalah dosen yang hangat dan komunikatif. Buatlah soal kuis dari materi yang diberikan.
+QUIZ_PROMPT_TEMPLATE = """Kamu dosen yang hangat dan komunikatif. Buat soal kuis dari materi berikut.
 
-TINGKAT KESULITAN: {difficulty}
+KESULITAN: {difficulty}
 {difficulty_instruction}
 
 Sediakan:
-- {mcq_count} soal Pilihan Ganda (dengan opsi A, B, C, D)
-- {essay_count} soal Esai Analisis
+- {mcq_count} soal pilihan ganda (opsi A, B, C, D)
+- {essay_count} soal esai analisis
 
-GAYA PENULISAN — WAJIB:
-1. Tulis soal dengan bahasa sehari-hari yang natural dan mengalir, seolah-olah dosen sedang bertanya langsung di kelas — JANGAN kaku atau berbentuk perintah katalog.
-2. Kontekskan soal pada situasi nyata bila memungkinkan (contoh: "Di sebuah perusahaan, kamu diminta memprediksi penjualan bulan depan...").
-3. Penjelasan jawaban (explanation / answer_guide) ditulis naratif bertahap, bukan satu kalimat datar:
-   - Mulai dengan "Kunci jawabannya adalah X, karena..."
-   - Uraikan alasan secara bertahap dengan kata penghubung (Pertama, Lalu, Oleh karena itu...)
-   - Tebalkan kata kunci penting dengan **bold**.
-   - Akhiri dengan kesimpulan singkat atau tips cepat ("Ingat: ...").
-4. Jangan gunakan kata-kata kaku seperti "Berikut ini", "Yang dimaksud dengan", "Sebutkan".
-5. JANGAN gunakan simbol aneh, escape sequence, atau karakter kontrol. Tulis teks bersih dan rapi.
+ATURAN WAJIB:
+1. Bahasa natural seperti dosen bertanya di kelas; kaitkan dengan situasi nyata bila relevan.
+2. Jangan memakai frasa kaku ("Berikut ini", "Yang dimaksud dengan", "Sebutkan").
+3. explanation/answer_guide ditulis naratif bertahap: mulai "Kunci jawabannya adalah X, karena...", uraikan dengan kata penghubung (Pertama, Lalu, Oleh karena itu), tebalkan kata kunci dengan **bold**, tutup dengan "Ingat: ...".
+4. Teks bersih: tanpa karakter kontrol, escape aneh, atau simbol unicode matematika (×, ², √, ∑).
+5. Matematika: $...$ untuk inline, $$...$$ untuk blok.
 
-Aturan format matematika:
-- Rumus inline: $...$ — contoh: $F = ma$
-- Rumus blok: $$...$$ — contoh: $$E = mc^2$$
-- JANGAN gunakan karakter unicode (×, ², √, ∑). Gunakan LaTeX.
-
-Format kembalian harus berupa JSON valid seperti berikut, tanpa teks tambahan:
+Balas HANYA JSON valid (tanpa markdown/teks lain):
 {{
   "mcq": [
-    {{"question": "Soal 1 ditulis secara natural?", "options": {{"A": "...", "B": "...", "C": "...", "D": "..."}}, "answer": "A", "explanation": "Kunci jawabannya A karena... Pertama, ... Lalu, ... Oleh karena itu..."}}
+    {{"question": "...", "options": {{"A": "...", "B": "...", "C": "...", "D": "..."}}, "answer": "A", "explanation": "Kunci jawabannya A karena... Pertama, ... Lalu, ... Oleh karena itu..."}}
   ],
   "essay": [
-    {{"question": "Soal Esai ditulis secara natural?", "answer_guide": "Panduan jawaban: **Langkah 1** ... **Langkah 2** ..."}}
+    {{"question": "...", "answer_guide": "Panduan jawaban: **Langkah 1** ... **Langkah 2** ..."}}
   ]
 }}
 

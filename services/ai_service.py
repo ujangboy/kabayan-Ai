@@ -21,6 +21,24 @@ logger = logging.getLogger(__name__)
 MAX_CONTEXT_CHARS = 8000
 MAX_HISTORY_TURNS = 8          # simpan 8 turn terakhir (cukup + hemat token)
 
+# Plafon output per kapabilitas — konservatif, bukan satu angka 4096 untuk
+# semua fitur. Quiz & flashcard menghitung sendiri di service-nya berdasarkan
+# jumlah item yang diminta (lihat services/token_budget.py).
+DEFAULT_MAX_TOKENS = 1200
+CAPABILITY_MAX_TOKENS = {
+    "chat": 1200,
+    "vision": 1200,
+    "summary": 1500,
+    "reasoning": 2500,
+    "quiz": 2000,
+    "flashcard": 1200,
+    "prediction": 2000,
+    "exam_analysis": 3500,
+    "exam_blueprint": 4096,
+    "exam_question": 4096,
+    "exam_evaluate": 2500,
+}
+
 # ─── Math Delimiter Normalization ────────────────────────────────────────────
 def _normalize_math(text: str) -> str:
     """
@@ -141,9 +159,7 @@ class AIService:
         exam_caps = {"exam_analysis", "exam_blueprint", "exam_question", "exam_evaluate", "reasoning", "quiz"}
         timeout = 90.0 if capability in exam_caps else 30.0
         if max_tokens is None:
-            # Output JSON exam/quiz sangat panjang (soal + opsi + pembahasan).
-            # 1200 token membuat respons terpotong dan JSON tidak bisa diparse.
-            max_tokens = 4096 if capability in exam_caps else 1200
+            max_tokens = CAPABILITY_MAX_TOKENS.get(capability, DEFAULT_MAX_TOKENS)
         return ChatGroq(
             api_key=config.GROQ_API_KEY,
             model_name=CapabilityRouter.get_model(capability),
@@ -162,11 +178,15 @@ class AIService:
         output_schema: Opt[Type[BaseModel]] = None,
         temperature: float = None,
         max_tokens: Opt[int] = None,
+        max_context_chars: Opt[int] = None,
     ) -> str | dict | list:
         if "context" in input_variables:
             input_variables = {
                 **input_variables,
-                "context": _truncate_context(str(input_variables["context"])),
+                "context": _truncate_context(
+                    str(input_variables["context"]),
+                    max_context_chars or MAX_CONTEXT_CHARS,
+                ),
             }
 
         prompt_str = prompt_template.format(**input_variables)
@@ -190,7 +210,7 @@ class AIService:
                         cache_service.set_cache(db, prompt_str, "", setting_hash, str(result))
                     if isinstance(result, BaseModel):
                         result = result.model_dump()
-                    record_usage(db, capability, str(result))
+                    record_usage(db, capability, str(result), prompt_str)
                     return result
                 except Exception as exc:
                     logger.warning("Structured output failed for %s, falling back to text: %s", capability, exc)
@@ -209,7 +229,7 @@ class AIService:
 
             if use_cache:
                 cache_service.set_cache(db, prompt_str, "", setting_hash, response_text)
-            record_usage(db, capability, response_text)
+            record_usage(db, capability, response_text, prompt_str)
             return _normalize_math(response_text)
         finally:
             db.close()
@@ -259,7 +279,7 @@ class AIService:
             response_text = response.content
 
             cache_service.set_cache(db, prompt_str, context, setting_hash, response_text)
-            record_usage(db, "chat", response_text)
+            record_usage(db, "chat", response_text, prompt_str)
             return response_text
         finally:
             db.close()
@@ -362,7 +382,7 @@ class AIService:
         # record_usage pakai session sendiri (sudah terisolasi).
         rec_db = SessionLocal()
         try:
-            await asyncio.to_thread(record_usage, rec_db, "chat", full_response)
+            await asyncio.to_thread(record_usage, rec_db, "chat", full_response, prompt_str)
         finally:
             rec_db.close()
 

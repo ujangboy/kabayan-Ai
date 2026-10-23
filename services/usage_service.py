@@ -46,8 +46,12 @@ def _increment(db: Session, key: str, amount: int = 1) -> None:
     setting_repository.set_value(db, key, str(current + amount))
 
 
-def record_usage(db: Session, feature: str, response_text: str | None = None) -> None:
+def record_usage(db: Session, feature: str, response_text: str | None = None,
+                 prompt_text: str | None = None) -> None:
     """Catat satu panggilan Groq untuk sebuah fitur.
+
+    `tokens` mengestimasi input + output (len(text) // 4) agar halaman Limit AI
+    mencerminkan biaya sebenarnya, termasuk efek pemangkasan prompt/konteks.
 
     Mencatat ke dua lokasi:
       - `usage_logs` (per-panggilan, untuk jendela sliding 24h)
@@ -55,7 +59,7 @@ def record_usage(db: Session, feature: str, response_text: str | None = None) ->
     """
     if not feature:
         return
-    tokens = len(response_text or "") // 4
+    tokens = (len(response_text or "") + len(prompt_text or "")) // 4
     try:
         # Log per-panggilan (sliding 24h).
         db.add(models.UsageLog(

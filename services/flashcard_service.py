@@ -1,5 +1,6 @@
 from time_utils import utcnow
 from services.ai_service import ai_service
+from services.token_budget import flashcard_context_chars, flashcard_output_tokens
 from prompts.flashcard import FLASHCARD_PROMPT
 from repositories.flashcard_repository import flashcard_repository
 from services.json_utils import parse_ai_json
@@ -26,6 +27,8 @@ class FlashcardService:
             input_variables={"context": context, "count": count},
             use_cache=True,
             temperature=0.7,
+            max_tokens=flashcard_output_tokens(count),
+            max_context_chars=flashcard_context_chars(count),
         )
 
         try:

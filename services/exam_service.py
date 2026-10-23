@@ -15,6 +15,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from fastapi import HTTPException, status
 
 from services.ai_service import ai_service
+from services.token_budget import exam_question_context_chars, exam_question_output_tokens
 from services.assessment_engine import assemble_evaluation, generate_study_plan, fallback_activity_description, TIME_SLOTS
 from repositories.exam_repository import exam_blueprint_repository, exam_session_repository
 from repositories.question_bank_repository import question_bank_repository
@@ -403,7 +404,8 @@ class ExamService:
                     },
                     use_cache=False,
                     temperature=0.7,
-                    max_tokens=min(8192, max(2400, capped * 1200)),
+                    max_tokens=exam_question_output_tokens(capped),
+                    max_context_chars=exam_question_context_chars(capped),
                 )
                 if not response or not str(response).strip():
                     logger.warning(f"Empty AI response for topic '{topic}' — using bank")

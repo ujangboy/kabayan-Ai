@@ -1,4 +1,5 @@
 from services.ai_service import ai_service
+from services.token_budget import quiz_context_chars, quiz_output_tokens
 from prompts.quiz import QUIZ_PROMPT, DIFFICULTY_INSTRUCTIONS
 from repositories.quiz_repository import quiz_repository
 from services.json_utils import parse_ai_json
@@ -47,6 +48,8 @@ class QuizService:
             },
             use_cache=True,
             temperature=0.7,
+            max_tokens=quiz_output_tokens(mcq_count, essay_count),
+            max_context_chars=quiz_context_chars(mcq_count, essay_count),
         )
 
         try:
