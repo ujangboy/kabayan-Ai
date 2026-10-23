@@ -13,6 +13,9 @@ import { cn } from '@/utils';
  *
  * Posisi kiri-bawah (keputusan user): menghindari area toast kanan-bawah
  * dan banner atas. Aksi: balik ke /audio, play/jeda, silang (hentikan).
+ * Offset horizontal responsif (Task 7): sejak min-md menjauh sejauh
+ * lebar sidebar 76/264 + 16px, agar player tidak menutupi footer
+ * "Setelan" sidebar (terbukti menelan klik saat audio berjalan).
  */
 export default function MiniAudioPlayer() {
   const { t } = useTranslation();
@@ -27,7 +30,11 @@ export default function MiniAudioPlayer() {
   return (
     <div
       className={cn(
-        'fixed bottom-4 left-4 z-50 flex items-center gap-2 w-[260px] max-w-[calc(100vw-2rem)]',
+        // Task 7:Offset minimal = lebar sidebar(RAIL 76 / EXPANDED 264)+ gap
+        // → md (tablet rail 76px): 76+16=92 ; lg (desktop, =DESKTOP_QUERY
+        //   min-width:1024px): 264+16=280. Di bawah md tetap left-4 (drawer).
+        'fixed bottom-4 z-50 flex items-center gap-2 w-[260px] max-w-[calc(100vw-2rem)]',
+        'left-4 md:left-[92px] lg:left-[280px]',
         'card-base px-3 py-2.5 rounded-xl border border-strong shadow-modal'
       )}
       role="region"
