@@ -5,8 +5,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { subjectAPI, examAPI, studyAPI } from '@/services/api';
 import { useUiStore } from '@/store';
-import { formatDate, fadeSlide } from '@/utils';
-import { Tooltip, ConfirmDialog, Skeleton, Icon } from '@/components/ui';
+import { cn, formatDate, fadeSlide } from '@/utils';
+import { Tooltip, ConfirmDialog, Skeleton, getSubjectPalette, Icon } from '@/components/ui';
 import { ICONS } from '@/lib/icons';
 import ProgressCard from '@/components/ProgressCard';
 import BackButton from '@/components/layout/BackButton';
@@ -68,6 +68,7 @@ export default function SubjectDashboardPage() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const subjectId = Number(id);
+  const subjectPalette = getSubjectPalette(subjectId);
   const setLastSubjectId = useUiStore((s) => s.setLastSubjectId);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -181,8 +182,9 @@ export default function SubjectDashboardPage() {
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-surface border border-border rounded-lg p-5"
+          className={cn('relative overflow-hidden bg-surface border border-border rounded-lg p-5', subjectPalette?.card)}
         >
+          {subjectPalette && <span aria-hidden className={cn('absolute inset-x-0 top-0 h-1', subjectPalette.bar)} />}
           <div className="flex items-center gap-3 flex-wrap">
             <BackButton fallback="/subjects" label={t('back.label', { name: t('nav.subjects') })} />
             <div className="flex-1 min-w-[200px]">

@@ -32,7 +32,7 @@ export function MaterialFileCard({ material: m, index, showSubject, isRagActive,
   const statusLabel = getMaterialStatusLabel(t, m.status);
   // Warna identitas mata kuliah (deterministik per subject_id) — konsisten
   // dengan badge/folder/deck di halaman lain.
-  const subjectTone = showSubject ? getSubjectPalette(m.subject_id ?? m.subject?.id) : null;
+  const subjectTone = getSubjectPalette(m.subject_id ?? m.subject?.id);
 
   return (
     <motion.div
@@ -45,8 +45,12 @@ export function MaterialFileCard({ material: m, index, showSubject, isRagActive,
         transition: { delay: Math.min(index * 0.04, 0.4), duration: 0.25 },
       }}
       exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
-      className={`card-base card-hoverable group relative flex flex-col gap-3 ${highlighted ? 'ring-2 ring-warning/60 bg-warning/5 animate-pulse' : ''}`}
+      className={cn(
+        'card-base card-hoverable group relative flex flex-col gap-3 overflow-hidden',
+        highlighted ? 'ring-2 ring-warning/60 bg-warning/5 animate-pulse' : subjectTone?.card
+      )}
     >
+      {subjectTone && !highlighted && <span aria-hidden className={cn('absolute inset-x-0 top-0 h-1', subjectTone.bar)} />}
       {/* Top: icon + nama file. Aksi mengambang agar nama tidak terpotong. */}
       <div className="relative flex items-start gap-3">
         <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${fileTint(m.material_type)}`}>

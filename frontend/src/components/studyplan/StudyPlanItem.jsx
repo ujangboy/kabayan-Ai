@@ -7,11 +7,11 @@ import { ICONS } from '@/lib/icons';
 import { sessionsAPI } from '@/services/api';
 import MathMarkdown from '@/components/MathMarkdown';
 import { extractErrorMessage } from '@/utils/errors';
-import { formatDate } from '@/utils';
+import { cn, formatDate } from '@/utils';
 import { useToast } from '@/components/Toast';
 import { usePageState } from '@/hooks/usePageState';
 import { springWave } from '@/lib/motion';
-import { Button, Textarea, Icon } from '@/components/ui';
+import { Button, Textarea, getSubjectPalette, Icon } from '@/components/ui';
 import { TYPE_META, formatItemDate, formatRealDate } from './shared';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -222,6 +222,7 @@ export function StudyPlanItem({
   const { t } = useTranslation();
   const navigate = useNavigate();
   const meta = TYPE_META[item.activity_type] || TYPE_META.review;
+  const palette = getSubjectPalette(subjectId);
   // Tanggal jadwal: start_date rencana (dipilih user di ResultView) + nomor
   // hari → tiap item punya tanggal sendiri. Fallback: tanggal real materi,
   // atau label "Hari N" bila keduanya tidak ada.
@@ -237,8 +238,16 @@ export function StudyPlanItem({
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`rounded-xl border overflow-hidden transition-all ${isPracticeOpen ? 'border-primary/30 bg-primary/5' : item.completed ? 'bg-success/5 border-success/20' : 'bg-surface border-border hover:border-strong'}`}
+      className={cn(
+        'relative rounded-xl border overflow-hidden transition-all',
+        isPracticeOpen
+          ? 'border-primary/30 bg-primary/5'
+          : item.completed
+            ? 'bg-success/5 border-success/20'
+            : palette?.card || 'bg-surface border-border hover:border-strong'
+      )}
     >
+      {palette && <span aria-hidden className={cn('absolute inset-x-0 top-0 h-1', palette.bar)} />}
       <div className="flex items-start gap-3 p-4">
         <button
           onClick={() => onToggle(item.id)}

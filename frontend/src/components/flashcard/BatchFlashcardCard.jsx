@@ -4,12 +4,13 @@ import { ICONS } from '@/lib/icons';
 import { springLift } from '@/lib/motion';
 
 import MathMarkdown from '@/components/MathMarkdown';
-import { Tooltip, SubjectBadge , Icon } from '@/components/ui';
-import { formatDate, formatTimeOnly } from '@/utils';
+import { Tooltip, SubjectBadge, getSubjectPalette, Icon } from '@/components/ui';
+import { cn, formatDate, formatTimeOnly } from '@/utils';
 
 export default function BatchFlashcardCard({ group, onStart, onReview, onHistory, onDeleteAll, subjectId }) {
   const { t } = useTranslation();
   const { subject, cards, title, materialNames } = group;
+  const palette = getSubjectPalette(subjectId ?? subject?.id);
   const latestCard = cards.reduce((a, b) =>
     new Date(b.created_at || 0) > new Date(a.created_at || 0) ? b : a, cards[0]);
   const createdAt = latestCard?.created_at;
@@ -32,14 +33,15 @@ export default function BatchFlashcardCard({ group, onStart, onReview, onHistory
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -3 }}
       transition={springLift}
-      className="card-base card-hoverable flex flex-col justify-between gap-3"
+      className={cn('card-base card-hoverable relative flex flex-col justify-between gap-3 overflow-hidden', palette?.card)}
     >
+      {palette && <span aria-hidden className={cn('absolute inset-x-0 top-0 h-1', palette.bar)} />}
       {/* Header — badge inisial + nama + aksi */}
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-start gap-3 min-w-0">
           <SubjectBadge name={subject.name} subjectId={subjectId} size="sm" />
           <div className="flex-1 min-w-0">
-            <p className="text-3xs font-semibold text-accent-teal uppercase tracking-wider">
+            <p className={cn('text-3xs font-semibold uppercase tracking-wider', palette?.icon || 'text-accent-teal')}>
               {title ? subject.name : t('flashcard.subjectLabel')}
             </p>
             <h3 className="font-semibold text-text text-base truncate">{title || subject.name}</h3>

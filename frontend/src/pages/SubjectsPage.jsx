@@ -7,8 +7,8 @@ import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 
 import { subjectAPI } from '@/services/api';
-import { formatDate, formatTimeOnly } from '@/utils';
-import { Tooltip, Modal, Button, Input, Textarea, Select, EmptyState, Skeleton, SubjectBadge , Icon } from '@/components/ui';
+import { cn, formatDate, formatTimeOnly } from '@/utils';
+import { Tooltip, Modal, Button, Input, Textarea, Select, EmptyState, Skeleton, SubjectBadge, getSubjectPalette, Icon } from '@/components/ui';
 import { useToast } from '@/components/Toast';
 
 export default function SubjectsPage() {
@@ -108,6 +108,7 @@ export default function SubjectsPage() {
           ) : (
             filteredSubjects.map((s, idx) => {
               const progress = Math.min(100, s.best_score ?? 0);
+              const palette = getSubjectPalette(s.id);
               const meta = [
                 { icon: ICONS.learning.trophy,     value: s.best_score ?? '—', label: t('subjects.statScore'),      color: 'text-warning' },
                 { icon: ICONS.ui.help, value: s.total_quizzes ?? 0,  label: t('subjects.statQuizzes'),    color: 'text-accent-teal' },
@@ -121,8 +122,9 @@ export default function SubjectsPage() {
                     animate={{ opacity: 1, y: 0 }}
                     whileHover={{ y: -3 }}
                     transition={{ delay: idx * 0.05, ...springLift }}
-                    className="card-base card-hoverable flex flex-col justify-between gap-4 group h-full"
+                    className={cn('card-base card-hoverable relative flex flex-col justify-between gap-4 group h-full overflow-hidden', palette?.card)}
                   >
+                    {palette && <span aria-hidden className={cn('absolute inset-x-0 top-0 h-1', palette.bar)} />}
                     {/* Header — badge inisial + nama + aksi */}
                     <div className="flex items-start gap-3">
                       <SubjectBadge name={s.name} subjectId={s.id} />

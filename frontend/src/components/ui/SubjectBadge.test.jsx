@@ -28,6 +28,15 @@ describe('getSubjectPalette — warna per subject_id', () => {
     expect(getSubjectPaletteIndex({ tone: 3, name: 'x' })).toBe(3);
   });
 
+  it('setiap palet punya tint kartu + bar aksen yang bisa dipakai lintas halaman', () => {
+    for (const id of [1, 2, 3, 4, 5]) {
+      const palette = getSubjectPalette(id);
+      expect(palette.card).toMatch(/^border-/);
+      expect(palette.card).toMatch(/bg-/);
+      expect(palette.bar).toMatch(/^bg-/);
+    }
+  });
+
   it('id tidak valid → null (bukan crash)', () => {
     expect(getSubjectPalette(undefined)).toBeNull();
     expect(getSubjectPalette(0)).toBeNull();

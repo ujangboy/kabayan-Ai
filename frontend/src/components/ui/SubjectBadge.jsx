@@ -5,35 +5,43 @@ import { cn } from '@/utils';
  * halaman lama/baru: badge, folder, kartu materi, deck flashcard, quiz).
  * Frontend-only, deterministik: (subject_id - 1) % 5. Tanpa kolom DB.
  * Token berbasis accent data-viz agar mittel tone di light & dark.
+ *
+ * `card` menintai seluruh badan kartu (bukan hanya badge): border + wash
+ * tipis yang tetap terbaca di light/dark, dengan `bar` sebagai aksen atas.
  */
 const PALETTE = [
   {
     id: 'teal',
     badge: 'bg-accent-teal/12 border-accent-teal/30 text-accent-teal',
+    card: 'border-accent-teal/30 bg-accent-teal/5 hover:border-accent-teal/45',
     bar: 'bg-accent-teal',
     icon: 'text-accent-teal',
   },
   {
     id: 'blue',
     badge: 'bg-accent-blue/12 border-accent-blue/30 text-accent-blue',
+    card: 'border-accent-blue/30 bg-accent-blue/5 hover:border-accent-blue/45',
     bar: 'bg-accent-blue',
     icon: 'text-accent-blue',
   },
   {
     id: 'purple',
     badge: 'bg-accent-purple/12 border-accent-purple/30 text-accent-purple',
+    card: 'border-accent-purple/30 bg-accent-purple/5 hover:border-accent-purple/45',
     bar: 'bg-accent-purple',
     icon: 'text-accent-purple',
   },
   {
     id: 'pink',
     badge: 'bg-accent-pink/12 border-accent-pink/30 text-accent-pink',
+    card: 'border-accent-pink/30 bg-accent-pink/5 hover:border-accent-pink/45',
     bar: 'bg-accent-pink',
     icon: 'text-accent-pink',
   },
   {
     id: 'sun',
     badge: 'bg-sun/12 border-sun/30 text-sun',
+    card: 'border-sun/30 bg-sun/5 hover:border-sun/45',
     bar: 'bg-sun',
     icon: 'text-sun',
   },

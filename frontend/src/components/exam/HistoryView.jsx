@@ -19,7 +19,7 @@ import {
   getExamTypeLabel,
 } from './shared';
 import { Tooltip } from '@/components/ui/Tooltip';
-import { SubjectBadge , Icon , Button} from '@/components/ui';
+import { SubjectBadge, getSubjectPalette, Icon, Button } from '@/components/ui';
 import { useToast } from '@/components/Toast';
 
 // ─── Subject picker (shown when no subject selected) ──────────────────────────
@@ -105,14 +105,14 @@ function SubjectCard({ subject, onSelectSubject, onStartConfig, onDelete, t, ton
      staleTime: 5 * 60 * 1000,
    });
    const subjectMaterials = materialData?.materials || [];
+   const palette = getSubjectPalette(subject.id);
 
    if (isLoading) {
      return (
-       <div className="card-base p-5 flex flex-col gap-3">
+       <div className={cn('card-base relative p-5 flex flex-col gap-3 overflow-hidden', palette?.card)}>
+         {palette && <span aria-hidden className={cn('absolute inset-x-0 top-0 h-1', palette.bar)} />}
          <div className="flex items-start gap-3">
-           <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
-             <Icon name={ICONS.learning.bookOpen} size={18} />
-           </div>
+           <SubjectBadge name={subject.name} subjectId={subject.id} />
            <div className="flex-1 min-w-0">
              <h3 className="font-semibold text-text truncate">{subject.name}</h3>
              <p className="text-xs text-text-muted">{t('exam.history.loadingMaterials')}</p>
@@ -140,14 +140,15 @@ function SubjectCard({ subject, onSelectSubject, onStartConfig, onDelete, t, ton
         whileHover={{ y: -3 }}
         whileTap={{ scale: 0.98 }}
         transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1], ...springLift }}
-        className="card-base card-hoverable flex flex-col justify-between gap-4"
+        className={cn('card-base card-hoverable relative flex flex-col justify-between gap-4 overflow-hidden', palette?.card)}
       >
+        {palette && <span aria-hidden className={cn('absolute inset-x-0 top-0 h-1', palette.bar)} />}
         {/* Header — badge inisial + nama + aksi */}
        <div className="flex items-start gap-3">
-         <SubjectBadge name={subject.name} tone={tone} />
+         <SubjectBadge name={subject.name} subjectId={subject.id ?? tone} />
          <div className="flex-1 min-w-0">
            <h3 className="font-semibold text-text truncate">{subject.name}</h3>
-           <p className="text-xs text-text-muted">{materialCount} materi</p>
+           <p className="text-xs text-text-muted">{materialCount} {t('exam.history.materialLabel', 'Materi')}</p>
          </div>
          {onDelete && (
            <Tooltip label={t('exam.history.deleteSubject')}>

@@ -11,8 +11,8 @@ import { extractErrorMessage } from '@/utils/errors';
 import { useToast } from '@/components/Toast';
 import { usePageState } from '@/hooks/usePageState';
 import { useHighlightScroll } from '@/hooks/useHighlightScroll';
-import { fadeSlide } from '@/utils';
-import { Modal, Button, EmptyState, HelpTip , Icon } from '@/components/ui';
+import { cn, fadeSlide } from '@/utils';
+import { Modal, Button, EmptyState, HelpTip, getSubjectPalette, Icon } from '@/components/ui';
 import { StudyPlanItem } from '@/components/studyplan/StudyPlanItem';
 import { formatItemDate } from '@/components/studyplan/shared';
 
@@ -72,6 +72,7 @@ export default function StudyPlanPage() {
   const completedItems = items.filter(i => i.completed).length;
   const totalItems = items.length;
   const progress = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
+  const subjectPalette = getSubjectPalette(subjectId);
   // Tanpa ?highlight → sorot otomatis 1 item berikutnya yang belum selesai (fallback).
   const lastWorked = items.find(i => !i.completed) || items.at(-1);
   const lastWorkedId = lastWorked ? `item-${lastWorked.id}` : null;
@@ -274,7 +275,8 @@ export default function StudyPlanPage() {
         )}
 
         {/* Progress */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="card-base p-5">
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={cn('card-base relative overflow-hidden p-5', subjectPalette?.card)}>
+          {subjectPalette && <span aria-hidden className={cn('absolute inset-x-0 top-0 h-1', subjectPalette.bar)} />}
           <div className="flex justify-between text-xs text-text-muted mb-2">
             <span className="flex items-center gap-1.5">
               <Icon name={ICONS.learning.target} size={12} className="text-primary" />
