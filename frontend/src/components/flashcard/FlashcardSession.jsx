@@ -13,6 +13,7 @@ import FlashcardFinishScreen from './FlashcardFinishScreen';
 
 export default function FlashcardSession({ cards, subjectName, onClose }) {
   const { t } = useTranslation();
+  const { toast } = useToast();
   const { restore: restoreSession, persist: persistSession, clear: clearSession } = usePageState('flashcard-session');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
