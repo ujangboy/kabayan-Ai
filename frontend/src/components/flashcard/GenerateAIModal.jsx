@@ -96,6 +96,7 @@ export default function GenerateAIModal({ open, subjects, onClose, onSuccess }) 
             value={subjectId}
             onChange={(e) => { setSubjectId(e.target.value); setSelectedMaterialIds([]); setTargetBatchId(''); }}
             disabled={isGenerating}
+            title={subjects.find((s) => String(s.id) === String(subjectId))?.name || ''}
           >
             <option value="">{t('flashcard.selectSubjectPlaceholder')}</option>
             {subjects.map(s => (

@@ -255,7 +255,11 @@ export default function AudioPage() {
           <div className="flex flex-col sm:flex-row sm:items-end gap-3">
             <div className="flex-1">
               <label className="block text-xs font-medium text-text-secondary mb-1">{t('audioPage.subjectLabel')}</label>
-              <Select value={subjectFilter} onChange={(e) => applySubjectFilter(e.target.value)}>
+              <Select
+                value={subjectFilter}
+                onChange={(e) => applySubjectFilter(e.target.value)}
+                title={subjects.find((s) => String(s.id) === String(subjectFilter))?.name || ''}
+              >
                 <option value="">{t('common.all')}</option>
                 {[...subjects].sort((a, b) => a.name.localeCompare(b.name, 'id', { sensitivity: 'base' })).map((s) => (
                   <option key={s.id} value={String(s.id)}>{s.name}</option>

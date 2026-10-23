@@ -119,21 +119,25 @@ export default function Breadcrumbs({ maxItems = 4 }) {
           <Fragment key={crumb.to + i}>
             {i > 0 && <Icon name={ICONS.ui.chevronRight} size={12} className="shrink-0 text-text-muted/50" />}
             {crumb.current ? (
-              <span
-                aria-current="page"
-                className="flex max-w-[180px] items-center gap-1.5 truncate rounded-md px-1.5 py-0.5 text-xs font-medium text-text cursor-default"
-              >
-                {icon}
-                <span className="truncate">{crumb.label}</span>
-              </span>
+              <Tooltip label={crumb.label}>
+                <span
+                  aria-current="page"
+                  className="flex max-w-[180px] items-center gap-1.5 truncate rounded-md px-1.5 py-0.5 text-xs font-medium text-text cursor-default"
+                >
+                  {icon}
+                  <span className="truncate">{crumb.label}</span>
+                </span>
+              </Tooltip>
             ) : (
-              <Link
-                to={crumb.to}
-                className="flex max-w-[180px] items-center gap-1.5 rounded-md px-1.5 py-0.5 text-xs text-text-secondary transition-colors hover:bg-card hover:text-text hover:underline"
-              >
-                {icon}
-                <span className="truncate">{crumb.label}</span>
-              </Link>
+              <Tooltip label={crumb.label}>
+                <Link
+                  to={crumb.to}
+                  className="flex max-w-[180px] items-center gap-1.5 rounded-md px-1.5 py-0.5 text-xs text-text-secondary transition-colors hover:bg-card hover:text-text hover:underline"
+                >
+                  {icon}
+                  <span className="truncate">{crumb.label}</span>
+                </Link>
+              </Tooltip>
             )}
           </Fragment>
         );

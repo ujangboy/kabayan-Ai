@@ -103,6 +103,7 @@ export default function ChatHeader({ chat, isCurrentChatStreaming, onToggleHisto
             <select
               value={tutorSubject}
               onChange={handleSubjectChange}
+              title={subjects.find((s) => String(s.id) === String(tutorSubject))?.name || ''}
               className="text-xs rounded-md bg-base border border-border px-2 py-1.5 text-text focus:outline-none focus:ring-2 focus:ring-primary/40"
             >
                 <option value="">{t('chat.selectSubjectTitle')}</option>

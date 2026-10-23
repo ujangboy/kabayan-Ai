@@ -124,6 +124,7 @@ export function GeneratePanel({ subjects, onClose, onNoteCreated }) {
                 setError('');
               }}
               className="w-full"
+              title={subjects.find((s) => String(s.id) === String(subjectId))?.name || ''}
             >
               <option value="">{t('notebook.selectSubjectPlaceholder')}</option>
               {subjects.map(s => (

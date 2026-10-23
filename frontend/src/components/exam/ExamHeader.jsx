@@ -35,7 +35,12 @@ export default function ExamHeader({ view, subjectId, subjects, canCreate, onBac
       </div>
 
       <div className="flex items-center gap-2">
-        <Select value={subjectId} onChange={onSubjectChange}>
+        {/* Nama mata kuliah panjang terpotong di select native — tampilkan lengkap saat dihover */}
+        <Select
+          value={subjectId}
+          onChange={onSubjectChange}
+          title={subjects.find((s) => String(s.id) === String(subjectId))?.name || ''}
+        >
           <option value="">{t('exam.selectSubjectPlaceholder')}</option>
           {subjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
         </Select>

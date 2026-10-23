@@ -62,6 +62,7 @@ export function UploadModal({ open, onClose, subjects, onSuccess }) {
             required
             value={subjectId}
             onChange={(e) => setSubjectId(e.target.value)}
+            title={subjects.find((s) => String(s.id) === String(subjectId))?.name || ''}
           >
             <option value="">{t('materi.selectSubject')}</option>
             {subjects.map(s => (

@@ -142,7 +142,7 @@ function SubjectCard({ subject, onSelectSubject, onStartConfig, onDelete, t, ton
          <div className="flex items-start gap-3">
            <SubjectBadge name={subject.name} subjectId={subject.id} />
            <div className="flex-1 min-w-0">
-             <h3 className="font-semibold text-text truncate">{subject.name}</h3>
+             <Tooltip label={subject.name}><h3 className="font-semibold text-text truncate">{subject.name}</h3></Tooltip>
              <p className="text-xs text-text-muted">{t('exam.history.loadingMaterials')}</p>
            </div>
          </div>
@@ -175,7 +175,7 @@ function SubjectCard({ subject, onSelectSubject, onStartConfig, onDelete, t, ton
        <div className="flex items-start gap-3">
          <SubjectBadge name={subject.name} subjectId={subject.id ?? tone} />
          <div className="flex-1 min-w-0">
-           <h3 className="font-semibold text-text truncate">{subject.name}</h3>
+           <Tooltip label={subject.name}><h3 className="font-semibold text-text truncate">{subject.name}</h3></Tooltip>
            <p className="text-xs text-text-muted">{materialCount} {t('exam.history.materialLabel', 'Materi')}</p>
          </div>
          {onDelete && (

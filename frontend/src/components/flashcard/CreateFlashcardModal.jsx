@@ -58,6 +58,7 @@ export default function CreateFlashcardModal({ open, subjects, onClose, onSucces
           <Select
             value={formData.subject_id}
             onChange={(e) => setFormData(p => ({ ...p, subject_id: e.target.value }))}
+            title={subjects.find((s) => String(s.id) === String(formData.subject_id))?.name || ''}
           >
             <option value="">{t('flashcard.selectSubjectPlaceholder')}</option>
             {subjects.map(s => (

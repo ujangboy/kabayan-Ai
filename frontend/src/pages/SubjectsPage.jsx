@@ -67,6 +67,7 @@ export default function SubjectsPage() {
               value={subjectFilter}
               onChange={(e) => setSubjectFilter(e.target.value)}
               className="min-w-[180px]"
+              title={sortedSubjects.find((s) => String(s.id) === String(subjectFilter))?.name || ''}
             >
               <option value="">{t('subjects.allSubjects', 'Semua Mata Kuliah')}</option>
               {sortedSubjects.map(s => (
