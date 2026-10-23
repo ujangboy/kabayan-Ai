@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ICONS } from '@/lib/icons';
 import { motion } from 'framer-motion';
@@ -6,73 +6,88 @@ import { motion } from 'framer-motion';
 import { notesAPI } from '@/services/api';
 import { Select , Icon } from '@/components/ui';
 import MaterialPicker from '@/components/MaterialPicker';
+import { useBackgroundJob } from '@/hooks/useBackgroundJob';
+import { useJobStore } from '@/store/jobStore';
 import { cn } from '@/utils';
+
+// Key job global — hasil tetap tersimpan walau panel/halaman unmount.
+const JOB_KEY = 'notebook-generate';
 
 export function GeneratePanel({ subjects, onClose, onNoteCreated }) {
   const { t } = useTranslation();
   const [subjectId, setSubjectId] = useState('');
   const [selectedMaterialIds, setSelectedMaterialIds] = useState([]);
   const [topic, setTopic] = useState('');
-  const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState('');
   const panelRef = useRef(null);
 
-  const handleGenerate = async () => {
+  // isGenerating diambil dari jobStore agar state "AI menulis" bertahan
+  // saat panel ditutup & dibuka lagi saat job masih berjalan.
+  const { run: runJob } = useBackgroundJob();
+  const isGenerating = useJobStore((s) => Boolean(s.jobs[JOB_KEY]));
+  const carriedResult = useJobStore((s) => s.results[JOB_KEY]);
+
+  const handleGenerate = () => {
     if (!subjectId) { setError(t('notebook.selectSubjectError')); return; }
     if (selectedMaterialIds.length === 0) { setError(t('notebook.selectMaterialError')); return; }
 
     setError('');
-    setIsGenerating(true);
-    try {
-      const payload = {
-        subject_id: Number(subjectId),
-        material_ids: selectedMaterialIds.join(','),
-      };
-      // Topic is sent as context for AI, NOT as the note title
-      if (topic.trim()) payload.title = topic.trim().slice(0, 80);
+    const subjectToUse = Number(subjectId);
+    const chosenTopic = topic;
+    runJob(
+      JOB_KEY,
+      t('notebook.generateJobLabel'),
+      async (signal) => {
+        const payload = {
+          subject_id: subjectToUse,
+          material_ids: selectedMaterialIds.join(','),
+        };
+        // Topic is sent as context for AI, NOT as the note title
+        if (chosenTopic.trim()) payload.title = chosenTopic.trim().slice(0, 80);
 
-      const res = await notesAPI.generate(payload);
-      const result = res.data;
+        const res = await notesAPI.generate(payload, { signal });
+        const result = res.data;
 
-      // Title comes from AI-generated content (extracted by backend)
-      const noteTitle = result.title || t('notebook.aiNoteTitle');
+        // Title comes from AI-generated content (extracted by backend)
+        const noteTitle = result.title || t('notebook.aiNoteTitle');
 
-      // Save the generated note to DB
-      const saveRes = await notesAPI.create(
-        noteTitle,
-        result.content || '',
-        Number(subjectId)
-      );
-      const noteId = saveRes.data?.note_id;
+        // Save the generated note to DB
+        const saveRes = await notesAPI.create(noteTitle, result.content || '', subjectToUse, { signal });
+        const noteId = saveRes.data?.note_id;
 
-      if (!noteId) {
-        setError(t('notebook.generateLoadError'));
-        return;
-      }
+        if (!noteId) throw new Error(t('notebook.generateLoadError'));
 
-      // Fetch full note object and pass back
-      const listRes = await notesAPI.getAll();
-      const allNotes = listRes.data?.notes || [];
-      const newNote = allNotes.find(n => n.id === noteId);
-      if (newNote) {
-        onNoteCreated(newNote);
-      } else {
+        // Fetch full note object and return it for the consumer
+        const listRes = await notesAPI.getAll();
+        const allNotes = listRes.data?.notes || [];
+        const newNote = allNotes.find((n) => n.id === noteId);
+        if (newNote) return newNote;
         // Fallback: construct note from what we have
-        onNoteCreated({
+        return {
           id: noteId,
-          title: result.title || topic.trim() || t('notebook.aiNoteTitle'),
+          title: result.title || chosenTopic.trim() || t('notebook.aiNoteTitle'),
           content: result.content || '',
           created_at: new Date().toISOString(),
           is_pinned: false,
-          subject: subjects.find(s => s.id === Number(subjectId)) || null,
-        });
+          subject: subjects.find((s) => s.id === subjectToUse) || null,
+        };
+      },
+      {
+        storeResult: true,
+        onError: (e) => setError(e.message || t('notebook.generateError')),
+        onDone: (note) => onNoteCreated(note),
       }
-    } catch (err) {
-      setError(err.message || t('notebook.generateError'));
-    } finally {
-      setIsGenerating(false);
-    }
+    ).catch(() => { /* sudah ditampilkan sebagai error/toast */ });
   };
+
+  // Job selesai saat panel unmount (user menutup panel/pindah menu):
+  // terapkan hasil saat panel dibuka lagi di halaman Notebook.
+  useEffect(() => {
+    if (!carriedResult) return;
+    const entry = useJobStore.getState().takeResult(JOB_KEY);
+    if (!entry || entry.status !== 'success' || entry.result == null) return;
+    onNoteCreated(entry.result);
+  }, [carriedResult, onNoteCreated]);
 
   return (
     <>

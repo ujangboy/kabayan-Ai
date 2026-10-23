@@ -22,11 +22,15 @@ export function TooltipProvider({ children, delayDuration = 300 }) {
 export function Tooltip({ label, children, side = 'top', align = 'center', ...props }) {
   if (!label) return children;
   return (
-    <TooltipPrimitive.Root>
-      <TooltipPrimitive.Trigger asChild {...props}>
-        {children}
-      </TooltipPrimitive.Trigger>
-      <TooltipPrimitive.Portal>
+    // Provider disertakan di sini agar Tooltip tetap hidup walau dirender
+    // di luar wrapper global (mis. unit test / portal akar) — nested
+    // TooltipProvider aman; nearest-provider yang dipakai Root.
+    <TooltipProvider>
+      <TooltipPrimitive.Root>
+        <TooltipPrimitive.Trigger asChild {...props}>
+          {children}
+        </TooltipPrimitive.Trigger>
+        <TooltipPrimitive.Portal>
         <TooltipPrimitive.Content
           side={side}
           align={align}
@@ -41,5 +45,6 @@ export function Tooltip({ label, children, side = 'top', align = 'center', ...pr
         </TooltipPrimitive.Content>
       </TooltipPrimitive.Portal>
     </TooltipPrimitive.Root>
+    </TooltipProvider>
   );
 }

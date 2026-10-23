@@ -11,6 +11,7 @@ import { NoteView } from '@/components/notebook/NoteView';
 import { GeneratePanel } from '@/components/notebook/GeneratePanel';
 import { NotebookEmptyState } from '@/components/notebook/NotebookEmptyState';
 import { Tooltip } from '@/components/ui';
+import { useJobStore } from '@/store/jobStore';
 
 export default function NotebookPage() {
   const { t } = useTranslation();
@@ -61,6 +62,17 @@ export default function NotebookPage() {
     // benar-benar selesai (catatan tidak ada lagi) supaya tidak menggantung.
     if (n || !isFetching) navigate('/notebook', { replace: true });
   }, [location.search, notesData, isFetching, navigate]);
+
+  // Hasil GeneratePanel AI yang selesai saat user sedang di halaman lain:
+  // saat kembali ke Notebook, segarkan daftar agar catatan baru langsung muncul.
+  // (setState langsung di dalam effect dihindari agar tidak memicu render
+  // beruntun; buka catatan tetap bisa dilakukan user dari daftar yang fresh.)
+  const carriedGenResult = useJobStore((s) => s.results['notebook-generate']);
+  useEffect(() => {
+    if (!carriedGenResult) return;
+    useJobStore.getState().takeResult('notebook-generate');
+    queryClient.invalidateQueries({ queryKey: ['notes'] });
+  }, [carriedGenResult, queryClient]);
 
   const notes = [...rawNotes].sort((a, b) => {
     if (!!a.is_pinned !== !!b.is_pinned) return a.is_pinned ? -1 : 1;
@@ -320,7 +332,7 @@ export default function NotebookPage() {
             onClose={() => setShowGeneratePanel(false)}
             onNoteCreated={(note) => {
               setShowGeneratePanel(false);
-              queryClient.invalidateQueries(['notes']);
+              queryClient.invalidateQueries({ queryKey: ['notes'] });
               setSelectedNote(note);
             }}
           />

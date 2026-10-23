@@ -1,9 +1,12 @@
 import { useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useChatStore } from '@/store';
+import { useJobStore } from '@/store/jobStore';
 import { streamChat, parseStreamContent } from '@/services/tutorStream';
 
 export function useChatUrlSync() {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const currentChatId = useChatStore((s) => s.currentChatId);
@@ -46,6 +49,10 @@ export function useChatUrlSync() {
         };
         addMessage(id, newMsg);
         addMessage(id, assistantPlaceholder);
+        // Daftarkan juga stream tutor otomatis ke jobStore (banner + batal).
+        const jobKey = `chat-stream-${id}`;
+        useJobStore.getState().startJob(jobKey, { type: 'chat', label: t('chat.streamJobLabel') });
+        let jobOutcome = 'success';
         setStreaming(true, id);
         try {
           const chat = useChatStore.getState().getCurrentChat();
@@ -66,12 +73,23 @@ export function useChatUrlSync() {
               updateLastMessage(id, clean);
               if (msgId) patchLastMessage(id, { msgId });
             },
+            onController: (controller) => useJobStore.getState().setController(jobKey, controller),
           });
         } catch (err) {
           console.error(err);
+          jobOutcome = 'error';
           updateLastMessage(id, 'Error: Terjadi kesalahan saat memproses pesan.');
         } finally {
           setStreaming(false, id);
+          const jobState = useJobStore.getState();
+          if (jobState.jobs[jobKey]) {
+            jobState.finishJob(jobKey, {
+              status: jobOutcome,
+              notify: !window.location.pathname.startsWith('/chat'),
+              ...(jobOutcome === 'error' ? { error: 'Terjadi kesalahan saat memproses pesan.' } : {}),
+            });
+          }
+          jobState.setController(jobKey, null);
         }
       })();
     }

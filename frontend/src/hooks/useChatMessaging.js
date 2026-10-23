@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { useChatStore } from '@/store';
+import { useJobStore } from '@/store/jobStore';
 import { notesAPI, tutorAPI } from '@/services/api';
 import { streamChat, parseStreamContent } from '@/services/tutorStream';
 import { usePendingOperation } from '@/hooks/usePendingOperation';
@@ -11,7 +12,6 @@ export function useChatMessaging() {
   const { t } = useTranslation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const chatOp = usePendingOperation();
   const notebookOp = usePendingOperation();
   const [noteToast, setNoteToast] = useState(null);
   const [isNoteSaving, setIsNoteSaving] = useState(false);
@@ -40,7 +40,16 @@ export function useChatMessaging() {
     };
     addMessage(chatId, newMsg);
     addMessage(chatId, assistantPlaceholder);
-    chatOp.start(chatId);
+
+    // Job stream didaftarkan ke jobStore (bukan pendingOperations) agar banner
+    // global menampilkan label jelas + tombol Batal yang benar-benar
+    // menghentikan stream, walau user sudah pindah menu.
+    const jobKey = `chat-stream-${chatId}`;
+    const jobLabel = t('chat.streamJobLabel');
+    useJobStore.getState().startJob(jobKey, { type: 'chat', label: jobLabel });
+    let jobOutcome = 'success';
+    let jobError = '';
+
     setStreaming(true, chatId);
     try {
       const history = (chat.messages || []).map((m) => ({ role: m.role, content: m.content }));
@@ -63,6 +72,7 @@ export function useChatMessaging() {
             updateLastMessage(chatId, clean);
             if (msgId) patchLastMessage(chatId, { msgId });
           },
+          onController: (controller) => useJobStore.getState().setController(jobKey, controller),
         });
       } else {
         await streamChat({
@@ -80,14 +90,28 @@ export function useChatMessaging() {
             updateLastMessage(chatId, clean);
             if (msgId) patchLastMessage(chatId, { msgId });
           },
+          onController: (controller) => useJobStore.getState().setController(jobKey, controller),
         });
       }
     } catch (err) {
       console.error(err);
+      jobOutcome = 'error';
+      jobError = err?.message || t('chat.errorGeneric');
       updateLastMessage(chatId, 'Error: ' + (err?.message || t('chat.errorGeneric')));
     } finally {
       setStreaming(false, chatId);
-      chatOp.finish(chatId);
+      // Job dihapus duluan saat dibatalkan lewat banner — jangan tulis status lagi.
+      const jobState = useJobStore.getState();
+      if (jobState.jobs[jobKey]) {
+        // Toast penyelesaian hanya muncul jika user telah pindah menu;
+        // di dalam Chat jawaban memang langsung terlihat (tanpa toast dobel).
+        jobState.finishJob(jobKey, {
+          status: jobOutcome,
+          notify: !window.location.pathname.startsWith('/chat'),
+          ...(jobOutcome === 'error' && jobError ? { error: jobError } : {}),
+        });
+      }
+      jobState.setController(jobKey, null);
     }
   };
 

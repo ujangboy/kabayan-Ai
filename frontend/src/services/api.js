@@ -84,13 +84,14 @@ export const subjectAPI = {
 // --- NOTES ---
 export const notesAPI = {
   getAll: () => api.get('/notes'),
-  create: (title, content = '', subjectId = null) => {
+  create: (title, content = '', subjectId = null, config = {}) => {
     const data = new URLSearchParams();
     data.append('title', title);
     data.append('content', content);
     if (subjectId) data.append('subject_id', subjectId);
     return api.post('/notes', data.toString(), {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      ...config,
     });
   },
   generate: (payload, config) => api.post('/notes/generate', payload, {
@@ -154,7 +155,7 @@ export const quizAPI = {
 
 // --- EXAM ANALYZER ---
 export const examAPI = {
-  analyze: (subjectId) => api.post(`/exam/analyze/${subjectId}`, {}, { timeout: 120000 }),
+  analyze: (subjectId, config) => api.post(`/exam/analyze/${subjectId}`, {}, { timeout: 120000, ...config }),
   generateBlueprint: (payload, config) => api.post('/exam/blueprint', payload, { ...config, timeout: 120000 }),
   generateQuestions: (blueprintId, config) => api.post(`/exam/generate/${blueprintId}`, {}, { ...config, timeout: 300000 }),
   getSessions: (subjectId) => api.get('/exam/sessions', { params: subjectId ? { subject_id: subjectId } : {} }),

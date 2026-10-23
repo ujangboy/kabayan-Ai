@@ -41,12 +41,15 @@ export function hasActiveStream() {
   return controllers.size > 0;
 }
 
-export async function streamChat({ chatId, endpoint, body, onChunk }) {
+export async function streamChat({ chatId, endpoint, body, onChunk, onController }) {
   // Hanya batalkan stream milik chat yang sama; stream sesi lain tidak diganggu.
   if (controllers.has(chatId)) controllers.get(chatId).abort();
 
   const controller = new AbortController();
   controllers.set(chatId, controller);
+  // Caller (mis. pending job) bisa mendaftarkan controller ini agar
+  // tombol "Batal" di banner global benar-benar menghentikan stream.
+  if (onController) onController(controller);
 
   try {
     const res = await fetch(endpoint, {

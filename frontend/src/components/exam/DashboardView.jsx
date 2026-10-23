@@ -1,31 +1,54 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ICONS } from '@/lib/icons';
 import { Icon , Button} from '@/components/ui';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { examAPI } from '@/services/api';
+import { useBackgroundJob } from '@/hooks/useBackgroundJob';
+import { useJobStore } from '@/store/jobStore';
 import { cn } from '@/utils';
 import { springLift } from '@/lib/motion';
 import { Chip, SectionHeader, StarRating } from './shared';
 
 export default function DashboardView({ subjectId, subjects, analysis, onAnalysisDone, onStartConfig }) {
   const { t } = useTranslation();
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState('');
   const [expandedNode, setExpandedNode] = useState(null);
 
-  const runAnalysis = async () => {
-    if (!subjectId) return setError(t('exam.dashboard.selectSubjectFirst'));
-    setError(''); setIsAnalyzing(true);
-    try {
-      const r = await examAPI.analyze(subjectId);
-      if (r.data?.detail) throw new Error(r.data.detail);
-      onAnalysisDone(r.data);
-    } catch (e) {
-      setError(e.response?.data?.detail || e.message || t('exam.dashboard.analysisFailed'));
-    } finally { setIsAnalyzing(false); }
+  // Job analisis berjalan lewat jobStore agar:
+  //  - banner global muncul walau user pindah menu;
+  //  - hasil tetap tersimpan (results) dan diterapkan saat user kembali.
+  // Kuncinya memuat ID mata kuliah agar hasil analisis tak pernah salah subjek.
+  const { run: runJob } = useBackgroundJob();
+  const jobKey = subjectId != null && subjectId !== '' ? `exam-analyze-${String(subjectId)}` : 'exam-analyze';
+  const isAnalyzing = useJobStore((s) => Boolean(s.jobs[jobKey]));
+  const carriedResult = useJobStore((s) => s.results[jobKey]);
+
+  const runAnalysis = () => {
+    if (!subjectId) { setError(t('exam.dashboard.selectSubjectFirst')); return; }
+    setError('');
+    const subjectName = subjects.find((s) => String(s.id) === String(subjectId))?.name || '';
+    runJob(
+      jobKey,
+      t('exam.dashboard.analyzeJob', { name: subjectName }),
+      (signal) => examAPI.analyze(subjectId, { signal }).then((r) => r.data),
+      {
+        storeResult: true,
+        onError: (e) => setError(e.response?.data?.detail || e.message || t('exam.dashboard.analysisFailed')),
+        onDone: (data) => onAnalysisDone(data),
+      }
+    ).catch(() => { /* sudah ditampilkan sebagai error/toast */ });
   };
+
+  // Hasil analisis yang selesai saat komponen/petualang halaman unmount:
+  // terapkan segera saat user kembali ke dashboard mata kuliah yang sama.
+  useEffect(() => {
+    if (analysis || !carriedResult) return;
+    const entry = useJobStore.getState().takeResult(jobKey);
+    if (!entry || entry.status !== 'success' || entry.result == null) return;
+    onAnalysisDone(entry.result);
+  }, [analysis, carriedResult, jobKey, onAnalysisDone]);
 
   if (!subjectId) {
     return (
