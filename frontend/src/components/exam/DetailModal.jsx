@@ -685,21 +685,7 @@ function StudyPlanTab({ plan, sessionId, onToggle, onPlanSaved,
     setStartDate(newDate);
     setDateSaving(true); setDateError('');
     try {
-      const planPayload = {
-        title: plan.title,
-        motivational_message: plan.motivational_message,
-        priority_actions: plan.priority_actions,
-        start_date: newDate,
-        study_plan: (plan.items || []).map(item => ({
-          label: item.day_label,
-          topic: item.topic,
-          activity: item.activity,
-          type: item.activity_type,
-          duration_minutes: item.duration_minutes,
-          resources: item.resources,
-        })),
-      };
-      await sessionsAPI.saveStudyPlan(sessionId, planPayload);
+      await sessionsAPI.updatePlanStartDate(sessionId, newDate);
       onPlanSaved?.();
     } catch {
       setStartDate(prevDate);

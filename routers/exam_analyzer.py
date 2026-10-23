@@ -1,7 +1,7 @@
 import json
 import logging
 from typing import Optional
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -12,6 +12,7 @@ from schemas.exam import (
     SubmitAnswersRequest,
     RetryRequest,
     StudyPlanRequest,
+    StudyPlanStartDateRequest,
     SubmitPlanQuizRequest,
     SubmitPlanFlashcardsRequest,
     ExplainRequest,
@@ -344,6 +345,27 @@ async def save_session_study_plan(
         return JSONResponse(result)
     except Exception as e:
         logger.error(f"save_study_plan error: {e}", exc_info=True)
+        raise AppError(str(e), status_code=500)
+
+
+@router.patch("/sessions/{session_id}/study-plan/start-date", response_model=StatusMessage)
+async def update_session_study_plan_start_date(
+    session_id: int,
+    payload: StudyPlanStartDateRequest,
+    db: Session = Depends(get_db),
+):
+    """Ubah tanggal mulai rencana tanpa menghapus item/progres yang sudah ada."""
+    try:
+        data = exam_service.update_study_plan_start_date(
+            db, session_id, payload.start_date
+        )
+        return JSONResponse(data)
+    except AppError:
+        raise
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"update_plan_start_date error: {e}", exc_info=True)
         raise AppError(str(e), status_code=500)
 
 

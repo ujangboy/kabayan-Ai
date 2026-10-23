@@ -32,6 +32,13 @@ class StudyPlanRequest(BaseModel):
     motivational_message: str = ""
     priority_actions: list[str] = Field(default_factory=list)
     study_plan: list[dict] = Field(default_factory=list)
+    start_date: Optional[str] = None
+
+
+class StudyPlanStartDateRequest(BaseModel):
+    """Ubah tanggal mulai tanpa membuat ulang item/progres rencana."""
+
+    start_date: Optional[str] = None
 
 
 class SubmitPlanQuizRequest(BaseModel):

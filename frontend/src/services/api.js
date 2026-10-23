@@ -176,6 +176,8 @@ export const sessionsAPI = {
       timeout: 15000,
     }),
   saveStudyPlan: (sessionId, planData) => api.post(`/exam/sessions/${sessionId}/study-plan`, planData),
+  updatePlanStartDate: (sessionId, startDate) =>
+    api.patch(`/exam/sessions/${sessionId}/study-plan/start-date`, { start_date: startDate || null }),
   togglePlanItem: (itemId) => api.post(`/exam/sessions/plan-item/${itemId}/toggle`),
   deletePlanItem: (itemId) => api.post(`/exam/sessions/plan-item/${itemId}/delete`),
   submitPlanQuiz: (itemId, payload) => api.post(`/exam/sessions/plan-item/${itemId}/submit-quiz`, payload),

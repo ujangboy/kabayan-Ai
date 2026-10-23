@@ -16,14 +16,87 @@ import { Modal, Button, EmptyState, HelpTip, getSubjectPalette, Icon } from '@/c
 import { StudyPlanItem } from '@/components/studyplan/StudyPlanItem';
 import { formatItemDate } from '@/components/studyplan/shared';
 
+function PlanCard({ plan, onOpen, t }) {
+  const palette = getSubjectPalette(plan.subject_id);
+  const nextItem = (plan.study_plan_items || []).find((i) => !i.completed);
+  const total = plan.study_plan_total_items ?? (plan.study_plan_items || []).length;
+  const done = plan.study_plan_completed_items ?? (plan.study_plan_items || []).filter((i) => i.completed).length;
+  const progress = Math.max(0, Math.min(100, plan.study_plan_progress ?? 0));
+  const startDate = plan.study_plan_start_date;
+  const endLabel = startDate && total > 0 ? formatItemDate(startDate, total - 1) : '';
+
+  return (
+    <motion.button
+      type="button"
+      onClick={onOpen}
+      whileHover={{ y: -3 }}
+      whileTap={{ scale: 0.99 }}
+      className={cn(
+        'card-base card-hoverable relative flex w-full flex-col gap-4 overflow-hidden p-5 text-left',
+        palette?.card
+      )}
+    >
+      {palette && <span aria-hidden className={cn('absolute inset-x-0 top-0 h-1', palette.bar)} />}
+      <div className="flex items-start gap-3">
+        <div className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border', palette?.badge)}>
+          <Icon name={ICONS.learning.calendarCheck} size={18} />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-semibold text-text">
+            {plan.study_plan_title || plan.title || t('nav.studyPlan')}
+          </p>
+          <p className="mt-0.5 truncate text-xs text-text-muted">{plan.subject_name || t('nav.subjects')}</p>
+        </div>
+        <span className="shrink-0 text-sm font-bold text-text">{progress}%</span>
+      </div>
+
+      <div className="h-1.5 overflow-hidden rounded-full bg-wash">
+        <div className="h-full rounded-full bg-primary transition-[width]" style={{ width: `${progress}%` }} />
+      </div>
+
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-3xs text-text-muted">
+        <span className="inline-flex items-center gap-1">
+          <Icon name={ICONS.editor.listChecks} size={10} />
+          {t('studyPlanPage.hub.items', { done, total })}
+        </span>
+        {startDate ? (
+          <span className="inline-flex items-center gap-1">
+            <Icon name={ICONS.learning.calendar} size={10} />
+            {formatItemDate(startDate, 0)}{endLabel ? ` – ${endLabel}` : ''}
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1">
+            <Icon name={ICONS.learning.calendar} size={10} />
+            {t('studyPlanPage.hub.emptyDate', 'Tanggal mulai belum diatur')}
+          </span>
+        )}
+      </div>
+
+      <div className="mt-auto flex items-center justify-between gap-3">
+        <span className="min-w-0 truncate text-xs text-text-secondary">
+          {nextItem ? t('studyPlanPage.hub.next', { topic: nextItem.topic || '—' }) : t('studyPlanPage.hub.done', 'Semua item selesai')}
+        </span>
+        <span className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-primary-light">
+          {nextItem ? t('studyPlanPage.hub.continue', 'Lanjutkan') : t('studyPlanPage.hub.open', 'Buka')}
+          <Icon name={ICONS.actions.forward} size={13} />
+        </span>
+      </div>
+    </motion.button>
+  );
+}
+
 export default function StudyPlanPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { t } = useTranslation();
-  const sessionId = Number(searchParams.get('session_id'));
-  const { restore, persist, clear } = usePageState(`study-plan-${sessionId}`);
+  const rawSessionId = searchParams.get('session_id');
+  const parsedSessionId = Number(rawSessionId);
+  const sessionId = Number.isFinite(parsedSessionId) && parsedSessionId > 0 ? parsedSessionId : null;
+  const { restore, persist, clear } = usePageState(`study-plan-${sessionId || 'hub'}`);
+  const [startDate, setStartDate] = useState('');
+  const [dateSaving, setDateSaving] = useState(false);
   const [practiceState, setPracticeState] = useState(null);
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(null);
   const [summaryModalOpen, setSummaryModalOpen] = useState(false);
@@ -56,7 +129,24 @@ export default function StudyPlanPage() {
     enabled: !!sessionId,
   });
 
+  // Hub: semua sesi yang sudah punya rencana belajar. Memakai endpoint sesi
+  // terpadu agar tidak perlu endpoint baru hanya untuk daftar.
+  const { data: plansData, isLoading: plansLoading } = useQuery({
+    queryKey: ['study-plans'],
+    queryFn: () => sessionsAPI.list().then((r) => (r.data?.sessions || []).filter((s) => s.has_study_plan)),
+    enabled: !sessionId,
+  });
+  const studyPlans = [...(plansData || [])].sort((a, b) => {
+    const ad = a.study_plan_updated_at || a.created_at || '';
+    const bd = b.study_plan_updated_at || b.created_at || '';
+    return String(bd).localeCompare(String(ad));
+  });
+
   const subjectId = data?.subject_id;
+
+  useEffect(() => {
+    if (data?.study_plan) setStartDate(data.study_plan.start_date || '');
+  }, [data?.study_plan?.id, data?.study_plan?.start_date]);
 
   const toggleMutation = useMutation({
     mutationFn: (itemId) => sessionsAPI.togglePlanItem(itemId),
@@ -94,53 +184,110 @@ export default function StudyPlanPage() {
   if (!sessionId) {
     return (
       <AnimatePresence mode="wait" initial={false}>
-        <motion.div key="nosession" {...fadeSlide} className="flex-1 flex flex-col items-center justify-center px-6 py-10 md:py-14 overflow-y-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ type: 'spring', stiffness: 350, damping: 30 }}
-            className="flex w-full max-w-[560px] flex-col items-center gap-6 rounded-lg border border-border bg-surface-2 p-8 md:p-10 text-center"
-          >
-            <div className="flex h-20 w-20 items-center justify-center rounded-xl bg-primary/10 border border-primary/20 text-primary-light">
-              <Icon name={ICONS.learning.calendarCheck} size={36} />
-            </div>
-
-            <div className="space-y-2">
-              <h2 className="text-xl font-bold tracking-tight text-text md:text-2xl">{t('studyPlanPage.empty.title')}</h2>
-              <p className="mx-auto max-w-md text-15 leading-relaxed text-text-secondary">{t('studyPlanPage.empty.desc')}</p>
-            </div>
-
-            <ol className="w-full max-w-[420px] divide-y divide-border rounded-xl border border-border bg-wash px-2 text-left">
-              {[1, 2, 3].map((n) => (
-                <li key={n} className="flex items-center gap-4 py-3.5 px-2">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 border border-primary/20 text-sm font-bold text-primary-light">{n}</span>
-                  <span className="text-sm text-text-secondary">{t(`studyPlanPage.empty.step${n}`)}</span>
-                </li>
-              ))}
-            </ol>
-
-            <div className="flex w-full flex-col gap-3 sm:flex-row sm:justify-center pt-2">
-              <Button
-                onClick={() => navigate('/exam-analyzer')}
-                size="lg"
-                className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 min-w-[200px] bg-primary-solid hover:bg-primary-solid-hover"
-              >
-                <Icon name={ICONS.nav.exam} size={18} />
-                {t('studyPlanPage.empty.ctaPrimary', 'Kerjakan Ujian Simulasi')}
-              </Button>
-              <Button
-                variant="secondary"
-                size="lg"
-                onClick={() => navigate('/materi')}
-                className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 min-w-[160px] border-border bg-subtle hover:bg-subtle hover:border-primary/30"
-              >
-                <Icon name={ICONS.files.document} size={16} className="text-text-secondary" />
-                {t('studyPlanPage.empty.ctaSecondary', 'Lihat Materi')}
+        <motion.div key="hub" {...fadeSlide} className="flex-1 overflow-y-auto p-6 md:p-10">
+          <div className="mx-auto w-full max-w-5xl space-y-6">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="mb-1 text-3xs font-semibold uppercase tracking-[0.16em] text-primary-light">
+                  {t('nav.studyPlan')}
+                </p>
+                <h1 className="flex items-center gap-2 text-2xl font-bold text-text">
+                  {t('studyPlanPage.hub.title', 'Rencana Belajar')}
+                  <HelpTip label={t('help.studyPlan')} />
+                </h1>
+                <p className="mt-1 max-w-2xl text-sm text-text-secondary">
+                  {t('studyPlanPage.hub.subtitle', 'Semua rencana dari ujian simulasimu, lengkap dengan progres dan tanggal mulai.')}
+                </p>
+              </div>
+              <Button onClick={() => navigate('/exam-analyzer')} className="inline-flex shrink-0 items-center justify-center gap-2 bg-primary-solid hover:bg-primary-solid-hover">
+                <Icon name={ICONS.nav.exam} size={16} />
+                {t('studyPlanPage.hub.newPlan', 'Buat Rencana Baru')}
               </Button>
             </div>
 
-            <p className="text-xs text-text-muted">{t('studyPlanPage.empty.hint')}</p>
-          </motion.div>
+            {plansLoading ? (
+              <div className="flex items-center justify-center rounded-2xl border border-border bg-surface-2 py-20">
+                <Icon name={ICONS.status.loading} size={28} className="animate-spin text-primary" />
+              </div>
+            ) : studyPlans.length > 0 ? (
+              <>
+                <div className="grid gap-4 md:grid-cols-2">
+                  {studyPlans.map((p) => {
+                    const next = (p.study_plan_items || []).find((i) => !i.completed);
+                    return (
+                      <PlanCard
+                        key={p.id}
+                        plan={p}
+                        t={t}
+                        onOpen={() => navigate(`/study-plan?session_id=${p.id}${next ? `&highlight=item-${next.id}` : ''}`)}
+                      />
+                    );
+                  })}
+                </div>
+
+                <div className="rounded-2xl border border-border bg-surface-2 p-5">
+                  <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-text-secondary">
+                    {t('studyPlanPage.hub.howTo', 'Cara pakai')}
+                  </p>
+                  <ol className="grid gap-3 text-sm text-text-secondary sm:grid-cols-3">
+                    {[1, 2, 3].map((n) => (
+                      <li key={n} className="flex items-start gap-2.5">
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-2xs font-bold text-primary-light">{n}</span>
+                        <span>{t(`studyPlanPage.empty.step${n}`)}</span>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              </>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+                className="flex flex-col items-center gap-6 rounded-lg border border-border bg-surface-2 p-8 text-center md:p-10"
+              >
+                <div className="flex h-20 w-20 items-center justify-center rounded-xl border border-primary/20 bg-primary/10 text-primary-light">
+                  <Icon name={ICONS.learning.calendarCheck} size={36} />
+                </div>
+
+                <div className="space-y-2">
+                  <h2 className="text-xl font-bold tracking-tight text-text md:text-2xl">{t('studyPlanPage.empty.title')}</h2>
+                  <p className="mx-auto max-w-md text-15 leading-relaxed text-text-secondary">{t('studyPlanPage.empty.desc')}</p>
+                </div>
+
+                <ol className="w-full max-w-[420px] divide-y divide-border rounded-xl border border-border bg-wash px-2 text-left">
+                  {[1, 2, 3].map((n) => (
+                    <li key={n} className="flex items-center gap-4 px-2 py-3.5">
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-primary/20 bg-primary/10 text-sm font-bold text-primary-light">{n}</span>
+                      <span className="text-sm text-text-secondary">{t(`studyPlanPage.empty.step${n}`)}</span>
+                    </li>
+                  ))}
+                </ol>
+
+                <div className="flex w-full flex-col gap-3 pt-2 sm:flex-row sm:justify-center">
+                  <Button
+                    onClick={() => navigate('/exam-analyzer')}
+                    size="lg"
+                    className="inline-flex min-w-[200px] flex-1 items-center justify-center gap-2 bg-primary-solid hover:bg-primary-solid-hover sm:flex-initial"
+                  >
+                    <Icon name={ICONS.nav.exam} size={18} />
+                    {t('studyPlanPage.empty.ctaPrimary', 'Kerjakan Ujian Simulasi')}
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="lg"
+                    onClick={() => navigate('/materi')}
+                    className="inline-flex min-w-[160px] flex-1 items-center justify-center gap-1.5 border-border bg-subtle hover:border-primary/30 hover:bg-subtle sm:flex-initial"
+                  >
+                    <Icon name={ICONS.files.document} size={16} className="text-text-secondary" />
+                    {t('studyPlanPage.empty.ctaSecondary', 'Lihat Materi')}
+                  </Button>
+                </div>
+
+                <p className="text-xs text-text-muted">{t('studyPlanPage.empty.hint')}</p>
+              </motion.div>
+            )}
+          </div>
         </motion.div>
       </AnimatePresence>
     );
@@ -227,6 +374,23 @@ export default function StudyPlanPage() {
     navigate(`/chat?tutor=1&subject=${encodeURIComponent(subjectName)}&topic=${encodeURIComponent(item.topic)}`);
   };
 
+  const handleStartDateChange = async (value) => {
+    const previous = startDate;
+    setStartDate(value);
+    setDateSaving(true);
+    try {
+      await sessionsAPI.updatePlanStartDate(sessionId, value || null);
+      queryClient.invalidateQueries(['session-detail', sessionId]);
+      queryClient.invalidateQueries(['study-plans']);
+      toast.success(t('studyPlanPage.dateSaved', 'Tanggal mulai tersimpan.'));
+    } catch (err) {
+      setStartDate(previous);
+      toast.error(extractErrorMessage(err) || t('studyPlanPage.dateSaveFailed', 'Gagal menyimpan tanggal mulai.'));
+    } finally {
+      setDateSaving(false);
+    }
+  };
+
   const handlePracticeClose = () => { setPracticeState(null); clear(); };
   const handlePracticeSubmitted = () => {
     setPracticeState(null); clear();
@@ -242,6 +406,9 @@ export default function StudyPlanPage() {
         <div className="flex items-center gap-3 flex-wrap">
           <Button onClick={() => navigate('/exam-analyzer')} className="px-3 py-2 rounded-xl text-sm" variant="ghost">
             <Icon name={ICONS.actions.back} size={16} /> {t('common.back')}
+          </Button>
+          <Button onClick={() => navigate('/study-plan')} className="px-3 py-2 rounded-xl text-sm" variant="secondary">
+            <Icon name={ICONS.editor.listChecks} size={15} /> {t('studyPlanPage.hub.allPlans', 'Semua Rencana')}
           </Button>
           <div className="flex-1 min-w-[200px]">
             <h1 className="text-2xl font-bold text-text flex items-center gap-2">
@@ -293,6 +460,24 @@ export default function StudyPlanPage() {
               transition={{ duration: 0.6 }}
               className={`h-full rounded-full ${progress >= 100 ? 'bg-success' : 'bg-primary'}`}
             />
+          </div>
+          <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border pt-3">
+            <Icon name={ICONS.learning.calendar} size={14} className="shrink-0 text-text-muted" />
+            <label htmlFor="plan-start-date" className="text-xs font-medium text-text-secondary">
+              {t('studyPlanPage.hub.startDateLabel', 'Tanggal mulai')}
+            </label>
+            <input
+              id="plan-start-date"
+              type="date"
+              value={startDate}
+              disabled={dateSaving}
+              onChange={(e) => handleStartDateChange(e.target.value)}
+              className="input-base w-auto py-1.5 text-xs"
+            />
+            {dateSaving && <Icon name={ICONS.status.loading} size={13} className="animate-spin text-primary" />}
+            <span className="text-3xs text-text-muted">
+              {t('studyPlanPage.hub.startDateHint', 'Geser tanggal untuk mengatur ulang jadwal. Progresmu tetap aman.')}
+            </span>
           </div>
           {(plan.priority_actions || []).length > 0 && (
             <div className="mt-4 pt-4 border-t border-border space-y-1.5">

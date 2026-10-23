@@ -438,22 +438,30 @@ def generate_study_plan(
     else:
         msg = f"Nilai kamu {score}. Jangan menyerah! Mulai dari topik yang paling dasar dulu."
 
+    def topic_name(item) -> str:
+        if isinstance(item, dict):
+            return str(item.get("topic") or "Topik")
+        return str(item or "Topik")
+
     # ── Priority actions ─────────────────────────────────────────────────────
     priority_actions = []
     for wt in weak_topics[:3]:
         priority_actions.append(
-            f"Review topik '{wt['topic']}' (akurasi {wt.get('accuracy', '?')}% — prioritas {wt.get('priority', 'Menengah')})"
+            f"Review topik '{topic_name(wt)}' (akurasi {wt.get('accuracy', '?') if isinstance(wt, dict) else '?'}% — prioritas {wt.get('priority', 'Menengah') if isinstance(wt, dict) else 'Menengah'})"
         )
     if score < 60:
         priority_actions.append("Baca ulang seluruh materi sebelum latihan soal.")
     if strong_topics:
         priority_actions.append(
-            f"Topik '{strong_topics[0]['topic']}' sudah dikuasai — fokus ke topik lemah."
+            f"Topik '{topic_name(strong_topics[0])}' sudah dikuasai — fokus ke topik lemah."
         )
 
     # ── Build day slots (cap = 6; slot 7 reserved for Simulasi Penuh) ────────
     # Sort weak_topics worst-first (lowest accuracy first); default accuracy=0 if missing
-    sorted_weak = sorted(weak_topics, key=lambda t: t.get("accuracy", 0))
+    sorted_weak = sorted(
+        [w for w in weak_topics if isinstance(w, dict) or isinstance(w, str)],
+        key=lambda t: t.get("accuracy", 0) if isinstance(t, dict) else 0,
+    )
 
     day_slots: List[dict] = []
 
@@ -461,14 +469,14 @@ def generate_study_plan(
     for wt in sorted_weak:
         if len(day_slots) >= 6:
             break
-        acc = wt.get("accuracy", 0)  # default to 0 (URGENT) if missing
+        acc = wt.get("accuracy", 0) if isinstance(wt, dict) else 0
         days, dur, atype = _classify_tier(acc)
 
         if days == 0:
             # LOW tier → skip entirely
             continue
 
-        topic = wt.get("topic", "Topik")
+        topic = topic_name(wt)
 
         for day_in_topic in range(days):
             if len(day_slots) >= 6:
@@ -484,17 +492,86 @@ def generate_study_plan(
             })
             day_counter += 1
 
-    # ── Fill remaining slots (up to 6) with Review Umum ──────────────────────
-    while len(day_slots) < 6:
-        day_slots.append({
+    # ── Fill remaining slots (up to 6) ───────────────────────────────────────
+    # Jangan isi semua slot dengan "Review Umum" yang identik. Prioritaskan
+    # penguatan topik kuat, lalu latihan campuran, baru review umum.
+    used_topics = {s["topic"] for s in day_slots}
+    fill_slots = []
+    for st in strong_topics[:2]:
+        name = topic_name(st)
+        if name not in used_topics:
+            used_topics.add(name)
+            fill_slots.append({
+                "topic": name,
+                "activity": f"Pertahankan penguasaan {name} — review cepat dan kerjakan beberapa soal penguatan",
+                "type": "review",
+                "duration_minutes": 30,
+                "resources": _get_resources(db, subject_id, name, subject_name),
+            })
+    candidates = [
+        {
+            "topic": "Latihan Campuran",
+            "activity": "Kerjakan latihan soal campuran dari beberapa topik — fokus pada variasi tipe soal",
+            "type": "practice",
+            "duration_minutes": 45,
+        },
+        {
             "topic": "Review Umum",
             "activity": "Review umum seluruh materi — perkuat pemahaman topik yang sudah dipelajari",
             "type": "review",
-            "duration_minutes": 60,
-            "time_slot": TIME_SLOTS[day_counter % len(TIME_SLOTS)],
-            "resources": "",
+            "duration_minutes": 45,
+        },
+        {
+            "topic": "Ringkasan Konsep",
+            "activity": "Buat ringkasan atau peta konsep — hubungkan topik yang saling berkaitan",
+            "type": "review",
+            "duration_minutes": 30,
+        },
+        {
+            "topic": "Latihan Soal Cepat",
+            "activity": "Kerjakan soal singkat dengan waktu terbatas — latih kecepatan dan ketepatan",
+            "type": "practice",
+            "duration_minutes": 30,
+        },
+        {
+            "topic": "Refleksi & Evaluasi",
+            "activity": "Tinjau kembali soal yang salah — catat pola kesalahan dan rencana perbaikan",
+            "type": "review",
+            "duration_minutes": 25,
+        },
+        {
+            "topic": "Persiapan Simulasi",
+            "activity": "Cek kesiapan sebelum simulasi penuh — baca catatan penting dan atur waktu belajar",
+            "type": "review",
+            "duration_minutes": 20,
+        },
+    ]
+    fill_slots.extend(
+        {
+            **candidate,
+            "resources": _get_resources(
+                db, subject_id, candidate["topic"], subject_name
+            ),
+        }
+        for candidate in candidates
+        if candidate["topic"] not in used_topics
+    )
+    if not fill_slots:
+        fill_slots.append({
+            "topic": "Review Umum",
+            "activity": "Review seluruh materi dan catatan penting sebelum simulasi",
+            "type": "review",
+            "duration_minutes": 30,
+            "resources": _get_resources(db, subject_id, "Review Umum", subject_name),
         })
+
+    fill_index = 0
+    while len(day_slots) < 6:
+        slot = dict(fill_slots[fill_index % len(fill_slots)])
+        slot["time_slot"] = TIME_SLOTS[day_counter % len(TIME_SLOTS)]
+        day_slots.append(slot)
         day_counter += 1
+        fill_index += 1
 
     # ── Always append Simulasi Penuh as 7th item ─────────────────────────────
     # Item ke-7 = sesi ujian simulasi yang dijadwalkan; resources-nya daftar
