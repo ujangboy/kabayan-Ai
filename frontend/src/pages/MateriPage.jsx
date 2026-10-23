@@ -234,7 +234,7 @@ export default function MateriPage() {
 
         {/* File manager grid */}
         {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
             {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
               <Skeleton key={i} className="h-28 w-full" />
             ))}
@@ -257,7 +257,7 @@ export default function MateriPage() {
                     {t('materi.activeSection', { count: activeMats.length })}
                   </h2>
                 </div>
-                <motion.div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <motion.div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
                   <AnimatePresence mode="popLayout">
                     {activeMats.map((m, idx) => (
                       <MaterialFileCard
@@ -286,7 +286,7 @@ export default function MateriPage() {
                     {t('materi.inactiveSection', { count: inactiveMats.length })}
                   </h2>
                 </div>
-                <motion.div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <motion.div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
                   <AnimatePresence mode="popLayout">
                     {inactiveMats.map((m, idx) => (
                       <MaterialFileCard

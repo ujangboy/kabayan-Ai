@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ICONS } from '@/lib/icons';
 import { Icon , Button} from '@/components/ui';
@@ -8,7 +8,7 @@ import { examAPI } from '@/services/api';
 import { cn } from '@/utils';
 import { springWave } from '@/lib/motion';
 import MathMarkdown from '@/components/MathMarkdown';
-import { Chip } from './shared';
+import { Chip, getQuestionTypeLabel, getBloomLabel, getDifficultyLabel } from './shared';
 
 export default function QuizView({ sessionData, clockStart, onDone }) {
   const { t } = useTranslation();
@@ -30,14 +30,11 @@ export default function QuizView({ sessionData, clockStart, onDone }) {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError]     = useState('');
-
-  // Timer
-  useEffect(() => {
-    if (timeLeft === null || paused) return;
-    if (timeLeft <= 0) { handleSubmit(); return; }
-    const timer = setTimeout(() => setTimeLeft(p => p - 1), 1000);
-    return () => clearTimeout(timer);
-  }, [timeLeft, paused]);
+  // Ref (bukan state) karena effect timer dan klik manual bisa memanggil
+  // submit pada tick yang sama. React StrictMode juga menjalankan effect
+  // dua kali saat mount; tanpa lock, sesi bisa ter-submit berulang dan
+  // memicu 422 saat jawaban masih kosong.
+  const submitLock = useRef(false);
 
   const formatTime = (s) => {
     if (s === null) return '∞';
@@ -48,9 +45,15 @@ export default function QuizView({ sessionData, clockStart, onDone }) {
   const q = questions[idx];
   const progress = Math.round(((idx + 1) / totalQ) * 100);
 
+  const typeLabel = getQuestionTypeLabel(t, q?.type);
+  const bloomLabel = getBloomLabel(t, q?.bloom_level);
+  const difficultyLabel = getDifficultyLabel(t, q?.difficulty);
+
   const selectAnswer = (val) => setAnswers(p => ({ ...p, [String(q.id)]: val }));
 
   const handleSubmit = async () => {
+    if (submitLock.current) return;
+    submitLock.current = true;
     setError(''); setIsSubmitting(true);
     try {
       const r = await examAPI.submit(sessionData.session_id, answers);
@@ -59,10 +62,22 @@ export default function QuizView({ sessionData, clockStart, onDone }) {
 
       onDone(evalResult, answers);
     } catch (e) {
+      submitLock.current = false;
       setError(e.response?.data?.detail || e.message || t('exam.quiz.submitFailed'));
       setIsSubmitting(false);
     }
   };
+
+  // Timer. Dependensi sengaja dibatasi ke waktu/pause agar timer tidak
+  // di-reset setiap kali jawaban berubah; render tick terakhir tetap memakai
+  // closure answers terbaru saat auto-submit.
+  useEffect(() => {
+    if (timeLeft === null || paused) return;
+    if (timeLeft <= 0) { handleSubmit(); return; }
+    const timer = setTimeout(() => setTimeLeft(p => p - 1), 1000);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timeLeft, paused]);
 
   if (!q) return null;
 
@@ -129,10 +144,10 @@ export default function QuizView({ sessionData, clockStart, onDone }) {
               </span>
               <div className="flex-1">
                 <div className="flex gap-2 flex-wrap mb-3">
-                  <Chip label={q.type}        size="xs" color="blue" />
-                  <Chip label={q.bloom_level} size="xs" color="teal" />
-                  <Chip label={q.difficulty}  size="xs"
-                    color={q.difficulty === 'sulit' ? 'danger' : q.difficulty === 'menengah' ? 'warning' : 'success'} />
+                  <Chip label={typeLabel} size="xs" color="blue" />
+                  <Chip label={bloomLabel} size="xs" color="teal" />
+                  <Chip label={difficultyLabel} size="xs"
+                    color={['sulit', 'hard'].includes(q.difficulty) ? 'danger' : ['menengah', 'medium'].includes(q.difficulty) ? 'warning' : 'success'} />
                 </div>
                 <MathMarkdown className="font-medium">{q.question}</MathMarkdown>
               </div>

@@ -10,7 +10,7 @@ import { cn } from '@/utils';
 import { springWave } from '@/lib/motion';
 import MathMarkdown from '@/components/MathMarkdown';
 import { formatItemDate } from '@/components/studyplan/shared';
-import { Chip, ProgressBar, STATUS_META, getBadge, getGradeColor, getExamTypeLabel } from './shared';
+import { Chip, ProgressBar, STATUS_META, getBadge, getGradeColor, getExamTypeLabel, getQuestionTypeLabel, getBloomLabel, getDifficultyLabel } from './shared';
 import { Tooltip, Modal , Icon , Button} from '@/components/ui';
 
 // ─── Detail Modal ─────────────────────────────────────────────────────────────
@@ -76,7 +76,7 @@ export default function DetailModal({ open = false, historySessionId, onClose, o
           </div>
           <div className="text-right shrink-0">
             <p className={cn('text-4xl font-black', getGradeColor(data.grade))}>{data.best_score ?? '--'}</p>
-            <p className={cn('text-sm font-bold', getGradeColor(data.grade))}>Grade {data.grade || '?'}</p>
+            <p className={cn('text-sm font-bold', getGradeColor(data.grade))}>{t('exam.result.gradeLabel')} {data.grade || '?'}</p>
           </div>
         </div>
 
@@ -281,7 +281,7 @@ function ReviewTab({ attempt }) {
                 {r.is_correct ? <Icon name={ICONS.status.success} size={13} className="text-white" /> : <Icon name={ICONS.status.error} size={13} className="text-white" />}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-3xs text-text-muted mb-0.5">{r.topic} · {r.question_type} · {r.difficulty}</p>
+                <p className="text-3xs text-text-muted mb-0.5">{r.topic} · {getQuestionTypeLabel(t, r.question_type)} · {getDifficultyLabel(t, r.difficulty)}</p>
                 <div className="text-base text-text line-clamp-2">
                   <MathMarkdown>{r.question_text}</MathMarkdown>
                 </div>
@@ -539,9 +539,9 @@ function InlinePractice({ questions, topic, onComplete, onClose, onRetryTopic })
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="text-xs font-semibold text-text">{t('exam.detail.questionProgress', { current: idx + 1, total })}</span>
-          <Chip label={q.type} size="xs" color="blue" />
-          {q.bloom_level && <Chip label={q.bloom_level.toLowerCase()} size="xs" color="purple" />}
-          {q.difficulty && <Chip label={q.difficulty} size="xs" color={q.difficulty === 'sulit' ? 'danger' : q.difficulty === 'menengah' ? 'warning' : 'success'} />}
+          <Chip label={getQuestionTypeLabel(t, q.type)} size="xs" color="blue" />
+          {q.bloom_level && <Chip label={getBloomLabel(t, q.bloom_level)} size="xs" color="purple" />}
+          {q.difficulty && <Chip label={getDifficultyLabel(t, q.difficulty)} size="xs" color={['sulit', 'hard'].includes(String(q.difficulty).toLowerCase()) ? 'danger' : ['menengah', 'medium'].includes(String(q.difficulty).toLowerCase()) ? 'warning' : 'success'} />}
         </div>
         <div className="flex items-center gap-2">
           <span className="text-3xs text-success flex items-center gap-0.5"><Icon name={ICONS.status.success} size={10} />{correctCount}</span>
@@ -914,7 +914,7 @@ function AttemptsTab({ attempts }) {
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1">
                 <span className={cn('text-2xl font-black', gradeC)}>{a.score ?? '--'}</span>
-                <span className={cn('text-sm font-bold', gradeC)}>Grade {a.grade || '?'}</span>
+                <span className={cn('text-sm font-bold', gradeC)}>{t('exam.result.gradeLabel')} {a.grade || '?'}</span>
                 {isLatest && <Chip label={t('exam.detail.latest')} size="xs" color="primary" />}
                 {delta !== null && (
                   <span className={cn('text-xs font-semibold flex items-center gap-0.5',

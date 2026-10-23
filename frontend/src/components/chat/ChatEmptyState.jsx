@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { cn } from '@/utils';
 import { ICONS } from '@/lib/icons';
 import { Icon } from '@/components/ui';
+import { KabayanMark } from '@/components/brand/KabayanLogo';
 
 const PROMPT_CARDS = [
   {
@@ -16,7 +17,7 @@ const PROMPT_CARDS = [
     promptKey: 'chat.promptQuizPrompt',
   },
   {
-    icon: ICONS.learning.network,
+    icon: ICONS.learning.lightbulb,
     titleKey: 'chat.promptGraphTitle',
     promptKey: 'chat.promptGraphPrompt',
   },
@@ -40,14 +41,8 @@ export default function ChatEmptyState({ onPromptSelect }) {
           transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
           className="relative mb-5"
         >
-          {/* Glow ring */}
-          <div className="absolute inset-0 rounded-lg bg-primary opacity-20 blur-xl scale-110" />
-          <div className={cn(
-            'relative w-14 h-14 rounded-lg flex items-center justify-center text-white',
-            'bg-primary '
-          )}>
-            <Icon name={ICONS.communication.bot} size={26} className="relative" />
-          </div>
+          <div className="absolute inset-0 scale-110 rounded-2xl bg-primary/25 blur-2xl" />
+          <KabayanMark size={56} className="relative" />
         </motion.div>
 
         {/* Heading */}

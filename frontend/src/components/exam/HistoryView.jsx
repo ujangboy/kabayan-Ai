@@ -474,7 +474,7 @@ function HistoryCard({ session: s, onDetail, onDelete, onRetry, t }) {
         </div>
         <div className="text-right shrink-0 ml-3">
           <p className={cn('text-3xl font-black', gradeC)}>{s.best_score ?? '--'}</p>
-          <p className={cn('text-sm font-bold', gradeC)}>Grade {s.grade || '?'}</p>
+          <p className={cn('text-sm font-bold', gradeC)}>{t('exam.result.gradeLabel')} {s.grade || '?'}</p>
         </div>
       </div>
 

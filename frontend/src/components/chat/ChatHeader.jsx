@@ -80,7 +80,7 @@ export default function ChatHeader({ chat, isCurrentChatStreaming, onToggleHisto
               className="px-2.5 py-1.5 rounded-full bg-success/10 border border-success/20 text-success text-xs font-medium hover:bg-success/20 transition-colors"
             >
               <Icon name={ICONS.learning.bookOpen} size={11} className="inline mr-1" />
-              RAG · {selectedDocs.length} dokumen
+              {t('chat.documentsActive', { count: selectedDocs.length })}
             </button>
           </Tooltip>
         )}

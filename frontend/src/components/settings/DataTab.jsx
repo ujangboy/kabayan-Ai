@@ -7,6 +7,7 @@ import { Icon , Button} from '@/components/ui';
 import { dataAPI, materiAPI, trashAPI, subjectAPI } from '@/services/api';
 import { useToast } from '@/components/Toast';
 import { formatDate, formatBytes } from '@/utils';
+import { getMaterialStatusLabel } from '@/utils/status';
 import { cn } from '@/utils';
 import { Tooltip } from '@/components/ui/Tooltip';
 
@@ -278,7 +279,7 @@ export default function DataTab() {
                     <td className="py-2 pr-3">
                       <span className={cn('px-1.5 py-0.5 rounded border text-3xs font-medium',
                         STATUS_BADGE[m.status] || 'bg-card border-border text-text-secondary')}>
-                        {m.status}
+                        {getMaterialStatusLabel(t, m.status)}
                       </span>
                     </td>
                     <td className="py-2 pr-3 text-text-secondary">{formatBytes(m.size_bytes)}</td>

@@ -51,6 +51,16 @@ export const staggerItem = {
   exit: { opacity: 0, y: -8, transition: { duration: 0.2, ease: EASE } },
 };
 
+// Ikuti bahasa aktif agar format tanggal konsisten dengan UI (id/en/su).
+function activeLocale() {
+  if (typeof document !== 'undefined') {
+    const lang = document.documentElement.lang;
+    if (lang === 'en') return 'en-US';
+    if (lang === 'su') return 'su-ID';
+  }
+  return 'id-ID';
+}
+
 // Pastikan string UTC ditambah 'Z' agar browser konversi ke local time dengan benar
 function toLocalDate(dateStr) {
   if (!dateStr) return null;
@@ -62,7 +72,7 @@ function toLocalDate(dateStr) {
 
 export function formatDate(dateStr) {
   if (!dateStr) return '-';
-  return toLocalDate(dateStr).toLocaleDateString('id-ID', {
+  return toLocalDate(dateStr).toLocaleDateString(activeLocale(), {
     year: 'numeric', month: 'short', day: 'numeric',
   });
 }
@@ -71,15 +81,15 @@ export function formatDate(dateStr) {
 export function formatDateTime(dateStr) {
   if (!dateStr) return '-';
   const d = toLocalDate(dateStr);
-  const date = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
-  const time = d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+  const date = d.toLocaleDateString(activeLocale(), { day: 'numeric', month: 'short', year: 'numeric' });
+  const time = d.toLocaleTimeString(activeLocale(), { hour: '2-digit', minute: '2-digit' });
   return `${date}, ${time}`;
 }
 
 // "16:48" saja
 export function formatTimeOnly(dateStr) {
   if (!dateStr) return '';
-  return toLocalDate(dateStr).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+  return toLocalDate(dateStr).toLocaleTimeString(activeLocale(), { hour: '2-digit', minute: '2-digit' });
 }
 
 // "1.5 MB" — satu sumber kebenaran untuk tampilan ukuran file/storage

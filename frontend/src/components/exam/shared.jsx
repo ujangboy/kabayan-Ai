@@ -54,6 +54,84 @@ export function getExamTypeLabel(t, type) {
   return key ? t(key) : raw.toUpperCase().replace(/_/g, ' ');
 }
 
+const QUESTION_TYPE_KEYS = {
+  mcq: 'typeMcq',
+  truefalse: 'typeTrueFalse',
+  short_answer: 'typeShortAnswer',
+  essay: 'typeEssay',
+  case_study: 'typeCaseStudy',
+  analysis: 'typeAnalysis',
+  calculation: 'typeCalculation',
+  mixed: 'typeMixed',
+  'pilihan ganda': 'typeMcq',
+  'benar / salah': 'typeTrueFalse',
+  'isian singkat': 'typeShortAnswer',
+  'studi kasus': 'typeCaseStudy',
+};
+
+const BLOOM_KEYS = {
+  remember: 'bloomRemember',
+  understand: 'bloomUnderstand',
+  apply: 'bloomApply',
+  analyze: 'bloomAnalyze',
+  evaluate: 'bloomEvaluate',
+  create: 'bloomCreate',
+  mixed: 'bloomMixed',
+  mengingat: 'bloomRemember',
+  memahami: 'bloomUnderstand',
+  menerapkan: 'bloomApply',
+  menganalisis: 'bloomAnalyze',
+  mengevaluasi: 'bloomEvaluate',
+  menciptakan: 'bloomCreate',
+  campuran: 'bloomMixed',
+};
+
+const DIFFICULTY_KEYS = {
+  mudah: 'difficultyBeginner',
+  easy: 'difficultyBeginner',
+  pemula: 'difficultyBeginner',
+  beginner: 'difficultyBeginner',
+  menengah: 'difficultyIntermediate',
+  medium: 'difficultyIntermediate',
+  intermediate: 'difficultyIntermediate',
+  sulit: 'difficultyHard',
+  hard: 'difficultyHard',
+  campuran: 'difficultyMixed',
+  mixed: 'difficultyMixed',
+};
+
+function localizedExamValue(t, value, keys, prefix = 'exam.config.') {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+  const key = keys[raw.toLowerCase()];
+  return key ? t(`${prefix}${key}`) : raw.replace(/_/g, ' ');
+}
+
+export const getQuestionTypeLabel = (t, type) =>
+  localizedExamValue(t, type, QUESTION_TYPE_KEYS);
+export const getBloomLabel = (t, level) =>
+  localizedExamValue(t, level, BLOOM_KEYS);
+export const getDifficultyLabel = (t, value) =>
+  localizedExamValue(t, value, DIFFICULTY_KEYS);
+
+const PERFORMANCE_KEYS = {
+  'sangat baik': 'performanceExcellent',
+  excellent: 'performanceExcellent',
+  baik: 'performanceGood',
+  good: 'performanceGood',
+  cukup: 'performanceFair',
+  fair: 'performanceFair',
+  kritis: 'performanceCritical',
+  critical: 'performanceCritical',
+};
+
+export function getPerformanceLabel(t, level) {
+  const raw = String(level || '').trim();
+  if (!raw) return '-';
+  const key = PERFORMANCE_KEYS[raw.toLowerCase()];
+  return key ? t(`exam.result.${key}`) : raw;
+}
+
 // Job background menyimpan hasil mentah dari axios (AxiosResponse), bukan
 // payload JSON-nya. Tanpa unwrap, modal blueprint menerima objek response
 // sehingga `blueprint_items` tidak ditemukan dan tabel tampil kosong.

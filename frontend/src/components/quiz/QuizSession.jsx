@@ -290,7 +290,7 @@ export function QuizSession({ quizId, onClose }) {
     <ViewShell view="question">
       <div className="flex-1 flex flex-col w-full p-6 md:p-10">
         <div className="flex items-center justify-between gap-4 mb-6">
-          <h2 className="text-lg font-semibold text-text truncate">{quizData.title || t('quiz.title')}</h2>
+          <h2 className="line-clamp-2 min-w-0 flex-1 text-base font-bold leading-snug text-text md:text-lg">{quizData.title || t('quiz.title')}</h2>
           <QuizTimer totalSeconds={timerSeconds} onTimeUp={handleTimeUp} isActive={!isFinished} />
         </div>
 

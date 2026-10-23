@@ -261,10 +261,10 @@ export default function NotebookPage() {
                   <path d="M9 3v18" />
                 </svg>
               </span>
-              {showList ? 'Sembunyikan Daftar' : 'Tampilkan Daftar'}
+              {showList ? t('notebook.hideList') : t('notebook.showList')}
             </button>
           </Tooltip>
-          <span className="text-xs text-text-secondary hidden lg:inline">Notebook — Editor & Previewer</span>
+          <span className="text-xs text-text-secondary hidden lg:inline">{t('notebook.workspaceLabel')}</span>
         </div>
         <AnimatePresence mode="wait" initial={false}>
           {selectedNote ? (

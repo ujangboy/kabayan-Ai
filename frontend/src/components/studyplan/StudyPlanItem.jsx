@@ -6,6 +6,7 @@ import { ICONS } from '@/lib/icons';
 import { sessionsAPI } from '@/services/api';
 import MathMarkdown from '@/components/MathMarkdown';
 import { extractErrorMessage } from '@/utils/errors';
+import { formatDate } from '@/utils';
 import { useToast } from '@/components/Toast';
 import { usePageState } from '@/hooks/usePageState';
 import { springWave } from '@/lib/motion';
@@ -275,13 +276,13 @@ export function StudyPlanItem({
                 <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-warning/10 border border-warning/20">
                   <Icon name={ICONS.learning.trophy} size={11} className="text-warning" />
                   <span className="font-bold text-warning">{latestResult.score}</span>
-                  <span className="text-text-muted">{t('studyPlanPage.lastQuizPractice', { date: latestResult.created_at ? new Date(latestResult.created_at).toLocaleDateString() : '' })}</span>
+                  <span className="text-text-muted">{t('studyPlanPage.lastQuizPractice', { date: latestResult.created_at ? formatDate(latestResult.created_at) : '' })}</span>
                 </span>
               ) : (
                 <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-accent-purple/10 border border-accent-purple/20">
                   <Icon name={ICONS.learning.brain} size={11} className="text-accent-purple" />
                   <span className="text-accent-purple font-semibold">{t('studyPlanPage.cardsReviewed', { count: latestResult.flashcard_reviewed })}</span>
-                  <span className="text-text-muted">{t('studyPlanPage.flashcardReviewed', { date: latestResult.created_at ? new Date(latestResult.created_at).toLocaleDateString() : '' })}</span>
+                  <span className="text-text-muted">{t('studyPlanPage.flashcardReviewed', { date: latestResult.created_at ? formatDate(latestResult.created_at) : '' })}</span>
                 </span>
               )}
             </div>

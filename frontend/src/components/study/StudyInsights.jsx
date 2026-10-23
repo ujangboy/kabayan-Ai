@@ -7,10 +7,10 @@ import { ICONS } from '@/lib/icons';
 
 function Tile({ icon, label, value, sub, tone }) {
   const tones = {
-    blue: 'bg-accent-blue/10 text-accent-blue border-accent-blue/20',
+    blue: 'bg-info/10 text-info border-info/20',
     green: 'bg-success/10 text-success border-success/20',
-    purple: 'bg-accent-purple/10 text-accent-purple border-accent-purple/20',
-    teal: 'bg-accent-teal/10 text-accent-teal border-accent-teal/20',
+    purple: 'bg-primary/10 text-primary-light border-primary/20',
+    teal: 'bg-sun/10 text-warning border-sun/25',
   };
   return (
     <Card className="p-card">
@@ -72,12 +72,12 @@ export default function StudyInsights() {
       transition={{ duration: 0.4, ease: [0.32, 0.72, 0, 1] }}
       className="space-y-4"
     >
-      <div className="flex items-center gap-2">
-        <Icon name={ICONS.learning.lightbulb} size={16} className="text-accent-purple" />
-        <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">
+      <div className="flex flex-wrap items-center gap-2">
+        <Icon name={ICONS.learning.lightbulb} size={15} className="text-primary-light" />
+        <h2 className="font-display text-[11px] font-bold uppercase tracking-[0.14em] text-text-muted">
           {t('studyInsights.title')}
         </h2>
-        <span className="text-3xs text-text-muted">{t('studyInsights.subtitle')}</span>
+        <span className="text-[10px] text-text-muted/80">{t('studyInsights.subtitle')}</span>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

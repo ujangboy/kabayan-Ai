@@ -69,6 +69,7 @@ export default {
           teal: "#2dd4bf",
           pink: "#f472b6",
         },
+        sun: "rgb(var(--sun) / <alpha-value>)",
         // Alias legacy → diarahkan ke token semantik (sweep bertahap)
         violet: "rgb(var(--accent) / <alpha-value>)",
         teal: "#14b8a6",
@@ -76,7 +77,8 @@ export default {
         amber: "#f59e0b",
       },
       fontFamily: {
-        sans: ["Monaspace Neon", "ui-monospace", "monospace"],
+        display: ["Plus Jakarta Sans Variable", "Plus Jakarta Sans", "Inter Variable", "sans-serif"],
+        sans: ["Inter Variable", "Inter", "ui-sans-serif", "system-ui", "sans-serif"],
         mono: ["Monaspace Neon", "ui-monospace", "monospace"],
       },
        fontSize: {
@@ -98,10 +100,10 @@ export default {
         subhead: "-0.015em",
       },
       borderRadius: {
-        card: "8px",
-        btn: "8px",
-        input: "6px",
-        dialog: "12px",
+        card: "16px",
+        btn: "10px",
+        input: "10px",
+        dialog: "20px",
         pill: "999px",
       },
       boxShadow: {

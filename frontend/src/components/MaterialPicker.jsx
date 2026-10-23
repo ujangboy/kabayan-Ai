@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { materiAPI } from '@/services/api';
 import { Tooltip } from '@/components/ui';
+import { getMaterialStatusLabel } from '@/utils/status';
 
 export default function MaterialPicker({ subjectId, selectedMaterialIds, onSelectionChange }) {
   const { t } = useTranslation();
@@ -84,7 +85,7 @@ export default function MaterialPicker({ subjectId, selectedMaterialIds, onSelec
           const isReady = m.status === 'Ready';
           const checked = selectedMaterialIds.includes(String(m.id));
           return (
-            <Tooltip key={m.id} label={!isReady ? t('materialPicker.notReadyTitle', { status: m.status }) : ''}>
+            <Tooltip key={m.id} label={!isReady ? t('materialPicker.notReadyTitle', { status: getMaterialStatusLabel(t, m.status) }) : ''}>
               <label
                 className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg transition-colors ${
                   !isReady ? 'opacity-60 cursor-not-allowed bg-card/50' : 
@@ -116,7 +117,7 @@ export default function MaterialPicker({ subjectId, selectedMaterialIds, onSelec
               <div className="flex flex-col overflow-hidden">
                 <span className="text-xs text-text truncate">{m.filename}</span>
                 {!isReady && (
-                  <span className="text-2xs text-warning mt-0.5">{m.status}</span>
+                  <span className="text-2xs text-warning mt-0.5">{getMaterialStatusLabel(t, m.status)}</span>
                 )}
               </div>
             </label>

@@ -4,6 +4,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import App from './App.jsx';
 import ErrorBoundary from './components/ErrorBoundary';
 import { TooltipProvider } from './components/ui/Tooltip';
+import '@fontsource-variable/inter';
+import '@fontsource-variable/plus-jakarta-sans';
 import './i18n';
 import './index.css';
 

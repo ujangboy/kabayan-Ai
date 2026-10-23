@@ -4,24 +4,26 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useChatStore } from '@/store';
 import { formatDate, formatBytes } from '@/utils';
+import { getMaterialStatusLabel } from '@/utils/status';
 import { EmptyState, Skeleton, HelpTip, Icon , Button} from '@/components/ui';
 import { ICONS } from '@/lib/icons';
 import FileTypeIcon from '@/components/FileTypeIcon';
 import StudyInsights from '@/components/study/StudyInsights';
+import { KabayanMark } from '@/components/brand/KabayanLogo';
 import api from '@/services/api';
 
 const QUICK_ACTIONS = (t) => [
-  { icon: ICONS.communication.chat, label: t('dashboard.quickChat'),       desc: t('dashboard.quickChatDesc'),     to: '/chat',      color: 'bg-primary text-white',       shadow: 'shadow-card' },
-  { icon: ICONS.files.document,      label: t('dashboard.quickUpload'),     desc: t('dashboard.quickUploadDesc'),    to: '/materi',    color: 'bg-accent-blue/15 text-accent-blue',   shadow: '' },
-  { icon: ICONS.nav.flashcard,    label: t('dashboard.quickFlashcard'),  desc: t('dashboard.quickFlashcardDesc'),  to: '/flashcard', color: 'bg-accent-purple/15 text-accent-purple', shadow: '' },
-  { icon: ICONS.ui.help,    label: t('dashboard.quickQuiz'),       desc: t('dashboard.quickQuizDesc'),        to: '/quiz',      color: 'bg-accent-teal/15 text-accent-teal',   shadow: '' },
+  { icon: ICONS.communication.chat, label: t('dashboard.quickChat'),       desc: t('dashboard.quickChatDesc'),     to: '/chat',             color: 'bg-primary text-white',              shadow: 'shadow-card' },
+  { icon: ICONS.files.document,      label: t('dashboard.quickUpload'),     desc: t('dashboard.quickUploadDesc'),    to: '/materi?upload=1', color: 'bg-sun/15 text-warning',             shadow: '' },
+  { icon: ICONS.nav.flashcard,       label: t('dashboard.quickFlashcard'),  desc: t('dashboard.quickFlashcardDesc'), to: '/flashcard',        color: 'bg-primary/10 text-primary-light',  shadow: '' },
+  { icon: ICONS.ui.help,             label: t('dashboard.quickQuiz'),       desc: t('dashboard.quickQuizDesc'),      to: '/quiz',             color: 'bg-info/10 text-info',              shadow: '' },
 ];
 
 const STAT_TONES = {
-  blue:   'bg-accent-blue/10 text-accent-blue border-accent-blue/20',
+  blue:   'bg-info/10 text-info border-info/20',
   green:  'bg-success/10 text-success border-success/20',
-  purple: 'bg-accent-purple/10 text-accent-purple border-accent-purple/20',
-  teal:   'bg-accent-teal/10 text-accent-teal border-accent-teal/20',
+  purple: 'bg-primary/10 text-primary-light border-primary/20',
+  teal:   'bg-sun/10 text-warning border-sun/25',
 };
 
 const container = {
@@ -36,17 +38,15 @@ const item = {
 
 function StatCard({ icon, label, value, tone, loading }) {
   return (
-    <motion.div variants={item} className="card-base card-hoverable relative overflow-hidden flex items-center gap-4 p-5">
-      {/* Colored top strip per tone */}
-      <div className={`absolute top-0 left-0 right-0 h-[2px] ${STAT_TONES[tone].split(' ')[0].replace('bg-', 'bg-').replace('/10', '/60')}`} />
-      <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 border ${STAT_TONES[tone]}`}>
-        <Icon name={icon} size={20} />
+    <motion.div variants={item} className="card-base card-hoverable relative flex items-center gap-3.5 overflow-hidden p-4">
+      <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border ${STAT_TONES[tone]}`}>
+        <Icon name={icon} size={18} />
       </div>
-      <div>
-        <div className="text-2xl font-bold text-text tracking-tight">
+      <div className="min-w-0">
+        <div className="font-display text-[22px] font-bold leading-tight tracking-[-0.035em] text-text">
           {loading ? <Skeleton className="inline-block h-7 w-10 rounded-lg" /> : (value ?? 0)}
         </div>
-        <p className="text-xs text-text-secondary mt-0.5">{label}</p>
+        <p className="mt-0.5 truncate text-[11.5px] text-text-secondary">{label}</p>
       </div>
     </motion.div>
   );
@@ -54,7 +54,7 @@ function StatCard({ icon, label, value, tone, loading }) {
 
 export default function DashboardPage() {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { createChat } = useChatStore();
 
   const { data, isLoading } = useQuery({
@@ -67,6 +67,8 @@ export default function DashboardPage() {
   const now = new Date();
   const hour = now.getHours();
   const greeting = hour < 12 ? t('dashboard.greetingMorning') : hour < 15 ? t('dashboard.greetingAfternoon') : hour < 18 ? t('dashboard.greetingEvening') : t('dashboard.greetingNight');
+  const locale = i18n.language === 'en' ? 'en-GB' : i18n.language === 'su' ? 'id-ID' : 'id-ID';
+  const todayLabel = new Intl.DateTimeFormat(locale, { weekday: 'long', day: 'numeric', month: 'long' }).format(now);
 
   const stats = {
     materials:  data?.materials  ?? null,
@@ -90,28 +92,32 @@ export default function DashboardPage() {
 
   return (
     <div className="flex-1 overflow-y-auto">
-      <div className="w-full p-6 md:p-10 space-y-6">
+      <div className="mx-auto w-full max-w-[1240px] space-y-8 p-5 md:p-8 lg:p-10">
 
-        {/* Greeting */}
+        {/* Greeting — ruang belajar, bukan dashboard metrik. */}
         <motion.div
-          initial={{ opacity: 0, y: 16 }}
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: [0.32, 0.72, 0, 1] }}
+          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+          className="relative overflow-hidden rounded-card border border-border bg-surface p-6 shadow-card md:p-8"
         >
-          <div className="flex items-center gap-3 mb-1.5">
-            <div className="w-12 h-12 rounded-lg bg-primary flex items-center justify-center shadow-card">
-              <Icon name={ICONS.learning.wavingHand} size={24} className="text-white" />
+          <div className="pointer-events-none absolute -right-16 -top-24 h-64 w-64 rounded-full bg-primary/[0.07] blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-24 right-24 h-48 w-48 rounded-full bg-sun/[0.08] blur-3xl" />
+          <div className="relative">
+            <div className="mb-3 flex flex-wrap items-center gap-2 text-[11px] font-bold uppercase tracking-[0.16em] text-primary-light">
+              <KabayanMark size={22} />
+              <span>{t('nav.groupToday')}</span>
+              <span className="text-text-muted/60">·</span>
+              <span className="font-medium normal-case tracking-normal text-text-muted">{todayLabel}</span>
             </div>
-            <div>
-              <h1 className="text-3xl font-bold text-text tracking-headline">
-                {greeting}!
-              </h1>
-              <p className="text-text-secondary text-sm">
-                {t('dashboard.tagline')}
-                {stats.subjects > 0 && ` ${t('dashboard.activeSubjects', { count: stats.subjects })}`}
-                <HelpTip label={t('help.dashboard')} className="ml-1.5 -mt-0.5 align-middle" />
-              </p>
-            </div>
+            <h1 className="font-display text-3xl font-extrabold tracking-[-0.04em] text-text md:text-4xl">
+              {greeting}!
+            </h1>
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-text-secondary">
+              {t('dashboard.tagline')}
+              {stats.subjects > 0 && ` ${t('dashboard.activeSubjects', { count: stats.subjects })}`}
+              <HelpTip label={t('help.dashboard')} className="ml-1.5 -mt-0.5 align-middle" />
+            </p>
           </div>
         </motion.div>
 
@@ -121,30 +127,34 @@ export default function DashboardPage() {
           initial="hidden"
           animate="show"
         >
-          <motion.div variants={item} className="flex items-center gap-2 mb-4">
-            <Icon name={ICONS.ui.bolt} size={16} className="text-warning" />
-            <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('dashboard.sectionQuickActions')}</h2>
+          <motion.div variants={item} className="mb-4 flex items-center gap-2">
+            <Icon name={ICONS.ui.bolt} size={15} className="text-warning" />
+            <h2 className="font-display text-[11px] font-bold uppercase tracking-[0.14em] text-text-muted">{t('dashboard.sectionQuickActions')}</h2>
           </motion.div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             {QUICK_ACTIONS(t).map(({ icon, label, desc, to, color, shadow }) => (
               <motion.button
                 key={to}
                 variants={item}
-                whileTap={{ scale: 0.97 }}
+                whileTap={{ scale: 0.985 }}
                 onClick={() => handleQuickAction(to)}
-                className="card-base card-hoverable flex flex-col items-start gap-3 p-4 text-left hover:border-primary/30 transition-all duration-300 cursor-pointer"
+                className="card-base card-hoverable flex cursor-pointer items-center gap-3.5 p-4 text-left hover:border-primary/25"
               >
-                <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${color} ${shadow}`}>
-                  <Icon name={icon} size={17} />
+                <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${color} ${shadow}`}>
+                  <Icon name={icon} size={18} />
                 </div>
-                <div>
-                  <p className="text-sm font-semibold text-text">{label}</p>
-                  <p className="text-xs text-text-muted mt-0.5">{desc}</p>
+                <div className="min-w-0">
+                  <p className="text-[12.5px] font-semibold leading-tight text-text sm:truncate sm:text-[13.5px]">{label}</p>
+                  <p className="mt-0.5 hidden truncate text-[11.5px] text-text-muted sm:block">{desc}</p>
                 </div>
               </motion.button>
             ))}
           </div>
         </motion.section>
+
+        {/* Daily insights tampil sebelum angka perpustakaan: yang dibutuhkan
+            saat membuka aplikasi adalah "apa yang harus dikerjakan hari ini". */}
+        <StudyInsights />
 
         {/* Stats */}
         <motion.section
@@ -152,9 +162,9 @@ export default function DashboardPage() {
           initial="hidden"
           animate="show"
         >
-          <motion.div variants={item} className="flex items-center gap-2 mb-4">
-            <Icon name={ICONS.learning.progress} size={16} className="text-success" />
-            <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('dashboard.sectionStats')}</h2>
+          <motion.div variants={item} className="mb-4 flex items-center gap-2">
+            <Icon name={ICONS.learning.progress} size={15} className="text-success" />
+            <h2 className="font-display text-[11px] font-bold uppercase tracking-[0.14em] text-text-muted">{t('dashboard.sectionStats')}</h2>
           </motion.div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <StatCard icon={ICONS.files.document}   label={t('dashboard.statMaterials')}    value={stats.materials}  tone="blue"   loading={isLoading} />
@@ -175,9 +185,6 @@ export default function DashboardPage() {
           )}
         </motion.section>
 
-        {/* Study Insights (R7: wire study cards) */}
-        <StudyInsights />
-
         {/* Recent Materials + Recent Quizzes side by side */}
         <motion.section
           variants={container}
@@ -190,7 +197,7 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <Icon name={ICONS.learning.clock} size={14} className="text-text-secondary" />
-                <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('dashboard.sectionRecentMaterials')}</h2>
+                <h2 className="font-display text-[11px] font-bold uppercase tracking-[0.14em] text-text-muted">{t('dashboard.sectionRecentMaterials')}</h2>
               </div>
               <button onClick={() => navigate('/materi')} className="text-xs text-primary-light hover:text-primary transition-colors">
                 {t('dashboard.viewAll')}
@@ -224,7 +231,7 @@ export default function DashboardPage() {
                         <td className="px-4 py-2.5 text-text-secondary text-xs">{m.subject?.name || '—'}</td>
                         <td className="px-4 py-2.5">
                           <span className={`badge text-xs ${m.status === 'Ready' ? 'badge-success' : m.status === 'Failed' ? 'badge-danger' : 'badge-warning'}`}>
-                            {m.status}
+                            {getMaterialStatusLabel(t, m.status)}
                           </span>
                         </td>
                       </tr>
@@ -240,7 +247,7 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <Icon name={ICONS.learning.trophy} size={14} className="text-text-secondary" />
-                <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('dashboard.sectionRecentQuizzes')}</h2>
+                <h2 className="font-display text-[11px] font-bold uppercase tracking-[0.14em] text-text-muted">{t('dashboard.sectionRecentQuizzes')}</h2>
               </div>
               <button onClick={() => navigate('/quiz')} className="text-xs text-primary-light hover:text-primary transition-colors">
                 {t('dashboard.viewAll')}
@@ -303,7 +310,7 @@ export default function DashboardPage() {
                 action={
                   <div className="flex gap-3 justify-center">
                     <Button onClick={() => navigate('/subjects')} className="" variant="primary">{t('dashboard.createSubject')}</Button>
-                    <Button onClick={() => navigate('/materi')} className="border border-border" variant="ghost">{t('dashboard.uploadMaterial')}</Button>
+                    <Button onClick={() => navigate('/materi?upload=1')} className="border border-border" variant="ghost">{t('dashboard.uploadMaterial')}</Button>
                   </div>
                 }
               />

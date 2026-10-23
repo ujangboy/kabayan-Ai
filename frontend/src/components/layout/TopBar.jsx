@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ICONS } from '@/lib/icons';
 import { Icon, Tooltip, ThemeToggle } from '@/components/ui';
@@ -12,6 +12,7 @@ import { useAppStore } from '@/store';
 import { setAppLanguage, STORAGE_KEY } from '@/i18n';
 import { cn } from '@/utils';
 import { springWave } from '@/lib/motion';
+import { KabayanMark } from '@/components/brand/KabayanLogo';
 import { DEFAULT_AVATAR } from '@/components/settings/ProfileTab';
 
 const LANGS = [
@@ -20,14 +21,16 @@ const LANGS = [
   { code: 'su', label: 'Sundanese', short: 'SU' },
 ];
 
+const SEARCH_SHORTCUT =
+  typeof navigator !== 'undefined' && /Mac|iPhone|iPad|iPod/.test(navigator.platform)
+    ? '⌘K'
+    : 'Ctrl K';
+
 export default function TopBar() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const setSearchOpen = useAppStore((s) => s.setSearchOpen);
-  const setShortcutsOpen = useAppStore((s) => s.setShortcutsOpen);
   const toggleSidebar = useAppStore((s) => s.toggleSidebar);
-  const collapsed = useAppStore((s) => s.collapsed);
-  const toggleCollapsed = useAppStore((s) => s.toggleCollapsed);
   const queryClient = useQueryClient();
 
   const { data: profile } = useQuery({
@@ -61,32 +64,33 @@ export default function TopBar() {
 
   const displayName = profile?.display_name || profile?.name || profile?.username || 'User';
   const photoPath = profile?.photo_path || DEFAULT_AVATAR;
-  const [notifOn, setNotifOn] = useState(true);
 
   return (
-    <header className="divider-gradient-b relative z-10 flex h-14 shrink-0 items-center gap-3 bg-surface px-4">
+    <header className="divider-gradient-b relative z-10 flex h-16 shrink-0 items-center gap-3 bg-surface/95 px-4 backdrop-blur-xl">
 
-      {/* Mobile sidebar toggle */}
+      {/* Mobile sidebar toggle + brand */}
       <Tooltip label={t('common.menu')} side="bottom">
         <button
           onClick={toggleSidebar}
-          className="lg:hidden flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-text-secondary transition-all duration-150 hover:bg-card hover:text-text"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-text-secondary transition-all duration-150 hover:bg-wash hover:text-text lg:hidden"
           aria-label={t('common.menu')}
         >
           <Icon name={ICONS.actions.menu} size={20} />
         </button>
       </Tooltip>
-
-      {/* Desktop: toggle collapse sidebar (Removed because it's redundant with the sidebar logo toggle) */}
+      <NavLink to="/dashboard" className="shrink-0 lg:hidden" aria-label="Kabayan AI">
+        <KabayanMark size={30} />
+      </NavLink>
 
       {/* Search bar */}
       <button
         onClick={() => setSearchOpen(true)}
-        className="flex max-w-md flex-1 items-center gap-2.5 rounded-xl border border-border bg-card px-3.5 py-2 text-sm text-text-muted transition-all duration-200 hover:border-primary/30 hover:bg-card-hover group"
+        aria-label={t('common.search')}
+        className="group flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-transparent bg-subtle text-sm text-text-muted transition-all duration-200 hover:border-border hover:bg-surface hover:shadow-card sm:w-auto sm:max-w-lg sm:flex-1 sm:justify-start sm:gap-2.5 sm:px-3.5"
       >
-        <Icon name={ICONS.actions.search} size={15} className="shrink-0 group-hover:text-primary-light transition-colors duration-150" />
-        <span className="flex-1 text-left truncate">{t('common.searchPlaceholder', 'Cari materi, flashcard, quiz...')}</span>
-        <kbd className="hidden sm:inline rounded-md border border-border bg-background px-1.5 py-0.5 text-3xs font-mono">⌘K</kbd>
+        <Icon name={ICONS.actions.search} size={16} className="shrink-0 transition-colors duration-150 group-hover:text-primary-light" />
+        <span className="hidden flex-1 truncate text-left sm:block">{t('common.searchPlaceholder', 'Cari materi, flashcard, quiz...')}</span>
+        <kbd className="hidden rounded-md border border-border bg-surface px-1.5 py-0.5 font-sans text-3xs font-medium text-text-muted sm:inline">{SEARCH_SHORTCUT}</kbd>
       </button>
 
       <div className="flex-1" />
@@ -96,7 +100,7 @@ export default function TopBar() {
         <DropdownMenu.Trigger asChild>
           <Tooltip label={t('settings.quickSettings')} side="bottom">
             <button
-              className="flex h-9 w-9 items-center justify-center rounded-xl text-text-secondary transition-all duration-150 hover:bg-card hover:text-text"
+              className="hidden h-9 w-9 items-center justify-center rounded-xl text-text-secondary transition-all duration-150 hover:bg-wash hover:text-text sm:flex"
               aria-label={t('settings.quickSettings')}
             >
               <Icon name={ICONS.nav.settings} size={18} />
@@ -138,27 +142,6 @@ export default function TopBar() {
 
             <DropdownMenu.Separator className="my-1.5 h-px bg-border" />
 
-            <p className="px-3 py-1.5 text-2xs font-semibold uppercase tracking-wider text-text-muted">
-              {t('common.notifications')}
-            </p>
-            <DropdownMenu.Item
-              onSelect={(e) => { e.preventDefault(); setNotifOn((v) => !v); }}
-              className="flex cursor-pointer items-center justify-between rounded-xl px-3 py-2 text-sm outline-none transition-all duration-100 text-text-secondary hover:bg-card-hover hover:text-text"
-            >
-              <span>{t('settings.notifications')}</span>
-              <span className={cn(
-                'w-7 h-4 rounded-full relative transition-colors duration-200',
-                notifOn ? 'bg-primary' : 'bg-card-hover'
-              )}>
-                <span className={cn(
-                  'absolute top-0.5 w-3 h-3 rounded-full bg-white transition-transform duration-200 shadow-sm',
-                  notifOn ? 'translate-x-3.5' : 'translate-x-0.5'
-                )} />
-              </span>
-            </DropdownMenu.Item>
-
-            <DropdownMenu.Separator className="my-1.5 h-px bg-border" />
-
             <DropdownMenu.Item
               onSelect={() => navigate('/settings')}
               className="flex cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2 text-sm outline-none transition-all duration-100 text-text-secondary hover:bg-card-hover hover:text-text"
@@ -173,28 +156,6 @@ export default function TopBar() {
       {/* Theme toggle */}
       <Tooltip label={isDark ? t('settings.themeSwitchToLight') : t('settings.themeSwitchToDark')} side="bottom">
         <ThemeToggle />
-      </Tooltip>
-
-      {/* Keyboard shortcuts */}
-      <Tooltip label={t('shortcuts.title')} side="bottom">
-        <button
-          onClick={() => setShortcutsOpen(true)}
-          className="rounded-xl p-2 text-text-secondary transition-all duration-150 hover:bg-card hover:text-text"
-          aria-label={t('shortcuts.title')}
-        >
-          <Icon name={ICONS.ui.help} size={18} />
-        </button>
-      </Tooltip>
-
-      {/* Notifications bell */}
-      <Tooltip label={t('common.notifications')} side="bottom">
-        <button
-          onClick={() => navigate('/settings?tab=data')}
-          className="relative rounded-xl p-2 text-text-secondary transition-all duration-150 hover:bg-card hover:text-text"
-          aria-label={t('common.notifications')}
-        >
-          <Icon name={ICONS.ui.bell} size={18} />
-        </button>
       </Tooltip>
 
       {/* Profile avatar */}

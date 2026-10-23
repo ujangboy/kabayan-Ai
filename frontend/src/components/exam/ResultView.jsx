@@ -7,7 +7,7 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 
 import { examAPI, sessionsAPI } from '@/services/api';
 import { cn } from '@/utils';
-import { Chip } from './shared';
+import { Chip, getPerformanceLabel } from './shared';
 import { fireConfetti } from '@/utils/confetti';
 
 // Count-up halus untuk skor (dihormati prefers-reduced-motion).
@@ -128,7 +128,7 @@ export default function ResultView({ evalData, onReview, onFinish, sessionId, on
         <div className={cn('text-7xl font-black my-4', scoreColor)}>{animatedScore}</div>
         <div className="flex justify-center gap-2 mb-3">
           <Chip label={t('exam.result.gradeLabel', { grade })} color={score>=80?'success':score>=60?'warning':'danger'} />
-          <Chip label={performance_level} color="purple" />
+          <Chip label={getPerformanceLabel(t, performance_level)} color="purple" />
         </div>
         <p className="text-text-secondary text-sm">{overall_feedback}</p>
       </div>

@@ -6,6 +6,8 @@ import { motion } from 'framer-motion';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import { audioAPI, materiAPI, subjectAPI } from '@/services/api';
+import { formatDateTime } from '@/utils';
+import { getMaterialStatusLabel } from '@/utils/status';
 import { Button, Icon, Select } from '@/components/ui';
 import { useUiStore } from '@/store';
 import { useJobStore } from '@/store/jobStore';
@@ -272,7 +274,7 @@ export default function AudioPage() {
                         <p className="text-sm font-medium text-text truncate">{m.filename}</p>
                         <p className="text-3xs text-text-muted">
                           {(m.filename || '').split('.').pop()?.toUpperCase()}
-                          {m.status && m.status !== 'Ready' ? ` · ${m.status}` : ''}
+                          {m.status && m.status !== 'Ready' ? ` · ${getMaterialStatusLabel(t, m.status)}` : ''}
                         </p>
                       </div>
                       <Button
@@ -375,7 +377,7 @@ function AudioItem({ audio, onCancel, onDelete }) {
                 : audio.voice}
             </p>
             <p className="text-3xs text-text-muted">
-              {isProcessing ? audio.stage || t('audioStatus.processing') : new Date(audio.created_at).toLocaleString()}
+              {isProcessing ? audio.stage || t('audioStatus.processing') : formatDateTime(audio.created_at)}
             </p>
           </div>
         </div>

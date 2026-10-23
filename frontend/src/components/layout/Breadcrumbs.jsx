@@ -79,6 +79,10 @@ export default function Breadcrumbs({ maxItems = 4 }) {
   });
   const subjectName = subjectDashboard?.subject?.name || null;
 
+  // Halaman root sudah punya judul sendiri; breadcrumb hanya berguna saat
+  // pengguna masuk lebih dalam (mis. detail mata kuliah / review flashcard).
+  if (segs.length <= 1) return null;
+
   const crumbs = collapseCrumbs(buildCrumbs(pathname, t, subjectName), maxItems);
   if (crumbs.length === 0) return null;
 
@@ -113,7 +117,7 @@ export default function Breadcrumbs({ maxItems = 4 }) {
 
         return (
           <Fragment key={crumb.to + i}>
-            <Icon name={ICONS.ui.chevronRight} size={12} className="shrink-0 text-text-muted/50" />
+            {i > 0 && <Icon name={ICONS.ui.chevronRight} size={12} className="shrink-0 text-text-muted/50" />}
             {crumb.current ? (
               <span
                 aria-current="page"

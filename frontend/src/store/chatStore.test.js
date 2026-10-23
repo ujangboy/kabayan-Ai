@@ -77,3 +77,41 @@ describe('useChatStore (undo/restore)', () => {
     expect(s.chats.some((c) => c.id === 9)).toBe(true);
   });
 });
+
+describe('useChatStore (createChat)', () => {
+  beforeEach(() => {
+    useChatStore.setState({ chats: [], currentChatId: null });
+  });
+
+  it('memakai ulang chat aktif yang masih kosong', () => {
+    const empty = seedChat(1, { messages: [] });
+    useChatStore.setState({ chats: [empty], currentChatId: 1 });
+
+    const id = useChatStore.getState().createChat();
+
+    expect(id).toBe(1);
+    expect(useChatStore.getState().chats).toHaveLength(1);
+  });
+
+  it('tidak membuat Chat Baru baru saat sudah ada chat kosong lain', () => {
+    const used = seedChat(1, { messages: [{ role: 'user', content: 'Halo' }] });
+    const empty = seedChat(2, { messages: [] });
+    useChatStore.setState({ chats: [used, empty], currentChatId: 1 });
+
+    const id = useChatStore.getState().createChat();
+
+    expect(id).toBe(2);
+    expect(useChatStore.getState().currentChatId).toBe(2);
+    expect(useChatStore.getState().chats).toHaveLength(2);
+  });
+
+  it('membuat chat baru jika semua chat sudah berisi pesan', () => {
+    const used = seedChat(1, { messages: [{ role: 'user', content: 'Halo' }] });
+    useChatStore.setState({ chats: [used], currentChatId: 1 });
+
+    const id = useChatStore.getState().createChat();
+
+    expect(id).not.toBe(1);
+    expect(useChatStore.getState().chats).toHaveLength(2);
+  });
+});

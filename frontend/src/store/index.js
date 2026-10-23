@@ -11,6 +11,19 @@ export const useChatStore = create(
       tutorBadge: null,
 
       createChat: () => {
+        // Jangan menumpuk "Chat Baru" kosong: jika chat aktif masih kosong,
+        // pakai ulang. Ini mencegah puluhan entri kosong saat pengguna
+        // berpindah dari Dashboard/aksi cepat berkali-kali.
+        const state = get();
+        const current = state.chats.find((c) => c.id === state.currentChatId);
+        if (current && !current.backendOnly && (current.messages?.length || 0) === 0) {
+          return current.id;
+        }
+        const reusable = state.chats.find((c) => !c.backendOnly && (c.messages?.length || 0) === 0);
+        if (reusable) {
+          set({ currentChatId: reusable.id });
+          return reusable.id;
+        }
         const chat = { id: Date.now(), title: 'Chat Baru', messages: [], pinned: false, createdAt: new Date().toISOString(), tutorEnabled: false, tutorSubject: '', tutorLevel: 'intermediate', examSessionId: null };
         set((s) => ({ chats: [chat, ...s.chats], currentChatId: chat.id }));
         return chat.id;

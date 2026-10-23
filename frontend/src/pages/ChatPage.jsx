@@ -21,7 +21,21 @@ export default function ChatPage() {
   const currentChatId = useChatStore((s) => s.currentChatId);
   const chat = useChatStore((s) => s.getCurrentChat());
   const isCurrentChatStreaming = useChatStore((s) => s.streamingChatIds.includes(currentChatId));
-  const [historyCollapsed, setHistoryCollapsed] = useState(false);
+  const [historyCollapsed, setHistoryCollapsed] = useState(() =>
+    typeof window !== 'undefined' && window.matchMedia
+      ? window.matchMedia('(max-width: 767px)').matches
+      : false
+  );
+
+  // Di layar kecil riwayat adalah panel overlay; mulai tertutup agar
+  // percakapan mendapat lebar penuh.
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return undefined;
+    const mq = window.matchMedia('(max-width: 767px)');
+    const onChange = (e) => { if (e.matches) setHistoryCollapsed(true); };
+    mq.addEventListener?.('change', onChange);
+    return () => mq.removeEventListener?.('change', onChange);
+  }, []);
 
   // Shortcut: Ctrl/Cmd + B toggle history
   useEffect(() => {
@@ -36,14 +50,23 @@ export default function ChatPage() {
   }, []);
 
   return (
-    <div className="flex h-full overflow-hidden bg-background">
+    <div className="relative flex h-full overflow-hidden bg-background">
       {/* Panel riwayat selalu ter-mount — animate width saja agar
-          expand/collapse tidak pernah gagal (tanpa remount AnimatePresence). */}
+          expand/collapse tidak pernah gagal (tanpa remount AnimatePresence).
+          Di mobile panel menjadi overlay agar percakapan tidak terjepit. */}
+      {!historyCollapsed && (
+        <button
+          type="button"
+          aria-label={t('chat.hideHistory')}
+          onClick={() => setHistoryCollapsed(true)}
+          className="absolute inset-0 z-20 bg-black/30 backdrop-blur-[1px] md:hidden"
+        />
+      )}
       <motion.div
         initial={false}
         animate={{ width: historyCollapsed ? 0 : 256, opacity: historyCollapsed ? 0 : 1 }}
         transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-        className="shrink-0 overflow-hidden border-r border-strong bg-subtle"
+        className="shrink-0 overflow-hidden border-r border-strong bg-subtle max-md:absolute max-md:inset-y-0 max-md:left-0 max-md:z-30 max-md:shadow-modal"
         style={{ willChange: 'width' }}
       >
         <div className="w-64 h-full">

@@ -8,7 +8,7 @@ import { examAPI } from '@/services/api';
 import { cn } from '@/utils';
 import MathMarkdown from '@/components/MathMarkdown';
 import { useNavigate } from 'react-router-dom';
-import { SectionHeader } from './shared';
+import { SectionHeader, getQuestionTypeLabel } from './shared';
 
 export default function ReviewView({ sessionData, evalData }) {
   const { t } = useTranslation();
@@ -73,7 +73,7 @@ export default function ReviewView({ sessionData, evalData }) {
                                           <span className="text-3xs font-bold text-text">?</span>}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs text-text-muted mb-0.5">{t('exam.detail.questionProgress', { current: i + 1, total: questions.length })} · {q.topic} · {q.type}</p>
+                    <p className="text-xs text-text-muted mb-0.5">{t('exam.detail.questionProgress', { current: i + 1, total: questions.length })} · {q.topic} · {getQuestionTypeLabel(t, q.type)}</p>
                     <div className="text-base text-text font-medium line-clamp-2">
                       <MathMarkdown>{q.question}</MathMarkdown>
                     </div>

@@ -16,7 +16,9 @@ class BlueprintRequest(BaseModel):
 
 
 class SubmitAnswersRequest(BaseModel):
-    answers: dict[str, str] = Field(..., min_length=1)
+    # Jawaban kosong tetap valid: timer bisa habis sebelum pengguna menjawab
+    # satu soal pun, dan sesi harus bisa diselesaikan dengan skor 0.
+    answers: dict[str, str] = Field(default_factory=dict)
 
 
 class RetryRequest(BaseModel):

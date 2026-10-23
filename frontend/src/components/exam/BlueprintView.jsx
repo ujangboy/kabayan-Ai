@@ -7,7 +7,7 @@ import { examAPI } from '@/services/api';
 import { useBackgroundJob } from '@/hooks/useBackgroundJob';
 import { useJobStore } from '@/store/jobStore';
 import { usePageStateStore } from '@/store/pageStateStore';
-import { Chip, SectionHeader, VIEW, unwrapJobPayload } from './shared';
+import { Chip, SectionHeader, VIEW, unwrapJobPayload, getQuestionTypeLabel, getBloomLabel, getDifficultyLabel } from './shared';
 
 const PAGE_KEY = 'exam-analyzer';
 const JOB_KEY = 'exam-questions';
@@ -147,14 +147,14 @@ export default function BlueprintView({ blueprint, onGenerate, onGenerating, onB
                     <span className="text-text font-semibold">{item.question_count}</span>
                   </td>
                   <td className="py-3 px-2 text-center">
-                    <Chip label={(item.question_types || []).join(', ')} size="xs" color="purple" />
+                    <Chip label={(item.question_types || []).map((v) => getQuestionTypeLabel(t, v)).join(', ')} size="xs" color="purple" />
                   </td>
                   <td className="py-3 px-2 text-center">
-                    <Chip label={item.bloom_level} size="xs" color="teal" />
+                    <Chip label={getBloomLabel(t, item.bloom_level)} size="xs" color="teal" />
                   </td>
                   <td className="py-3 px-2 text-center">
-                    <Chip label={item.difficulty}  size="xs"
-                      color={item.difficulty === 'sulit' ? 'danger' : item.difficulty === 'menengah' ? 'warning' : 'success'} />
+                    <Chip label={getDifficultyLabel(t, item.difficulty)} size="xs"
+                      color={['sulit', 'hard'].includes(String(item.difficulty).toLowerCase()) ? 'danger' : ['menengah', 'medium'].includes(String(item.difficulty).toLowerCase()) ? 'warning' : 'success'} />
                   </td>
                 </tr>
               ))}

@@ -7,6 +7,7 @@ import { materiAPI } from '@/services/api';
 import { useQueryClient } from '@tanstack/react-query';
 import { extractErrorMessage } from '@/utils/errors';
 import { formatDate } from '@/utils';
+import { getMaterialStatusLabel } from '@/utils/status';
 import FileTypeIcon from '@/components/FileTypeIcon';
 import { useToast } from '@/components/Toast';
 import { Tooltip, ConfirmDialog , Icon } from '@/components/ui';
@@ -116,7 +117,7 @@ export default function MaterialsTable({ materials, subjectId, compact = false }
                   <td className={`px-3 ${rowPy} text-text-secondary text-xs`}>{(m.filename || '').split('.').pop()?.toUpperCase() || m.material_type}</td>
                   <td className={`px-3 ${rowPy} text-right`}>
                     <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-3xs font-medium border ${m.status === 'Ready' ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20' : m.status === 'Failed' ? 'bg-red-500/10 text-red-300 border-red-500/20' : 'bg-amber-500/10 text-amber-300 border-amber-500/20'}`}>
-                      {m.status}
+                      {getMaterialStatusLabel(t, m.status)}
                     </span>
                   </td>
                   <td className={`px-3 ${rowPy} text-text-secondary text-xs whitespace-nowrap`}>{formatDate(m.upload_date)}</td>
