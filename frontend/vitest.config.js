@@ -10,6 +10,8 @@ export default defineConfig({
   test: {
     environment: 'node',
     environmentMatchGlobs: [['src/**/*.smoke.test.jsx', 'jsdom']],
+    setupFiles: ['./src/testSetup.js'],
+    testTimeout: 15000,
   },
   esbuild: {
     jsx: 'automatic',

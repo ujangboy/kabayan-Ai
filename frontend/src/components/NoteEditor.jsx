@@ -697,6 +697,11 @@ export default function NoteEditor({
   // Expose editor instance ke parent (untuk vertical rail di luar kertas)
   useEffect(() => { if (editor) onEditorReady?.(editor); }, [editor, onEditorReady]);
 
+  // Timer setContent/focus harus dibersihkan saat unmount. Tanpa ini timer
+  // 50ms bisa menembak editor yang sudah dihancurkan → error getClientRects
+  // (terutama di jsdom saat seluruh test suite berjalan).
+  const contentTimersRef = useRef([]);
+
   // Load content ke Tiptap saat masuk edit mode.
   // Hanya dimuat SEKALI per note — toggle view/edit tidak boleh me-reset
   // editor (setContent ulang menimpa format font size/warna yang sudah
@@ -713,14 +718,21 @@ export default function NoteEditor({
       // Defer setContent ke scheduler task — memanggilnya langsung di dalam
       // lifecycle method memicu warning "flushSync was called from inside a
       // lifecycle method" dari Tiptap ReactNodeViewRenderer.
-      setTimeout(() => {
+      contentTimersRef.current.push(setTimeout(() => {
+        if (editor.isDestroyed) return;
         editor.commands.setContent(html, false);
-        setTimeout(() => editor.commands.focus('end'), 50);
-      }, 0);
+        contentTimersRef.current.push(setTimeout(() => {
+          if (!editor.isDestroyed) editor.commands.focus('end');
+        }, 50));
+      }, 0));
     })();
   }, [noteId, activeMode, editor, content]);
 
   useEffect(() => () => clearTimeout(saveTimerRef.current), []);
+  useEffect(() => () => {
+    contentTimersRef.current.forEach(clearTimeout);
+    contentTimersRef.current = [];
+  }, []);
   useEffect(() => () => { editor?.destroy(); }, [editor]);
 
   const handleToggle = () => setMode(m => (m === 'view' ? 'edit' : 'view'));
