@@ -133,13 +133,13 @@ export default function CommandSearch() {
         </div>
 
         {/* Results */}
-        <div id="command-search-list" ref={listRef} role="listbox" className="py-2 max-h-72 overflow-y-auto">
+        <div id="command-search-list" ref={listRef} role="listbox" className="px-2 py-1.5 max-h-72 overflow-y-auto">
           {total === 0 ? (
             <p className="text-center text-text-muted text-sm py-8">{t('commandSearch.noResults')}</p>
           ) : (
             flat.map(({ section, items }) => (
               <div key={section.id}>
-                <p className="px-4 py-1 text-xs text-text-muted font-medium uppercase tracking-wider">
+                <p className="px-5 py-1.5 text-xs text-text-muted font-medium uppercase tracking-wider">
                   {t(section.labelKey)}
                 </p>
                 {items.map((item) => {
@@ -155,19 +155,21 @@ export default function CommandSearch() {
                       onMouseEnter={() => setActiveIndex(index)}
                       onClick={() => go(item)}
                       className={cn(
-                        'w-full flex items-center gap-3 px-4 py-2.5 text-left group transition-colors',
-                        isActive ? 'bg-background' : 'hover:bg-background'
+                        'w-full flex items-center gap-3 px-3 py-2.5 text-left group rounded-xl transition-colors',
+                        isActive ? 'bg-primary/10' : 'hover:bg-wash'
                       )}
                     >
                       <div className={cn(
-                        'w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors',
-                        isActive ? 'bg-primary' : 'bg-primary/10 group-hover:bg-primary'
+                        'w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border transition-colors',
+                        isActive
+                          ? 'bg-primary text-white border-primary'
+                          : 'bg-wash text-text-secondary border-border group-hover:bg-primary/10 group-hover:text-primary group-hover:border-primary/30'
                       )}>
-                        <item.icon size={15} className={isActive ? 'text-white' : 'text-primary transition-colors group-hover:text-white'} />
+                        <Icon name={item.icon} size={16} />
                       </div>
-                      <div>
-                        <p className="text-base font-medium text-text">{item.label}</p>
-                        <p className="text-xs text-text-muted">{item.desc}</p>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-text truncate">{item.label}</p>
+                        <p className="mt-0.5 text-xs text-text-muted truncate">{item.desc}</p>
                       </div>
                     </button>
                   );
