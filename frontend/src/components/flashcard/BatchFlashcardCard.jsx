@@ -7,7 +7,7 @@ import MathMarkdown from '@/components/MathMarkdown';
 import { Tooltip, SubjectBadge , Icon } from '@/components/ui';
 import { formatDate, formatTimeOnly } from '@/utils';
 
-export default function BatchFlashcardCard({ group, onStart, onReview, onHistory, onDeleteAll, tone }) {
+export default function BatchFlashcardCard({ group, onStart, onReview, onHistory, onDeleteAll, subjectId }) {
   const { t } = useTranslation();
   const { subject, cards, title, materialNames } = group;
   const latestCard = cards.reduce((a, b) =>
@@ -37,7 +37,7 @@ export default function BatchFlashcardCard({ group, onStart, onReview, onHistory
       {/* Header — badge inisial + nama + aksi */}
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-start gap-3 min-w-0">
-          <SubjectBadge name={subject.name} tone={tone} size="sm" />
+          <SubjectBadge name={subject.name} subjectId={subjectId} size="sm" />
           <div className="flex-1 min-w-0">
             <p className="text-3xs font-semibold text-accent-teal uppercase tracking-wider">
               {title ? subject.name : t('flashcard.subjectLabel')}

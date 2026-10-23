@@ -125,7 +125,7 @@ export default function SubjectsPage() {
                   >
                     {/* Header — badge inisial + nama + aksi */}
                     <div className="flex items-start gap-3">
-                      <SubjectBadge name={s.name} tone={idx} />
+                      <SubjectBadge name={s.name} subjectId={s.id} />
                       <div className="flex-1 min-w-0">
                         <h3 className="font-semibold text-text truncate">{s.name}</h3>
                         <p className="text-xs text-text-muted truncate">

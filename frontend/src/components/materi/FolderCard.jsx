@@ -5,7 +5,7 @@ import { SubjectBadge, Tooltip } from '@/components/ui';
 import { cn } from '@/utils';
 import { springLift } from '@/lib/motion';
 
-export function FolderCard({ active, name, count, onClick, tone, index = 0 }) {
+export function FolderCard({ active, name, count, onClick, tone, index = 0, subjectId }) {
   const { t } = useTranslation();
   return (
     <motion.button
@@ -23,7 +23,7 @@ export function FolderCard({ active, name, count, onClick, tone, index = 0 }) {
       )}
     >
       <div className="flex items-center justify-between">
-        <SubjectBadge name={name} tone={tone} size="sm" />
+        <SubjectBadge name={name} tone={tone} subjectId={subjectId} size="sm" />
         <span className={cn(
           'text-3xs font-medium px-2 py-0.5 rounded-full border',
           active

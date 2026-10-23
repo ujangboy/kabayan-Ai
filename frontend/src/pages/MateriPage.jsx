@@ -204,7 +204,7 @@ export default function MateriPage() {
                   icon={ICONS.files.folder}
                   name={s.name}
                   count={count}
-                  tone={i + 1}
+                  subjectId={s.id}
                   index={i + 1}
                   onClick={() => setSubjectFilter('materi', String(s.id))}
                 />

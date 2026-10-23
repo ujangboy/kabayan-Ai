@@ -301,7 +301,7 @@ export default function FlashcardPage() {
               >
                 <BatchFlashcardCard
                   group={group}
-                  tone={idx}
+                  subjectId={group.subject.id}
                   onStart={() => setActiveBatchId(group.batch_id)}
                   onReview={() => navigate(`/flashcard/review?subject_id=${group.subject.id}`)}
                   onHistory={() => setHistoryBatchId(group.batch_id)}

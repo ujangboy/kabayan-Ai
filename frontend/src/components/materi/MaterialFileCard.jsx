@@ -4,8 +4,10 @@ import { ICONS } from '@/lib/icons';
 
 import FileTypeIcon, { FILE_COLOR_MAP } from '@/components/FileTypeIcon';
 import { Tooltip , Icon } from '@/components/ui';
+import { getSubjectPalette } from '@/components/ui/SubjectBadge';
 import { formatDate } from '@/utils';
 import { getMaterialStatusLabel } from '@/utils/status';
+import { cn } from '@/utils';
 
 const FILE_TINT = {
   YOUTUBE: 'bg-violet/10',
@@ -28,6 +30,9 @@ export function MaterialFileCard({ material: m, index, showSubject, isRagActive,
   const { t } = useTranslation();
   const iconColor = FILE_COLOR_MAP[String(m.material_type || '').toUpperCase().includes('YOUTUBE') ? 'YOUTUBE' : m.material_type] || 'text-text-secondary';
   const statusLabel = getMaterialStatusLabel(t, m.status);
+  // Warna identitas mata kuliah (deterministik per subject_id) — konsisten
+  // dengan badge/folder/deck di halaman lain.
+  const subjectTone = showSubject ? getSubjectPalette(m.subject_id ?? m.subject?.id) : null;
 
   return (
     <motion.div
@@ -57,7 +62,7 @@ export function MaterialFileCard({ material: m, index, showSubject, isRagActive,
           {showSubject && (m.subject?.name) && (
             <Tooltip label={m.subject.name}>
               <p className="mt-1 truncate text-[11px] text-text-secondary">
-                <Icon name={ICONS.files.folder} size={10} className="mr-1 inline text-warning" />{m.subject.name}
+                <Icon name={ICONS.files.folder} size={10} className={cn('mr-1 inline', subjectTone ? subjectTone.icon : 'text-warning')} />{m.subject.name}
               </p>
             </Tooltip>
           )}

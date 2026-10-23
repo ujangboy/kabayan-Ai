@@ -82,11 +82,10 @@ function SubjectPicker({ subjects, onSelectSubject, onStartConfig, t }) {
          {t('exam.history.selectSubjectDesc')}
        </p>
       <div id="subject-picker" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {subjects.map((s, i) => (
+        {subjects.map((s) => (
           <SubjectCard
             key={s.id}
             subject={s}
-            tone={i}
             onSelectSubject={onSelectSubject}
             onStartConfig={onStartConfig}
             onDelete={handleDelete}

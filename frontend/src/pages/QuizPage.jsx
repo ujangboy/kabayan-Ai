@@ -325,7 +325,7 @@ export default function QuizPage() {
                   {/* Header — badge + title + badges + aksi */}
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-start gap-3 min-w-0">
-                      <SubjectBadge name={quiz.subject?.name || quiz.title} tone={idx} size="sm" />
+                      <SubjectBadge name={quiz.subject?.name || quiz.title} subjectId={quiz.subject?.id} size="sm" />
                       <div className="flex-1 min-w-0">
                         <p className="text-3xs font-semibold text-accent-blue uppercase tracking-wider truncate">
                           {quiz.subject?.name || t('quiz.genericSubject')}
