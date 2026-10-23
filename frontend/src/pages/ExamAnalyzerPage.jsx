@@ -415,7 +415,6 @@ export default function ExamAnalyzerPage() {
                 setAnalysis(null);
                 setBlueprint(null);
               }}
-              onRequestCreateSubject={() => setCreateSubjectOpen(true)}
             />
           )}
         </Modal>

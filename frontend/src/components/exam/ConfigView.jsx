@@ -1,14 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { ICONS } from '@/lib/icons';
-import { Icon, Button, Select } from '@/components/ui';
+import { Icon, Button } from '@/components/ui';
 
-import { examAPI } from '@/services/api';
+import { examAPI, materiAPI } from '@/services/api';
 import { useBackgroundJob } from '@/hooks/useBackgroundJob';
 import { useJobStore } from '@/store/jobStore';
 import { usePageStateStore } from '@/store/pageStateStore';
 import { cn } from '@/utils';
 import MaterialPicker from '@/components/MaterialPicker';
+import { FolderCard } from '@/components/materi/FolderCard';
 import {
   EXAM_TYPES, COUNTS, DIFFICULTIES, BLOOMS, Q_TYPES, FOCUSES,
   DURATIONS, Q_TYPE_MAP, SectionHeader, unwrapJobPayload,
@@ -23,9 +26,9 @@ export default function ConfigView({
   analysis,
   onDone,
   onSubjectChange,
-  onRequestCreateSubject,
 }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { run: runJob } = useBackgroundJob();
   const jobRunning = useJobStore((s) => Boolean(s.jobs[JOB_KEY]));
   const blueprintResult = useJobStore((s) => s.results[JOB_KEY]);
@@ -74,6 +77,24 @@ export default function ConfigView({
     });
     onDone?.(data);
   }, [blueprintResult, onDone, t]);
+
+  // Folder mata kuliah tersinkron dari materi yang ada (bukan dibuat manual):
+  // hanya mata kuliah yang punya file materi yang muncul di sini, dengan jumlah file.
+  const { data: allMaterialsData } = useQuery({
+    queryKey: ['materials'],
+    queryFn: () => materiAPI.getAll().then((r) => r.data),
+  });
+  const fileCounts = useMemo(() => {
+    const map = {};
+    for (const m of allMaterialsData?.materials || []) {
+      map[m.subject_id] = (map[m.subject_id] || 0) + 1;
+    }
+    return map;
+  }, [allMaterialsData]);
+  const folders = useMemo(
+    () => subjects.filter((s) => fileCounts[s.id]),
+    [subjects, fileCounts]
+  );
 
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
 
@@ -169,26 +190,33 @@ export default function ConfigView({
         <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-text-secondary">
           {t('exam.config.subjectLabel', 'Mata Kuliah')}
         </p>
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <Select
-            value={subjectId || ''}
-            onChange={(e) => onSubjectChange?.(e.target.value ? Number(e.target.value) : null)}
-            className="sm:max-w-md"
-            aria-label={t('exam.config.subjectLabel', 'Mata Kuliah')}
-          >
-            <option value="">{t('exam.config.subjectPlaceholder', 'Pilih mata kuliah...')}</option>
-            {subjects.map((s) => (
-              <option key={s.id} value={s.id}>{s.name}</option>
-            ))}
-          </Select>
-          <Button type="button" variant="secondary" onClick={onRequestCreateSubject} className="inline-flex shrink-0 items-center justify-center gap-1.5">
-            <Icon name={ICONS.actions.addOutline} size={14} /> {t('exam.history.addSubject')}
-          </Button>
-        </div>
-        {!subjectId && (
-          <p className="mt-2 text-xs text-text-muted">
-            {t('exam.config.subjectHint', 'Pilih mata kuliah yang sudah punya materi, atau tambah mata kuliah baru.')}
-          </p>
+        {folders.length === 0 ? (
+          // Mata kuliah dibuat otomatis dari materi — tanpa materi, folder muncul kosong.
+          <div className="card-base p-8 text-center">
+            <Icon name={ICONS.learning.brain} size={40} className="mx-auto mb-3 text-primary opacity-40" />
+            <p className="text-base font-semibold text-text">{t('exam.config.emptyFoldersTitle')}</p>
+            <p className="mt-1 text-xs text-text-muted max-w-sm mx-auto">{t('exam.config.emptyFoldersDesc')}</p>
+            <Button type="button" onClick={() => navigate('/materi')} variant="primary" className="mt-4">
+              {t('exam.config.emptyFoldersCta')}
+            </Button>
+          </div>
+        ) : (
+          <>
+            <div className="flex flex-wrap items-stretch gap-2">
+              {folders.map((s, i) => (
+                <FolderCard
+                  key={s.id}
+                  name={s.name}
+                  count={fileCounts[s.id] || 0}
+                  subjectId={s.id}
+                  active={String(s.id) === String(subjectId)}
+                  index={i}
+                  onClick={() => onSubjectChange?.(String(s.id))}
+                />
+              ))}
+            </div>
+            <p className="mt-2 text-xs text-text-muted">{t('exam.config.folderHint')}</p>
+          </>
         )}
       </div>
 
@@ -222,7 +250,6 @@ export default function ConfigView({
         subjectId={subjectId}
         selectedMaterialIds={selectedMaterialIds}
         onSelectionChange={setSelectedMaterialIds}
-        autoSelectReady
       />
 
       {error && <p className="text-danger text-sm">{error}</p>}
