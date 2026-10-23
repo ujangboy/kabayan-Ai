@@ -67,6 +67,13 @@
     "regenerateTitle": "Regenerate audio",
     "regenerateConfirm": "Regenerate audio from this material? The old audio will be deleted."
   },
+  "audioMini": {
+    "regionTitle": "Audio Player",
+    "backTitle": "Back to the Audio page",
+    "playTitle": "Play",
+    "pauseTitle": "Pause",
+    "stopTitle": "Stop"
+  },
   "audioPage": {
     "title": "Audio Materials",
     "subtitle": "Listen to your course materials as audio. Pick a subject and a material, then let AI read it aloud.",
@@ -78,6 +85,8 @@
     "voiceGadis": "Gadis · Female",
     "voiceJenny": "Jenny · Female (EN)",
     "generateBtn": "Generate Audio",
+    "playHint": "Play via MiniPlayer (bottom left)",
+    "playingHint": "Playing globally · keeps playing across menus",
     "pickMaterialFirst": "Please select a material first.",
     "pickVoiceFirst": "Please select a voice first.",
     "noMaterials": "No materials for this subject yet.",

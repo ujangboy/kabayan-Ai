@@ -67,6 +67,13 @@
     "regenerateTitle": "Buat ulang audio",
     "regenerateConfirm": "Buat ulang audio dari materi ini? Audio lama akan dihapus."
   },
+  "audioMini": {
+    "regionTitle": "Pemutar Audio",
+    "backTitle": "Kembali ke halaman Audio",
+    "playTitle": "Putar",
+    "pauseTitle": "Jeda",
+    "stopTitle": "Hentikan"
+  },
   "audioPage": {
     "title": "Audio Materi",
     "subtitle": "Dengarkan materi kuliahmu dalam bentuk audio. Pilih mata kuliah, lalu materi, dan biarkan AI membacakannya.",
@@ -78,6 +85,8 @@
     "voiceGadis": "Gadis · Wanita",
     "voiceJenny": "Jenny · Wanita (EN)",
     "generateBtn": "Buat Audio",
+    "playHint": "Putar via MiniPlayer (kiri bawah)",
+    "playingHint": "Sedang diputar global · tetap jalan saat pindah menu",
     "pickMaterialFirst": "Pilih materi terlebih dahulu.",
     "pickVoiceFirst": "Pilih suara terlebih dahulu.",
     "noMaterials": "Belum ada materi untuk mata kuliah ini.",

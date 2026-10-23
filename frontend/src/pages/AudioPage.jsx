@@ -6,12 +6,13 @@ import { motion } from 'framer-motion';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import { audioAPI, materiAPI, subjectAPI } from '@/services/api';
-import { formatDateTime } from '@/utils';
+import { formatDateTime, cn } from '@/utils';
 import { getMaterialStatusLabel } from '@/utils/status';
-import { Button, Icon, Select } from '@/components/ui';
+import { Button, Icon, Select, Tooltip } from '@/components/ui';
 import { useUiStore } from '@/store';
 import { useJobStore } from '@/store/jobStore';
 import { useBackgroundJob } from '@/hooks/useBackgroundJob';
+import { useAudioPlayerStore } from '@/services/globalAudio';
 import { useToast } from '@/components/Toast';
 
 let audioRequestSeq = 0;
@@ -418,6 +419,7 @@ export default function AudioPage() {
                   key={a.id}
                   audio={a}
                   materialName={fileNameById.get(String(a.material_id))}
+                  subjectName={subjectFilter ? activeSubjectName : ''}
                   onCancel={() => handleCancel(a.id)}
                   onDelete={() => handleDelete(a.id)}
                   onRegenerate={() => handleGenerate(a.material_id)}
@@ -452,12 +454,21 @@ function StepIndicator({ steps, activeStep }) {
   );
 }
 
-function AudioItem({ audio, materialName, onCancel, onDelete, onRegenerate }) {
+function AudioItem({ audio, materialName, subjectName, onCancel, onDelete, onRegenerate }) {
   const { t } = useTranslation();
   const isProcessing = audio.status === 'Processing';
   const isFailed = audio.status === 'Failed';
   const isReady = audio.status === 'Ready';
   const isCancelled = audio.status === 'Cancelled';
+
+  // Player global: SATU elemen audio untuk seluruh halaman. Baris aktif
+  // menampilkan tombol jeda; baris lain memutar track baru (track lama
+  // otomatis berhenti — tidak bisa dua-duanya berbunyi lagi).
+  const { audioId, isPlaying, toggle } = useAudioPlayerStore();
+  const isActive = audioId === audio.id;
+
+  const voiceLabel = VOICE_LABEL_KEYS[audio.voice] ? t(VOICE_LABEL_KEYS[audio.voice]) : audio.voice;
+  const playerTitle = materialName || voiceLabel;
 
   return (
     <motion.div layout data-testid="audio-item" data-status={audio.status} className="card-base p-4 space-y-2">
@@ -515,9 +526,25 @@ function AudioItem({ audio, materialName, onCancel, onDelete, onRegenerate }) {
       )}
 
       {isReady && audio.file_url && (
-        <audio controls src={audio.file_url} className="w-full mt-1">
-          {t('audioPage.download')}
-        </audio>
+        <div className="flex items-center gap-2 mt-1">
+          <Tooltip label={isActive && isPlaying ? t('audioMini.pauseTitle') : t('audioMini.playTitle')}>
+            <Button
+              size="sm"
+              variant={isActive ? 'primary' : 'secondary'}
+              className="rounded-full"
+              onClick={() => toggle({ id: audio.id, src: audio.file_url, title: playerTitle, subjectLabel: subjectName || '' })}
+              aria-label={isActive && isPlaying ? t('audioMini.pauseTitle') : t('audioMini.playTitle')}
+            >
+              <Icon name={isActive && isPlaying ? ICONS.ui.pause : ICONS.ui.play} size={15} />
+              {isActive && isPlaying ? t('audioMini.pauseTitle') : t('audioMini.playTitle')}
+            </Button>
+          </Tooltip>
+          <span className={cn('text-3xs truncate', isActive ? 'text-primary' : 'text-text-muted')}>
+            {isActive && isPlaying
+              ? t('audioPage.playingHint')
+              : t('audioPage.playHint')}
+          </span>
+        </div>
       )}
     </motion.div>
   );

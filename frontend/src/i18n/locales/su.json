@@ -67,6 +67,13 @@
     "regenerateTitle": "Jieun deui audio",
     "regenerateConfirm": "Jieun deui audio tina materi ieu? Audio lama bakal dihapus."
   },
+  "audioMini": {
+    "regionTitle": "Pamuter Audio",
+    "backTitle": "Balik ka halaman Audio",
+    "playTitle": "Puter",
+    "pauseTitle": "Jéda",
+    "stopTitle": "Eureunkeun"
+  },
   "audioPage": {
     "title": "Audio Materi",
     "subtitle": "Dengekeun materi mata pelajaran anjeun dina wangun audio. Pilih mata pelajaran, teras materi, sareng hayu AI maca éta.",
@@ -78,6 +85,8 @@
     "voiceGadis": "Gadis · Awéwé",
     "voiceJenny": "Jenny · Awéwé (EN)",
     "generateBtn": "Jieun Audio",
+    "playHint": "Puter via MiniPlayer (ka kenca handap)",
+    "playingHint": "Keur diputer global · tetep jalan nalika pindah menu",
     "pickMaterialFirst": "Pilih materi heula.",
     "pickVoiceFirst": "Pilih sora heula.",
     "noMaterials": "Can aya materi pikeun mata pelajaran ieu.",
