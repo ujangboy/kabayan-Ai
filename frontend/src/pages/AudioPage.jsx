@@ -36,7 +36,6 @@ export default function AudioPage() {
 
   const [generatingId, setGeneratingId] = useState(null);
   const [preselectedMaterialId, setPreselectedMaterialId] = useState(null);
-  const hydratingSubjectFromUrl = useRef(false);
 
   const { data: subjectData } = useQuery({
     queryKey: ['subjects'],
@@ -75,6 +74,34 @@ export default function AudioPage() {
   }, [audios]);
 
   const [materialQuery, setMaterialQuery] = useState('');
+  // Urutan daftar audio: Terbaru (default), Terlama, Nama A–Z, Nama Z–A.
+  const [audioSort, setAudioSort] = useState('newest');
+
+  // Nama file materi per material_id — dipakai utk sort by nama & baris "Materi:".
+  const fileNameById = useMemo(() => {
+    const map = new Map();
+    for (const m of materials) map.set(String(m.id), m.filename || '');
+    return map;
+  }, [materials]);
+
+  const sortedAudios = useMemo(() => {
+    const nameOf = (a) => fileNameById.get(String(a.material_id)) || a.voice || '';
+    const list = [...audios];
+    switch (audioSort) {
+      case 'oldest':
+        list.sort((x, y) => new Date(x.created_at || 0) - new Date(y.created_at || 0));
+        break;
+      case 'nameAsc':
+        list.sort((x, y) => nameOf(x).localeCompare(nameOf(y), 'id', { sensitivity: 'base', numeric: true }));
+        break;
+      case 'nameDesc':
+        list.sort((x, y) => nameOf(y).localeCompare(nameOf(x), 'id', { sensitivity: 'base', numeric: true }));
+        break;
+      default:
+        list.sort((x, y) => new Date(y.created_at || 0) - new Date(x.created_at || 0));
+    }
+    return list;
+  }, [audios, audioSort, fileNameById]);
   const visibleMaterials = useMemo(() => {
     if (!materialQuery.trim()) return materials;
     const q = materialQuery.trim().toLowerCase();
@@ -147,28 +174,39 @@ export default function AudioPage() {
     });
   };
 
-  // URL sync agar konteks mata kuliah + materi bertahan saat pindah menu.
-  // Ref mencegah effect sync menghapus subject_id dari URL sebelum nilai dari
-  // URL sempat dihidrasi ke store (deep-link ?subject_id=...&material_id=...).
-  useEffect(() => {
-    const sid = new URLSearchParams(location.search).get('subject_id');
-    if (!sid || sid === subjectFilter) return;
-    hydratingSubjectFromUrl.current = true;
-    setSubjectFilter('audio', sid);
-  }, [location.search, subjectFilter, setSubjectFilter]);
-
-  useEffect(() => {
-    if (hydratingSubjectFromUrl.current) {
-      hydratingSubjectFromUrl.current = false;
-      return;
-    }
+  // Satu pintu perubahan filter: store + URL diperbarui bersama agar tidak ada
+  // jendela render di mana URL lama menghidrasi ulang store yang baru dikosongkan.
+  const applySubjectFilter = (value) => {
+    const v = value == null ? '' : String(value);
+    setSubjectFilter('audio', v);
     const params = new URLSearchParams(location.search);
-    const cur = params.get('subject_id') || '';
-    if (cur === (subjectFilter || '')) return;
-    if (subjectFilter) params.set('subject_id', subjectFilter);
+    if (v) params.set('subject_id', v);
     else params.delete('subject_id');
-    navigate(`/audio?${params.toString()}`, { replace: true });
-  }, [subjectFilter, location.search, navigate]);
+    const qs = params.toString();
+    navigate(`/audio${qs ? `?${qs}` : ''}`, { replace: true });
+  };
+
+  // Fase E — filter mata kuliah: URL adalah sumber kebenaran saat mount
+  // (deep-link ?subject_id=...) dan saat back/forward. Store basi (sisa sesi
+  // lama / halaman lain) tidak boleh menyaring diam-diam tanpa indikator.
+  const didInitFilter = useRef(false);
+  useEffect(() => {
+    if (didInitFilter.current) return;
+    didInitFilter.current = true;
+    const sid = new URLSearchParams(location.search).get('subject_id') || '';
+    if (sid !== subjectFilter) setSubjectFilter('audio', sid);
+    // Cukup sekali saat mount; perubahan berikutnya lewat applySubjectFilter.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // URL berubah dari luar (back/forward atau deep-link baru) → hidrasi store.
+  const lastUrlSearch = useRef(location.search);
+  useEffect(() => {
+    if (lastUrlSearch.current === location.search) return;
+    lastUrlSearch.current = location.search;
+    const sid = new URLSearchParams(location.search).get('subject_id') || '';
+    if (sid !== subjectFilter) setSubjectFilter('audio', sid);
+  }, [location.search, subjectFilter, setSubjectFilter]);
 
   // Preselect materi dari deep-link (?material_id) — sorot kartu & scroll.
   useEffect(() => {
@@ -184,6 +222,10 @@ export default function AudioPage() {
     });
     return () => cancelAnimationFrame(raf);
   }, [location.search, materialData]);
+
+  const activeSubjectName = subjects.find(
+    (s) => String(s.id) === String(subjectFilter)
+  )?.name || `#${subjectFilter}`;
 
   return (
     <div className="flex-1 overflow-y-auto p-6 md:p-10">
@@ -213,7 +255,7 @@ export default function AudioPage() {
           <div className="flex flex-col sm:flex-row sm:items-end gap-3">
             <div className="flex-1">
               <label className="block text-xs font-medium text-text-secondary mb-1">{t('audioPage.subjectLabel')}</label>
-              <Select value={subjectFilter} onChange={(e) => setSubjectFilter('audio', e.target.value)}>
+              <Select value={subjectFilter} onChange={(e) => applySubjectFilter(e.target.value)}>
                 <option value="">{t('common.all')}</option>
                 {[...subjects].sort((a, b) => a.name.localeCompare(b.name, 'id', { sensitivity: 'base' })).map((s) => (
                   <option key={s.id} value={String(s.id)}>{s.name}</option>
@@ -237,7 +279,21 @@ export default function AudioPage() {
             <h2 className="text-sm font-semibold text-text-secondary">
               <span className="inline-flex w-6 h-6 rounded-full bg-primary/10 text-primary items-center justify-center text-2xs font-bold mr-2">2</span>
               {t('audioPage.materialLabel')}
-              {!subjectFilter && <span className="ml-2 normal-case font-normal text-text-muted">{t('audioPage.allMaterials')}</span>}
+              {subjectFilter ? (
+                // Chip filter aktif — user selalu tahu konteks yang menyaring daftar
+                <button
+                  type="button"
+                  onClick={() => applySubjectFilter('')}
+                  className="ml-2 inline-flex items-center gap-1 normal-case font-normal text-2xs px-2 py-0.5 rounded-full bg-primary/10 text-primary-light border border-primary/25 hover:bg-primary/20 transition-colors cursor-pointer"
+                  title={t('common.all')}
+                >
+                  <Icon name={ICONS.actions.filter} size={10} />
+                  {t('audioPage.filteredBy', { name: activeSubjectName })}
+                  <Icon name={ICONS.actions.close} size={10} className="ml-0.5" />
+                </button>
+              ) : (
+                <span className="ml-2 normal-case font-normal text-text-muted">{t('audioPage.allMaterials')}</span>
+              )}
             </h2>
             <div className="relative w-44">
               <Icon name={ICONS.actions.search} size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-text-secondary" />
@@ -312,22 +368,55 @@ export default function AudioPage() {
 
         {/* Step 3 — Audio tersimpan (proses & hasil) */}
         <section className="card-base p-4 sm:p-5 space-y-3">
-          <h2 className="text-sm font-semibold text-text-secondary">
-            <span className="inline-flex w-6 h-6 rounded-full bg-primary/10 text-primary items-center justify-center text-2xs font-bold mr-2">3</span>
-            {t('audioPage.generatedTitle')}
-          </h2>
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <h2 className="text-sm font-semibold text-text-secondary">
+              <span className="inline-flex w-6 h-6 rounded-full bg-primary/10 text-primary items-center justify-center text-2xs font-bold mr-2">3</span>
+              {t('audioPage.generatedTitle')}
+            </h2>
+            {audios.length > 1 && (
+              <div className="flex items-center gap-1.5">
+                <Icon name={ICONS.actions.sort} size={12} className="text-text-muted shrink-0" />
+                <Select
+                  value={audioSort}
+                  onChange={(e) => setAudioSort(e.target.value)}
+                  aria-label={t('audioPage.sortNewest')}
+                  className="w-36 text-xs py-1.5"
+                >
+                  <option value="newest">{t('audioPage.sortNewest')}</option>
+                  <option value="oldest">{t('audioPage.sortOldest')}</option>
+                  <option value="nameAsc">{t('audioPage.sortNameAsc')}</option>
+                  <option value="nameDesc">{t('audioPage.sortNameDesc')}</option>
+                </Select>
+              </div>
+            )}
+          </div>
           {audioLoading ? (
             <div className="card-base p-6 text-center text-text-muted text-sm">{t('common.loading')}</div>
           ) : audios.length === 0 ? (
-            <div className="card-base p-6 text-center text-text-muted text-sm">{t('audioPage.noGenerated')}</div>
+            <div className="card-base p-6 text-center text-text-muted text-sm">
+              {subjectFilter
+                ? t('audioPage.noGeneratedForSubject', { name: activeSubjectName })
+                : t('audioPage.noGenerated')}
+              {subjectFilter && (
+                <button
+                  type="button"
+                  onClick={() => applySubjectFilter('')}
+                  className="ml-2 text-primary hover:underline cursor-pointer"
+                >
+                  {t('common.all')}
+                </button>
+              )}
+            </div>
           ) : (
             <div className="space-y-3">
-              {audios.map((a) => (
+              {sortedAudios.map((a) => (
                 <AudioItem
                   key={a.id}
                   audio={a}
+                  materialName={fileNameById.get(String(a.material_id))}
                   onCancel={() => handleCancel(a.id)}
                   onDelete={() => handleDelete(a.id)}
+                  onRegenerate={() => handleGenerate(a.material_id)}
                 />
               ))}
             </div>
@@ -359,14 +448,15 @@ function StepIndicator({ steps, activeStep }) {
   );
 }
 
-function AudioItem({ audio, onCancel, onDelete }) {
+function AudioItem({ audio, materialName, onCancel, onDelete, onRegenerate }) {
   const { t } = useTranslation();
   const isProcessing = audio.status === 'Processing';
   const isFailed = audio.status === 'Failed';
   const isReady = audio.status === 'Ready';
+  const isCancelled = audio.status === 'Cancelled';
 
   return (
-    <motion.div layout className="card-base p-4 space-y-2">
+    <motion.div layout data-testid="audio-item" data-status={audio.status} className="card-base p-4 space-y-2">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 min-w-0">
           <Icon name={ICONS.nav.audio} size={18} className="text-primary shrink-0" />
@@ -376,20 +466,34 @@ function AudioItem({ audio, onCancel, onDelete }) {
                 ? t(VOICE_LABEL_KEYS[audio.voice])
                 : audio.voice}
             </p>
-            <p className="text-3xs text-text-muted">
+            <p className="text-3xs text-text-muted truncate">
+              {materialName && <span className="mr-1">{t('audioPage.byMaterial', { name: materialName })} ·</span>}
               {isProcessing ? audio.stage || t('audioStatus.processing') : formatDateTime(audio.created_at)}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-1 shrink-0">
+          {isCancelled && (
+            // Audio dibatalkan: tidak ada player (file memang tidak ada) —
+            // sediakan label status + aksi buat ulang / hapus.
+            <span className="text-3xs px-2 py-0.5 rounded-full bg-warning/10 text-warning border border-warning/30">
+              {t('audioStatus.cancelled')}
+            </span>
+          )}
+          {isCancelled && onRegenerate && (
+            <Button variant="ghost" size="sm" className="text-primary" onClick={onRegenerate}>
+              <Icon name={ICONS.actions.replay} size={14} />
+              {t('audioStatus.regenerate')}
+            </Button>
+          )}
           {isProcessing && (
             <Button variant="ghost" size="sm" onClick={onCancel}>
               <Icon name={ICONS.actions.close} size={14} />
               {t('audioPage.cancel')}
             </Button>
           )}
-          {(isReady || isFailed) && (
-            <Button variant="ghost" size="sm" className="text-danger" onClick={onDelete}>
+          {(isReady || isFailed || isCancelled) && (
+            <Button variant="ghost" size="sm" className="text-danger" onClick={onDelete} aria-label={t('audioStatus.deleteTitle')}>
               <Icon name={ICONS.actions.delete} size={14} />
             </Button>
           )}
