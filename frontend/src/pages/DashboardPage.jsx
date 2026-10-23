@@ -13,7 +13,7 @@ import { KabayanMark } from '@/components/brand/KabayanLogo';
 import api from '@/services/api';
 
 const QUICK_ACTIONS = (t) => [
-  { icon: ICONS.communication.chat, label: t('dashboard.quickChat'),       desc: t('dashboard.quickChatDesc'),     to: '/chat',             color: 'bg-primary text-white',              shadow: 'shadow-card' },
+  { icon: ICONS.communication.chat, label: t('dashboard.quickChat'),       desc: t('dashboard.quickChatDesc'),     to: '/chat',             color: 'bg-primary-solid text-white',        shadow: 'shadow-card' },
   { icon: ICONS.files.document,      label: t('dashboard.quickUpload'),     desc: t('dashboard.quickUploadDesc'),    to: '/materi?upload=1', color: 'bg-sun/15 text-warning',             shadow: '' },
   { icon: ICONS.nav.flashcard,       label: t('dashboard.quickFlashcard'),  desc: t('dashboard.quickFlashcardDesc'), to: '/flashcard',        color: 'bg-primary/10 text-primary-light',  shadow: '' },
   { icon: ICONS.ui.help,             label: t('dashboard.quickQuiz'),       desc: t('dashboard.quickQuizDesc'),      to: '/quiz',             color: 'bg-info/10 text-info',              shadow: '' },

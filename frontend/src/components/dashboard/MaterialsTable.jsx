@@ -68,7 +68,7 @@ export default function MaterialsTable({ materials, subjectId, compact = false }
             </div>
             <button
               onClick={() => navigate(`/materi?subject_id=${subjectId}`)}
-              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-primary text-white hover:bg-primary-hover transition-colors"
+              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-primary-solid text-white hover:bg-primary-solid-hover transition-colors"
             >
               <Icon name={ICONS.actions.addOutline} size={12} /> {t('subjectDashboard.addMaterial', 'Tambah')}
             </button>

@@ -189,7 +189,7 @@ export default function AudioPage() {
     <div className="flex-1 overflow-y-auto p-6 md:p-10">
       <div className="w-full max-w-5xl mx-auto space-y-6">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-card shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-primary-solid flex items-center justify-center shadow-card shrink-0">
             <Icon name={ICONS.nav.audio} size={20} className="text-white" />
           </div>
           <div>
@@ -347,7 +347,7 @@ function StepIndicator({ steps, activeStep }) {
         const active = n === activeStep;
         return (
           <div key={n} className="flex items-center gap-2 flex-1">
-            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-2xs font-bold shrink-0 ${active ? 'bg-primary text-white' : done ? 'bg-primary/20 text-primary' : 'bg-subtle text-text-muted border border-border'}`}>
+            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-2xs font-bold shrink-0 ${active ? 'bg-primary-solid text-white' : done ? 'bg-primary/20 text-primary' : 'bg-subtle text-text-muted border border-border'}`}>
               {n}
             </div>
             <span className={`text-xs truncate ${active ? 'text-text font-medium' : 'text-text-muted'}`}>{label}</span>

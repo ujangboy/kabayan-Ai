@@ -122,7 +122,7 @@ function SubjectCard({ subject, onSelectSubject, onStartConfig, onDelete, t, ton
            <button disabled className="flex-1 px-3 py-2 rounded-lg border border-border bg-card text-text text-xs font-medium opacity-50">
              <Icon name={ICONS.learning.history} size={12} className="inline mr-1 -mt-0.5" /> {t('exam.history.history')}
            </button>
-            <button disabled className="flex-1 px-3 py-2 rounded-lg bg-primary text-white text-xs font-medium opacity-50">
+            <button disabled className="flex-1 px-3 py-2 rounded-lg bg-primary-solid text-white text-xs font-medium opacity-50">
               {t('exam.history.simulation')}
             </button>
          </div>
@@ -223,7 +223,7 @@ function SubjectCard({ subject, onSelectSubject, onStartConfig, onDelete, t, ton
          <button onClick={() => onSelectSubject(subject.id)} className="flex-1 px-3 py-2 rounded-lg border border-strong bg-wash text-text text-xs font-medium hover:border-primary/40 hover:bg-wash transition-colors">
            <Icon name={ICONS.learning.history} size={12} className="inline mr-1 -mt-0.5" /> {t('exam.history.history')}
          </button>
-           <button onClick={() => onStartConfig(subject.id)} className="flex-1 px-3 py-2 rounded-lg bg-primary text-white text-xs font-medium hover:opacity-90 transition-opacity">
+           <button onClick={() => onStartConfig(subject.id)} className="flex-1 px-3 py-2 rounded-lg bg-primary-solid text-white text-xs font-medium hover:opacity-90 transition-opacity">
             {t('exam.history.simulation')}
           </button>
         </div>

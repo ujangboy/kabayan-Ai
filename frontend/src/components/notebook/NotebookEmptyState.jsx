@@ -20,7 +20,7 @@ export function NotebookEmptyState({ onCreate, isCreating }) {
         disabled={isCreating}
         className={cn(
           'flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all',
-          'bg-primary text-white hover:bg-primary/90 shadow-sm',
+          'bg-primary-solid text-white hover:bg-primary-solid/90 shadow-sm',
           isCreating && 'opacity-50 pointer-events-none'
         )}
       >

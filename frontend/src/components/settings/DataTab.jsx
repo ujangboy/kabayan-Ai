@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { fadeUp, staggerContainer } from '@/lib/motion';
 import { ICONS } from '@/lib/icons';
 import { Icon , Button} from '@/components/ui';
 
@@ -214,9 +216,9 @@ export default function DataTab() {
   };
 
   return (
-    <div className="space-y-8">
+    <motion.div variants={staggerContainer} initial="hidden" animate="show" className="space-y-8">
       {/* Count cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+      <motion.div variants={fadeUp} className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
         {CATEGORIES.map(({ key, label, icon }) => (
           <div key={key} className="card-base p-4 flex flex-col gap-1">
             <Icon name={icon} size={16} className="text-primary" />
@@ -224,10 +226,10 @@ export default function DataTab() {
             <span className="text-xs text-text-secondary">{label}</span>
           </div>
         ))}
-      </div>
+      </motion.div>
 
       {/* Material status */}
-      <div className="card-base p-6 md:p-7">
+      <motion.div variants={fadeUp} className="card-base p-6 md:p-7">
         <h3 className="text-base font-semibold text-text mb-3">{t('settings.data.materials')}</h3>
         <div className="flex gap-6 text-xs">
           <span className="flex items-center gap-2">
@@ -243,10 +245,10 @@ export default function DataTab() {
             {t('settings.data.materialsFailed')} <b className="text-text">{stats.materials_failed ?? 0}</b>
           </span>
         </div>
-      </div>
+      </motion.div>
 
       {/* Materials list */}
-      <div className="card-base p-6 md:p-7">
+      <motion.div variants={fadeUp} className="card-base p-6 md:p-7">
         <h3 className="text-base font-semibold text-text mb-3">
           {t('settings.data.materials')} ({materials.length} {t('settings.data.items')})
         </h3>
@@ -308,10 +310,10 @@ export default function DataTab() {
             </table>
           </div>
         )}
-      </div>
+      </motion.div>
 
       {/* Backup / Export */}
-      <div className="card-base p-6 md:p-7">
+      <motion.div variants={fadeUp} className="card-base p-6 md:p-7">
         <h3 className="text-base font-semibold text-text mb-1 flex items-center gap-2">
           <Icon name={ICONS.ui.archive} size={15} className="text-primary" />
           {t('settings.data.backupTitle')}
@@ -365,10 +367,10 @@ export default function DataTab() {
             </div>
           )}
         </div>
-      </div>
+      </motion.div>
 
       {/* Trash (Sampah) */}
-      <div className="card-base p-6 md:p-7">
+      <motion.div variants={fadeUp} className="card-base p-6 md:p-7">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-base font-semibold text-text flex items-center gap-2">
             <Icon name={ICONS.actions.delete} size={15} className="text-danger" />
@@ -445,11 +447,11 @@ export default function DataTab() {
             </table>
           </div>
         )}
-      </div>
+      </motion.div>
 
       {/* Trashed subjects (soft-delete) */}
       {(trashedSubjects?.length || 0) > 0 && (
-        <div className="card-base p-6 md:p-7">
+        <motion.div variants={fadeUp} className="card-base p-6 md:p-7">
           <h3 className="text-base font-semibold text-text mb-3 flex items-center gap-2">
             <Icon name={ICONS.actions.delete} size={15} className="text-warning" />
             {t('settings.data.trashedSubjects')} ({trashedSubjects.length})
@@ -478,11 +480,11 @@ export default function DataTab() {
               </div>
             ))}
           </div>
-        </div>
+        </motion.div>
       )}
 
       {/* Storage */}
-      <div className="card-base p-6 md:p-7">
+      <motion.div variants={fadeUp} className="card-base p-6 md:p-7">
         <h3 className="text-base font-semibold text-text mb-3 flex items-center gap-2">
           <Icon name={ICONS.ui.storage} size={15} className="text-primary" />
           {t('settings.data.storage')}
@@ -499,7 +501,7 @@ export default function DataTab() {
             <span className="font-bold text-text">{formatBytes(storage.total)}</span>
           </div>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }

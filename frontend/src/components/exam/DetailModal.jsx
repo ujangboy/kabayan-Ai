@@ -89,7 +89,7 @@ export default function DetailModal({ open = false, historySessionId, onClose, o
           ].map(({ id, label, icon }) => (
             <button type="button" key={id} onClick={() => setTab(id)}
               className={cn('flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap shrink-0 snap-start',
-                tab === id ? 'bg-primary text-white' : 'bg-card text-text-secondary hover:text-text border border-border')}>
+                tab === id ? 'bg-primary-solid text-white' : 'bg-card text-text-secondary hover:text-text border border-border')}>
               <Icon name={icon} size={11} />{label}
             </button>
           ))}
@@ -482,7 +482,7 @@ function InlinePractice({ questions, topic, onComplete, onClose, onRetryTopic })
                           setRetryingTopic(null);
                         }
                       }}
-                      className="shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-lg bg-primary text-white text-3xs font-bold hover:bg-primary-hover transition-colors disabled:opacity-40"
+                      className="shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-lg bg-primary-solid text-white text-3xs font-bold hover:bg-primary-solid-hover transition-colors disabled:opacity-40"
                     >
                       {retryingTopic === weakTopic
                         ? <><Icon name={ICONS.status.loading} size={9} className="animate-spin" /> {t('common.loading')}</>
@@ -839,7 +839,7 @@ function StudyPlanTab({ plan, sessionId, onToggle, onPlanSaved,
                               setLoadingItemId(null);
                             }
                           }}
-                          className="text-3xs px-2 py-1 rounded bg-primary text-white font-bold
+                          className="text-3xs px-2 py-1 rounded bg-primary-solid text-white font-bold
                                      hover:bg-primary-hover transition-colors shrink-0 disabled:opacity-50 flex items-center gap-1">
                           {loadingItemId === item.id
                             ? <><Icon name={ICONS.status.loading} size={9} className="animate-spin" /> {t('common.loading')}</>

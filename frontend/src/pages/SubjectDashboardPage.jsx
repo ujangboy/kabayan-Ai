@@ -187,7 +187,7 @@ export default function SubjectDashboardPage() {
             <BackButton fallback="/subjects" label={t('back.label', { name: t('nav.subjects') })} />
             <div className="flex-1 min-w-[200px]">
               <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-primary-solid flex items-center justify-center shrink-0">
                   <Icon name={ICONS.learning.progress} size={18} className="text-white" />
                 </div>
                 <div className="min-w-0">

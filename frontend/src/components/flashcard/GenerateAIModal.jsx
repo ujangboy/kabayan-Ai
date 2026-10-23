@@ -122,7 +122,7 @@ export default function GenerateAIModal({ open, subjects, onClose, onSuccess }) 
                 <button key={opt.v} type="button" disabled={isGenerating}
                   onClick={() => setMode(opt.v)}
                   className={`flex-1 py-2 rounded-lg text-sm font-semibold border transition-colors disabled:opacity-50 ${
-                    mode === opt.v ? 'bg-primary text-white border-primary' : 'bg-background text-text-secondary border-border hover:border-primary/50 hover:text-text'
+                    mode === opt.v ? 'bg-primary-solid text-white border-primary-solid' : 'bg-background text-text-secondary border-border hover:border-primary/50 hover:text-text'
                   }`}>
                   {opt.l}
                 </button>
@@ -152,7 +152,7 @@ export default function GenerateAIModal({ open, subjects, onClose, onSuccess }) 
                 onClick={() => setCount(p)}
                 className={`flex-1 py-2 rounded-lg text-sm font-semibold border transition-colors disabled:opacity-50 ${
                   count === p
-                    ? 'bg-primary text-white border-primary'
+                    ? 'bg-primary-solid text-white border-primary-solid'
                     : 'bg-background text-text-secondary border-border hover:border-primary/50 hover:text-text'
                 }`}
               >

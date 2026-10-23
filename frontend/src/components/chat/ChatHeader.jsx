@@ -52,7 +52,7 @@ export default function ChatHeader({ chat, isCurrentChatStreaming, onToggleHisto
             className={cn(
               'inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium transition-colors border',
               tutorMode
-                ? 'bg-primary text-white border-primary hover:bg-primary-hover'
+                ? 'bg-primary-solid text-white border-primary hover:bg-primary-solid-hover'
                 : 'bg-subtle border-strong text-text-muted hover:text-text hover:border-strong'
             )}
             aria-pressed={tutorMode}

@@ -12,7 +12,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         primary:
-          'bg-primary text-white shadow-card hover:bg-primary-hover',
+          'bg-primary-solid text-white shadow-card hover:bg-primary-solid-hover',
         secondary:
           'bg-card text-text border border-border hover:bg-card-hover hover:border-strong',
         ghost: 'text-text-secondary hover:bg-card hover:text-text',

@@ -144,7 +144,7 @@ export default function ConfigView({ subjectId, analysis, onDone }) {
           return (
             <button key={lbl} onClick={() => set(field, opt)}
               className={cn('px-3 py-1.5 rounded-lg text-xs font-medium border transition-all',
-                active ? 'bg-primary text-white border-primary' : 'bg-card text-text border-border hover:border-primary/40')}>
+                active ? 'bg-primary-solid text-white border-primary-solid' : 'bg-card text-text border-border hover:border-primary/40')}>
               {lbl}
             </button>
           );
@@ -165,7 +165,7 @@ export default function ConfigView({ subjectId, analysis, onDone }) {
           {[...COUNTS, 'custom'].map(c => (
             <button key={c} onClick={() => set('total_questions', c)}
               className={cn('px-3 py-1.5 rounded-lg text-xs font-medium border transition-all',
-                form.total_questions === c ? 'bg-primary text-white border-primary' : 'bg-card text-text border-border hover:border-primary/40')}>
+                form.total_questions === c ? 'bg-primary-solid text-white border-primary-solid' : 'bg-card text-text border-border hover:border-primary/40')}>
               {c === 'custom' ? t('exam.config.countCustom') : c}
             </button>
           ))}

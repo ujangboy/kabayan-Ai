@@ -77,6 +77,7 @@ function SidebarContent({ collapsed, onNavigate, hideToggle = false }) {
   const { t } = useTranslation();
   const location = useLocation();
   const toggleCollapsed = useAppStore((s) => s.toggleCollapsed);
+  const settingsActive = isPathActive(location.pathname, '/settings');
 
   const navItem = (item) => {
     const active = isPathActive(location.pathname, item.to);
@@ -95,12 +96,10 @@ function SidebarContent({ collapsed, onNavigate, hideToggle = false }) {
             : 'text-text-secondary hover:bg-wash hover:text-text'
         )}
       >
+        {/* Penanda aktif statis (bukan layoutId): sebelumnya indikator "terbang"
+            lintas kelompok menu sehingga terasa melompat ke bawah. */}
         {active && (
-          <motion.span
-            layoutId="nav-active-indicator"
-            className="absolute -left-px top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full bg-primary"
-            transition={{ type: 'spring', stiffness: 400, damping: 34 }}
-          />
+          <span aria-hidden className="absolute -left-px top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full bg-primary" />
         )}
         <Icon
           name={item.icon}
@@ -125,12 +124,12 @@ function SidebarContent({ collapsed, onNavigate, hideToggle = false }) {
       <div
         className={cn(
           'flex h-16 shrink-0 items-center border-b border-border/70',
-          collapsed ? 'justify-center px-2' : 'justify-between px-4'
+          collapsed ? 'justify-between px-2' : 'justify-between px-4'
         )}
       >
         {collapsed ? (
           <NavLink to="/dashboard" onClick={() => onNavigate?.()} aria-label="Kabayan AI">
-            <KabayanMark size={34} />
+            <KabayanMark size={30} />
           </NavLink>
         ) : (
           <NavLink to="/dashboard" onClick={() => onNavigate?.()} className="min-w-0">
@@ -147,14 +146,22 @@ function SidebarContent({ collapsed, onNavigate, hideToggle = false }) {
             </span>
           </NavLink>
         )}
-        {!hideToggle && !collapsed && (
-          <Tooltip label={t('sidebar.collapse')} side="right">
+        {/* Toggle buka/tutup selalu di posisi yang sama (kanan header), di semua
+            keadaan — sebelumnya pindah ke footer saat rail, dan hilang di drawer. */}
+        {!hideToggle && (
+          <Tooltip label={collapsed ? t('sidebar.expand') : t('sidebar.collapse')} side="right">
             <button
               onClick={toggleCollapsed}
-              aria-label={t('sidebar.collapse')}
-              className="flex h-9 w-9 items-center justify-center rounded-xl text-text-muted transition-colors hover:bg-wash hover:text-text"
+              aria-label={collapsed ? t('sidebar.expand') : t('sidebar.collapse')}
+              className={cn(
+                'flex items-center justify-center rounded-xl text-text-muted transition-colors hover:bg-wash hover:text-text',
+                collapsed ? 'h-7 w-7' : 'h-9 w-9'
+              )}
             >
-              <Icon name={ICONS.actions.menu} size={18} />
+              <Icon
+                name={collapsed ? ICONS.actions.panelLeft : ICONS.actions.panelLeftClose}
+                size={collapsed ? 16 : 18}
+              />
             </button>
           </Tooltip>
         )}
@@ -175,31 +182,24 @@ function SidebarContent({ collapsed, onNavigate, hideToggle = false }) {
         ))}
       </nav>
 
-      <div className="mt-auto flex shrink-0 flex-col items-center gap-1 border-t border-border/80 bg-sidebar px-3 py-2">
-        {collapsed && !hideToggle && (
-          <Tooltip label={t('sidebar.expand')} side="right">
-            <button
-              onClick={toggleCollapsed}
-              aria-label={t('sidebar.expand')}
-              className="flex h-9 w-10 items-center justify-center rounded-xl text-text-muted transition-colors hover:bg-wash hover:text-text"
-            >
-              <Icon name={ICONS.actions.menuOpen} size={18} />
-            </button>
-          </Tooltip>
-        )}
+      <div className="mt-auto flex shrink-0 flex-col border-t border-border/80 bg-sidebar px-3 py-2">
         <NavLink
           to="/settings"
           onClick={() => onNavigate?.()}
-          aria-current={isPathActive(location.pathname, '/settings') ? 'page' : undefined}
+          aria-current={settingsActive ? 'page' : undefined}
           aria-label={t('nav.settings')}
           className={cn(
-            'flex h-10 items-center rounded-xl transition-colors',
+            'relative flex h-10 items-center rounded-xl transition-colors',
             collapsed ? 'w-10 justify-center' : 'w-full gap-3 px-3',
-            isPathActive(location.pathname, '/settings')
+            settingsActive
               ? 'bg-primary/10 text-primary-light'
               : 'text-text-secondary hover:bg-wash hover:text-text'
           )}
         >
+          {/* Penanda aktif statis yang sama dengan item nav utama */}
+          {settingsActive && (
+            <span aria-hidden className="absolute -left-px top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full bg-primary" />
+          )}
           <Icon name={ICONS.nav.settings} size={19} className="shrink-0" />
           {!collapsed && <span className="text-[13.5px] font-medium">{t('nav.settings')}</span>}
         </NavLink>

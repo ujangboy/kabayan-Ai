@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { ICONS } from '@/lib/icons';
 import { Icon } from '@/components/ui';
 import { motion, AnimatePresence } from 'framer-motion';
+import { fadeUp, easeStandard } from '@/lib/motion';
 import { cn } from '@/utils';
 import ProfileTab from '@/components/settings/ProfileTab';
 import LanguageTab from '@/components/settings/LanguageTab';
@@ -38,7 +39,7 @@ export default function SettingsPage() {
       {/* Header */}
       <div className="shrink-0 px-6 md:px-8 py-6 border-b border-border">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-primary-solid flex items-center justify-center shrink-0">
             <Icon name={ICONS.nav.settings} size={18} className="text-white" />
           </div>
           <div>
@@ -56,30 +57,26 @@ export default function SettingsPage() {
             {TABS.map(({ key, icon, labelKey }) => {
               const isActive = active === key;
               return (
-                <motion.button
+                <button
                   key={key}
                   onClick={() => setActive(key)}
-                  whileHover={{ x: 1 }}
-                  whileTap={{ scale: 0.98 }}
+                  aria-current={isActive ? 'page' : undefined}
                   className={cn(
-                    'relative flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-[background-color,color] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] shrink-0 md:shrink',
+                    'relative flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-[background-color,color] duration-200 shrink-0 md:shrink cursor-pointer',
                     isActive
                       ? 'text-white'
                       : 'text-text-secondary hover:text-text hover:bg-wash'
                   )}
                 >
+                  {/* Pill aktif statis — konsisten dgn penanda statis sidebar */}
                   {isActive && (
-                    <motion.span
-                      layoutId="settings-active-indicator"
-                      className="absolute inset-0 rounded-xl bg-primary"
-                      transition={{ type: 'spring', stiffness: 400, damping: 32 }}
-                    />
+                    <span aria-hidden className="absolute inset-0 rounded-xl bg-primary-solid" />
                   )}
                   <span className="relative flex items-center gap-2.5">
                     <Icon name={icon} size={16} className={isActive ? 'text-white' : 'text-text-secondary'} />
                     <span>{t(labelKey)}</span>
                   </span>
-                </motion.button>
+                </button>
               );
             })}
           </nav>
@@ -90,12 +87,13 @@ export default function SettingsPage() {
           <div className="p-6 md:p-10 lg:p-12 max-w-7xl mx-auto">
             <div className="rounded-lg border border-border bg-surface p-6 md:p-10 shadow-sm">
               <AnimatePresence mode="wait">
+                {/* Gerak tab standar dari lib/motion: fadeUp masuk, keluar lebih cepat */}
                 <motion.div
                   key={active}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+                  variants={fadeUp}
+                  initial="hidden"
+                  animate="show"
+                  exit={{ opacity: 0, y: -6, transition: { duration: 0.18, ease: easeStandard } }}
                 >
                   {renderTab()}
                 </motion.div>

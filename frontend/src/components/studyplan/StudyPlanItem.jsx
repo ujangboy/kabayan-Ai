@@ -294,7 +294,7 @@ export function StudyPlanItem({
               <button
                 disabled={isPracticeOpen}
                 onClick={() => onOpenPractice(item)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-white text-2xs font-bold hover:bg-primary-hover transition-colors disabled:opacity-40"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary-solid text-white text-2xs font-bold hover:bg-primary-solid-hover transition-colors disabled:opacity-40"
               >
                 <Icon name={ICONS.media.play} size={11} /> {t('studyPlanPage.practiceQuiz')}
               </button>

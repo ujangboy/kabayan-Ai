@@ -134,7 +134,7 @@ export default function ChatComposer({ onSend, isStreaming, onStop, tutorMode, o
             onClick={() => setShowQuickPrompts((v) => !v)}
             className={cn(
               "flex h-8 w-8 items-center justify-center rounded-full transition-all duration-200 shrink-0 mb-1",
-              showQuickPrompts ? "bg-primary text-white" : "bg-card-hover text-text-secondary hover:text-text"
+              showQuickPrompts ? "bg-primary-solid text-white" : "bg-card-hover text-text-secondary hover:text-text"
             )}
             aria-label={t('chat.quickPrompts', 'Pintasan')}
           >
@@ -198,7 +198,7 @@ export default function ChatComposer({ onSend, isStreaming, onStop, tutorMode, o
               onClick={handleSend}
               disabled={!input.trim()}
               whileTap={{ scale: 0.9 }}
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white hover:bg-primary-hover disabled:opacity-35 disabled:cursor-not-allowed transition-all duration-150 shrink-0 mb-1 shadow-card"
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-solid text-white hover:bg-primary-solid-hover disabled:opacity-35 disabled:cursor-not-allowed transition-all duration-150 shrink-0 mb-1 shadow-card"
               aria-label={t('chat.send')}
             >
               <Icon name={ICONS.actions.send} size={14} className="ml-px" />

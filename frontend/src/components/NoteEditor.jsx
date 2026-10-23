@@ -311,7 +311,7 @@ function Toolbar({ editor, onPreview, onInsertMath, className = '' }) {
         <button
           type="button"
           onClick={onPreview}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-primary/10 text-primary border border-primary/20 transition-all shrink-0 mr-2 hover:bg-primary hover:text-white shadow-sm"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-primary/10 text-primary border border-primary/20 transition-all shrink-0 mr-2 hover:bg-primary-solid hover:text-white shadow-sm"
         >
           <Icon name={ICONS.ui.eye} size={14} /> {t('noteEditor.preview')}
         </button>

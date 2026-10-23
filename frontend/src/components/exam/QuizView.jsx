@@ -139,7 +139,7 @@ export default function QuizView({ sessionData, clockStart, onDone }) {
             className="card-base p-6 space-y-5"
           >
             <div className="flex items-start gap-3">
-              <span className="shrink-0 w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold">
+              <span className="shrink-0 w-8 h-8 rounded-full bg-primary-solid text-white flex items-center justify-center text-sm font-bold">
                 {idx+1}
               </span>
               <div className="flex-1">
@@ -202,7 +202,7 @@ export default function QuizView({ sessionData, clockStart, onDone }) {
             {questions.map((_, i) => (
               <button key={i} onClick={() => setIdx(i)}
                 className={cn('w-6 h-6 rounded-md text-3xs font-medium transition-all',
-                  i === idx ? 'bg-primary text-white' :
+                  i === idx ? 'bg-primary-solid text-white' :
                   answers[String(questions[i].id)] ? 'bg-success/20 text-success border border-success/30' :
                   'bg-card text-text-muted border border-border hover:border-primary/40')}>
                 {i+1}

@@ -122,7 +122,7 @@ export default function StudyPlanPage() {
               <Button
                 onClick={() => navigate('/exam-analyzer')}
                 size="lg"
-                className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 min-w-[200px] bg-primary hover:bg-primary-hover"
+                className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 min-w-[200px] bg-primary-solid hover:bg-primary-solid-hover"
               >
                 <Icon name={ICONS.nav.exam} size={18} />
                 {t('studyPlanPage.empty.ctaPrimary', 'Kerjakan Ujian Simulasi')}

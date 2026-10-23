@@ -162,7 +162,7 @@ export default function TopBar() {
       <Tooltip label={displayName} side="bottom">
         <button
           onClick={() => navigate('/settings')}
-          className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-primary text-sm font-semibold text-white shadow-card transition-all duration-150 hover:bg-primary-hover active:scale-[0.98]"
+          className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-primary-solid text-sm font-semibold text-white shadow-card transition-all duration-150 hover:bg-primary-solid-hover active:scale-[0.98]"
           aria-label={displayName}
         >
           <img

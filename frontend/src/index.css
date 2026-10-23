@@ -97,6 +97,10 @@
     --accent: 13 122 88;
     --accent-hover: 10 98 71;
     --accent-light: 10 98 71;
+    /* Solid fill terpisah: tombol/kartu dengan teks putih selalu pakai hijau
+       dalam agar kontras AA — tidak ikut meneon walau --accent dinaikkan. */
+    --accent-solid: 13 122 88;
+    --accent-solid-hover: 10 98 71;
     --sun: 232 162 58;
     --wash: rgba(20, 34, 29, 0.045);
     --wash-strong: rgba(20, 34, 29, 0.08);
@@ -131,9 +135,12 @@
     --text-primary-rgb: 236 245 240;
     --text-secondary-rgb: 169 184 176;
     --text-muted-rgb: 114 130 122;
-    --accent: 52 211 153;
-    --accent-hover: 110 231 183;
+    --accent: 51 187 137;
+    --accent-hover: 82 214 162;
     --accent-light: 167 243 208;
+    /* Solid fill = hijau brand dalam (sama dgn light) — putih di atasnya 5.2:1 */
+    --accent-solid: 13 122 88;
+    --accent-solid-hover: 10 98 71;
     --sun: 251 191 36;
     --wash: rgba(236, 245, 240, 0.065);
     --wash-strong: rgba(236, 245, 240, 0.11);
@@ -144,7 +151,7 @@
     --code-bg: #1d2b25;
     --shadow-card: none;
     /* Status semantik — lebih terang di dark agar lolos kontras */
-    --success: 74 222 128;
+    --success: 57 199 116;
     --danger: 248 113 113;
     --warning: 251 191 36;
     --info: 56 189 248;
@@ -383,7 +390,7 @@
      secara visual. Untuk kode baru, prefer <Button>. */
   .btn-primary {
     @apply inline-flex items-center justify-center gap-2 font-medium select-none whitespace-nowrap rounded-btn h-10 px-4 text-[15px]
-           bg-primary text-white shadow-card hover:bg-primary-hover active:scale-[0.98] transition-all duration-200 cursor-pointer
+           bg-primary-solid text-white shadow-card hover:bg-primary-solid-hover active:scale-[0.98] transition-all duration-200 cursor-pointer
            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-1 focus-visible:ring-offset-background;
   }
 

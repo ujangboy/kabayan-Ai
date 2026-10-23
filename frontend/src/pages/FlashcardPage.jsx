@@ -175,7 +175,7 @@ export default function FlashcardPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-card shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-primary-solid flex items-center justify-center shadow-card shrink-0">
               <Icon name={ICONS.nav.flashcard} size={20} className="text-white" />
             </div>
             <div>
@@ -219,7 +219,7 @@ export default function FlashcardPage() {
               onClick={() => setSubjectFilter('flashcard', '')}
               className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
                 !subjectFilter
-                  ? 'bg-primary text-white border-primary'
+                  ? 'bg-primary-solid text-white border-primary-solid'
                   : 'bg-surface border-strong text-text-secondary hover:border-primary/50'
               }`}
             >
@@ -233,7 +233,7 @@ export default function FlashcardPage() {
                   onClick={() => setSubjectFilter('flashcard', String(s.id))}
                   className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors flex items-center gap-1.5 ${
                     active
-                      ? 'bg-primary text-white border-primary'
+                      ? 'bg-primary-solid text-white border-primary-solid'
                       : 'bg-surface border-strong text-text-secondary hover:border-primary/50'
                   }`}
                 >

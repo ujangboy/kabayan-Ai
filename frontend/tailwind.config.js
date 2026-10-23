@@ -50,6 +50,8 @@ export default {
           DEFAULT: "rgb(var(--accent) / <alpha-value>)",
           hover: "rgb(var(--accent-hover) / <alpha-value>)",
           light: "rgb(var(--accent-light) / <alpha-value>)",
+          solid: "rgb(var(--accent-solid) / <alpha-value>)",
+          "solid-hover": "rgb(var(--accent-solid-hover) / <alpha-value>)",
           foreground: "#ffffff",
         },
         text: {

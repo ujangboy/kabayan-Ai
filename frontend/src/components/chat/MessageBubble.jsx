@@ -17,7 +17,7 @@ export default function MessageBubble({ message, isLast, tutorMode, onFeedback }
     return (
       <div className="flex justify-end group">
         <div className="relative max-w-[75%]">
-          <div className="rounded-2xl rounded-br-md bg-primary text-primary-foreground px-4 py-2.5 text-[15px] leading-relaxed shadow-sm whitespace-pre-wrap">
+          <div className="rounded-2xl rounded-br-md bg-primary-solid text-primary-foreground px-4 py-2.5 text-[15px] leading-relaxed shadow-sm whitespace-pre-wrap">
             {message.content}
           </div>
           <div className="absolute -bottom-6 right-0 flex items-center">
