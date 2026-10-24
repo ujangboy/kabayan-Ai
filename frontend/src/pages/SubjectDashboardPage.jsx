@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { subjectAPI, examAPI, studyAPI } from '@/services/api';
 import { useUiStore } from '@/store';
 import { cn, formatDate, fadeSlide } from '@/utils';
-import { Tooltip, ConfirmDialog, Skeleton, getSubjectPalette, Icon } from '@/components/ui';
+import { Tooltip, ConfirmDialog, Skeleton, Icon } from '@/components/ui';
 import { ICONS } from '@/lib/icons';
 import ProgressCard from '@/components/ProgressCard';
 import BackButton from '@/components/layout/BackButton';
@@ -19,26 +19,26 @@ import StudyRecommendationCard from '@/components/dashboard/StudyRecommendationC
 import MaterialsTable from '@/components/dashboard/MaterialsTable';
 
 const ACTIVITY_META = (t) => ({
-  quiz:      { icon: ICONS.ui.help, label: t('subjectDashboard.activityQuiz'),      cls: 'bg-teal-500/10 text-teal-400 border-teal-500/20' },
+  quiz:      { icon: ICONS.ui.help, label: t('subjectDashboard.activityQuiz'),      cls: 'bg-accent-teal/10 text-accent-teal border-accent-teal/20' },
   ujian:     { icon: ICONS.learning.trophy,     label: t('subjectDashboard.activityExam'),      cls: 'bg-primary/10 text-primary-light border-primary/20' },
   flashcard: { icon: ICONS.nav.flashcard, label: t('subjectDashboard.activityFlashcard'), cls: 'bg-accent-blue/10 text-accent-blue border-accent-blue/20' },
-  materi:    { icon: ICONS.files.document,   label: t('subjectDashboard.activityMaterial'),  cls: 'bg-sky-500/10 text-sky-300 border-sky-500/20' },
+  materi:    { icon: ICONS.files.document,   label: t('subjectDashboard.activityMaterial'),  cls: 'bg-info/10 text-info border-info/20' },
 });
 
 function QueryErrorCard({ title }) {
   const { t } = useTranslation();
   return (
-    <div className="rounded-xl border border-red-500/30 bg-surface p-4">
-      <p className="text-xs text-red-400">{t('subjectDashboard.queryError', { title })}</p>
+    <div className="rounded-xl border border-danger/30 bg-surface p-4">
+      <p className="text-xs text-danger">{t('subjectDashboard.queryError', { title })}</p>
     </div>
   );
 }
 
 function MetricBar({ subject, masteryPct, t }) {
   const items = [
-    { icon: ICONS.files.document, label: t('subjectDashboard.statMaterials'), value: subject.total_materials, color: 'text-sky-400', bg: 'bg-sky-500/10' },
+    { icon: ICONS.files.document, label: t('subjectDashboard.statMaterials'), value: subject.total_materials, color: 'text-info', bg: 'bg-info/10' },
     { icon: ICONS.nav.flashcard, label: t('subjectDashboard.statFlashcards'), value: subject.total_flashcards, color: 'text-accent-blue', bg: 'bg-accent-blue/10' },
-    { icon: ICONS.learning.trophy, label: t('subjectDashboard.statAvgScore'), value: subject.avg_score, suffix: subject.avg_score != null ? '/100' : '', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+    { icon: ICONS.learning.trophy, label: t('subjectDashboard.statAvgScore'), value: subject.avg_score, suffix: subject.avg_score != null ? '/100' : '', color: 'text-success', bg: 'bg-success/10' },
     { icon: ICONS.learning.progress, label: t('subjectDashboard.statMastery', 'Progress'), value: masteryPct, suffix: masteryPct != null ? '%' : '', color: 'text-primary-light', bg: 'bg-primary/10' },
   ];
   return (
@@ -68,7 +68,6 @@ export default function SubjectDashboardPage() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const subjectId = Number(id);
-  const subjectPalette = getSubjectPalette(subjectId);
   const setLastSubjectId = useUiStore((s) => s.setLastSubjectId);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -139,8 +138,8 @@ export default function SubjectDashboardPage() {
     return (
       <AnimatePresence mode="wait" initial={false}>
         <motion.div key="error" {...fadeSlide} className="flex-1 overflow-y-auto p-6 md:p-8 bg-base">
-          <div className="w-full rounded-xl border border-red-500/30 bg-surface p-8 text-center">
-            <p className="text-sm text-red-400">{extractErrorMessage(error) || t('subjectDashboard.notFound')}</p>
+          <div className="w-full rounded-xl border border-danger/30 bg-surface p-8 text-center">
+            <p className="text-sm text-danger">{extractErrorMessage(error) || t('subjectDashboard.notFound')}</p>
             <button
               type="button"
               onClick={() => queryClient.invalidateQueries(['subject-dashboard', subjectId])}
@@ -182,9 +181,8 @@ export default function SubjectDashboardPage() {
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          className={cn('relative overflow-hidden bg-surface border border-border rounded-lg p-5', subjectPalette?.card)}
+          className={cn('relative bg-surface border border-border rounded-lg p-5')}
         >
-          {subjectPalette && <span aria-hidden className={cn('absolute inset-x-0 top-0 h-1', subjectPalette.bar)} />}
           <div className="flex items-center gap-3 flex-wrap">
             <BackButton fallback="/subjects" label={t('back.label', { name: t('nav.subjects') })} />
             <div className="flex-1 min-w-[200px]">
@@ -214,7 +212,7 @@ export default function SubjectDashboardPage() {
                 <Icon name={ICONS.actions.edit} size={14} /> {t('subjectDashboard.editButton')}
               </button>
               <Tooltip label={t('common.delete')}>
-                <button onClick={() => setIsDeleteOpen(true)} aria-label={t('common.delete')} className="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-subtle border border-border text-text-secondary hover:text-red-400 hover:border-red-500/30 transition-colors">
+                <button onClick={() => setIsDeleteOpen(true)} aria-label={t('common.delete')} className="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-subtle border border-border text-text-secondary hover:text-danger hover:border-danger/30 transition-colors">
                   <Icon name={ICONS.actions.delete} size={14} />
                 </button>
               </Tooltip>

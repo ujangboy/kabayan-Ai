@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 
 import MathMarkdown from '@/components/MathMarkdown';
+import { KabayanMark } from '@/components/brand/KabayanLogo';
 import { ICONS } from '@/lib/icons';
 import { Icon } from '@/components/ui';
 import CopyButton from './CopyButton';
@@ -17,7 +18,7 @@ export default function MessageBubble({ message, isLast, tutorMode, onFeedback }
     return (
       <div className="flex justify-end group">
         <div className="relative max-w-[75%]">
-          <div className="rounded-2xl rounded-br-md bg-primary-solid text-primary-foreground px-4 py-2.5 text-[15px] leading-relaxed shadow-sm whitespace-pre-wrap">
+          <div className="rounded-2xl rounded-br-md bg-primary-solid text-primary-foreground px-4 py-2.5 text-15 leading-relaxed shadow-sm whitespace-pre-wrap">
             {message.content}
           </div>
           <div className="absolute -bottom-6 right-0 flex items-center">
@@ -31,14 +32,13 @@ export default function MessageBubble({ message, isLast, tutorMode, onFeedback }
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-start gap-3">
-        <div
-          className={cn(
-            'w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 shadow-sm ring-1 ring-black/10',
-            tutorMode ? 'bg-primary' : 'bg-orange'
-          )}
-        >
-          {tutorMode ? 'T' : 'K'}
-        </div>
+        {tutorMode ? (
+          <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center text-white text-xs font-bold shrink-0 shadow-sm ring-1 ring-black/10">
+            T
+          </div>
+        ) : (
+          <KabayanMark size={28} className="shrink-0" />
+        )}
         <div className="flex-1 min-w-0">
           {message.note_saved && (
             <div className="mb-1 inline-flex items-center gap-1 text-2xs font-medium text-warning">
@@ -47,7 +47,7 @@ export default function MessageBubble({ message, isLast, tutorMode, onFeedback }
           )}
           <div
             className={cn(
-              'rounded-2xl rounded-tl-md text-[15px] leading-relaxed transition-colors duration-200',
+              'rounded-2xl rounded-tl-md text-15 leading-relaxed transition-colors duration-200',
               message.content === ''
                 ? 'bg-transparent border-0 shadow-none px-1 py-1'
                 : 'bg-surface border border-strong px-4 py-2.5 shadow-sm'

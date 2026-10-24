@@ -205,7 +205,7 @@ export default function MathMarkdown({ children = '', className = '' }) {
   const safe = sanitizeUnpairedDelimiters(normalized);
 
   return (
-    <div className={`prose-dark text-[15px] leading-relaxed ${className}`}>
+    <div className={`prose-dark text-15 leading-relaxed ${className}`}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath]}
         rehypePlugins={[

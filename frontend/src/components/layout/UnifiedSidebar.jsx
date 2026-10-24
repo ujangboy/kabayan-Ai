@@ -106,7 +106,7 @@ function SidebarContent({ collapsed, onNavigate, hideToggle = false }) {
           size={19}
           className={cn('shrink-0 transition-transform duration-200', !active && 'group-hover:scale-[1.04]')}
         />
-        {!collapsed && <span className="truncate text-[13.5px] font-medium">{t(item.labelKey)}</span>}
+        {!collapsed && <span className="truncate text-meta font-medium">{t(item.labelKey)}</span>}
       </NavLink>
     );
 
@@ -128,7 +128,7 @@ function SidebarContent({ collapsed, onNavigate, hideToggle = false }) {
         )}
       >
         {collapsed ? (
-          <NavLink to="/dashboard" onClick={() => onNavigate?.()} aria-label="Kabayan AI">
+          <NavLink to="/dashboard" onClick={() => onNavigate?.()} aria-label="Kabayan Pintar">
             <KabayanMark size={30} />
           </NavLink>
         ) : (
@@ -136,11 +136,11 @@ function SidebarContent({ collapsed, onNavigate, hideToggle = false }) {
             <span className="flex items-center gap-2.5">
               <KabayanMark size={34} />
               <span className="flex items-baseline gap-1.5">
-                <span className="font-display text-[19px] font-extrabold tracking-[-0.045em] text-text">
+                <span className="font-display text-lg font-extrabold tracking-[-0.045em] text-text">
                   kabayan
                 </span>
-                <span className="rounded-md bg-primary/10 px-1.5 py-0.5 font-display text-[10px] font-extrabold uppercase tracking-[0.12em] text-primary-light">
-                  AI
+                <span className="rounded-md bg-primary/10 px-1.5 py-0.5 font-display text-3xs font-extrabold uppercase tracking-[0.12em] text-primary-light">
+                  Pintar
                 </span>
               </span>
             </span>
@@ -173,7 +173,7 @@ function SidebarContent({ collapsed, onNavigate, hideToggle = false }) {
             {collapsed ? (
               groupIdx > 0 && <div className="mx-2 mb-2 h-px bg-border/80" />
             ) : (
-              <p className="px-3 pb-1.5 pt-3 font-display text-[10px] font-bold uppercase tracking-[0.16em] text-text-muted">
+              <p className="px-3 pb-1.5 pt-3 font-display text-3xs font-bold uppercase tracking-[0.16em] text-text-muted">
                 {t(group.labelKey, group.fallback)}
               </p>
             )}
@@ -201,7 +201,7 @@ function SidebarContent({ collapsed, onNavigate, hideToggle = false }) {
             <span aria-hidden className="absolute -left-px top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full bg-primary" />
           )}
           <Icon name={ICONS.nav.settings} size={19} className="shrink-0" />
-          {!collapsed && <span className="text-[13.5px] font-medium">{t('nav.settings')}</span>}
+          {!collapsed && <span className="text-meta font-medium">{t('nav.settings')}</span>}
         </NavLink>
       </div>
     </div>

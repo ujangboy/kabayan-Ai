@@ -13,18 +13,11 @@ import { KabayanMark } from '@/components/brand/KabayanLogo';
 import api from '@/services/api';
 
 const QUICK_ACTIONS = (t) => [
-  { icon: ICONS.communication.chat, label: t('dashboard.quickChat'),       desc: t('dashboard.quickChatDesc'),     to: '/chat',             color: 'bg-primary-solid text-white',        shadow: 'shadow-card', tone: 'green' },
-  { icon: ICONS.files.document,      label: t('dashboard.quickUpload'),     desc: t('dashboard.quickUploadDesc'),    to: '/materi?upload=1', color: 'bg-sun/15 text-warning',             shadow: '', tone: 'sun' },
-  { icon: ICONS.nav.flashcard,       label: t('dashboard.quickFlashcard'),  desc: t('dashboard.quickFlashcardDesc'), to: '/flashcard',        color: 'bg-primary/10 text-primary-light',  shadow: '', tone: 'purple' },
-  { icon: ICONS.ui.help,             label: t('dashboard.quickQuiz'),       desc: t('dashboard.quickQuizDesc'),      to: '/quiz',             color: 'bg-info/10 text-info',              shadow: '', tone: 'blue' },
+  { icon: ICONS.communication.chat, label: t('dashboard.quickChat'),       desc: t('dashboard.quickChatDesc'),     to: '/chat',             tone: 'green' },
+  { icon: ICONS.files.document,      label: t('dashboard.quickUpload'),     desc: t('dashboard.quickUploadDesc'),    to: '/materi?upload=1',  tone: 'neutral' },
+  { icon: ICONS.nav.flashcard,       label: t('dashboard.quickFlashcard'),  desc: t('dashboard.quickFlashcardDesc'), to: '/flashcard',        tone: 'neutral' },
+  { icon: ICONS.ui.help,             label: t('dashboard.quickQuiz'),       desc: t('dashboard.quickQuizDesc'),      to: '/quiz',             tone: 'neutral' },
 ];
-
-const STAT_TONES = {
-  blue:   'bg-info/10 text-info border-info/20',
-  green:  'bg-success/10 text-success border-success/20',
-  purple: 'bg-primary/10 text-primary-light border-primary/20',
-  teal:   'bg-sun/10 text-warning border-sun/25',
-};
 
 const container = {
   hidden: { opacity: 0 },
@@ -36,19 +29,17 @@ const item = {
   show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.32, 0.72, 0, 1] } },
 };
 
-function StatCard({ icon, label, value, tone, loading }) {
-  const palette = getCardTone(tone);
+function StatCard({ icon, label, value, loading }) {
   return (
-    <motion.div variants={item} className={`card-base card-hoverable relative flex items-center gap-3.5 overflow-hidden p-4 ${palette.card}`}>
-      {palette && <span aria-hidden className={`absolute inset-x-0 top-0 h-1 ${palette.bar}`} />}
-      <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border ${STAT_TONES[tone]}`}>
+    <motion.div variants={item} className="card-base card-hoverable relative flex items-center gap-3.5 p-4">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border bg-subtle text-text-secondary">
         <Icon name={icon} size={18} />
       </div>
       <div className="min-w-0">
-        <div className="font-display text-[22px] font-bold leading-tight tracking-[-0.035em] text-text">
+        <div className="font-display text-2xl font-bold leading-tight tracking-[-0.035em] text-text">
           {loading ? <Skeleton className="inline-block h-7 w-10 rounded-lg" /> : (value ?? 0)}
         </div>
-        <p className="mt-0.5 truncate text-[11.5px] text-text-secondary">{label}</p>
+        <p className="mt-0.5 truncate text-xs text-text-secondary">{label}</p>
       </div>
     </motion.div>
   );
@@ -96,61 +87,59 @@ export default function DashboardPage() {
     <div className="flex-1 overflow-y-auto">
       <div className="mx-auto w-full max-w-[1240px] space-y-8 p-5 md:p-8 lg:p-10">
 
-        {/* Greeting — ruang belajar, bukan dashboard metrik. */}
+        {/* Greeting — flat tipografis di kanvas, tanpa kartu dekorasi. */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-          className="relative overflow-hidden rounded-card border border-border bg-surface p-6 shadow-card md:p-8"
+          className="relative pt-2 md:pt-4"
         >
-          <div className="pointer-events-none absolute -right-16 -top-24 h-64 w-64 rounded-full bg-primary/[0.07] blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-24 right-24 h-48 w-48 rounded-full bg-sun/[0.08] blur-3xl" />
-          <div className="relative">
-            <div className="mb-3 flex flex-wrap items-center gap-2 text-[11px] font-bold uppercase tracking-[0.16em] text-primary-light">
-              <KabayanMark size={22} />
-              <span>{t('nav.groupToday')}</span>
-              <span className="text-text-muted/60">·</span>
-              <span className="font-medium normal-case tracking-normal text-text-muted">{todayLabel}</span>
-            </div>
-            <h1 className="font-display text-3xl font-extrabold tracking-[-0.04em] text-text md:text-4xl">
-              {greeting}!
-            </h1>
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-text-secondary">
-              {t('dashboard.tagline')}
-              {stats.subjects > 0 && ` ${t('dashboard.activeSubjects', { count: stats.subjects })}`}
-              <HelpTip label={t('help.dashboard')} className="ml-1.5 -mt-0.5 align-middle" />
-            </p>
+          <div className="mb-3 flex flex-wrap items-center gap-2 text-2xs font-bold uppercase tracking-[0.16em] text-primary-light">
+            <KabayanMark size={22} />
+            <span>{t('nav.groupToday')}</span>
+            <span className="text-text-muted/60">·</span>
+            <span className="font-medium normal-case tracking-normal text-text-muted">{todayLabel}</span>
           </div>
+          <h1 className="font-display text-3xl font-extrabold tracking-[-0.04em] text-text md:text-4xl">
+            {greeting}!
+          </h1>
+          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-text-secondary">
+            {t('dashboard.tagline')}
+            {stats.subjects > 0 && ` ${t('dashboard.activeSubjects', { count: stats.subjects })}`}
+            <HelpTip label={t('help.dashboard')} className="ml-1.5 -mt-0.5 align-middle" />
+          </p>
         </motion.div>
 
-        {/* Quick Actions */}
+        {/* Quick Actions — satu CTA solid, sisanya netral. */}
         <motion.section
           variants={container}
           initial="hidden"
           animate="show"
         >
-          <motion.div variants={item} className="mb-4 flex items-center gap-2">
-            <Icon name={ICONS.ui.bolt} size={15} className="text-warning" />
-            <h2 className="font-display text-[11px] font-bold uppercase tracking-[0.14em] text-text-muted">{t('dashboard.sectionQuickActions')}</h2>
+          <motion.div variants={item} className="mb-4">
+            <h2 className="font-display text-2xs font-bold uppercase tracking-[0.14em] text-text-muted">{t('dashboard.sectionQuickActions')}</h2>
           </motion.div>
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            {QUICK_ACTIONS(t).map(({ icon, label, desc, to, color, shadow, tone }) => {
-              const palette = getCardTone(tone);
+            {QUICK_ACTIONS(t).map(({ icon, label, desc, to, tone }) => {
+              const isPrimary = tone === 'green';
               return (
                 <motion.button
                   key={to}
                   variants={item}
                   whileTap={{ scale: 0.985 }}
                   onClick={() => handleQuickAction(to)}
-                  className={`card-base card-hoverable relative flex cursor-pointer items-center gap-3.5 overflow-hidden p-4 text-left ${palette.card}`}
+                  className={`card-base card-hoverable relative flex cursor-pointer items-center gap-3.5 p-4 text-left ${
+                    isPrimary ? getCardTone('primary').card : ''
+                  }`}
                 >
-                  {palette && <span aria-hidden className={`absolute inset-x-0 top-0 h-1 ${palette.bar}`} />}
-                  <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${color} ${shadow}`}>
+                  <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
+                    isPrimary ? 'bg-white/15 text-white' : 'bg-subtle text-text-secondary'
+                  }`}>
                     <Icon name={icon} size={18} />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[12.5px] font-semibold leading-tight text-text sm:truncate sm:text-[13.5px]">{label}</p>
-                    <p className="mt-0.5 hidden truncate text-[11.5px] text-text-muted sm:block">{desc}</p>
+                    <p className={`text-meta font-semibold leading-tight sm:truncate ${isPrimary ? 'text-white' : 'text-text'}`}>{label}</p>
+                    <p className="mt-0.5 hidden truncate text-xs text-text-muted sm:block">{desc}</p>
                   </div>
                 </motion.button>
               );
@@ -168,15 +157,14 @@ export default function DashboardPage() {
           initial="hidden"
           animate="show"
         >
-          <motion.div variants={item} className="mb-4 flex items-center gap-2">
-            <Icon name={ICONS.learning.progress} size={15} className="text-success" />
-            <h2 className="font-display text-[11px] font-bold uppercase tracking-[0.14em] text-text-muted">{t('dashboard.sectionStats')}</h2>
+          <motion.div variants={item} className="mb-4">
+            <h2 className="font-display text-2xs font-bold uppercase tracking-[0.14em] text-text-muted">{t('dashboard.sectionStats')}</h2>
           </motion.div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <StatCard icon={ICONS.files.document}   label={t('dashboard.statMaterials')}    value={stats.materials}  tone="blue"   loading={isLoading} />
-            <StatCard icon={ICONS.learning.bookmarks} label={t('dashboard.statNotes')}       value={stats.notes}      tone="green"  loading={isLoading} />
-            <StatCard icon={ICONS.nav.flashcard} label={t('dashboard.statFlashcards')}  value={stats.flashcards} tone="purple" loading={isLoading} />
-            <StatCard icon={ICONS.ui.help} label={t('dashboard.statQuizzes')}     value={stats.quizzes}    tone="teal"   loading={isLoading} />
+            <StatCard icon={ICONS.files.document}   label={t('dashboard.statMaterials')}    value={stats.materials}  loading={isLoading} />
+            <StatCard icon={ICONS.learning.bookmarks} label={t('dashboard.statNotes')}       value={stats.notes}      loading={isLoading} />
+            <StatCard icon={ICONS.nav.flashcard} label={t('dashboard.statFlashcards')}  value={stats.flashcards} loading={isLoading} />
+            <StatCard icon={ICONS.ui.help} label={t('dashboard.statQuizzes')}     value={stats.quizzes}    loading={isLoading} />
           </div>
           {/* D6: badge observability storage */}
           {data?.storage && (
@@ -201,16 +189,12 @@ export default function DashboardPage() {
           {/* Materi Terbaru */}
           <motion.div variants={item}>
             <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <Icon name={ICONS.learning.clock} size={14} className="text-text-secondary" />
-                <h2 className="font-display text-[11px] font-bold uppercase tracking-[0.14em] text-text-muted">{t('dashboard.sectionRecentMaterials')}</h2>
-              </div>
+              <h2 className="font-display text-2xs font-bold uppercase tracking-[0.14em] text-text-muted">{t('dashboard.sectionRecentMaterials')}</h2>
               <button onClick={() => navigate('/materi')} className="text-xs text-primary-light hover:text-primary transition-colors">
                 {t('dashboard.viewAll')}
               </button>
             </div>
-            <div className={`card-base relative overflow-hidden p-0 ${getCardTone('blue').card}`}>
-              <span aria-hidden className={`absolute inset-x-0 top-0 h-1 ${getCardTone('blue').bar}`} />
+            <div className="card-base p-0">
               {isLoading ? (
                 <div className="p-5 space-y-3">
                   {[1,2,3].map(i => <Skeleton key={i} className="h-4 w-full rounded-lg" />)}
@@ -252,16 +236,12 @@ export default function DashboardPage() {
           {/* Quiz Terbaru */}
           <motion.div variants={item}>
             <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <Icon name={ICONS.learning.trophy} size={14} className="text-text-secondary" />
-                <h2 className="font-display text-[11px] font-bold uppercase tracking-[0.14em] text-text-muted">{t('dashboard.sectionRecentQuizzes')}</h2>
-              </div>
+              <h2 className="font-display text-2xs font-bold uppercase tracking-[0.14em] text-text-muted">{t('dashboard.sectionRecentQuizzes')}</h2>
               <button onClick={() => navigate('/quiz')} className="text-xs text-primary-light hover:text-primary transition-colors">
                 {t('dashboard.viewAll')}
               </button>
             </div>
-            <div className={`card-base relative overflow-hidden p-0 ${getCardTone('sun').card}`}>
-              <span aria-hidden className={`absolute inset-x-0 top-0 h-1 ${getCardTone('sun').bar}`} />
+            <div className="card-base p-0">
               {isLoading ? (
                 <div className="p-5 space-y-3">
                   {[1,2,3].map(i => <Skeleton key={i} className="h-4 w-full rounded-lg" />)}

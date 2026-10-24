@@ -182,7 +182,7 @@ export default function ChatSidebar() {
           <div className="flex items-start gap-1.5">
             {c.tutorEnabled && (
               <Tooltip label={t('chat.tutorBadge')}>
-                <span className="shrink-0 mt-0.5 inline-flex items-center justify-center h-4 min-w-4 px-1 rounded text-[10px] font-bold leading-none bg-primary/10 text-primary border border-primary/20">
+                <span className="shrink-0 mt-0.5 inline-flex items-center justify-center h-4 min-w-4 px-1 rounded text-3xs font-bold leading-none bg-primary/10 text-primary border border-primary/20">
                   T
                 </span>
               </Tooltip>

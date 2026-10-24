@@ -116,7 +116,7 @@ export default function MaterialsTable({ materials, subjectId, compact = false }
                   </td>
                   <td className={`px-3 ${rowPy} text-text-secondary text-xs`}>{(m.filename || '').split('.').pop()?.toUpperCase() || m.material_type}</td>
                   <td className={`px-3 ${rowPy} text-right`}>
-                    <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-3xs font-medium border ${m.status === 'Ready' ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20' : m.status === 'Failed' ? 'bg-red-500/10 text-red-300 border-red-500/20' : 'bg-amber-500/10 text-amber-300 border-amber-500/20'}`}>
+                    <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-3xs font-medium border ${m.status === 'Ready' ? 'bg-success/10 text-success border-success/20' : m.status === 'Failed' ? 'bg-danger/10 text-danger border-danger/20' : 'bg-warning/10 text-warning border-warning/20'}`}>
                       {getMaterialStatusLabel(t, m.status)}
                     </span>
                   </td>
@@ -127,7 +127,7 @@ export default function MaterialsTable({ materials, subjectId, compact = false }
                         <button
                           onClick={() => navigate(`/materi?subject_id=${subjectId}&highlight=${m.id}`)}
                           aria-label={t('subjectDashboard.viewMaterial', 'Lihat')}
-                          className="p-1 rounded-md text-text-secondary hover:text-sky-300 hover:bg-sky-500/10 transition-colors"
+                          className="p-1 rounded-md text-text-secondary hover:text-primary-light hover:bg-primary/10 transition-colors"
                         >
                           <Icon name={ICONS.ui.eye} size={12} />
                         </button>
@@ -136,7 +136,7 @@ export default function MaterialsTable({ materials, subjectId, compact = false }
                         <button
                           onClick={() => navigate(`/quiz?subject_id=${subjectId}`)}
                           aria-label={t('subjectDashboard.quizMaterial', 'Quiz dari materi ini')}
-                          className="p-1 rounded-md text-text-secondary hover:text-teal-300 hover:bg-teal-500/10 transition-colors"
+                          className="p-1 rounded-md text-text-secondary hover:text-info hover:bg-info/10 transition-colors"
                         >
                           <Icon name={ICONS.ui.help} size={12} />
                         </button>
@@ -145,7 +145,7 @@ export default function MaterialsTable({ materials, subjectId, compact = false }
                         <button
                           onClick={() => setDeleteTarget(m)}
                           aria-label={t('subjectDashboard.deleteMaterial', 'Hapus')}
-                          className="p-1 rounded-md text-text-secondary hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                          className="p-1 rounded-md text-text-secondary hover:text-danger hover:bg-danger/10 transition-colors"
                         >
                           <Icon name={ICONS.actions.delete} size={12} />
                         </button>

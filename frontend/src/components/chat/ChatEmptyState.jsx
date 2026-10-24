@@ -34,15 +34,14 @@ export default function ChatEmptyState({ onPromptSelect }) {
     <div className="flex-1 flex flex-col items-center justify-center px-4 py-8 md:py-10">
       <div className="w-full max-w-xl mx-auto flex flex-col items-center text-center">
 
-        {/* Logo hero */}
+        {/* Logo hero — flat, tanpa glow */}
         <motion.div
           initial={{ opacity: 0, scale: 0.85, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-          className="relative mb-5"
+          className="mb-5"
         >
-          <div className="absolute inset-0 scale-110 rounded-2xl bg-primary/25 blur-2xl" />
-          <KabayanMark size={56} className="relative" />
+          <KabayanMark size={56} />
         </motion.div>
 
         {/* Heading */}

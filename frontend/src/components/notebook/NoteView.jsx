@@ -184,7 +184,7 @@ export function NoteView({ note, onBack, onSave, onPin, onDelete }) {
               onInput={autoResizeTitle}
               onBlur={handleTitleBlur}
               onKeyDown={handleTitleKeyDown}
-              className="w-full text-[28px] font-medium tracking-headline text-text bg-transparent outline-none resize-none overflow-y-auto break-words whitespace-pre-wrap leading-tight placeholder:text-text-muted/40 min-h-[36px] max-h-[120px]"
+              className="w-full text-3xl font-medium tracking-headline text-text bg-transparent outline-none resize-none overflow-y-auto break-words whitespace-pre-wrap leading-tight placeholder:text-text-muted/40 min-h-[36px] max-h-[120px]"
               placeholder={t('notebook.noteTitlePlaceholder')}
             />
             <div className="flex items-center gap-2 mt-1.5 text-2xs text-text-muted/60">

@@ -4,16 +4,15 @@ import { ICONS } from '@/lib/icons';
 
 import FileTypeIcon, { FILE_COLOR_MAP } from '@/components/FileTypeIcon';
 import { Tooltip , Icon } from '@/components/ui';
-import { getSubjectPalette } from '@/components/ui/SubjectBadge';
 import { formatDate } from '@/utils';
 import { getMaterialStatusLabel } from '@/utils/status';
 import { cn } from '@/utils';
 
 const FILE_TINT = {
-  YOUTUBE: 'bg-violet/10',
+  YOUTUBE: 'bg-accent-purple/10',
   PDF: 'bg-danger/10',
   DOCX: 'bg-info/10',
-  PPT: 'bg-orange/10',
+  PPT: 'bg-warning/10',
   XLS: 'bg-success/10',
   TXT: 'bg-text-secondary/10',
   CSV: 'bg-success/10',
@@ -30,9 +29,6 @@ export function MaterialFileCard({ material: m, index, showSubject, isRagActive,
   const { t } = useTranslation();
   const iconColor = FILE_COLOR_MAP[String(m.material_type || '').toUpperCase().includes('YOUTUBE') ? 'YOUTUBE' : m.material_type] || 'text-text-secondary';
   const statusLabel = getMaterialStatusLabel(t, m.status);
-  // Warna identitas mata kuliah (deterministik per subject_id) — konsisten
-  // dengan badge/folder/deck di halaman lain.
-  const subjectTone = getSubjectPalette(m.subject_id ?? m.subject?.id);
 
   return (
     <motion.div
@@ -47,10 +43,9 @@ export function MaterialFileCard({ material: m, index, showSubject, isRagActive,
       exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
       className={cn(
         'card-base card-hoverable group relative flex flex-col gap-3 overflow-hidden',
-        highlighted ? 'ring-2 ring-warning/60 bg-warning/5 animate-pulse' : subjectTone?.card
+        highlighted ? 'ring-2 ring-warning/60 bg-warning/5 animate-pulse' : ''
       )}
     >
-      {subjectTone && !highlighted && <span aria-hidden className={cn('absolute inset-x-0 top-0 h-1', subjectTone.bar)} />}
       {/* Top: icon + nama file. Aksi mengambang agar nama tidak terpotong. */}
       <div className="relative flex items-start gap-3">
         <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${fileTint(m.material_type)}`}>
@@ -58,15 +53,15 @@ export function MaterialFileCard({ material: m, index, showSubject, isRagActive,
         </div>
         <div className="min-w-0 flex-1 pr-10 md:pr-0">
           <Tooltip label={m.filename}>
-            <p className="line-clamp-2 break-words text-[13.5px] font-semibold leading-snug text-text">
+            <p className="line-clamp-2 break-words text-meta font-semibold leading-snug text-text">
               {m.filename.replaceAll('_', ' ')}
             </p>
           </Tooltip>
-          <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-text-muted">{m.material_type}</p>
+          <p className="mt-1 text-3xs font-semibold uppercase tracking-[0.12em] text-text-muted">{m.material_type}</p>
           {showSubject && (m.subject?.name) && (
             <Tooltip label={m.subject.name}>
-              <p className="mt-1 truncate text-[11px] text-text-secondary">
-                <Icon name={ICONS.files.folder} size={10} className={cn('mr-1 inline', subjectTone ? subjectTone.icon : 'text-warning')} />{m.subject.name}
+              <p className="mt-1 truncate text-2xs text-text-secondary">
+                <Icon name={ICONS.files.folder} size={10} className="mr-1 inline text-text-muted" />{m.subject.name}
               </p>
             </Tooltip>
           )}

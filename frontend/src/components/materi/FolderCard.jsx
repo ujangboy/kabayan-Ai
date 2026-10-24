@@ -1,13 +1,12 @@
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 
-import { SubjectBadge, Tooltip, getSubjectPalette } from '@/components/ui';
+import { SubjectBadge, Tooltip } from '@/components/ui';
 import { cn } from '@/utils';
 import { springLift } from '@/lib/motion';
 
 export function FolderCard({ active, name, count, onClick, tone, index = 0, subjectId }) {
   const { t } = useTranslation();
-  const palette = getSubjectPalette(subjectId);
   return (
     <motion.button
       onClick={onClick}
@@ -19,10 +18,9 @@ export function FolderCard({ active, name, count, onClick, tone, index = 0, subj
       className={cn(
         'relative shrink-0 w-44 text-left rounded-lg border p-4 transition-all duration-200 group flex flex-col gap-3 cursor-pointer overflow-hidden',
         'card-base',
-        active ? 'border-primary/50 bg-popover' : palette?.card || 'hover:border-primary/40 hover:bg-wash'
+        active ? 'border-primary/50 bg-popover' : 'hover:border-primary/40 hover:bg-wash'
       )}
     >
-      {palette && <span aria-hidden className={cn('absolute inset-x-0 top-0 h-1', palette.bar)} />}
       <div className="flex items-center justify-between">
         <SubjectBadge name={name} tone={tone} subjectId={subjectId} size="sm" />
         <span className={cn(

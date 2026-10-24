@@ -2,24 +2,18 @@ import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { studyAPI } from '@/services/api';
-import { Card, Skeleton, Icon, getCardTone } from '@/components/ui';
+import { Card, Skeleton, Icon } from '@/components/ui';
 import { ICONS } from '@/lib/icons';
 
 function Tile({ icon, label, value, sub, tone }) {
-  const tones = {
-    blue: 'bg-info/10 text-info border-info/20',
-    green: 'bg-success/10 text-success border-success/20',
-    purple: 'bg-primary/10 text-primary-light border-primary/20',
-    teal: 'bg-sun/10 text-warning border-sun/25',
-  };
-  const palette = getCardTone(tone);
+  // Satu-satunya highlight kunyit di layar → nilai streak.
+  const isStreak = tone === 'green';
   return (
-    <Card className={`relative overflow-hidden p-card ${palette.card}`}>
-      <span aria-hidden className={`absolute inset-x-0 top-0 h-1 ${palette.bar}`} />
-      <div className={`w-9 h-9 rounded-lg flex items-center justify-center border mb-3 ${tones[tone]}`}>
+    <Card className="p-card">
+      <div className="w-9 h-9 rounded-lg flex items-center justify-center border border-border bg-subtle text-text-secondary mb-3">
         <Icon name={icon} size={16} />
       </div>
-      <div className="text-xl font-bold text-text tracking-tight">{value ?? '—'}</div>
+      <div className={`text-xl font-bold tracking-tight ${isStreak ? 'text-sun' : 'text-text'}`}>{value ?? '—'}</div>
       <div className="text-xs text-text-secondary mt-0.5">
         {label}{sub ? <span className="text-text-muted"> · {sub}</span> : null}
       </div>
@@ -75,11 +69,10 @@ export default function StudyInsights() {
       className="space-y-4"
     >
       <div className="flex flex-wrap items-center gap-2">
-        <Icon name={ICONS.learning.lightbulb} size={15} className="text-primary-light" />
-        <h2 className="font-display text-[11px] font-bold uppercase tracking-[0.14em] text-text-muted">
+        <h2 className="font-display text-2xs font-bold uppercase tracking-[0.14em] text-text-muted">
           {t('studyInsights.title')}
         </h2>
-        <span className="text-[10px] text-text-muted/80">{t('studyInsights.subtitle')}</span>
+        <span className="text-3xs text-text-muted/80">{t('studyInsights.subtitle')}</span>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -108,12 +101,10 @@ export default function StudyInsights() {
           label={t('studyInsights.retention')}
           value={isLoading ? null : (fsrs.retention_pct ?? '—')}
           sub={fsrs.retention_pct != null ? '%' : ''}
-        />
-      </div>
+        />      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <Card className={`relative overflow-hidden p-card ${getCardTone('green').card}`}>
-          <span aria-hidden className={`absolute inset-x-0 top-0 h-1 ${getCardTone('green').bar}`} />
+        <Card className="p-card">
           <div className="flex items-center gap-2 mb-2">
             <Icon name={ICONS.learning.calendar} size={14} className="text-text-secondary" />
             <span className="text-xs font-semibold text-text-secondary uppercase tracking-wider">
@@ -139,8 +130,7 @@ export default function StudyInsights() {
           )}
         </Card>
 
-        <Card className={`relative overflow-hidden p-card ${getCardTone('blue').card}`}>
-          <span aria-hidden className={`absolute inset-x-0 top-0 h-1 ${getCardTone('blue').bar}`} />
+        <Card className="p-card">
           <div className="flex items-center gap-2 mb-2">
             <Icon name={ICONS.learning.target} size={14} className="text-text-secondary" />
             <span className="text-xs font-semibold text-text-secondary uppercase tracking-wider">
@@ -166,8 +156,7 @@ export default function StudyInsights() {
           )}
         </Card>
 
-        <Card className={`relative overflow-hidden p-card ${getCardTone('purple').card}`}>
-          <span aria-hidden className={`absolute inset-x-0 top-0 h-1 ${getCardTone('purple').bar}`} />
+        <Card className="p-card">
           <div className="flex items-center gap-2 mb-2">
             <Icon name={ICONS.learning.network} size={14} className="text-text-secondary" />
             <span className="text-xs font-semibold text-text-secondary uppercase tracking-wider">

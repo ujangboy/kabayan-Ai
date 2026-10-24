@@ -2,7 +2,7 @@ import { useId } from 'react';
 import { cn } from '@/utils';
 
 /**
- * Identitas Kabayan AI.
+ * Identitas Kabayan Pintar.
  *
  * Mark: huruf K yang dibentuk dari dua sapuan kuas + satu bintang kunyit.
  * K = Kabayan, bintang = percikan AI, dan bentuknya tetap terbaca di 16px.
@@ -47,15 +47,15 @@ export function KabayanMark({ size = 36, className }) {
 
 export default function KabayanLogo({ collapsed = false, className, markSize = 36 }) {
   return (
-    <span className={cn('flex min-w-0 items-center gap-2.5', className)} aria-label="Kabayan AI">
+    <span className={cn('flex min-w-0 items-center gap-2.5', className)} aria-label="Kabayan Pintar">
       <KabayanMark size={markSize} />
       {!collapsed && (
         <span className="flex min-w-0 items-baseline gap-1.5">
-          <span className="truncate font-display text-[19px] font-extrabold tracking-[-0.045em] text-text">
+          <span className="truncate font-display text-lg font-extrabold tracking-[-0.045em] text-text">
             kabayan
           </span>
-          <span className="rounded-md bg-primary/10 px-1.5 py-0.5 font-display text-[10px] font-extrabold uppercase tracking-[0.12em] text-primary-light">
-            AI
+          <span className="rounded-md bg-primary/10 px-1.5 py-0.5 font-display text-3xs font-extrabold uppercase tracking-[0.12em] text-primary-light">
+            Pintar
           </span>
         </span>
       )}

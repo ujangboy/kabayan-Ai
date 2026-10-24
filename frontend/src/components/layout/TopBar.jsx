@@ -78,7 +78,7 @@ export default function TopBar() {
           <Icon name={ICONS.actions.menu} size={20} />
         </button>
       </Tooltip>
-      <NavLink to="/dashboard" className="shrink-0 lg:hidden" aria-label="Kabayan AI">
+      <NavLink to="/dashboard" className="shrink-0 lg:hidden" aria-label="Kabayan Pintar">
         <KabayanMark size={30} />
       </NavLink>
 

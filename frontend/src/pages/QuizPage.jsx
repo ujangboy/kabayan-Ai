@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { quizAPI, subjectAPI } from '@/services/api';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { formatDate, formatTimeOnly, fadeSlide, cn } from '@/utils';
-import { Tooltip, EmptyState, Skeleton, SubjectBadge, getSubjectPalette, Icon, Button } from '@/components/ui';
+import { Tooltip, EmptyState, Skeleton, SubjectBadge, Icon, Button } from '@/components/ui';
 import { useUiStore } from '@/store';
 import { usePageState } from '@/hooks/usePageState';
 import { useHighlightScroll } from '@/hooks/useHighlightScroll';
@@ -305,7 +305,6 @@ export default function QuizPage() {
           ) : (
             filtered.map((quiz, idx) => {
               const qProgress = Math.min(100, quiz.score ?? 0);
-              const palette = getSubjectPalette(quiz.subject?.id);
               const isHighlighted = highlightedId === String(quiz.id);
               const stats = [
                 { icon: ICONS.ui.help, value: quiz.question_count || 0, label: t('quiz.questionCount', { count: quiz.question_count || 0 }), color: 'text-accent-teal' },
@@ -324,16 +323,15 @@ export default function QuizPage() {
                 transition={{ delay: idx * 0.05, ...springLift }}
                 className={cn(
                   'card-base card-hoverable relative flex flex-col justify-between gap-3 overflow-hidden',
-                  isHighlighted ? 'ring-2 ring-warning/60 bg-warning/5 animate-pulse' : palette?.card
+                  isHighlighted ? 'ring-2 ring-warning/60 bg-warning/5 animate-pulse' : ''
                 )}
               >
-                  {palette && !isHighlighted && <span aria-hidden className={cn('absolute inset-x-0 top-0 h-1', palette.bar)} />}
                   {/* Header — badge + title + badges + aksi */}
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-start gap-3 min-w-0">
                       <SubjectBadge name={quiz.subject?.name || quiz.title} subjectId={quiz.subject?.id} size="sm" />
                       <div className="flex-1 min-w-0">
-                        <p className={cn('text-3xs font-semibold uppercase tracking-wider truncate', palette?.icon || 'text-accent-blue')}>
+                        <p className="text-3xs font-semibold uppercase tracking-wider truncate text-text-muted">
                           {quiz.subject?.name || t('quiz.genericSubject')}
                         </p>
                         <h3 className="font-semibold text-text text-15 line-clamp-2">

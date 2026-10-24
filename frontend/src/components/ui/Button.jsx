@@ -22,8 +22,8 @@ const buttonVariants = cva(
       },
       size: {
         sm: 'h-8 px-3 text-xs rounded-btn', // 12px — chip-keep small
-        md: 'h-10 px-4 text-[15px] rounded-btn', // Gemini Button 15/500 (was text-sm 14)
-        lg: 'h-11 px-5 text-[15px] rounded-btn',
+        md: 'h-10 px-4 text-15 rounded-btn', // Gemini Button 15/500 (was text-sm 14)
+        lg: 'h-11 px-5 text-15 rounded-btn',
         icon: 'h-10 w-10 rounded-btn',
         'icon-sm': 'h-8 w-8 rounded-btn',
       },

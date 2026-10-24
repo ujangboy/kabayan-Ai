@@ -11,7 +11,7 @@ import { cn, formatDate } from '@/utils';
 import { useToast } from '@/components/Toast';
 import { usePageState } from '@/hooks/usePageState';
 import { springWave } from '@/lib/motion';
-import { Button, Textarea, getSubjectPalette, Icon } from '@/components/ui';
+import { Button, Textarea, Icon, Tooltip } from '@/components/ui';
 import { TYPE_META, formatItemDate, formatRealDate } from './shared';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -108,7 +108,9 @@ export default function InlinePlanPractice({ item, practiceState, onClose, onSub
                   <Icon name={ICONS.status.error} size={12} className="text-danger shrink-0" />
                 )}
                 <span className="text-text-muted">{t('studyPlanPage.questionN', { n: i + 1 })}</span>
-                <span className="text-text-secondary truncate flex-1">{question.topic}</span>
+                <Tooltip label={question.topic}>
+                  <span className="text-text-secondary truncate flex-1">{question.topic}</span>
+                </Tooltip>
                 {isCorrect === false && <span className="text-danger text-3xs">{t('studyPlanPage.answerLabel', { answer: question.answer })}</span>}
               </div>
             );
@@ -222,7 +224,6 @@ export function StudyPlanItem({
   const { t } = useTranslation();
   const navigate = useNavigate();
   const meta = TYPE_META[item.activity_type] || TYPE_META.review;
-  const palette = getSubjectPalette(subjectId);
   // Tanggal jadwal: start_date rencana (dipilih user di ResultView) + nomor
   // hari → tiap item punya tanggal sendiri. Fallback: tanggal real materi,
   // atau label "Hari N" bila keduanya tidak ada.
@@ -244,10 +245,9 @@ export function StudyPlanItem({
           ? 'border-primary/30 bg-primary/5'
           : item.completed
             ? 'bg-success/5 border-success/20'
-            : palette?.card || 'bg-surface border-border hover:border-strong'
+            : 'bg-surface border-border hover:border-strong'
       )}
     >
-      {palette && <span aria-hidden className={cn('absolute inset-x-0 top-0 h-1', palette.bar)} />}
       <div className="flex items-start gap-3 p-4">
         <button
           onClick={() => onToggle(item.id)}
@@ -275,12 +275,16 @@ export function StudyPlanItem({
           {item.material_names?.length > 0 && (
             <div className="flex gap-1 flex-wrap mt-2">
               {item.material_names.slice(0, 4).map((name, i) => (
-                <span key={i} className="inline-flex items-center gap-0.5 text-3xs px-2 py-0.5 rounded bg-accent-blue/10 text-accent-blue border border-accent-blue/20 truncate max-w-[220px]">
-                  <Icon name={ICONS.files.document} size={8} className="shrink-0" />{name}
-                </span>
+                <Tooltip key={i} label={name}>
+                  <span className="inline-flex items-center gap-0.5 text-3xs px-2 py-0.5 rounded bg-accent-blue/10 text-accent-blue border border-accent-blue/20 truncate max-w-[220px]">
+                    <Icon name={ICONS.files.document} size={8} className="shrink-0" />{name}
+                  </span>
+                </Tooltip>
               ))}
               {item.material_names.length > 4 && (
-                <span className="text-3xs text-text-muted">{t('studyPlanPage.moreMaterials', { count: item.material_names.length - 4 })}</span>
+                <Tooltip label={item.material_names.slice(4).join(', ')}>
+                  <span className="text-3xs text-text-muted cursor-default">{t('studyPlanPage.moreMaterials', { count: item.material_names.length - 4 })}</span>
+                </Tooltip>
               )}
             </div>
           )}

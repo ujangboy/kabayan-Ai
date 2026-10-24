@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ICONS } from '@/lib/icons';
-import { Icon, getCardTone } from '@/components/ui';
+import { Icon } from '@/components/ui';
 import { motion, AnimatePresence } from 'framer-motion';
 import { fadeUp, easeStandard } from '@/lib/motion';
 import { cn } from '@/utils';
@@ -12,26 +12,17 @@ import AiLimitTab from '@/components/settings/AiLimitTab';
 import AboutTab from '@/components/settings/AboutTab';
 
 const TABS = [
-  { key: 'profile', icon: ICONS.ui.user, labelKey: 'settings.tabs.profile', tone: 'green' },
-  { key: 'language', icon: ICONS.ui.languages, labelKey: 'settings.tabs.language', tone: 'blue' },
-  { key: 'data', icon: ICONS.ui.database, labelKey: 'settings.tabs.data', tone: 'sun' },
-  { key: 'aiLimit', icon: ICONS.ui.cpu, labelKey: 'settings.tabs.aiLimit', tone: 'purple' },
-  { key: 'about', icon: ICONS.status.info, labelKey: 'settings.tabs.about', tone: 'pink' },
+  { key: 'profile', icon: ICONS.ui.user, labelKey: 'settings.tabs.profile' },
+  { key: 'language', icon: ICONS.ui.languages, labelKey: 'settings.tabs.language' },
+  { key: 'data', icon: ICONS.ui.database, labelKey: 'settings.tabs.data' },
+  { key: 'aiLimit', icon: ICONS.ui.cpu, labelKey: 'settings.tabs.aiLimit' },
+  { key: 'about', icon: ICONS.status.info, labelKey: 'settings.tabs.about' },
 ];
-
-const TAB_TINTS = {
-  profile: '#2dd4bf',
-  language: '#38bdf8',
-  data: '#f59e0b',
-  aiLimit: '#818cf8',
-  about: '#f472b6',
-};
 
 export default function SettingsPage() {
   const { t } = useTranslation();
   const [active, setActive] = useState('profile');
   const activeTab = TABS.find((tab) => tab.key === active) || TABS[0];
-  const activePalette = getCardTone(activeTab.tone);
 
   const renderTab = () => {
     switch (active) {
@@ -64,9 +55,8 @@ export default function SettingsPage() {
         {/* Left: vertical mini sidebar w-64 — statis, tanpa slide */}
         <aside className="w-full md:w-64 shrink-0 border-b md:border-b-0 md:border-r border-border bg-surface p-3 md:p-4 overflow-y-auto">
           <nav className="flex md:flex-col gap-1.5 overflow-x-auto md:overflow-visible pb-1 md:pb-0">
-            {TABS.map(({ key, icon, labelKey, tone }) => {
+            {TABS.map(({ key, icon, labelKey }) => {
               const isActive = active === key;
-              const palette = getCardTone(tone);
               return (
                 <button
                   key={key}
@@ -84,7 +74,6 @@ export default function SettingsPage() {
                     <span aria-hidden className="absolute inset-0 rounded-xl bg-primary-solid" />
                   )}
                   <span className="relative flex items-center gap-2.5">
-                    <span aria-hidden className={cn('h-1.5 w-1.5 rounded-full', isActive ? 'bg-white' : palette.bar)} />
                     <Icon name={icon} size={16} className={isActive ? 'text-white' : 'text-text-secondary'} />
                     <span>{t(labelKey)}</span>
                   </span>
@@ -97,11 +86,7 @@ export default function SettingsPage() {
         {/* Right: content panel clean bordered slate-800/60 */}
         <div className="flex-1 min-w-0 overflow-y-auto bg-base">
           <div className="p-6 md:p-10 lg:p-12 max-w-7xl mx-auto">
-            <div
-              className={cn('settings-tint relative overflow-hidden rounded-lg border p-6 shadow-sm md:p-10', activePalette.card)}
-              style={{ '--settings-tint': TAB_TINTS[active] || TAB_TINTS.profile }}
-            >
-              <span aria-hidden className={cn('absolute inset-x-0 top-0 h-1', activePalette.bar)} />
+            <div className="relative overflow-hidden rounded-card border border-border bg-surface shadow-card p-6 md:p-10">
               <AnimatePresence mode="wait">
                 {/* Gerak tab standar dari lib/motion: fadeUp masuk, keluar lebih cepat */}
                 <motion.div

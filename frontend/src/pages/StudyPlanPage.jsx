@@ -12,7 +12,7 @@ import { useToast } from '@/components/Toast';
 import { usePageState } from '@/hooks/usePageState';
 import { useHighlightScroll } from '@/hooks/useHighlightScroll';
 import { cn, fadeSlide } from '@/utils';
-import { Modal, Button, EmptyState, HelpTip, getSubjectPalette, Icon } from '@/components/ui';
+import { Modal, Button, EmptyState, HelpTip, getSubjectPalette, Icon, Tooltip } from '@/components/ui';
 import { StudyPlanItem } from '@/components/studyplan/StudyPlanItem';
 import { formatItemDate } from '@/components/studyplan/shared';
 
@@ -32,20 +32,22 @@ function PlanCard({ plan, onOpen, t }) {
       whileHover={{ y: -3 }}
       whileTap={{ scale: 0.99 }}
       className={cn(
-        'card-base card-hoverable relative flex w-full flex-col gap-4 overflow-hidden p-5 text-left',
-        palette?.card
+        'card-base card-hoverable relative flex w-full flex-col gap-4 overflow-hidden p-5 text-left'
       )}
     >
-      {palette && <span aria-hidden className={cn('absolute inset-x-0 top-0 h-1', palette.bar)} />}
       <div className="flex items-start gap-3">
         <div className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border', palette?.badge)}>
           <Icon name={ICONS.learning.calendarCheck} size={18} />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold text-text">
-            {plan.study_plan_title || plan.title || t('nav.studyPlan')}
-          </p>
-          <p className="mt-0.5 truncate text-xs text-text-muted">{plan.subject_name || t('nav.subjects')}</p>
+          <Tooltip label={plan.study_plan_title || plan.title}>
+            <p className="truncate text-sm font-semibold text-text">
+              {plan.study_plan_title || plan.title || t('nav.studyPlan')}
+            </p>
+          </Tooltip>
+          <Tooltip label={plan.subject_name}>
+            <p className="mt-0.5 truncate text-xs text-text-muted">{plan.subject_name || t('nav.subjects')}</p>
+          </Tooltip>
         </div>
         <span className="shrink-0 text-sm font-bold text-text">{progress}%</span>
       </div>
@@ -73,9 +75,11 @@ function PlanCard({ plan, onOpen, t }) {
       </div>
 
       <div className="mt-auto flex items-center justify-between gap-3">
-        <span className="min-w-0 truncate text-xs text-text-secondary">
-          {nextItem ? t('studyPlanPage.hub.next', { topic: nextItem.topic || '—' }) : t('studyPlanPage.hub.done', 'Semua item selesai')}
-        </span>
+        <Tooltip label={nextItem?.topic}>
+          <span className="min-w-0 truncate text-xs text-text-secondary">
+            {nextItem ? t('studyPlanPage.hub.next', { topic: nextItem.topic || '—' }) : t('studyPlanPage.hub.done', 'Semua item selesai')}
+          </span>
+        </Tooltip>
         <span className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-primary-light">
           {nextItem ? t('studyPlanPage.hub.continue', 'Lanjutkan') : t('studyPlanPage.hub.open', 'Buka')}
           <Icon name={ICONS.actions.forward} size={13} />
@@ -162,7 +166,6 @@ export default function StudyPlanPage() {
   const completedItems = items.filter(i => i.completed).length;
   const totalItems = items.length;
   const progress = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
-  const subjectPalette = getSubjectPalette(subjectId);
   // Tanpa ?highlight → sorot otomatis 1 item berikutnya yang belum selesai (fallback).
   const lastWorked = items.find(i => !i.completed) || items.at(-1);
   const lastWorkedId = lastWorked ? `item-${lastWorked.id}` : null;
@@ -425,9 +428,11 @@ export default function StudyPlanPage() {
             {data.material_names?.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-2">
                 {data.material_names.map((name, i) => (
-                  <span key={i} className="inline-flex items-center gap-1 text-3xs px-2 py-0.5 rounded bg-accent-blue/10 text-accent-blue border border-accent-blue/20 truncate max-w-[240px]">
-                    <Icon name={ICONS.files.document} size={9} className="shrink-0" />{name}
-                  </span>
+                  <Tooltip key={i} label={name}>
+                    <span className="inline-flex items-center gap-1 text-3xs px-2 py-0.5 rounded bg-accent-blue/10 text-accent-blue border border-accent-blue/20 truncate max-w-[240px]">
+                      <Icon name={ICONS.files.document} size={9} className="shrink-0" />{name}
+                    </span>
+                  </Tooltip>
                 ))}
               </div>
             )}
@@ -442,8 +447,7 @@ export default function StudyPlanPage() {
         )}
 
         {/* Progress */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={cn('card-base relative overflow-hidden p-5', subjectPalette?.card)}>
-          {subjectPalette && <span aria-hidden className={cn('absolute inset-x-0 top-0 h-1', subjectPalette.bar)} />}
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="card-base p-5">
           <div className="flex justify-between text-xs text-text-muted mb-2">
             <span className="flex items-center gap-1.5">
               <Icon name={ICONS.learning.target} size={12} className="text-primary" />

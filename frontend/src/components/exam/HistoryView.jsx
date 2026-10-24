@@ -18,7 +18,7 @@ import {
   getExamTypeLabel,
 } from './shared';
 import { Tooltip } from '@/components/ui/Tooltip';
-import { SubjectBadge, getSubjectPalette, Icon, Button } from '@/components/ui';
+import { SubjectBadge, Icon, Button } from '@/components/ui';
 import { useToast } from '@/components/Toast';
 import CreateSubjectModal from '@/components/subjects/CreateSubjectModal';
 
@@ -133,12 +133,10 @@ function SubjectCard({ subject, onSelectSubject, onStartConfig, onDelete, t, ton
      staleTime: 5 * 60 * 1000,
    });
    const subjectMaterials = materialData?.materials || [];
-   const palette = getSubjectPalette(subject.id);
 
    if (isLoading) {
      return (
-       <div className={cn('card-base relative p-5 flex flex-col gap-3 overflow-hidden', palette?.card)}>
-         {palette && <span aria-hidden className={cn('absolute inset-x-0 top-0 h-1', palette.bar)} />}
+       <div className={cn('card-base relative p-5 flex flex-col gap-3 overflow-hidden')}>
          <div className="flex items-start gap-3">
            <SubjectBadge name={subject.name} subjectId={subject.id} />
            <div className="flex-1 min-w-0">
@@ -168,9 +166,8 @@ function SubjectCard({ subject, onSelectSubject, onStartConfig, onDelete, t, ton
         whileHover={{ y: -3 }}
         whileTap={{ scale: 0.98 }}
         transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1], ...springLift }}
-        className={cn('card-base card-hoverable relative flex flex-col justify-between gap-4 overflow-hidden', palette?.card)}
+        className={cn('card-base card-hoverable relative flex flex-col justify-between gap-4 overflow-hidden')}
       >
-        {palette && <span aria-hidden className={cn('absolute inset-x-0 top-0 h-1', palette.bar)} />}
         {/* Header — badge inisial + nama + aksi */}
        <div className="flex items-start gap-3">
          <SubjectBadge name={subject.name} subjectId={subject.id ?? tone} />

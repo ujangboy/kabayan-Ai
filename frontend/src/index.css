@@ -422,12 +422,6 @@
                 box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  /* Settings: kartu di dalam panel mengikuti warna tab yang aktif. */
-  .settings-tint .card-base {
-    background-color: color-mix(in srgb, var(--settings-tint, #2dd4bf) 5%, rgb(var(--bg-surface)));
-    border-color: color-mix(in srgb, var(--settings-tint, #2dd4bf) 24%, transparent);
-  }
-
   /* Hover kartu: lift halus tanpa mengubah warna permukaan. */
   .card-hoverable {
     @apply transition-[transform,border-color,box-shadow] duration-200 ease-out

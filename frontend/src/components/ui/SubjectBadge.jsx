@@ -85,26 +85,40 @@ export function getSubjectPaletteIndex({ subjectId, tone, name } = {}) {
   return getSubjectColorIndex(name);
 }
 
-const TONE_INDEX = {
-  teal: 0,
-  green: 0,
-  success: 0,
-  blue: 1,
-  info: 1,
-  purple: 2,
-  primary: 2,
-  pink: 3,
-  rose: 3,
-  sun: 4,
-  warning: 4,
+/**
+ * Palet kartu semantik — DESAIN V3.1 "kartu bicara satu suara":
+ * - primary : CTA solid pandan (MAKSIMAL SATU per layar, biasanya aksi Chat).
+ * - accent  : tint pandan tipis untuk penekanan interaktif sekunder.
+ * - neutral : surface + border polos (default semua kartu).
+ * Warna kategori (subject) tetap hidup via getSubjectPalette badge/chip.
+ */
+const CARD_TONES = {
+  primary: {
+    id: 'primary',
+    card: 'bg-primary-solid text-white border-primary-solid hover:border-primary-solid-hover',
+    bar: '',
+    icon: 'text-white',
+  },
+  accent: {
+    id: 'accent',
+    card: 'bg-primary/8 border-primary/25 hover:border-primary/40 hover:bg-primary/12',
+    bar: '',
+    icon: 'text-primary-light',
+  },
+  neutral: {
+    id: 'neutral',
+    card: '',
+    bar: '',
+    icon: 'text-text-secondary',
+  },
 };
 
-/** Palet kartu untuk tone semantik (dipakai Dashboard/Settings). */
 export function getCardTone(tone) {
-  if (typeof tone === 'number') {
-    return PALETTE[((tone % PALETTE.length) + PALETTE.length) % PALETTE.length];
-  }
-  return PALETTE[TONE_INDEX[String(tone || '').toLowerCase()] ?? 0];
+  if (typeof tone === 'number') return CARD_TONES.neutral;
+  const key = String(tone || '').toLowerCase();
+  if (['primary', 'solid', 'cta'].includes(key)) return CARD_TONES.primary;
+  if (['accent', 'tint'].includes(key)) return CARD_TONES.accent;
+  return CARD_TONES.neutral;
 }
 
 export function SubjectBadge({ name, className, size = 'md', tone, subjectId }) {

@@ -37,7 +37,7 @@ export default function FlashcardReviewCard({
           <div className="absolute inset-0 backface-hidden card-base flex flex-col items-center justify-center p-6 text-center border-t-2 border-t-accent-purple/70 shadow-2xl shadow-primary/20">
             <span className="text-xs font-semibold text-text-secondary uppercase tracking-widest mb-3 shrink-0">{t('flashcard.question')}</span>
             <div className="w-full max-h-[190px] overflow-y-auto custom-scrollbar px-1">
-              <MathMarkdown className="text-[17px] sm:text-xl font-semibold text-text leading-relaxed text-center break-words whitespace-pre-wrap">{currentCard.question}</MathMarkdown>
+              <MathMarkdown className="text-lg sm:text-xl font-semibold text-text leading-relaxed text-center break-words whitespace-pre-wrap">{currentCard.question}</MathMarkdown>
             </div>
             <p className="absolute bottom-3 text-2xs text-text-muted">{t('flashcard.clickToSeeAnswer')}</p>
           </div>
