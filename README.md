@@ -112,4 +112,5 @@ memiliki schema yang sama persis dengan `models.py`.
 - React 19 + Vite + Tailwind CSS
 - LanceDB + sentence-transformers untuk RAG
 
-Dokumen penting: `ATURAN_KERJA_DENGAN_AGENT.md`, `PROTECTED_BASELINE.md`, `ai_context.md`.
+Dokumen penting (folder `docs/`): `ATURAN_KERJA_DENGAN_AGENT.md`,
+`PROTECTED_BASELINE.md`, `ai_context.md`.
