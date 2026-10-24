@@ -278,7 +278,7 @@
     "noMaterials": "Belum ada materi.",
     "noQuizzes": "Belum ada quiz.",
     "notPlayed": "Belum dimainkan",
-    "welcomeTitle": "Selamat datang di Kabayan AI!",
+    "welcomeTitle": "Selamat datang di Kabayan Pintar!",
     "welcomeText": "Mulai dengan membuat mata kuliah lalu unggah materi pertamamu.",
     "createSubject": "Buat Mata Kuliah",
     "uploadMaterial": "Upload Materi"
@@ -352,7 +352,7 @@
     "documentsActive": "{{count}} dokumen aktif",
     "clearDocumentSelection": "Bersihkan pilihan dokumen",
     "tutorModeActive": "Mode Tutor Aktif",
-    "greetingKabayan": "Halo! Saya Kabayan AI",
+    "greetingKabayan": "Halo! Saya Kabayan Pintar",
     "tutorModeHint": "Saya siap membantumu belajar.",
     "tutorModeFocus": "Fokus: {{subject}}.",
     "normalModeHint": "Tanyakan apa saja — materi, konsep, soal, atau ide.",
@@ -375,7 +375,7 @@
     "quickQuiz": "Quiz cepat",
     "quickQuizPrompt": "Berikan kuis cepat 5 pertanyaan untuk menguji pemahaman saya.",
     "emptyTitle": "Ada materi yang ingin kita pelajari hari ini?",
-    "emptySubtitle": "Pilih topik cepat di bawah atau tanyakan apa pun kepada Kabayan AI.",
+    "emptySubtitle": "Pilih topik cepat di bawah atau tanyakan apa pun kepada Kabayan Pintar.",
     "promptSummaryTitle": "Ringkas materi terbaru saya",
     "promptSummaryPrompt": "Tolong ringkas materi terbaru yang saya unggah dengan poin-poin penting dan contoh sederhana.",
     "promptQuizTitle": "Buat 5 latihan soal kuis",
@@ -1170,7 +1170,7 @@
     "about": {
       "title": "Tentang Aplikasi",
       "subtitle": "Informasi versi dan aplikasi.",
-      "appName": "Kabayan AI",
+      "appName": "Kabayan Pintar",
       "version": "Versi",
       "description": "Ruang belajar cerdas berbasis AI: materi, chat, flashcard, quiz, dan simulasi ujian."
     },

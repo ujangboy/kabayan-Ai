@@ -9,7 +9,7 @@ SETTING_KEY_DISPLAY_NAME = "profile.display_name"
 SETTING_KEY_PHOTO_PATH = "profile.photo_path"
 SETTING_KEY_LANGUAGE = "app.language"
 APP_DEFAULT_LANGUAGE = "id"
-APP_VERSION = "2.1.0"
+APP_VERSION = "0.1.1"
 
 
 class SettingsService:

@@ -1,18 +1,19 @@
 ---
-version: 3.0
+version: 3.1
 name: kabayan-agent-design-system
 description: >
-  Design system Kabayan AI v3 — "Meja Belajar". Kanvas sage sejuk, tinta hijau
-  hutan, aksen pandan, dan kunyit untuk momen penting. Tipografi dua peran:
-  Plus Jakarta Sans untuk judul, Inter untuk UI dan bacaan. Motion ringan,
-  reduced-motion aware, dan navigasi datar yang mengikuti ritme harian.
+  Design system Kabayan Pintar v3.1 — "Meja Belajar". Kanvas sage sejuk,
+  tinta hijau hutan, aksen pandan, dan kunyit untuk satu momen penting.
+  Tipografi dua peran: Plus Jakarta Sans untuk judul, Inter untuk UI dan bacaan.
+  Kartu bicara satu suara (primary/accent/neutral), tanpa strip warna acak,
+  tanpa glow dekoratif. Motion ringan, reduced-motion aware, navigasi datar.
 ---
 
 # Design System & UI Specification — "Meja Belajar"
 
 ## 1. Overview & Core Philosophy
 
-Kabayan AI adalah ruang belajar harian, bukan dashboard metrik. Antarmuka
+Kabayan Pintar adalah ruang belajar harian, bukan dashboard metrik. Antarmuka
 harus terasa tenang, hangat, dan langsung bisa dipakai.
 
 Prinsip utama:
@@ -20,6 +21,9 @@ Prinsip utama:
   tempo, rencana) muncul sebelum angka perpustakaan.
 - **Calm contrast:** 90% permukaan netral-hijau, 10% aksen pandan; kunyit hanya
   untuk penanda momen/streak, bukan chrome.
+- **Kartu satu suara (v3.1):** kartu tidak mewarnai diri — CTA solid pandan
+  MAKSIMAL SATU per layar; warna kategori (mata kuliah, tipe file, status)
+  hanya hidup di badge/chip/chart, bukan di badan kartu atau strip atas.
 - **Two-role typography:** judul tegas dan bersahabat, body netral dan mudah
   dibaca panjang.
 - **Flat navigation:** tiga kelompok (Hari ini / Belajar / Koleksi), tanpa
@@ -96,7 +100,7 @@ atau NoteEditor — gunakan Inter agar bacaan panjang nyaman.
 - **Mark:** huruf K dari dua sapuan + bintang kunyit di kanan atas. Latar
   gradien pandan `#148a63 → #084f3d`, radius 12/40.
 - **Wordmark:** `kabayan` Plus Jakarta Sans extrabold, tracking rapat, dengan
-  badge `AI` kecil berwarna pandan.
+  badge `Pintar` kecil berwarna pandan (v3.1).
 - **Favicon:** `public/favicon.svg`, versi mark yang sama.
 - Logo dipakai di sidebar, drawer mobile, TopBar mobile, empty state Chat, dan
   About.
@@ -119,15 +123,28 @@ Token terpusat di `frontend/src/lib/motion.js`:
 
 ### Do
 - Pakai token semantik (`bg-base`, `bg-surface`, `border-border`, `text-text`).
-- Pertahankan aksen pandan untuk interaksi; kunyit sangat hemat.
+- Pertahankan aksen pandan untuk interaksi; kunyit sangat hemat (satu
+  highlight per layar — streak).
+- Kartu monokrom: `getCardTone` hanya `primary` (CTA solid) / `accent` /
+  `neutral`. Strip warna atas kartu (`h-1` bar) **dihapus** dari semua surface.
+- Warna kategori tetap di tempat yang benar: `SubjectBadge` (badge inisial),
+  chart, badge status — bukan badan kartu.
+- Snap ukuran font ke skala token (`2xs`/`3xs`/`meta`/`15`/`lg`/…); tambahkan
+  nilai baru ke tailwind config, jangan pakai `text-[…]` arbitrer.
 - Bangun elevasi dari surface ladder + hairline border.
 - Gunakan komponen `ui/`; semua modal via `Modal`/`ConfirmDialog`.
+- Icon umum wajib dari registry `ICONS` via `<Icon>`; pengecualian tunggal:
+  `FileTypeIcon` (glyph SVG custom — lembar bertekuk + label tipe PDF/DOC/…)
+  karena glyph Material Symbols untuk tipe file terasa kaku.
 - Uji light & dark, desktop & 390px mobile, serta `prefers-reduced-motion`.
 
 ### Don't
-- Gradien dekoratif penuh layar, glow tebal, atau backdrop-blur pada kartu isi.
+- Gradien dekoratif penuh layar, glow tebal, atau backdrop-blur pada kartu isi
+  (termasuk glow di belakang ikon/logo empty state).
+- Strip warna acak di atas kartu, atau `card` wash multi-hue per fitur.
 - Nested card dengan border/shadow ganda.
-- Hardcode warna slate/zinc/hex langsung di komponen.
+- Hardcode warna slate/zinc/hex langsung di komponen (termasuk
+  `sky-500`, `teal-400`, `emerald-500` — pakai token `info`/`success`/…).
 - Animasi layout-shifting (`width`/`height`/`top`/`left`) selain sidebar/drawer
   yang memang perlu.
 - Monospace untuk teks bacaan panjang.

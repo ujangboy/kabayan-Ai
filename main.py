@@ -188,7 +188,7 @@ async def lifespan(_app: FastAPI):
             material_executor.shutdown(wait=False, cancel_futures=True)
             material_executor = None
 
-app = FastAPI(title="Kabayan AI Study Workspace", lifespan=lifespan)
+app = FastAPI(title="Kabayan Pintar Study Workspace", lifespan=lifespan)
 register_all_handlers(app)
 
 import asyncio
@@ -328,9 +328,25 @@ async def serve_react(full_path: str):
     if full_path.startswith("api/") or full_path.startswith("static/") or full_path.startswith("assets/"):
         return JSONResponse(status_code=404, content={"detail": "Not Found"})
 
+    # File publik di root dist (favicon.ico, favicon-*.png, site.webmanifest,
+    # icons.svg, dst.) — WAJIB balik file asli, bukan HTML SPA, supaya
+    # favicon di tab browser selalu logo Kabayan yang benar.
+    # Cache-Control: no-cache → selalu revalidasi, perubahan build baru
+    # (logo/aset yang dihapus/diganti) langsung terlihat tanpa hard refresh.
+    dist_norm = os.path.normpath(DIST_DIR)
+    public_file = os.path.normpath(os.path.join(DIST_DIR, full_path))
+    if full_path and public_file.startswith(dist_norm + os.sep) and os.path.isfile(public_file):
+        resp = FileResponse(public_file)
+        resp.headers["Cache-Control"] = "no-cache"
+        return resp
+
     index_path = os.path.join(DIST_DIR, "index.html")
     if os.path.isfile(index_path):
-        return FileResponse(index_path, media_type='text/html')
+        resp = FileResponse(index_path, media_type="text/html")
+        # Shell SPA tidak boleh di-cache — referensi aset ber-hash selalu
+        # segar dari HTML terbaru, jadi elemen yang dihapus tidak "hantu".
+        resp.headers["Cache-Control"] = "no-cache"
+        return resp
     return JSONResponse(status_code=404, content={"detail": "Frontend not built"})
 
 if __name__ == "__main__":

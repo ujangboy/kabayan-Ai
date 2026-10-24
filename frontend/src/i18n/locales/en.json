@@ -278,7 +278,7 @@
     "noMaterials": "No materials yet.",
     "noQuizzes": "No quizzes yet.",
     "notPlayed": "Not played",
-    "welcomeTitle": "Welcome to Kabayan AI!",
+    "welcomeTitle": "Welcome to Kabayan Pintar!",
     "welcomeText": "Start by creating a subject, then upload your first material.",
     "createSubject": "Create Subject",
     "uploadMaterial": "Upload Material"
@@ -352,7 +352,7 @@
     "documentsActive": "{{count}} documents active",
     "clearDocumentSelection": "Clear document selection",
     "tutorModeActive": "Tutor Mode Active",
-    "greetingKabayan": "Hi! I'm Kabayan AI",
+    "greetingKabayan": "Hi! I'm Kabayan Pintar",
     "tutorModeHint": "I'm ready to help you learn.",
     "tutorModeFocus": "Focus: {{subject}}.",
     "normalModeHint": "Ask anything — materials, concepts, questions, or ideas.",
@@ -375,7 +375,7 @@
     "quickQuiz": "Quick quiz",
     "quickQuizPrompt": "Give me a quick 5-question quiz to test my understanding.",
     "emptyTitle": "What would you like to learn today?",
-    "emptySubtitle": "Pick a quick topic below or ask Kabayan AI anything.",
+    "emptySubtitle": "Pick a quick topic below or ask Kabayan Pintar anything.",
     "promptSummaryTitle": "Summarize my latest material",
     "promptSummaryPrompt": "Please summarize my latest material with key points and simple examples.",
     "promptQuizTitle": "Create 5 quiz practice questions",
@@ -1170,7 +1170,7 @@
     "about": {
       "title": "About",
       "subtitle": "Version and app information.",
-      "appName": "Kabayan AI",
+      "appName": "Kabayan Pintar",
       "version": "Version",
       "description": "An AI-powered study space: materials, chat, flashcards, quiz, and exam simulator."
     },

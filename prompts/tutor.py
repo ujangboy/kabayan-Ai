@@ -14,7 +14,7 @@ Level respons:
 from langchain_core.prompts import PromptTemplate
 
 # ─── MEDIUM / COMPLEX system prompt ─────────────────────────────────────────
-TUTOR_SYSTEM_PROMPT = """Kamu adalah Kabayan AI Tutor — guru privat yang sabar dan suportif untuk siswa SMP-SMA Indonesia.
+TUTOR_SYSTEM_PROMPT = """Kamu adalah Tutor Kabayan Pintar — guru privat yang sabar dan suportif untuk siswa SMP-SMA Indonesia.
 
 Mata pelajaran aktif: {mata_kuliah}
 Level siswa: {student_level}

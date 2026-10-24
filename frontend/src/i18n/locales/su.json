@@ -278,7 +278,7 @@
     "noMaterials": "Can aya materi.",
     "noQuizzes": "Can aya kuis.",
     "notPlayed": "Can dimaénkeun",
-    "welcomeTitle": "Wilujeng Sumping di Kabayan AI!",
+    "welcomeTitle": "Wilujeng Sumping di Kabayan Pintar!",
     "welcomeText": "Mimitian ku nyieun mata pelajaran tuluy unggah materi kahiji anjeun.",
     "createSubject": "Jieun Mata Pelajaran",
     "uploadMaterial": "Unggah Materi"
@@ -352,7 +352,7 @@
     "documentsActive": "{{count}} dokumén aktip",
     "clearDocumentSelection": "Beresihan pilihan dokumén",
     "tutorModeActive": "Mode Tutor Aktip",
-    "greetingKabayan": "Halo! Kuring Kabayan AI",
+    "greetingKabayan": "Halo! Kuring Kabayan Pintar",
     "tutorModeHint": "Kuring siap ngabantuan anjeun diajar.",
     "tutorModeFocus": "Fokus: {{subject}}.",
     "normalModeHint": "Taroskeun naon waé — materi, konsép, soal, atanapi ideu.",
@@ -375,7 +375,7 @@
     "quickQuiz": "Kuis gancang",
     "quickQuizPrompt": "Béré kuis gancang 5 patarosan pikeun nguji pamahaman kuring.",
     "emptyTitle": "Aya materi anu badé urang pelajari ayeuna?",
-    "emptySubtitle": "Pilih topik gancang di handap atawa taroskeun naon waé ka Kabayan AI.",
+    "emptySubtitle": "Pilih topik gancang di handap atawa taroskeun naon waé ka Kabayan Pintar.",
     "promptSummaryTitle": "Ringkes materi panganyarna kuring",
     "promptSummaryPrompt": "Mangga ringkes materi panganyarna anu kuring unggah ku poin-poin penting jeung conto saderhana.",
     "promptQuizTitle": "Jieun 5 latihan soal kuis",
@@ -1170,7 +1170,7 @@
     "about": {
       "title": "Ngeunaan Aplikasi",
       "subtitle": "Inpormasi vérsi sareng aplikasi.",
-      "appName": "Kabayan AI",
+      "appName": "Kabayan Pintar",
       "version": "Vérsi",
       "description": "Rohang diajar pinter dumasar AI: materi, chat, flashcard, kuis, sareng simulasi ujian."
     },
