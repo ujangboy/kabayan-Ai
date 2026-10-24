@@ -10,9 +10,9 @@ import os
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from database import Base
-import config
-import models  # noqa: F401 — daftarkan semua tabel ke Base.metadata
+from app.database import Base
+from app import config
+from app import models  # noqa: F401 — daftarkan semua tabel ke Base.metadata
 
 
 @pytest.fixture(autouse=True)
@@ -25,7 +25,7 @@ def _clear_app_dependency_overrides():
     selesai → endpoint berikutnya dapat 500 tak jelas.
     """
     yield
-    from main import app
+    from app.main import app
     app.dependency_overrides.clear()
 
 
@@ -44,12 +44,12 @@ def db_session(tmp_path, monkeypatch):
     Base.metadata.create_all(engine)
     TestingSession = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-    import services.material_service as _material_service
+    import app.services.material_service as _material_service
     _material_service.SessionLocal = TestingSession
 
     # Router streaming (chat/tutor) membuat session persist sendiri via
     # database.SessionLocal() — arahkan juga ke DB uji.
-    import database as _database
+    import app.database as _database
     monkeypatch.setattr(_database, "SessionLocal", TestingSession)
 
     db = TestingSession()

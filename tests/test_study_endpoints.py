@@ -6,9 +6,9 @@ tanpa subject_id, serta endpoint yg menolak subject_id tak dikenal (404).
 '''
 import pytest
 from fastapi.testclient import TestClient
-from main import app
-from database import get_db
-import models
+from app.main import app
+from app.database import get_db
+from app import models
 
 
 @pytest.fixture()

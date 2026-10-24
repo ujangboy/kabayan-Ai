@@ -7,9 +7,9 @@ from alembic.config import Config
 from alembic.migration import MigrationContext
 from sqlalchemy import create_engine
 
-import config
-import models  # noqa: F401 — register all tables on Base.metadata
-from database import Base
+from app import config
+from app import models  # noqa: F401 — register all tables on Base.metadata
+from app.database import Base
 
 
 def test_fresh_migrations_match_models(tmp_path, monkeypatch):

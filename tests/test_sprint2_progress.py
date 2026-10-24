@@ -10,20 +10,20 @@ Fokus uji:
   - Endpoint: 200 valid, 404 subject hilang
 """
 import datetime
-from time_utils import utcnow
+from app.time_utils import utcnow
 import json
 
 import pytest
 
-import models
-from database import get_db
-from engines.progress import compute_streak, compute_mastery_trend, get_progress, _local_date
+from app import models
+from app.database import get_db
+from app.engines.progress import compute_streak, compute_mastery_trend, get_progress, _local_date
 
 
 @pytest.fixture()
 def client(db_session):
     from fastapi.testclient import TestClient
-    from main import app
+    from app.main import app
 
     app.dependency_overrides[get_db] = lambda: db_session
     yield TestClient(app)

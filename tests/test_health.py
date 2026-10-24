@@ -4,7 +4,7 @@ import json
 
 from sqlalchemy.orm import sessionmaker
 
-import main
+from app import main
 
 
 def test_health_reports_cache_and_lazy_embedding(db_session, monkeypatch):

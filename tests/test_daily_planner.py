@@ -11,12 +11,12 @@ Fokus uji:
 """
 import asyncio
 import datetime
-from time_utils import utcnow
+from app.time_utils import utcnow
 import json
 
-import models
-from engines.daily_planner import generate_daily_plan
-from routers.study import study_daily_plan
+from app import models
+from app.engines.daily_planner import generate_daily_plan
+from app.routers.study import study_daily_plan
 
 
 def _card(db, subject_id, due=True, new=False, times_seen=1, times_correct=1):

@@ -1,6 +1,6 @@
 """D4 — exam_service.get_blueprints (endpoint yang sebelumnya 500: ExamBlueprint undefined)."""
-from models import ExamBlueprint, ExamSession, StudyPlan, StudyPlanItem
-from services.exam_service import exam_service
+from app.models import ExamBlueprint, ExamSession, StudyPlan, StudyPlanItem
+from app.services.exam_service import exam_service
 
 
 def test_get_blueprints_returns_list(db_session, make_subject):

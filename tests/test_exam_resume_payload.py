@@ -6,8 +6,8 @@ elapsed dari timestamp backend)."""
 import json
 from datetime import datetime
 
-from models import ExamSession
-from services.exam_service import exam_service
+from app.models import ExamSession
+from app.services.exam_service import exam_service
 
 
 def test_active_session_detail_contains_resume_payload(db_session, make_subject):

@@ -11,8 +11,8 @@ import json
 
 import pytest
 
-from models import ExamSession, StudyPlan
-from services.exam_service import exam_service
+from app.models import ExamSession, StudyPlan
+from app.services.exam_service import exam_service
 
 
 def _plan_data(start_date=None, invalid_date=False):
@@ -142,8 +142,8 @@ def test_update_start_date_missing_plan_returns_404(db_session):
 
 def test_generate_study_plan_simulation_resources_lists_materials(db_session, make_subject):
     """Item Simulasi Penuh (hari 7) harus membawa daftar materi sebagai resources."""
-    from models import Material
-    from services.assessment_engine import generate_study_plan
+    from app.models import Material
+    from app.services.assessment_engine import generate_study_plan
 
     subject = make_subject("Biologi Sel")
     names = ["Sel Hewan.pdf", "Organel.docx", "Querl.docx-x"]

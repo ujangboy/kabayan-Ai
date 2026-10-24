@@ -5,19 +5,22 @@ catatan, flashcard, quiz, simulasi ujian, dan tutor AI.
 
 ## Isi
 
-- `main.py` — entry point aplikasi dan lifecycle worker
-- `config.py` — konfigurasi environment dan path storage
-- `database.py` — koneksi database dan `Base` SQLAlchemy
-- `models.py` — model data (SQLAlchemy)
-- `routers/` — endpoint API
-- `services/` — logika bisnis
-- `repositories/` — akses data
-- `parsers/` — ekstraksi teks PDF/DOCX/PPTX/XLSX/YouTube
-- `agents/` — definisi agent
-- `prompts/` — template prompt
+- `app/` — paket backend FastAPI, entry point `app.main:app`
+  - `app/main.py` — entry point aplikasi dan lifecycle worker
+  - `app/config.py` — konfigurasi environment dan path storage
+  - `app/database.py` — koneksi database dan `Base` SQLAlchemy
+  - `app/models.py` — model data (SQLAlchemy)
+  - `app/routers/` — endpoint API
+  - `app/services/` — logika bisnis
+  - `app/repositories/` — akses data
+  - `app/parsers/` — ekstraksi teks PDF/DOCX/PPTX/XLSX/YouTube
+  - `app/agents/` — definisi agent
+  - `app/prompts/` — template prompt
 - `frontend/` — UI React/Vite + Tailwind
 - `alembic/` — migrasi database
+- `scripts/` — skrip operasional (backup, seed, rebuild index)
 - `tests/` — test backend (pytest)
+- `docs/` — dokumen proyek (aturan agent, baseline, konteks AI)
 
 Data runtime (database, upload, vector store, backup) disimpan di `storage/`
 dan tidak di-commit.
@@ -58,7 +61,7 @@ Backend:
 python -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-uvicorn main:app --reload --port 8000
+uvicorn app.main:app --reload --port 8000
 ```
 
 Frontend (terminal terpisah):
@@ -94,7 +97,7 @@ npm run lint      # oxlint
 
 ## Database & Migrasi
 
-Alembic adalah source of truth schema. Saat aplikasi start, `main.py`
+Alembic adalah source of truth schema. Saat aplikasi start, `app/main.py`
 menjalankan `alembic upgrade head`. Untuk memeriksa drift model vs database:
 
 ```bash
@@ -103,7 +106,7 @@ alembic check     # harus: "No new upgrade operations detected."
 ```
 
 Test `tests/test_migrations.py` juga memastikan database baru hasil migrasi
-memiliki schema yang sama persis dengan `models.py`.
+memiliki schema yang sama persis dengan `app/models.py`.
 
 ## Teknologi
 

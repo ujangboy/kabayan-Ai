@@ -1,21 +1,21 @@
-from time_utils import utcnow
+from app.time_utils import utcnow
 """
 Integration test untuk GET /api/tutor/stats dan optimasi token Task C.
 """
 import pytest
 
-import models
-from routers.tutor import get_tutor_stats
-from services.tutor_profile_service import get_or_create_profile
-from services.cache_service import cache_service
+from app import models
+from app.routers.tutor import get_tutor_stats
+from app.services.tutor_profile_service import get_or_create_profile
+from app.services.cache_service import cache_service
 import asyncio
 
 
 class TestStatsEndpoint:
     def _make_client(self, db_session):
         from fastapi.testclient import TestClient
-        from database import get_db
-        from main import app
+        from app.database import get_db
+        from app.main import app
 
         def _override():
             yield db_session
@@ -38,7 +38,7 @@ class TestStatsEndpoint:
         assert "helpful_rate" in data
 
     def test_stats_defaults_zero(self, db_session):
-        from services.tutor_profile_service import get_or_create_profile as _goc
+        from app.services.tutor_profile_service import get_or_create_profile as _goc
         _goc(db_session)  # pastikan profil ada tapi belum ada pesan
         client = self._make_client(db_session)
         response = client.get("/api/tutor/stats")
@@ -53,7 +53,7 @@ class TestStatsEndpoint:
 
 class TestCacheIntegration:
     def test_cache_service_importable(self):
-        from services.cache_service import cache_service
+        from app.services.cache_service import cache_service
         assert cache_service is not None
 
     def test_cache_get_set(self, db_session):
@@ -72,7 +72,7 @@ class TestCacheIntegration:
         key = "expiring_key"
         cache_service.set_cache(db_session, key, "", "", "old_response")
 
-        from services.cache_service import CACHE_TTL_SECONDS
+        from app.services.cache_service import CACHE_TTL_SECONDS
         import datetime
         from sqlalchemy.orm import Session as SaSession
 

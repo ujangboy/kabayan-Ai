@@ -1,10 +1,10 @@
 """Recycle bin — soft-delete materi, list sampah, restore, hapus permanen."""
 import os
 import pytest
-import config
-from models import TrashItem, Material
-from services.material_service import material_service
-from services.trash_service import (
+from app import config
+from app.models import TrashItem, Material
+from app.services.material_service import material_service
+from app.services.trash_service import (
     list_trash,
     restore_material,
     delete_material_permanent,
@@ -16,8 +16,8 @@ from services.trash_service import (
 @pytest.fixture()
 def client(db_session):
     from fastapi.testclient import TestClient
-    from main import app
-    from database import get_db
+    from app.main import app
+    from app.database import get_db
     app.dependency_overrides[get_db] = lambda: db_session
     yield TestClient(app)
     app.dependency_overrides.clear()
@@ -179,7 +179,7 @@ def test_trash_api_flow(client, db_session, make_subject, make_material):
 
 def test_orphan_files_registered_without_metadata(db_session):
     """File trash lama (tanpa TrashItem) otomatis tampil sebagai orphan."""
-    from services.trash_service import list_trash, empty_trash
+    from app.services.trash_service import list_trash, empty_trash
     # Simulasikan file yang masuk trash sebelum fitur (trash_file tanpa metadata)
     name1 = "lama_ab12cd34.pdf"
     name2 = "tanpauuid.docx"

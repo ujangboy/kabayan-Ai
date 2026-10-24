@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:all": "concurrently -k \"npm run dev\" \"cd .. && python -m uvicorn main:app --port 8000 --reload\"",
-    "dev:api": "cd .. && python -m uvicorn main:app --port 8000 --reload",
+    "dev:all": "concurrently -k \"npm run dev\" \"cd .. && python -m uvicorn app.main:app --port 8000 --reload\"",
+    "dev:api": "cd .. && python -m uvicorn app.main:app --port 8000 --reload",
     "build": "vite build",
     "lint": "oxlint",
     "preview": "vite preview",

@@ -30,9 +30,9 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 logger = logging.getLogger(__name__)
 
 from langchain_core.prompts import PromptTemplate
-from database import SessionLocal
-from services.ai_service import ai_service
-import models
+from app.database import SessionLocal
+from app.services.ai_service import ai_service
+from app import models
 
 
 # ─── Prompt template ─────────────────────────────────────────────────────────

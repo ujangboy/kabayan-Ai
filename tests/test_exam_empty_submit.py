@@ -1,7 +1,7 @@
 """Regresi: sesi ujian yang kehabisan waktu tanpa jawaban tetap bisa dikirim."""
 
-from schemas.exam import SubmitAnswersRequest
-from services.assessment_engine import assemble_evaluation
+from app.schemas.exam import SubmitAnswersRequest
+from app.services.assessment_engine import assemble_evaluation
 
 
 def test_submit_answers_accepts_empty_dict():

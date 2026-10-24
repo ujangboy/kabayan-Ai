@@ -11,7 +11,7 @@ Fokus uji:
 """
 import pytest
 
-from services.rag_service import (
+from app.services.rag_service import (
     _tokenize,
     _keyword_overlap,
     _normalize_vec,

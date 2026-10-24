@@ -11,8 +11,8 @@ Fokus:
 """
 import pytest
 
-import models
-from services.feedback_service import feedback_service
+from app import models
+from app.services.feedback_service import feedback_service
 
 
 @pytest.fixture()

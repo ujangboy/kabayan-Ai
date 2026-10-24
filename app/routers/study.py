@@ -1,0 +1,137 @@
+"""
+Study router — endpoint rekomendasi modalitas belajar (PRD US3.2).
+
+POST /api/study/route
+    request:  { "subject_id": int, "tier": "SIMPLE"|"MEDIUM"|"COMPLEX"|null }
+    - Jika `tier` diberikan → satu rekomendasi untuk tier tersebut.
+    - Jika `tier` null → kembalikan `recommendations` untuk semua tier +
+      `primary` (modalitas terbaik yang resource-nya tersedia).
+"""
+from fastapi import APIRouter, Depends, Query
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel
+from typing import Optional
+from sqlalchemy.orm import Session
+from app.database import get_db
+from app.engines.modality_router import route as modality_route, VALID_TIERS
+from app.engines.learning_metrics import get_learning_metrics
+from app.engines.daily_planner import generate_daily_plan
+from app.schemas.common import StatusMessage
+
+router = APIRouter()
+
+
+class StudyRouteRequest(BaseModel):
+    subject_id: int
+    tier: Optional[str] = None
+    topic: Optional[str] = None
+
+
+@router.post("/api/study/route", response_model=StatusMessage)
+async def study_route(req: StudyRouteRequest, db: Session = Depends(get_db)):
+    """Rekomendasikan modalitas belajar berdasarkan tier kompleksitas + stok latihan."""
+    from app.models import Subject
+
+    subject = db.query(Subject).filter(Subject.id == req.subject_id).first()
+    if not subject:
+        return JSONResponse(status_code=404, content={"detail": "Mata kuliah tidak ditemukan."})
+
+    try:
+        if req.tier:
+            result = modality_route(db, req.subject_id, req.tier, req.topic)
+            result["mode"] = "single"
+            return JSONResponse(result)
+
+        # Mode "semua tier": tetap satu panggilan DB (snapshot resource dipakai bersama)
+        recommendations = []
+        primary = None
+        # Prioritas primary: flashcard > micro_quiz > socratic (resource nyata dulu)
+        priority = {"flashcard": 0, "micro_quiz": 1, "socratic": 2}
+        best = None
+        for t in VALID_TIERS:
+            rec = modality_route(db, req.subject_id, t, req.topic)
+            recommendations.append(rec)
+            if best is None or priority[rec["modality"]] < priority[best["modality"]]:
+                best = rec
+        if best is not None:
+            primary = best
+        return JSONResponse({
+            "subject_id": req.subject_id,
+            "tier": None,
+            "topic": req.topic,
+            "mode": "all",
+            "primary": primary,
+            "recommendations": recommendations,
+        })
+    except ValueError as e:
+        return JSONResponse(status_code=422, content={"detail": str(e)})
+
+
+@router.get("/api/study/metrics", response_model=dict)
+async def study_metrics(subject_id: Optional[int] = Query(None), db: Session = Depends(get_db)):
+    """Metrik belajar (PRD US3.3): speed, fatigue, waktu optimal, overview FSRS."""
+    if subject_id is not None:
+        from app.models import Subject
+
+        subject = db.query(Subject).filter(Subject.id == subject_id).first()
+        if not subject:
+            return JSONResponse(status_code=404, content={"detail": "Mata kuliah tidak ditemukan."})
+    return JSONResponse(get_learning_metrics(db, subject_id))
+
+
+@router.get("/api/study/daily-plan", response_model=dict)
+async def study_daily_plan(
+    subject_id: Optional[int] = Query(None),
+    free_minutes: int = Query(60, ge=5, le=480),
+    db: Session = Depends(get_db),
+):
+    """Rencana belajar hari ini (PRD US4.3): FSRS due + mastery rendah + waktu luang."""
+    if subject_id is not None:
+        from app.models import Subject
+
+        subject = db.query(Subject).filter(Subject.id == subject_id).first()
+        if not subject:
+            return JSONResponse(status_code=404, content={"detail": "Mata kuliah tidak ditemukan."})
+    return JSONResponse(generate_daily_plan(db, free_minutes=free_minutes, subject_id=subject_id))
+
+
+@router.get("/api/study/knowledge-graph", response_model=dict)
+async def study_knowledge_graph(subject_id: Optional[int] = Query(None), db: Session = Depends(get_db)):
+    """Knowledge graph (PRD US4.1): peta topik/bab + keterkaitan konsep per mata kuliah."""
+    from app.engines.knowledge_graph import build_knowledge_graph
+
+    if subject_id is not None:
+        from app.models import Subject
+
+        subject = db.query(Subject).filter(Subject.id == subject_id).first()
+        if not subject:
+            return JSONResponse(status_code=404, content={"detail": "Mata kuliah tidak ditemukan."})
+    return JSONResponse(build_knowledge_graph(db, subject_id))
+
+
+@router.get("/api/study/progress", response_model=dict)
+async def study_progress(subject_id: Optional[int] = Query(None), db: Session = Depends(get_db)):
+    """Progres belajar (PRD US5.1): streak konsistensi + tren mastery."""
+    from app.engines.progress import get_progress
+
+    if subject_id is not None:
+        from app.models import Subject
+
+        subject = db.query(Subject).filter(Subject.id == subject_id).first()
+        if not subject:
+            return JSONResponse(status_code=404, content={"detail": "Mata kuliah tidak ditemukan."})
+    return JSONResponse(get_progress(db, subject_id))
+
+
+@router.get("/api/study/diagnostic", response_model=dict)
+async def study_diagnostic(subject_id: Optional[int] = Query(None), db: Session = Depends(get_db)):
+    """Diagnostic (PRD US4.2): readiness, topik lemah/kuat, resep perbaikan, risiko."""
+    from app.engines.diagnostic import run_diagnostic
+
+    if subject_id is not None:
+        from app.models import Subject
+
+        subject = db.query(Subject).filter(Subject.id == subject_id).first()
+        if not subject:
+            return JSONResponse(status_code=404, content={"detail": "Mata kuliah tidak ditemukan."})
+    return JSONResponse(run_diagnostic(db, subject_id))

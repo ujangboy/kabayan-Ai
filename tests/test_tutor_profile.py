@@ -3,15 +3,15 @@ Integration test untuk services/tutor_profile_service.py + GET /api/tutor/profil
 """
 import pytest
 
-import models
-from services.tutor_profile_service import (
+from app import models
+from app.services.tutor_profile_service import (
     get_or_create_profile,
     update_after_feedback,
     record_message,
     get_adaptive_instructions,
     build_adaptive_prompt_section,
 )
-from routers.tutor import get_tutor_profile, TutorChatRequest
+from app.routers.tutor import get_tutor_profile, TutorChatRequest
 import asyncio
 
 
@@ -148,7 +148,7 @@ def test_profile_endpoint_returns_json(db_session):
     get_or_create_profile(db_session)
 
     from fastapi.testclient import TestClient
-    from main import app
+    from app.main import app
 
     client = TestClient(app)
     response = client.get("/api/tutor/profile")
@@ -161,7 +161,7 @@ def test_profile_endpoint_returns_json(db_session):
 
 def test_profile_endpoint_creates_profile_if_missing(db_session):
     from fastapi.testclient import TestClient
-    from main import app
+    from app.main import app
 
     client = TestClient(app)
     response = client.get("/api/tutor/profile")

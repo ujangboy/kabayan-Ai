@@ -11,10 +11,10 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from database import SessionLocal
-from models import Material
-from services.material_service import material_service
-from services.rag_service import rag_service
+from app.database import SessionLocal
+from app.models import Material
+from app.services.material_service import material_service
+from app.services.rag_service import rag_service
 
 
 def main() -> int:

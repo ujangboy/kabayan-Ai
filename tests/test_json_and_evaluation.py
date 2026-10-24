@@ -1,5 +1,5 @@
-from services.assessment_engine import assemble_evaluation
-from services.json_utils import parse_ai_json
+from app.services.assessment_engine import assemble_evaluation
+from app.services.json_utils import parse_ai_json
 
 
 def test_parse_ai_json_keeps_outer_object_with_nested_array():

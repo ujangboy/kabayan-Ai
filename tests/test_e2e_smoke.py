@@ -18,14 +18,14 @@ import zipfile
 
 import pytest
 
-import models
-from database import get_db
+from app import models
+from app.database import get_db
 
 
 @pytest.fixture()
 def client(db_session):
     from fastapi.testclient import TestClient
-    from main import app
+    from app.main import app
 
     app.dependency_overrides[get_db] = lambda: db_session
     yield TestClient(app)
@@ -35,7 +35,7 @@ def client(db_session):
 @pytest.fixture()
 def fake_rag(monkeypatch):
     """Matikan embedding/LanceDB: index_document jadi no-op tercatat."""
-    from services.rag_service import rag_service
+    from app.services.rag_service import rag_service
     indexed = []
 
     def _fake_index(doc_id, chunks):
@@ -47,7 +47,7 @@ def fake_rag(monkeypatch):
 
 @pytest.fixture()
 def isolated_backup_dir(tmp_path, monkeypatch):
-    import config
+    from app import config
 
     backups = tmp_path / "storage" / "backups"
     backups.mkdir(parents=True, exist_ok=True)
@@ -100,7 +100,7 @@ class TestFullChain:
         assert mat["status"] == "Pending"
 
         # Proses manual (worker background tidak jalan di test)
-        from services.material_service import material_service
+        from app.services.material_service import material_service
         db_session.query(models.Material).filter(models.Material.id == mat["id"]).update({"status": "Processing"})
         db_session.commit()
         material_service.process_material_async(mat["filepath"], f"mat_{mat['id']}", mat["id"])

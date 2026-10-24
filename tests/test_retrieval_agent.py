@@ -10,7 +10,7 @@ Fokus uji:
 """
 import pytest
 
-from agents.retrieval_agent import retrieval_agent, RetrievalResult
+from app.agents.retrieval_agent import retrieval_agent, RetrievalResult
 
 
 # ─── Helper: fake search yang bisa diprogram per-query ───────────────────────
@@ -51,7 +51,7 @@ def test_empty_query_returns_empty():
 
 def test_sufficient_first_attempt(monkeypatch):
     monkeypatch.setattr(
-        "services.rag_service.rag_service.search",
+        "app.services.rag_service.rag_service.search",
         _fake_search({
             "apa itu hukum newton?": {"text": _SUFFICIENT_TEXT, "sources": [{"doc_id": "mat_1", "content": "x"}]},
         }),
@@ -77,7 +77,7 @@ def test_reformulation_retry_when_first_query_empty(monkeypatch):
             return {"text": _SUFFICIENT_TEXT, "sources": [{"doc_id": "mat_1", "content": "x"}]}
         return {"text": "", "sources": []}
 
-    monkeypatch.setattr("services.rag_service.rag_service.search", _search)
+    monkeypatch.setattr("app.services.rag_service.rag_service.search", _search)
 
     result = retrieval_agent.run("apa itu hukum newton?", doc_ids=["mat_1"])
 
@@ -90,11 +90,11 @@ def test_reformulation_retry_when_first_query_empty(monkeypatch):
 def test_broaden_gather_when_still_insufficient(monkeypatch):
     """Retry gagal semua → broaden ambil chunk dari rag_context_service."""
     monkeypatch.setattr(
-        "services.rag_service.rag_service.search",
+        "app.services.rag_service.rag_service.search",
         _fake_search({}),  # semua query kosong
     )
     monkeypatch.setattr(
-        "services.rag_context_service.rag_context_service._gather_chunks",
+        "app.services.rag_context_service.rag_context_service._gather_chunks",
         lambda doc_ids, max_words: _SUFFICIENT_TEXT,
     )
 
@@ -107,11 +107,11 @@ def test_broaden_gather_when_still_insufficient(monkeypatch):
 def test_total_failure_sets_needs_clarification(monkeypatch):
     """Gagal total → needs_clarification=True (minta user klarifikasi, bukan halusinasi)."""
     monkeypatch.setattr(
-        "services.rag_service.rag_service.search",
+        "app.services.rag_service.rag_service.search",
         _fake_search({}),
     )
     monkeypatch.setattr(
-        "services.rag_context_service.rag_context_service._gather_chunks",
+        "app.services.rag_context_service.rag_context_service._gather_chunks",
         lambda doc_ids, max_words: "",
     )
 
@@ -127,7 +127,7 @@ def test_insufficient_when_score_below_threshold(monkeypatch):
     def _search(query, doc_ids=None, top_k=5):
         return {"text": weak_text, "sources": [{"doc_id": "mat_1", "content": "x"}]}
 
-    monkeypatch.setattr("services.rag_service.rag_service.search", _search)
+    monkeypatch.setattr("app.services.rag_service.rag_service.search", _search)
 
     result = retrieval_agent.run("apa itu hukum newton?", doc_ids=["mat_1"])
     assert result.status == "insufficient"
@@ -157,8 +157,8 @@ def test_evaluate_scoring():
 def test_tutor_handle_ai_uses_retrieval_agent(monkeypatch):
     """_handle_ai memanggil retrieval_agent dan menambah status ke cache key."""
     import inspect
-    from services.tutor_service import TutorService, _collect_doc_ids
-    from agents.retrieval_agent import retrieval_agent as ra
+    from app.services.tutor_service import TutorService, _collect_doc_ids
+    from app.agents.retrieval_agent import retrieval_agent as ra
 
     src = inspect.getsource(TutorService._handle_ai)
     assert "retrieval_agent.run" in src
@@ -171,7 +171,7 @@ def test_tutor_handle_ai_uses_retrieval_agent(monkeypatch):
 def test_chat_router_uses_retrieval_agent():
     """routers/chat.py memakai retrieval_agent (bukan rag_service.search langsung)."""
     import inspect
-    from routers import chat as chat_router
+    from app.routers import chat as chat_router
 
     src = inspect.getsource(chat_router)
     assert "retrieval_agent.run" in src

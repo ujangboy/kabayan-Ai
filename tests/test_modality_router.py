@@ -10,14 +10,14 @@ Fokus uji:
   - Endpoint /api/study/route: 200 valid, 422 tier invalid, 404 subject hilang
 """
 import datetime
-from time_utils import utcnow
+from app.time_utils import utcnow
 import asyncio
 
 import pytest
 
-import models
-from engines.modality_router import route, collect_resources, MODALITY_BY_TIER
-from routers.study import study_route, StudyRouteRequest
+from app import models
+from app.engines.modality_router import route, collect_resources, MODALITY_BY_TIER
+from app.routers.study import study_route, StudyRouteRequest
 
 
 def _add_flashcards(db, subject_id, n=2, due_days=None):

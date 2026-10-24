@@ -9,12 +9,12 @@ Fokus uji:
 """
 import json
 import datetime
-from time_utils import utcnow
+from app.time_utils import utcnow
 
 import pytest
 
-from models import ExamSession, ExamAttempt, ExamReview, TutorUserProfile, Subject
-from services.learning_profile_service import (
+from app.models import ExamSession, ExamAttempt, ExamReview, TutorUserProfile, Subject
+from app.services.learning_profile_service import (
     get_or_create,
     ingest_session,
     get_profile_payload,
@@ -23,8 +23,8 @@ from services.learning_profile_service import (
     _ADAPTIVE_BOUNDARY,
     MAX_SECTION_CHARS,
 )
-from routers.exam_analyzer import get_learning_profile, submit_exam
-from exceptions import AppError
+from app.routers.exam_analyzer import get_learning_profile, submit_exam
+from app.exceptions import AppError
 
 
 # ─── Endpoint integration ────────────────────────────────────────────────────
@@ -53,9 +53,9 @@ def test_get_learning_profile_endpoint_404_unknown_subject(db_session):
 def test_submit_exam_ingests_profile(db_session, make_subject, monkeypatch):
     """Hook submit_exam: setelah evaluasi, profil belajar ikut ter-agregasi."""
     import asyncio
-    from services import exam_service as es_mod
-    from services import subject_service as subj_mod
-    from routers import exam_analyzer as ea_mod
+    from app.services import exam_service as es_mod
+    from app.services import subject_service as subj_mod
+    from app.routers import exam_analyzer as ea_mod
 
     subject = make_subject("Matkul Hook")
 
@@ -84,7 +84,7 @@ def test_submit_exam_ingests_profile(db_session, make_subject, monkeypatch):
             self.s = s
         def get(self, db, sid):
             return self.s
-    from repositories import exam_repository as exam_repo_mod
+    from app.repositories import exam_repository as exam_repo_mod
     monkeypatch.setattr(exam_repo_mod, "exam_session_repository", _FakeRepo(session))
 
     class _FakeSubjSvc:
@@ -92,7 +92,7 @@ def test_submit_exam_ingests_profile(db_session, make_subject, monkeypatch):
             return None
     monkeypatch.setattr(subj_mod, "subject_service", _FakeSubjSvc())
 
-    from schemas.exam import SubmitAnswersRequest
+    from app.schemas.exam import SubmitAnswersRequest
     resp = asyncio.run(submit_exam(session.id, SubmitAnswersRequest(answers={"1": "A"}), db_session))
     assert resp.status_code == 200
 
@@ -282,7 +282,7 @@ def test_ingest_syncs_tutor_profile(db_session, make_subject):
 
 def test_adaptive_section_prioritizes_subject_profile(db_session):
     """Jika subject_profile ada, topik matkul itu DIPRIORITASKAN (tidak campur global)."""
-    from services.tutor_profile_service import get_or_create_profile, build_adaptive_prompt_section
+    from app.services.tutor_profile_service import get_or_create_profile, build_adaptive_prompt_section
     profile = get_or_create_profile(db_session)
     profile.weak_topics = json.dumps(["GlobalTopicLain"])
     db_session.commit()
@@ -297,7 +297,7 @@ def test_adaptive_section_prioritizes_subject_profile(db_session):
 
 def test_adaptive_section_falls_back_to_global(db_session):
     """Tanpa subject_profile → perilaku lama: pakai daftar global."""
-    from services.tutor_profile_service import get_or_create_profile, build_adaptive_prompt_section
+    from app.services.tutor_profile_service import get_or_create_profile, build_adaptive_prompt_section
     profile = get_or_create_profile(db_session)
     profile.weak_topics = json.dumps(["GlobalTopic"])
     db_session.commit()
@@ -307,8 +307,8 @@ def test_adaptive_section_falls_back_to_global(db_session):
 
 
 def test_find_subject_learning_profile_matches_case_insensitive(db_session, make_subject):
-    from services.tutor_service import _find_subject_learning_profile
-    from services.learning_profile_service import get_or_create
+    from app.services.tutor_service import _find_subject_learning_profile
+    from app.services.learning_profile_service import get_or_create
 
     subject = make_subject("Matematika")
     lp = get_or_create(db_session, subject.id)
@@ -325,7 +325,7 @@ def test_find_subject_learning_profile_matches_case_insensitive(db_session, make
 
 
 def test_find_subject_learning_profile_none_without_data(db_session, make_subject):
-    from services.tutor_service import _find_subject_learning_profile
+    from app.services.tutor_service import _find_subject_learning_profile
 
     subject = make_subject("Fisika")
     assert _find_subject_learning_profile(db_session, "Fisika") is None
@@ -334,8 +334,8 @@ def test_find_subject_learning_profile_none_without_data(db_session, make_subjec
 
 
 def test_build_tutor_prompt_includes_subject_adaptive(db_session):
-    from services.tutor_profile_service import get_or_create_profile
-    from prompts.tutor import build_tutor_prompt
+    from app.services.tutor_profile_service import get_or_create_profile
+    from app.prompts.tutor import build_tutor_prompt
 
     profile = get_or_create_profile(db_session)
     subject_profile = {"subject": "Matematika", "weak": ["Logaritma"], "strong": []}

@@ -1,4 +1,4 @@
-from services.exam_builder import (
+from app.services.exam_builder import (
     allocate_counts,
     normalize_blueprint_items,
     normalize_question,

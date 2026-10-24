@@ -9,18 +9,18 @@ Menggunakan TestClient dengan dependency_overrides agar memakai session
 temporer dari fixture db_session (tidak menyentuh DB produksi).
 """
 import datetime
-from time_utils import utcnow
+from app.time_utils import utcnow
 
 import pytest
 
-import models
-from database import get_db
+from app import models
+from app.database import get_db
 
 
 @pytest.fixture()
 def client(db_session):
     from fastapi.testclient import TestClient
-    from main import app
+    from app.main import app
     app.dependency_overrides[get_db] = lambda: db_session
     yield TestClient(app)
     app.dependency_overrides.clear()

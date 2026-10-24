@@ -5,8 +5,8 @@ from pathlib import Path
 
 from sqlalchemy.orm import sessionmaker
 
-from models import AudioGeneration
-from services import audio_service
+from app.models import AudioGeneration
+from app.services import audio_service
 
 
 def test_resolve_edge_tts_endpoint_migrates_legacy_host():

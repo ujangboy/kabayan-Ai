@@ -4,9 +4,9 @@ import json
 
 import pytest
 
-from database import get_db
-from engines.diagnostic import run_diagnostic, _prescribe
-from models import QuestionBank, LearningProfile, Flashcard
+from app.database import get_db
+from app.engines.diagnostic import run_diagnostic, _prescribe
+from app.models import QuestionBank, LearningProfile, Flashcard
 
 
 def _seed_profile(db_session, subject, mastery, weak=None, strong=None, trends=None,
@@ -128,7 +128,7 @@ class TestDiagnosticEngine:
         assert "low_retention" in codes
 
     def test_risk_flag_wrong_streak(self, db_session, make_subject):
-        from models import ExamSession, ExamAttempt, ExamReview
+        from app.models import ExamSession, ExamAttempt, ExamReview
         subject = make_subject()
         session = ExamSession(subject_id=subject.id, total_questions=5, score=0)
         db_session.add(session)
@@ -159,7 +159,7 @@ class TestDiagnosticEngine:
 @pytest.fixture()
 def client(db_session):
     from fastapi.testclient import TestClient
-    from main import app
+    from app.main import app
     app.dependency_overrides[get_db] = lambda: db_session
     yield TestClient(app)
     app.dependency_overrides.clear()

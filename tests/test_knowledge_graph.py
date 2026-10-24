@@ -4,9 +4,9 @@ import json
 
 import pytest
 
-from database import get_db
-from engines.knowledge_graph import build_knowledge_graph
-from models import QuestionBank, LearningProfile
+from app.database import get_db
+from app.engines.knowledge_graph import build_knowledge_graph
+from app.models import QuestionBank, LearningProfile
 
 
 def _seed(db_session, subject, questions=None, profile=None):
@@ -102,7 +102,7 @@ class TestKnowledgeGraphEngine:
         assert graph["meta"]["data_ready"] is True
 
     def test_blueprint_adds_concepts_and_priority(self, db_session, make_subject):
-        from models import ExamBlueprint
+        from app.models import ExamBlueprint
         subject = make_subject()
         _seed(db_session, subject, questions=[
             {"topic": "Array", "chapter": "Bab 1"},
@@ -143,7 +143,7 @@ class TestKnowledgeGraphEngine:
 @pytest.fixture()
 def client(db_session):
     from fastapi.testclient import TestClient
-    from main import app
+    from app.main import app
     app.dependency_overrides[get_db] = lambda: db_session
     yield TestClient(app)
     app.dependency_overrides.clear()

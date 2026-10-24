@@ -8,14 +8,14 @@ Fokus uji:
 """
 import json
 import datetime
-from time_utils import utcnow
+from app.time_utils import utcnow
 
 import pytest
 
-from models import ExamSession, ExamAttempt, ExamReview, Subject
-from services.flashcard_service import flashcard_service
-from services.tutor_service import _gather_exam_context
-from prompts.tutor import build_tutor_prompt
+from app.models import ExamSession, ExamAttempt, ExamReview, Subject
+from app.services.flashcard_service import flashcard_service
+from app.services.tutor_service import _gather_exam_context
+from app.prompts.tutor import build_tutor_prompt
 
 
 def _make_exam(db, subject, score=60, wrong_topics=("Topik Lemah",), submitted=True):
@@ -186,7 +186,7 @@ def test_build_tutor_prompt_without_exam_context(db_session):
 # ─── Router: TutorChatRequest terima exam_session_id ─────────────────────────
 
 def test_tutor_chat_request_accepts_exam_session_id():
-    from routers.tutor import TutorChatRequest
+    from app.routers.tutor import TutorChatRequest
     req = TutorChatRequest(
         message="kenapa nilai turun?",
         mata_kuliah="Struktur Data",

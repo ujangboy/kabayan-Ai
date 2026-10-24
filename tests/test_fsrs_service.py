@@ -11,13 +11,13 @@ Fokus uji:
   - Backward compat: kartu legacy (hanya field SRS lama) tetap berfungsi
 """
 import datetime
-from time_utils import utcnow
+from app.time_utils import utcnow
 import json
 
 import pytest
 
-import models
-from services.fsrs_service import (
+from app import models
+from app.services.fsrs_service import (
     build_card,
     review,
     apply_review,

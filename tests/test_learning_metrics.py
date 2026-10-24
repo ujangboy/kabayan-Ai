@@ -10,18 +10,18 @@ Fokus uji:
 """
 import asyncio
 import datetime
-from time_utils import utcnow
+from app.time_utils import utcnow
 import json
 
-import models
-from engines.learning_metrics import (
+from app import models
+from app.engines.learning_metrics import (
     compute_speed,
     compute_fatigue,
     compute_optimal_time,
     compute_fsrs_overview,
     get_learning_metrics,
 )
-from routers.study import study_metrics
+from app.routers.study import study_metrics
 
 
 def _quiz(db, subject_id, score, time_taken, total_questions=10, created_at=None):

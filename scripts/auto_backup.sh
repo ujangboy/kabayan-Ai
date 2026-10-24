@@ -25,7 +25,7 @@ cd "$ROOT"
 
 JSON=$(./venv/bin/python - <<'PY'
 import json
-from services.backup_service import create_backup
+from app.services.backup_service import create_backup
 print(json.dumps(create_backup(), default=str))
 PY
 )

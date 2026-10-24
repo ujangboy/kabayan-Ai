@@ -1,6 +1,6 @@
 """Recovery audio TTS yang tertinggal Processing setelah server restart."""
-from models import AudioGeneration
-from services.audio_service import recover_stale_audio
+from app.models import AudioGeneration
+from app.services.audio_service import recover_stale_audio
 
 
 def test_recover_stale_audio_marks_only_processing_rows_failed(

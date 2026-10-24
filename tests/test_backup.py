@@ -17,15 +17,15 @@ import zipfile
 
 import pytest
 
-import models
-from database import get_db
-from services.backup_service import create_backup, list_backups, backup_path_for, BACKUP_PREFIX
+from app import models
+from app.database import get_db
+from app.services.backup_service import create_backup, list_backups, backup_path_for, BACKUP_PREFIX
 
 
 @pytest.fixture()
 def client(db_session):
     from fastapi.testclient import TestClient
-    from main import app
+    from app.main import app
 
     app.dependency_overrides[get_db] = lambda: db_session
     yield TestClient(app)
@@ -35,7 +35,7 @@ def client(db_session):
 @pytest.fixture()
 def seeded_fs(tmp_path, monkeypatch):
     """Layout storage uji: DB + upload dalam tmp_path (sama dgn db_session)."""
-    import config
+    from app import config
 
     storage = tmp_path / "storage"
     uploads = storage / "uploads"

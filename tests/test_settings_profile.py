@@ -6,14 +6,14 @@ memakai session temporer (tidak menyentuh DB produksi).
 import io
 import pytest
 
-from database import get_db
-from services.settings_service import settings_service
+from app.database import get_db
+from app.services.settings_service import settings_service
 
 
 @pytest.fixture()
 def client(db_session):
     from fastapi.testclient import TestClient
-    from main import app
+    from app.main import app
     app.dependency_overrides[get_db] = lambda: db_session
     yield TestClient(app)
     app.dependency_overrides.clear()
@@ -48,10 +48,10 @@ class TestProfileEndpoint:
 
     def test_remove_photo_flag(self, client, db_session, tmp_path, monkeypatch):
         # Arahkan direktori foto ke temp, simulasikan foto lama tersimpan.
-        import config
+        from app import config
         fake_dir = tmp_path / "profile"
         fake_dir.mkdir()
-        monkeypatch.setattr("routers.profile.PROFILE_DIR", str(fake_dir))
+        monkeypatch.setattr("app.routers.profile.PROFILE_DIR", str(fake_dir))
         # _try_remove_photo membangun path dari config.BASE_DIR (dirujuk ke tmp_path oleh conftest).
         import os
         real_dir = os.path.join(config.BASE_DIR, "static", "profile")
@@ -83,7 +83,7 @@ class TestUsageEndpoint:
         assert data["features"] == []
 
     def test_usage_records_and_aggregates(self, client, db_session):
-        from services.usage_service import record_usage
+        from app.services.usage_service import record_usage
         record_usage(db_session, "quiz", "a" * 400)   # ~100 token
         record_usage(db_session, "quiz", "b" * 400)   # ~100 token, fitur sama
         record_usage(db_session, "tutor", "x" * 100)  # ~25 token, fitur beda
@@ -105,10 +105,10 @@ class TestUsageEndpoint:
 class TestProfilePhotoEndpoint:
     def test_upload_png(self, client, db_session, tmp_path, monkeypatch):
         # Arahkan direktori foto ke temp agar tidak menumpuk di static/
-        import config
+        from app import config
         fake_dir = tmp_path / "profile"
         fake_dir.mkdir()
-        monkeypatch.setattr("routers.profile.PROFILE_DIR", str(fake_dir))
+        monkeypatch.setattr("app.routers.profile.PROFILE_DIR", str(fake_dir))
 
         # 1x1 PNG (magic bytes valid)
         png_bytes = b"\x89PNG\r\n\x1a\n" + b"\x00" * 40
@@ -171,7 +171,7 @@ class TestDataOverviewEndpoint:
         assert "total" in data["storage"]
 
     def test_overview_counts_data(self, client, db_session):
-        import models
+        from app import models
         subj = models.Subject(name="Materi Test")
         db_session.add(subj)
         db_session.commit()

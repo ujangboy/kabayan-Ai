@@ -11,7 +11,7 @@ Test suite for services/tutor_classifier.py
 Tidak membutuhkan DB atau API — pure unit tests.
 """
 import pytest
-from services.tutor_classifier import classify, ClassificationResult
+from app.services.tutor_classifier import classify, ClassificationResult
 
 
 # ─── Helper ──────────────────────────────────────────────────────────────────

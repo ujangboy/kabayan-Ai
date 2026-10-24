@@ -1,9 +1,9 @@
 """D4 — jalur gagal materi: extract gagal, cancel, orphan sweep, subject delete, trash."""
 import os
 import time
-import config
-from services.material_service import material_service
-from services.storage_cleanup_service import cleanup_orphan_files, cleanup_trash, trash_file
+from app import config
+from app.services.material_service import material_service
+from app.services.storage_cleanup_service import cleanup_orphan_files, cleanup_trash, trash_file
 
 
 def _trash_contents():
@@ -95,8 +95,8 @@ def test_delete_subject_soft_deletes_without_touching_material_files(
     exam, flashcard) bisa dipulihkan. Hard cascade bukan lagi perilaku yang
     diharapkan.
     """
-    from models import Material, Subject
-    from services.subject_service import subject_service
+    from app.models import Material, Subject
+    from app.services.subject_service import subject_service
 
     subject = make_subject()
     fp = os.path.join(config.UPLOADS_DIR, "subj.pdf")

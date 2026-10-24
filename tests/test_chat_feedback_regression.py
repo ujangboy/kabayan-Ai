@@ -7,12 +7,12 @@ Regression test: feedback untuk kedua mode (Tutor & Kabayan).
 """
 import asyncio
 
-import models
+from app import models
 import pytest
 
-from routers.chat import chat_endpoint, ChatRequest
-from services.feedback_service import feedback_service
-from services.ai_service import ai_service as ai_service_instance
+from app.routers.chat import chat_endpoint, ChatRequest
+from app.services.feedback_service import feedback_service
+from app.services.ai_service import ai_service as ai_service_instance
 
 
 async def _fake_stream(hist_dicts, context, message):

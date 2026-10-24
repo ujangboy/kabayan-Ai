@@ -1,13 +1,13 @@
 """Regresi anggaran token Fase F — output & konteks proporsional per fitur."""
-import models
+from app import models
 
-import services.flashcard_service as flashcard_service_module
-import services.quiz_service as quiz_service_module
-from services import token_budget as tb
-from services.ai_service import CAPABILITY_MAX_TOKENS, _truncate_context
-from services.flashcard_service import flashcard_service
-from services.quiz_service import quiz_service
-from services.usage_service import record_usage
+import app.services.flashcard_service as flashcard_service_module
+import app.services.quiz_service as quiz_service_module
+from app.services import token_budget as tb
+from app.services.ai_service import CAPABILITY_MAX_TOKENS, _truncate_context
+from app.services.flashcard_service import flashcard_service
+from app.services.quiz_service import quiz_service
+from app.services.usage_service import record_usage
 
 
 def test_quiz_output_budget_is_conservative():

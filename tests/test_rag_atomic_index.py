@@ -1,7 +1,7 @@
 """Regression: kegagalan embedding tidak boleh menghapus chunk lama."""
 import pytest
 
-from services.rag_service import RAGService
+from app.services.rag_service import RAGService
 
 
 class _ExplodingEmbedder:

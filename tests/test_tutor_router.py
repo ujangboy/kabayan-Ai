@@ -9,15 +9,15 @@ import asyncio
 
 import pytest
 
-import models
-from exceptions import AppError
-from routers.tutor import (
+from app import models
+from app.exceptions import AppError
+from app.routers.tutor import (
     tutor_chat,
     tutor_feedback,
     TutorChatRequest,
     TutorFeedbackRequest,
 )
-from services.tutor_service import tutor_service as tutor_service_instance
+from app.services.tutor_service import tutor_service as tutor_service_instance
 
 
 # ─── Fake stream: ganti achat_stream agar deterministik & tanpa AI ───────────
