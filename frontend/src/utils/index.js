@@ -1,8 +1,25 @@
 import { clsx } from "clsx";
-import { twMerge } from "tailwind-merge";
+import { extendTailwindMerge } from "tailwind-merge";
+
+/**
+ * tailwind-merge default hanya kenal ukuran font bawaan Tailwind (xs–4xl).
+ * Token kustom dari tailwind.config.js (15, meta, 2xs, 3xs) jatuh ke grup
+ * "text-color" → `cn('... text-white ...', 'text-15')` akan MEMBUANG
+ * text-white (kasus nyata: teks tombol solid pandan jadi gelap di light mode).
+ * Daftarkan di sini supaya selalu diperlakukan sebagai font-size.
+ */
+const CUSTOM_FONT_SIZES = ["15", "meta", "2xs", "3xs"];
+
+const customTwMerge = extendTailwindMerge({
+  extend: {
+    classGroups: {
+      "font-size": [{ text: CUSTOM_FONT_SIZES }],
+    },
+  },
+});
 
 export function cn(...inputs) {
-  return twMerge(clsx(inputs));
+  return customTwMerge(clsx(inputs));
 }
 
 // ─── Motion tokens (DESIGN.md §7) ──────────────────────────────────────────
