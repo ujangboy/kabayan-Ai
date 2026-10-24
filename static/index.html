@@ -449,7 +449,7 @@
             </div>
             
             <div class="typing-indicator" id="typingIndicator">
-                <div class="avatar"><img src="/static/ai_cat.png.png" alt="AI Avatar" onerror="this.src='https://api.dicebear.com/7.x/pixel-art/svg?seed=ai-cat'"></div>
+                <div class="avatar"><img src="/static/ai_cat.png" alt="AI Avatar" onerror="this.src='https://api.dicebear.com/7.x/pixel-art/svg?seed=ai-cat'"></div>
                 <div class="dots"><span></span><span></span><span></span></div>
             </div>
         </div>
@@ -478,7 +478,7 @@
 
         // Note: Avatar URLs fallback to Dicebear pixel-art if local images aren't found.
         const USER_AVATAR = `<img src="/static/user_ghost.png.png" alt="User" onerror="this.src='https://api.dicebear.com/7.x/pixel-art/svg?seed=user-ghost'">`;
-        const AI_AVATAR = `<img src="/static/ai_cat.png.png" alt="AI" onerror="this.src='https://api.dicebear.com/7.x/pixel-art/svg?seed=ai-cat'">`;
+        const AI_AVATAR = `<img src="/static/ai_cat.png" alt="AI" onerror="this.src='https://api.dicebear.com/7.x/pixel-art/svg?seed=ai-cat'">`;
 
         function saveState() {
             localStorage.setItem('chats', JSON.stringify(chats));
