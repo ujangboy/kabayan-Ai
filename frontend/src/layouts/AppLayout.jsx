@@ -10,6 +10,7 @@ import CommandSearch from '@/components/search/CommandSearch';
 import KeyboardShortcuts from '@/components/KeyboardShortcuts';
 import BackgroundProcessSync from '@/components/BackgroundProcessSync';
 import FocusModeView from '@/components/FocusModeView';
+import MiniAudioPlayer from '@/components/audio/MiniAudioPlayer';
 import { useAppStore, useFocusStore } from '@/store';
 import { useJobStore, cancelJobByKey } from '@/store/jobStore';
 import { useTranslation } from 'react-i18next';
@@ -178,6 +179,7 @@ export default function AppLayout() {
         </main>
         <AnimatePresence>{searchOpen && <CommandSearch />}</AnimatePresence>
         <KeyboardShortcuts />
+        <MiniAudioPlayer />
       </div>
     </MotionConfig>
   );

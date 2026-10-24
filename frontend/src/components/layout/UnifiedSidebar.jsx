@@ -264,7 +264,10 @@ export default function UnifiedSidebar() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
             onClick={() => setSidebarOpen(false)}
-            className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
+            /* Task 7b: scrim & drawer di atas MiniAudioPlayer (z-50) supaya
+               kartu mini tidak melayang menembus dim layer; tetap di bawah
+               modal tertinggi (FocusMode z-100, Toast z-9998/9999). */
+            className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm"
           />,
           <motion.aside
             key="sidebar-drawer"
@@ -273,7 +276,7 @@ export default function UnifiedSidebar() {
             animate={{ x: 0 }}
             exit={{ x: -EXPANDED_WIDTH }}
             transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed inset-y-0 left-0 z-50 w-[264px] touch-pan-y"
+            className="fixed inset-y-0 left-0 z-[70] w-[264px] touch-pan-y"
           >
             <SidebarContent collapsed={false} onNavigate={() => setSidebarOpen(false)} hideToggle />
           </motion.aside>,

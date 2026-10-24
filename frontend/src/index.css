@@ -288,6 +288,9 @@
     right: 0;
     width: 1px;
     background: linear-gradient(to bottom, var(--border-subtle), transparent 80%);
+    /* Sama seperti -b: pseudo-element tidak boleh memakan klik
+       (Terbukti Task 7: strip 1px ini menelan klik di tepi sidebar). */
+    pointer-events: none;
   }
 
   .divider-gradient-b {
