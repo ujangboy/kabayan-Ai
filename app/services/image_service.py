@@ -19,8 +19,12 @@ logger = logging.getLogger(__name__)
 _MAGIC_ALLOWED = [
     b"\x89PNG\r\n\x1a\n",  # PNG
     b"\xff\xd8\xff",       # JPEG
-    b"RIFF",               # WEBP (diikuti "WEBP" pada offset 8)
+    b"RIFF",               # WEBP (diperiksa ulang offset 8..12)
 ]
+
+# Batas piksel total sebelum decode (decompression bomb: PNG ~10MB bisa
+# meluas ke ratusan MB RAM). 40MP cukup untuk screenshot & foto papan tulis.
+_MAX_PIXELS = 40_000_000
 
 
 def prepare_image(data: bytes) -> str:
@@ -39,8 +43,15 @@ def prepare_image(data: bytes) -> str:
             "Format gambar tidak didukung. Gunakan JPG, PNG, atau WEBP.",
             status_code=400,
         )
+    if data[:4] == b"RIFF" and data[8:12] != b"WEBP":
+        raise AppError(
+            "Format gambar tidak didukung. Gunakan JPG, PNG, atau WEBP.",
+            status_code=400,
+        )
     try:
         img = Image.open(io.BytesIO(data))
+        if img.size[0] * img.size[1] > _MAX_PIXELS:
+            raise AppError("Dimensi gambar terlalu tinggi.", status_code=400)
         img.load()
     except Exception:
         raise AppError("Gambar tidak dapat dibaca (file korup?).", status_code=400)

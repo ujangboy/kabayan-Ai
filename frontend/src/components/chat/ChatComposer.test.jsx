@@ -30,10 +30,6 @@ function setFile(container, file) {
   fireEvent.change(input, { target: { files: [file] } });
 }
 
-async function setFileAndTick(container, file) {
-  setFile(container, file);
-}
-
 describe('ChatComposer — lampiran gambar', () => {
   afterEach(cleanup);
 

@@ -435,7 +435,6 @@ class AIService:
         """
         from app.prompts.chat import VISION_PROMPT
 
-        global_rate_limiter.check_limit("vision")
         prompt_str = VISION_PROMPT.format(pertanyaan=user_text)
         messages = [{
             "role": "user",
@@ -457,6 +456,7 @@ class AIService:
             )
 
         try:
+            global_rate_limiter.check_limit("vision")
             resp = _retry_with_backoff(_call)
         except Exception as e:
             err = str(e).lower()

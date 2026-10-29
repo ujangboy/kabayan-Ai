@@ -5,14 +5,17 @@ from typing import List, Optional
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app import database
+from app import config
 from app.services.flashcard_service import flashcard_service
 from app.services.quiz_service import quiz_service
 from app.repositories.chat_repository import chat_repository
 from app.exceptions import AppError
+import logging
 import time
 from app.schemas.common import StatusMessage
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 class Message(BaseModel):
     role: str
@@ -205,6 +208,13 @@ async def chat_vision_endpoint(
         from app.services.ai_service import ai_service
         from app.services.image_service import prepare_image
 
+        # Cek ukuran SEBELUM membaca seluruh isi request ke memori
+        # (file.size diisi Starlette dari parsing multipart).
+        if file.size and file.size > config.CHAT_IMAGE_MAX_MB * 1024 * 1024:
+            raise AppError(
+                f"Ukuran gambar terlalu besar (maksimal {config.CHAT_IMAGE_MAX_MB} MB).",
+                status_code=400,
+            )
         raw = await file.read()
         data_url = prepare_image(raw)
 
@@ -238,13 +248,18 @@ async def chat_vision_endpoint(
         return {
             "transcription": result["transcription"],
             "answer": result["answer"],
+            "markdown": markdown,
             "chat_id": chat_id,
             "msg_id": msg_id,
         }
     except AppError as e:
         return JSONResponse(status_code=e.status_code, content={"detail": e.message})
     except Exception as e:
-        return JSONResponse(status_code=500, content={"detail": f"Gagal memproses gambar: {e}"})
+        logger.exception("[CHAT_VISION] gagal memproses gambar")  # internal tetap di log
+        return JSONResponse(
+            status_code=500,
+            content={"detail": "Terjadi kesalahan saat memproses gambar. Silakan coba lagi."},
+        )
 
 @router.post("/api/export/note", response_model=StatusMessage)
 async def export_note(request: ExportRequest, db: Session = Depends(get_db)):

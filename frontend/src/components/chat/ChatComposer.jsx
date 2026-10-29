@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ICONS } from '@/lib/icons';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -27,10 +27,6 @@ export default function ChatComposer({ onSend, isStreaming, onStop, tutorMode, o
   const [attachError, setAttachError] = useState('');
   const textareaRef = useRef(null);
   const fileInputRef = useRef(null);
-
-  useEffect(() => () => {
-    if (attachment?.url) URL.revokeObjectURL(attachment.url);
-  }, []);  // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSend = () => {
     const text = input;

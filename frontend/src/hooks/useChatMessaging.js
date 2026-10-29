@@ -54,7 +54,7 @@ export function useChatMessaging() {
     setStreaming(true, chatId);
     try {
       const history = (chat.messages || []).map((m) => ({ role: m.role, content: m.content }));
-      if (attachment) {
+      if (attachment && !isTutor) {
         // Vision: lampiran gambar → 1 panggilan POST /api/chat/vision (bukan stream).
         const formData = new FormData();
         formData.append('session_id', String(chatId));
@@ -75,9 +75,9 @@ export function useChatMessaging() {
           );
         }
         const data = await res.json();
-        const markdown = data.transcription
-          ? `**Teks yang saya baca:**\n> ${String(data.transcription).replace(/\n/g, '\n> ')}\n\n**Jawaban:**\n${data.answer}`
-          : `**Jawaban:**\n${data.answer}`;
+        // markdown dari server = satu sumber format (identik dengan yang dipersist).
+        const markdown = data.markdown
+          || `**Jawaban:**\n${data.answer ?? ''}`;
         updateLastMessage(chatId, markdown);
         if (data.msg_id) patchLastMessage(chatId, { msgId: data.msg_id });
       } else if (isTutor) {

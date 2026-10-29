@@ -13,7 +13,7 @@ disinkronkan lewat konfigurasi.
    - `feat!:` / `BREAKING CHANGE:` → naik major
 2. **Release PR dibuka otomatis** oleh workflow `.github/workflows/release-please.yml`
    setiap push ke `main` — isinya: bump `version.txt`,
-   `frontend/package.json`, `frontend/package-lock.json`, danulis
+   `frontend/package.json`, `frontend/package-lock.json`, dan tulis
    `CHANGELOG.md`.
 3. **Merge Release PR** → otomatis: tag `vX.Y.Z`, GitHub Release, dan
    CHANGELOG final.

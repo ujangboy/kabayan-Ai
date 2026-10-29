@@ -53,6 +53,7 @@ def test_vision_happy_path_persists_messages(client, db_session, monkeypatch):
     body = res.json()
     assert body["transcription"] == "a + b = c"
     assert body["answer"] == "Rumus penjumlahan."
+    assert body["markdown"].startswith("**Teks yang saya baca:**")
     assert body["chat_id"] > 0 and body["msg_id"] > 0
 
     chat = chat_repository.get_or_create_by_uuid(db_session, "sess-vision-1")
@@ -137,52 +138,39 @@ def _fake_factory(content):
     return client, lambda: client
 
 
-def test_vision_read_json_mode(db_session):
+def test_vision_read_json_mode(db_session, monkeypatch):
     fake, factory = _fake_factory('{"transcription": "abc", "answer": "5"}')
-    monkeypatch_local = None
-    ai_service._get_groq_client = factory
-    try:
-        out = ai_service.vision_read("baca", "data:image/jpeg;base64,QUJD")
-    finally:
-        del ai_service._get_groq_client
+    monkeypatch.setattr(ai_service, "_get_groq_client", factory, raising=False)
+    out = ai_service.vision_read("baca", "data:image/jpeg;base64,QUJD")
     assert out["transcription"] == "abc"
     assert out["answer"] == "5"
 
 
-def test_vision_read_fallback_bukan_json(db_session):
+def test_vision_read_fallback_bukan_json(db_session, monkeypatch):
     clientobj, factory = _fake_factory("Balasan biasa tanpa JSON")
-    ai_service._get_groq_client = factory
-    try:
-        out = ai_service.vision_read("baca", "data:image/jpeg;base64,QUJD")
-    finally:
-        del ai_service._get_groq_client
+    monkeypatch.setattr(ai_service, "_get_groq_client", factory, raising=False)
+    out = ai_service.vision_read("baca", "data:image/jpeg;base64,QUJD")
     assert out == {"transcription": "", "answer": "Balasan biasa tanpa JSON"}
 
 
-def test_vision_read_429_dipetakan(db_session):
+def test_vision_read_429_dipetakan(db_session, monkeypatch):
     def bad_client():
         raise Exception('Error code: 429 - Rate limit exceeded (free tier)')
 
-    ai_service._get_groq_client = bad_client
-    try:
-        with pytest.raises(AppError) as ei:
-            ai_service.vision_read("baca", "data:image/jpeg;base64,QUJD")
-    finally:
-        del ai_service._get_groq_client
+    monkeypatch.setattr(ai_service, "_get_groq_client", bad_client, raising=False)
+    with pytest.raises(AppError) as ei:
+        ai_service.vision_read("baca", "data:image/jpeg;base64,QUJD")
     assert ei.value.status_code == 429
     assert "kuota" in ei.value.message.lower()
 
 
-def test_vision_read_401_dipetakan(db_session):
+def test_vision_read_401_dipetakan(db_session, monkeypatch):
     def bad_client():
         raise Exception('Error code: 401 - Authentication error')
 
-    ai_service._get_groq_client = bad_client
-    try:
-        with pytest.raises(AppError) as ei:
-            ai_service.vision_read("baca", "data:image/jpeg;base64,QUJD")
-    finally:
-        del ai_service._get_groq_client
+    monkeypatch.setattr(ai_service, "_get_groq_client", bad_client, raising=False)
+    with pytest.raises(AppError) as ei:
+        ai_service.vision_read("baca", "data:image/jpeg;base64,QUJD")
     assert ei.value.status_code == 401
 
 
