@@ -4,14 +4,20 @@ import { ICONS } from '@/lib/icons';
 import { Icon , Button} from '@/components/ui';
 import { motion, AnimatePresence } from 'framer-motion';
 
-import { examAPI } from '@/services/api';
+import { examAPI, sessionsAPI } from '@/services/api';
 import { cn } from '@/utils';
 import { springWave } from '@/lib/motion';
 import MathMarkdown from '@/components/MathMarkdown';
 import { Chip, getQuestionTypeLabel, getBloomLabel, getDifficultyLabel } from './shared';
+import { useBackgroundJob } from '@/hooks/useBackgroundJob';
+import { useJobStore } from '@/store/jobStore';
 
-export default function QuizView({ sessionData, clockStart, onDone }) {
+export default function QuizView({ sessionData, clockStart, onDone, onEvaluationStateChange }) {
   const { t } = useTranslation();
+  const { run: runJob } = useBackgroundJob();
+  const sessionId = sessionData?.session_id ?? sessionData?.id;
+  const jobKey = `exam-submit-${sessionId}`;
+  const activeJob = useJobStore((s) => s.jobs[jobKey]);
   const questions = sessionData?.questions || [];
   const totalQ    = questions.length;
   const duration  = sessionData?.duration_minutes;
@@ -34,11 +40,17 @@ export default function QuizView({ sessionData, clockStart, onDone }) {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError]     = useState('');
+  const mountedRef = useRef(false);
   // Ref (bukan state) karena effect timer dan klik manual bisa memanggil
   // submit pada tick yang sama. React StrictMode juga menjalankan effect
   // dua kali saat mount; tanpa lock, sesi bisa ter-submit berulang dan
   // memicu 422 saat jawaban masih kosong.
   const submitLock = useRef(false);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
 
   const formatTime = (s) => {
     if (s === null) return '∞';
@@ -56,21 +68,70 @@ export default function QuizView({ sessionData, clockStart, onDone }) {
   const selectAnswer = (val) => setAnswers(p => ({ ...p, [String(q.id)]: val }));
 
   const handleSubmit = async () => {
-    if (submitLock.current) return;
+    if (submitLock.current || activeJob || sessionId == null) return;
     submitLock.current = true;
     setError(''); setIsSubmitting(true);
-    try {
-      const r = await examAPI.submit(sessionData.session_id, answers);
-      if (r.data?.detail) throw new Error(r.data.detail);
-      const evalResult = r.data;
-
-      onDone(evalResult, answers);
-    } catch (e) {
-      submitLock.current = false;
-      setError(e.response?.data?.detail || e.message || t('exam.quiz.submitFailed'));
-      setIsSubmitting(false);
-    }
+    onEvaluationStateChange?.(true, answers);
+    await runJob(
+      jobKey,
+      t('exam.quiz.evaluating'),
+      (signal) => examAPI.submit(sessionId, answers, { signal }),
+      {
+        notify: false,
+        onDone: (response) => {
+          if (!mountedRef.current) return;
+          const result = response?.data || response;
+          if (result?.detail) {
+            setError(result.detail);
+            onEvaluationStateChange?.(false);
+            submitLock.current = false;
+            setIsSubmitting(false);
+            return;
+          }
+          onDone(result, answers);
+        },
+        onError: (err) => {
+          if (!mountedRef.current) return;
+          setError(err.response?.data?.detail || err.message || t('exam.quiz.submitFailed'));
+        },
+      }
+    ).catch(() => {
+      // The global job handler and onError provide the user-facing failure.
+    });
   };
+
+  useEffect(() => {
+    if (!sessionData?.evaluating || activeJob || sessionId == null) return undefined;
+    let stopped = false;
+    let timer;
+    const pollEvaluation = async () => {
+      try {
+        const { data } = await sessionsAPI.detail(sessionId);
+        if (stopped) return;
+        if (data?.evaluation) {
+          onDone(data.evaluation, data.answers || sessionData.answers || answers);
+          return;
+        }
+        if (!data?.evaluating) {
+          submitLock.current = false;
+          setIsSubmitting(false);
+          onEvaluationStateChange?.(false, data?.answers || sessionData.answers || answers);
+          setError((current) => current || t('exam.quiz.submitFailed'));
+          return;
+        }
+        timer = setTimeout(pollEvaluation, 2500);
+      } catch (err) {
+        if (stopped) return;
+        setError(err.response?.data?.detail || err.message || t('exam.quiz.submitFailed'));
+        timer = setTimeout(pollEvaluation, 5000);
+      }
+    };
+    pollEvaluation();
+    return () => {
+      stopped = true;
+      clearTimeout(timer);
+    };
+  }, [sessionData?.evaluating, sessionData?.answers, sessionId, activeJob, onDone, onEvaluationStateChange, answers, t]);
 
   // Timer. Dependensi sengaja dibatasi ke waktu/pause agar timer tidak
   // di-reset setiap kali jawaban berubah; render tick terakhir tetap memakai
@@ -84,6 +145,17 @@ export default function QuizView({ sessionData, clockStart, onDone }) {
   }, [timeLeft, paused]);
 
   if (!q) return null;
+
+  if (isSubmitting || activeJob || sessionData?.evaluating) {
+    return (
+      <div className="card-base flex min-h-64 flex-col items-center justify-center gap-3 p-8 text-center" role="status" aria-live="polite">
+        <Icon name={ICONS.status.loading} size={30} className="animate-spin text-primary" />
+        <h2 className="text-lg font-semibold text-text">{t('exam.quiz.evaluating')}</h2>
+        <p className="max-w-md text-sm text-text-secondary">{t('exam.quiz.evaluationBackgroundHint')}</p>
+        {error && <p className="text-sm text-danger">{error}</p>}
+      </div>
+    );
+  }
 
   const isObjectiveQ = ['mcq','truefalse'].includes(q.type);
   const userAnswer   = answers[String(q.id)] || '';

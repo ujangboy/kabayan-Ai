@@ -39,11 +39,13 @@ async def generate_audio(payload: dict, db: Session = Depends(get_db)):
 async def list_audio(
     subject_id: int = Query(None),
     material_id: int = Query(None),
+    include_trashed: bool = Query(False),
     db: Session = Depends(get_db),
 ):
     try:
         rows = audio_service.get_list(
-            db, subject_id=subject_id, material_id=material_id
+            db, subject_id=subject_id, material_id=material_id,
+            include_trashed=include_trashed,
         )
         return {"audio": [_serialize(r) for r in rows]}
     except Exception as e:
@@ -85,12 +87,43 @@ async def delete_audio(audio_id: int, db: Session = Depends(get_db)):
         ok = audio_service.remove(db, audio_id)
         if not ok:
             raise HTTPException(status_code=404, detail="Audio tidak ditemukan.")
-        return {"status": "success", "deleted": audio_id}
+        return {"status": "success", "deleted": audio_id, "trashed": True}
     except HTTPException:
         raise
     except Exception as e:
         from app.services.error_handler import safe_json_response
         return safe_json_response(e, context="audio/delete")
+
+
+@router.post("/{audio_id}/restore")
+async def restore_audio_route(audio_id: int, db: Session = Depends(get_db)):
+    """Kembalikan audio yang ada di sampah ke daftar audio."""
+    try:
+        from app.services.trash_service import restore_audio
+        if not restore_audio(db, audio_id):
+            raise HTTPException(status_code=404, detail="Audio sampah tidak ditemukan.")
+        rec = audio_service.get_status(db, audio_id)
+        return _serialize(rec)
+    except HTTPException:
+        raise
+    except Exception as e:
+        from app.services.error_handler import safe_json_response
+        return safe_json_response(e, context="audio/restore")
+
+
+@router.delete("/{audio_id}/permanent")
+async def delete_audio_permanent_route(audio_id: int, db: Session = Depends(get_db)):
+    """Hapus permanen audio yang ada di sampah."""
+    try:
+        from app.services.trash_service import delete_audio_permanent
+        if not delete_audio_permanent(db, audio_id):
+            raise HTTPException(status_code=404, detail="Audio sampah tidak ditemukan.")
+        return {"status": "success", "deleted": audio_id}
+    except HTTPException:
+        raise
+    except Exception as e:
+        from app.services.error_handler import safe_json_response
+        return safe_json_response(e, context="audio/delete-permanent")
 
 
 @router.get("/{audio_id}/file")

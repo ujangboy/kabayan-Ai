@@ -22,13 +22,13 @@ from app.schemas.common import StatusMessage
 
 router = APIRouter(prefix="/api/exam", tags=["Exam Analyzer"])
 
-# Strong refs untuk background task fire-and-forget (anti GC mid-run)
-_BACKGROUND_TASKS: set = set()
 logger = logging.getLogger(__name__)
 
 
 @router.post("/analyze/{subject_id}", response_model=StatusMessage)
-async def analyze_subject(subject_id: int, db: Session = Depends(get_db)):
+def analyze_subject(subject_id: int, db: Session = Depends(get_db)):
+    # Sync endpoint → FastAPI menjalankannya di threadpool. Proses AI panjang
+    # tidak boleh memblokir event loop (menu lain harus tetap responsif).
     try:
         data = exam_service.analyze(db, subject_id)
         return JSONResponse(data)
@@ -40,7 +40,7 @@ async def analyze_subject(subject_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/blueprint", response_model=StatusMessage)
-async def generate_blueprint(
+def generate_blueprint(
     payload: BlueprintRequest,
     db: Session = Depends(get_db),
 ):
@@ -77,7 +77,7 @@ async def get_blueprints(subject_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/generate/{blueprint_id}", response_model=StatusMessage)
-async def generate_questions(blueprint_id: int, db: Session = Depends(get_db)):
+def generate_questions(blueprint_id: int, db: Session = Depends(get_db)):
     try:
         data = exam_service.generate_questions(db, blueprint_id)
         return JSONResponse(data)
@@ -89,7 +89,7 @@ async def generate_questions(blueprint_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/submit/{session_id}", response_model=StatusMessage)
-async def submit_exam(
+def submit_exam(
     session_id: int,
     payload: SubmitAnswersRequest,
     db: Session = Depends(get_db),
@@ -113,7 +113,7 @@ async def submit_exam(
         # Fire-and-forget di thread terpisah dengan session sendiri agar tidak
         # memblokir respons submit dan tidak bergantung pada session request.
         try:
-            import asyncio
+            import threading
 
             def _gen_flashcards():
                 # Akses runtime via modul — ikut patch test ke DB uji
@@ -129,12 +129,7 @@ async def submit_exam(
                 finally:
                     session_db.close()
 
-            # Strong reference: task tanpa referensi bisa di-GC mid-run
-            # (dokumentasi asyncio.create_task). Set modul-level memegang
-            # referensi sampai task selesai lalu membuang dirinya sendiri.
-            _task = asyncio.create_task(asyncio.to_thread(_gen_flashcards))
-            _BACKGROUND_TASKS.add(_task)
-            _task.add_done_callback(_BACKGROUND_TASKS.discard)
+            threading.Thread(target=_gen_flashcards, daemon=True).start()
         except Exception as exc:
             logger.warning("Menjadwalkan auto flashcard gagal: %s", exc)
 
@@ -159,7 +154,7 @@ async def get_recommendation(session_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/explain", response_model=StatusMessage)
-async def get_explanation(
+def get_explanation(
     payload: ExplainRequest,
     db: Session = Depends(get_db),
 ):
@@ -423,7 +418,7 @@ class SummaryRequest(BaseModel):
     topic: str
 
 @router.post("/sessions/{session_id}/summary", response_model=StatusMessage)
-async def generate_session_summary(
+def generate_session_summary(
     session_id: int,
     payload: SummaryRequest,
     db: Session = Depends(get_db),

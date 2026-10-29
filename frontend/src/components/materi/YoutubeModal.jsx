@@ -3,9 +3,13 @@ import { useTranslation } from 'react-i18next';
 import { materiAPI } from '@/services/api';
 import { Modal, Button, Select, Input } from '@/components/ui';
 import { extractErrorMessage } from '@/utils/errors';
+import { usePendingOperation } from '@/hooks/usePendingOperation';
+import { useToast } from '@/components/Toast';
 
 export function YoutubeModal({ open, onClose, subjects, onSuccess }) {
   const { t } = useTranslation();
+  const { toast } = useToast();
+  const processOp = usePendingOperation('process');
   const [url, setUrl] = useState('');
   const [subjectId, setSubjectId] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -19,6 +23,12 @@ export function YoutubeModal({ open, onClose, subjects, onSuccess }) {
     try {
       const res = await materiAPI.importYoutube({ url, subject_id: parseInt(subjectId) });
       if (res.data?.detail) throw new Error(res.data.detail);
+      const mid = res.data?.material_id;
+      if (mid) processOp.start(`process-${mid}`);
+      toast.success(t('materi.youtubeSuccess'));
+      setUrl('');
+      setSubjectId('');
+      setIsSubmitting(false);
       onSuccess();
     } catch (err) {
       setError(extractErrorMessage(err));
@@ -71,6 +81,8 @@ export function YoutubeModal({ open, onClose, subjects, onSuccess }) {
             {t('materi.youtubeSubtitleInfo')}
             <br />
             {t('materi.youtubeSubtitleHelp')}
+            <br />
+            {t('materi.youtubeLimits')}
           </p>
         </div>
       </form>

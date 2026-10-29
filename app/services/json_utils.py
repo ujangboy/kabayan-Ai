@@ -55,8 +55,19 @@ def sanitize_all_strings(data):
     return data
 
 
+# Escape JSON valid yang TETAP seperti asal: \" \\ \/ \b \f \n \r \t \uXXXX.
+# Tapi \b\f\n\r\t\u yang diikuti huruf/`{` lebih mungkin LaTeX (\begin, \frac,
+# \tan, \underline) daripada karakter kontrol — model sering menulis LaTeX
+# mentah di dalam string JSON. Ragam itu di-re-escape agar JSON decode tak
+# menggerus backslash-nya (bug: `\begin` → backspace → `egin`).
+_LATEX_CTRL_RE = re.compile(r'\\([bfnrtu])(?=[a-zA-Z{])')
+
+
 def sanitize_json_str(s: str) -> str:
     """Iteratively fix invalid JSON escapes (e.g. latex commands like \\cap)."""
+    # 0. Lindungi LaTeX-command escape yang bentrok dengan escape JSON
+    #    (hanya bila diawali satu backslash, bukan sudah menjadi \\).
+    s = _LATEX_CTRL_RE.sub(lambda m: '\\\\' + m.group(1), s)
     s = re.sub(r',\s*([}\]])', r'\1', s)
     max_passes = 30
     for _ in range(max_passes):
@@ -130,8 +141,116 @@ def extract_json(raw: str) -> str:
     return s[start:]
 
 
+def _salvage_truncated_json(s: str) -> str | None:
+    """Best-effort perbaikan JSON yang terpotong (max_tokens habis).
+
+    Strategi: coba tutup semua bracket/string yang terbuka dari prefix
+    paling panjang; jika gagal, mundur ke posisi pemisah (`, { [ `)
+    sebelumnya — membuang elemen yang belum lengkap — lalu tutup lagi.
+    Ulangi sampai ada prefix yang utuh untuk diparse. Item yang sudah
+    lengkap tetap dipakai: lebih baik 4 dari 5 soal daripada gagal total.
+    """
+    base = s.strip()
+    if not base:
+        return None
+
+    if base[0] not in "[{":
+        # Bukan JSON murni — coba mulai dari bracket pertama bila ada.
+        start = next((i for i, ch in enumerate(base) if ch in "[{"), None)
+        if start is None:
+            return None
+        base = base[start:]
+
+    # Kandidat posisi potong: ujung string, lalu posisi TEPAT setelah
+    # elemen yang sudah ditutup (koma yang diawali `}`/`]`), dari kanan
+    # ke kiri. Potongan di tengah wadah kosong/kunci sub-string melahirkan
+    # item setengah isi — untuk itu dicari lengkapnya dulu.
+    batas = [len(base)] + sorted(
+        (
+            i + 1
+            for i, ch in enumerate(base)
+            if ch == "," and i > 0 and base[i - 1] in "}]"
+        ),
+        reverse=True,
+    )
+    for pos in batas:
+        prefix = base[:pos].rstrip()
+        if prefix.endswith(","):
+            prefix = prefix[:-1].rstrip()
+        if not prefix:
+            continue
+        if prefix[-1] in '{[:':
+            continue
+        state = _bracket_state(prefix)
+        if state is None:
+            continue
+        string_open, stack = state
+        if string_open:
+            # Prefix berakhir di TENGAH string — item yang memuatnya belum
+            # lengkap. Jangan dipaksa ditutup dulu; mundur ke boundary
+            # berikutnya (posisi lebih pendek) agar item parsial dibuang.
+            continue
+        tail = ""
+        for ch in reversed(stack):
+            tail += buka_pair[ch]
+        trial = prefix + tail
+        try:
+            json.loads(trial, strict=False)
+            return trial
+        except json.JSONDecodeError:
+            continue
+    return None
+
+
+def _bracket_state(s: str):
+    """Status bracket akhir sebuah string JSON *raw*.
+
+    Return (string_terbuka, stack_bracket) atau None jika berakhir di tengah
+    escape (`\\` kosong tak berpasangan) yang tak bisa diperbaiki.
+    """
+    stack: list[str] = []
+    in_string = False
+    escaped = False
+    for ch in s:
+        if in_string:
+            if escaped:
+                escaped = False
+            elif ch == "\\":
+                escaped = True
+            elif ch == '"':
+                in_string = False
+            continue
+        if ch == '"':
+            in_string = True
+        elif ch in "{[":
+            stack.append(ch)
+        elif ch in "}]":
+            if not stack or buka_pair[stack[-1]] != ch:
+                return None
+            stack.pop()
+    if escaped:
+        return None
+    return in_string, stack
+
+
+buka_pair = {"{": "}", "[": "]"}
+
+
 def parse_ai_json(response, label: str = "AI") -> dict | list:
-    json_str = extract_json(str(response))
-    json_str = sanitize_json_str(json_str)
-    data = json.loads(json_str, strict=False)
+    text = str(response)
+    if not text.strip():
+        raise ValueError(
+            f"{label}: respons AI kosong (kemungkinan terpotong total oleh "
+            "batas max_tokens). Kecilkan jumlah item atau coba lagi."
+        )
+    json_str = extract_json(text)
+    try:
+        data = json.loads(sanitize_json_str(json_str), strict=False)
+    except json.JSONDecodeError:
+        # Respons terpotong di tengah string/bracket — coba salamatkan item
+        # yang utuh daripada gagal total.
+        salvaged = _salvage_truncated_json(json_str)
+        if salvaged is None:
+            raise
+        data = json.loads(salvaged, strict=False)
     return sanitize_all_strings(data)

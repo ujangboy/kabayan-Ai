@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ICONS } from '@/lib/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -75,6 +75,30 @@ export default function MateriPage() {
   const materials = materiData?.materials || [];
   const subjects = subjectData?.subjects || [];
   const sortedSubjects = [...subjects].sort((a, b) => a.name.localeCompare(b.name, 'id', { sensitivity: 'base' }));
+
+  // Baris folder: geser horizontal hanya lewat tombol / swipe.
+  // Wheel vertikal tetap dipakai scroll halaman (tidak lagi dibajak).
+  const folderRowRef = useRef(null);
+  const [folderScroll, setFolderScroll] = useState({ left: false, right: false });
+
+  const updateFolderScroll = () => {
+    const el = folderRowRef.current;
+    if (!el) return;
+    setFolderScroll({
+      left: el.scrollLeft > 4,
+      right: el.scrollLeft + el.clientWidth < el.scrollWidth - 4,
+    });
+  };
+
+  const scrollFolders = (dir) => {
+    folderRowRef.current?.scrollBy({ left: dir * 220, behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    updateFolderScroll();
+    window.addEventListener('resize', updateFolderScroll);
+    return () => window.removeEventListener('resize', updateFolderScroll);
+  }, [sortedSubjects.length, materials.length]);
   const filteredMaterials = subjectFilter
     ? materials.filter(m => String(m.subject_id ?? m.subject?.id) === subjectFilter)
     : materials;
@@ -183,8 +207,33 @@ export default function MateriPage() {
           <div className="flex items-center gap-2">
             <Icon name={ICONS.learning.grid} size={15} className="text-primary-light" />
             <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">{t('nav.subjects')}</h2>
+            <div className="ml-auto flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => scrollFolders(-1)}
+                disabled={!folderScroll.left}
+                aria-label={t('materi.scrollLeft')}
+                className="p-1.5 rounded-lg border border-border bg-card text-text-secondary shadow-sm hover:text-primary-light hover:border-primary/50 hover:shadow transition-all disabled:opacity-40 disabled:pointer-events-none"
+              >
+                <Icon name={ICONS.ui.chevronLeft} size={18} />
+              </button>
+              <button
+                type="button"
+                onClick={() => scrollFolders(1)}
+                disabled={!folderScroll.right}
+                aria-label={t('materi.scrollRight')}
+                className="p-1.5 rounded-lg border border-border bg-card text-text-secondary shadow-sm hover:text-primary-light hover:border-primary/50 hover:shadow transition-all disabled:opacity-40 disabled:pointer-events-none"
+              >
+                <Icon name={ICONS.ui.chevronRight} size={18} />
+              </button>
+            </div>
           </div>
-          <div className="flex gap-3 overflow-x-auto py-1 -m-1 p-1">
+          <div className="relative">
+          <div
+            ref={folderRowRef}
+            onScroll={updateFolderScroll}
+            className="flex gap-3 overflow-x-auto py-1 -m-1 p-1"
+          >
             {/* All Materials folder */}
             <FolderCard
               active={!subjectFilter}
@@ -216,6 +265,10 @@ export default function MateriPage() {
             >
               <span className="text-xs font-medium">{t('subjects.addNew')}</span>
             </button>
+          </div>
+          {folderScroll.right && (
+            <div className="pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-background to-transparent" />
+          )}
           </div>
         </div>
 

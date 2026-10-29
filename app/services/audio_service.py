@@ -365,8 +365,10 @@ def _duration_sec(path):
     return None
 
 
-def get_list(db, subject_id=None, material_id=None):
+def get_list(db, subject_id=None, material_id=None, include_trashed=False):
     q = db.query(AudioGeneration)
+    if not include_trashed:
+        q = q.filter(AudioGeneration.status != "Trashed")
     if subject_id is not None:
         q = q.filter(AudioGeneration.subject_id == subject_id)
     if material_id is not None:
@@ -396,17 +398,14 @@ def cancel(db, audio_id):
 
 
 def remove(db, audio_id):
+    """Soft-delete audio: pindahkan file ke sampah (status Trashed). Bisa di-restore
+    dari Pengaturan > Data > Sampah."""
+    from app.services.trash_service import trash_audio
     rec = db.query(AudioGeneration).get(audio_id)
     if not rec:
         return False
-    if rec.file_path and os.path.exists(rec.file_path):
-        try:
-            os.remove(rec.file_path)
-        except Exception:
-            pass
-    flag = _cancel_flags.get(audio_id)
-    if flag:
-        flag.set()
-    db.delete(rec)
-    db.commit()
-    return True
+    if rec.status == "Processing":
+        flag = _cancel_flags.get(audio_id)
+        if flag:
+            flag.set()
+    return trash_audio(db, audio_id)

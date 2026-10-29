@@ -655,6 +655,12 @@ export default function NoteEditor({
     else setInternalMode(m);
   };
   const saveTimerRef = useRef(null);
+  // Guard auto-save: setContent/focus PROGRAMATIK saat load juga memicu
+  // onUpdate — tanpa flag ini, HTML hasil normalisasi Tiptap (beda tipis dari
+  // toHtml(): <p></p> kosong, style min-width kolom) langsung ditulis ulang
+  // ke server dan MERUSAK markdown asli (math jadi node kustom) walau user
+  // sama sekali belum mengetik.
+  const suppressSaveRef = useRef(false);
   const lastSavedRef = useRef(null);
 
   const editor = useEditor({
@@ -679,6 +685,7 @@ export default function NoteEditor({
       attributes: { class: 'note-editor-content focus:outline-none min-h-[400px] pb-20' },
     },
     onUpdate: ({ editor }) => {
+      if (suppressSaveRef.current) return;
       clearTimeout(saveTimerRef.current);
       saveTimerRef.current = setTimeout(() => {
         const html = editor.getHTML();
@@ -720,10 +727,16 @@ export default function NoteEditor({
       // lifecycle method" dari Tiptap ReactNodeViewRenderer.
       contentTimersRef.current.push(setTimeout(() => {
         if (editor.isDestroyed) return;
+        suppressSaveRef.current = true;
         editor.commands.setContent(html, false);
         contentTimersRef.current.push(setTimeout(() => {
           if (!editor.isDestroyed) editor.commands.focus('end');
+          // Lepaskan suppress SETELAH semua edit programatik load selesai
+          // (setContent + focus) — timer di bawah di-bersihkan unmount.
         }, 50));
+        contentTimersRef.current.push(setTimeout(() => {
+          suppressSaveRef.current = false;
+        }, 400));
       }, 0));
     })();
   }, [noteId, activeMode, editor, content]);

@@ -16,7 +16,7 @@ export function NoteView({ note, onBack, onSave, onPin, onDelete }) {
   const [title, setTitle] = useState(note.title || '');
   const [showMenu, setShowMenu] = useState(false);
   const [saveStatus, setSaveStatus] = useState('saved');
-  const [mode, setMode] = useState('edit');
+  const [mode, setMode] = useState('view'); // Buka catatan = mode BACA (render MathMarkdown identik Chat); edit via tombol mata / dbl-klik.
   const [editorRef, setEditorRef] = useState(null);
   const titleRef = useRef(null);
   const saveTimerRef = useRef(null);

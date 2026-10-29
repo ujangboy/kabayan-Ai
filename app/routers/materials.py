@@ -68,7 +68,7 @@ async def get_materials_json(
 async def upload_material(
     background_tasks: BackgroundTasks,
     subject_id: int = Form(...),
-    file: UploadFile = File(...),
+    files: list[UploadFile] = File(...),
     db: Session = Depends(get_db)
 ):
     try:
@@ -77,35 +77,47 @@ async def upload_material(
         if not subject:
             return JSONResponse(status_code=404, content={"detail": "Mata kuliah tidak ditemukan."})
 
-        # REQ-01: Validasi ukuran awal via Content-Length (tanpa buffer file).
-        # Batas final tetap ditegakkan streaming di material_service.
         MAX_SIZE = 50 * 1024 * 1024
-        if getattr(file, "size", None) and file.size > MAX_SIZE:
-            return JSONResponse(status_code=400, content={"detail": f"Ukuran file melebihi batas 50MB. Ukuran file: {file.size // (1024*1024)}MB"})
-
-        # REQ-01: Validasi ekstensi file (D1: selaras dengan parsers/document_parser.py)
-        filename_lower = (file.filename or "").lower()
         ALLOWED_EXTENSIONS = (".pdf", ".docx", ".txt", ".md", ".csv", ".pptx", ".xlsx")
-        if not any(filename_lower.endswith(ext) for ext in ALLOWED_EXTENSIONS):
-            return JSONResponse(status_code=400, content={"detail": "Format file tidak didukung. Gunakan: PDF, DOCX, TXT, MD, CSV, PPTX, XLSX"})
+        material_ids = []
+        for file in files:
+            # REQ-01: Validasi ukuran awal via Content-Length (tanpa buffer file).
+            # Batas final tetap ditegakkan streaming di material_service.
+            if getattr(file, "size", None) and file.size > MAX_SIZE:
+                return JSONResponse(status_code=400, content={
+                    "detail": f"File terlalu besar: '{file.filename}' melebihi batas 50MB "
+                              f"(ukuran: {file.size // (1024*1024)}MB)."
+                })
 
-        # REQ-01: Validasi magic bytes dilakukan di material_service SETELAH file
-        # ditulis ke disk (bukan dari stream upload) — lebih aman (stream hanya
-        # dibaca sekali) dan mendukung file yang punya preamble kecil (mis. BOM).
-        filepath, mat_id = material_service.upload_material_sync(db, subject_id, file)
+            # REQ-01: Validasi ekstensi file (D1: selaras dengan parsers/document_parser.py)
+            filename_lower = (file.filename or "").lower()
+            if not any(filename_lower.endswith(ext) for ext in ALLOWED_EXTENSIONS):
+                return JSONResponse(status_code=400, content={
+                    "detail": f"Format file '{file.filename}' tidak didukung. "
+                              "Gunakan: PDF, DOCX, TXT, MD, CSV, PPTX, XLSX"
+                })
+
+            # REQ-01: Validasi magic bytes dilakukan di material_service SETELAH file
+            # ditulis ke disk (bukan dari stream upload) — lebih aman (stream hanya
+            # dibaca sekali) dan mendukung file yang punya preamble kecil (mis. BOM).
+            filepath, mat_id = material_service.upload_material_sync(db, subject_id, file)
+            material_ids.append(mat_id)
+
         # ID dikembalikan agar frontend bisa langsung mendaftarkan operasi
         # pemrosesan global; tanpa ini file yang selesai cepat tidak pernah
         # memunculkan banner/toast karena polling pertama sudah melihat Ready.
         return JSONResponse({
             "status": "success",
             "message": "Material uploaded, waiting for processing",
-            "material_id": mat_id,
+            "material_id": material_ids[0] if len(material_ids) == 1 else None,
+            "material_ids": material_ids,
         })
     except ValueError as e:
         # Batas 50MB ditegakkan streaming di service layer
         return JSONResponse(status_code=400, content={"detail": str(e)})
     finally:
-        await file.close()
+        for file in files:
+            await file.close()
 
 @router.post("/api/materials/{material_id}/delete", response_model=StatusMessage)
 async def delete_material(material_id: int, db: Session = Depends(get_db)):

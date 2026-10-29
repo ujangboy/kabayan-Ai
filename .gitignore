@@ -60,3 +60,6 @@ frontend/node_modules/
 
 # Vite cache (dibuat di root saat dev server berjalan)
 .vite/
+
+# Superpowers/SDD scratch (ledger eksekusi rencana)
+.superpowers/

@@ -120,6 +120,8 @@ Aturan format matematika:
 - Rumus inline: $...$ — contoh: $F = ma$
 - Rumus blok: $$...$$ pada baris tersendiri
 - JANGAN gunakan unicode matematika (×, ², √, ∑, ∫). Gunakan LaTeX.
+- SELALU bungkus setiap LaTeX dengan delimiter. DILARANG menulis \begin{{...}}...\end{{...}} tanpa $$ di sekelilingnya.
+- Tulis baris baru sebagai newline JSON yang sah, JANGAN sebagai teks "\n" literal di dalam nilai string.
 
 Instruksi Adaptif (bisa kosong — hanya penyesuaian distribusi bobot/kesulitan topik, jangan ubah jumlah soal):
 {adaptive_instructions}

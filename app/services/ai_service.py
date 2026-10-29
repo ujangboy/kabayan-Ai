@@ -93,6 +93,20 @@ def _retry_with_backoff(fn, max_attempts: int = 3, base_delay: float = 2.0):
             time.sleep(base_delay * (2 ** attempt))  # 2s → 4s → 8s
     raise last_exc
 
+def _safe_cache_set(db, *cache_args) -> None:
+    """Tulis cache best-effort. Kegagalan (mis. "database is locked" saat
+    traffic tinggi) TIDAK boleh membatalkan respons valid dari model —
+    cukup log + rollback agar session tidak 'tercemar' untuk pemakaian
+    berikutnya (record_usage dll)."""
+    try:
+        cache_service.set_cache(db, *cache_args)
+    except Exception as cache_err:
+        logger.warning("Cache set gagal (non-fatal): %s", cache_err)
+        try:
+            db.rollback()
+        except Exception:
+            pass
+
 # ─── REQ-06: Internal Rate Limiter (Loop Guard) ──────────────────────────────
 class InternalRateLimiter:
     """Rate limiter per-key (per-capability = per-endpoint), bukan global (B10).
@@ -207,7 +221,7 @@ class AIService:
                     structured_llm = llm.with_structured_output(output_schema)
                     result = _retry_with_backoff(lambda: structured_llm.invoke(input_variables))
                     if use_cache:
-                        cache_service.set_cache(db, prompt_str, "", setting_hash, str(result))
+                        _safe_cache_set(db, prompt_str, "", setting_hash, str(result))
                     if isinstance(result, BaseModel):
                         result = result.model_dump()
                     record_usage(db, capability, str(result), prompt_str)
@@ -224,11 +238,30 @@ class AIService:
             finish_reason = getattr(response, 'response_metadata', {}).get('finish_reason', '')
             if finish_reason == 'length':
                 logger.warning("Response truncated for capability=%s (hit max_tokens)", capability)
+
+                # Model reasoning (gpt-oss-*) bisa menghabiskan seluruh
+                # budget hanya untuk reasoning → content kosong. Retry SEKALI
+                # dengan budget jauh lebih besar daripada mengembalikan hasil
+                # tak berguna ke caller.
+                if not (response_text or "").strip():
+                    retry_budget = min(6144, max((max_tokens or 1200) * 3, 2400))
+                    logger.info(
+                        "Retry %s dengan max_tokens=%s (respons kosong terpotong)",
+                        capability, retry_budget,
+                    )
+                    llm2 = self._get_llm(capability, temperature=temperature, max_tokens=retry_budget)
+                    chain2 = prompt_template | llm2
+                    response = _retry_with_backoff(lambda: chain2.invoke(input_variables))
+                    response_text = response.content
+                    finish_reason = getattr(response, 'response_metadata', {}).get('finish_reason', '')
+
                 if response_text and not response_text.rstrip().endswith(('.', '!', '?', '```')):
                     response_text = response_text.rstrip() + "\n\n⚠️ *Catatan: Respons terpotong karena batas token.*"
 
-            if use_cache:
-                cache_service.set_cache(db, prompt_str, "", setting_hash, response_text)
+            # Jangan simpan respons terpotong ke cache — hasil truncat akan
+            # dilayani ulang pada prompt identik dan tetap gagal diparse.
+            if use_cache and finish_reason != 'length':
+                _safe_cache_set(db, prompt_str, "", setting_hash, response_text)
             record_usage(db, capability, response_text, prompt_str)
             return _normalize_math(response_text)
         finally:
@@ -278,7 +311,7 @@ class AIService:
             response = _retry_with_backoff(lambda: llm.invoke(messages))
             response_text = response.content
 
-            cache_service.set_cache(db, prompt_str, context, setting_hash, response_text)
+            _safe_cache_set(db, prompt_str, context, setting_hash, response_text)
             record_usage(db, "chat", response_text, prompt_str)
             return response_text
         finally:
@@ -374,9 +407,7 @@ class AIService:
         # TIDAK dipegang selama streaming.
         db = SessionLocal()
         try:
-            await asyncio.to_thread(
-                cache_service.set_cache, db, prompt_str, context, setting_hash, normalized_response
-            )
+            await asyncio.to_thread(_safe_cache_set, db, prompt_str, context, setting_hash, normalized_response)
         finally:
             db.close()
         # record_usage pakai session sendiri (sudah terisolasi).

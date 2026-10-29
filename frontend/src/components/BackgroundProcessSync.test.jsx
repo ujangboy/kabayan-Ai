@@ -83,7 +83,7 @@ describe('BackgroundProcessSync', () => {
 
     const { unmount } = renderSync();
 
-    await waitFor(() => expect(screen.getByText(/AI selesai:/)).toBeTruthy());
+    await waitFor(() => expect(screen.getByText(/Selesai:/)).toBeTruthy());
     expect(useJobStore.getState().jobs['audio-2']).toBeUndefined();
     expect(useJobStore.getState().completed).toHaveLength(0);
 
@@ -121,7 +121,7 @@ describe('BackgroundProcessSync', () => {
     });
 
     await waitFor(() =>
-      expect(screen.getByText(/AI selesai:.*uji_materi\.pdf/)).toBeTruthy()
+      expect(screen.getByText(/Selesai:.*uji_materi\.pdf/)).toBeTruthy()
     );
     expect(useAppStore.getState().pendingOperations.has('process-7')).toBe(false);
 
@@ -142,7 +142,7 @@ describe('BackgroundProcessSync', () => {
     const { unmount } = renderSync();
 
     await waitFor(() =>
-      expect(screen.getByText(/AI selesai:.*cepat_selesai\.pdf/)).toBeTruthy()
+      expect(screen.getByText(/Selesai:.*cepat_selesai\.pdf/)).toBeTruthy()
     );
     expect(useAppStore.getState().pendingOperations.has('process-9')).toBe(false);
 
@@ -177,7 +177,7 @@ describe('BackgroundProcessSync', () => {
     const { unmount } = renderSync();
 
     await waitFor(() => expect(useJobStore.getState().completed).toHaveLength(0));
-    expect(screen.queryByText(/AI selesai:/)).toBeNull();
+    expect(screen.queryByText(/Selesai:/)).toBeNull();
 
     unmount();
   });

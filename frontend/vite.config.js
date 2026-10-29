@@ -22,10 +22,19 @@ export default defineConfig({
             },
             // Heavy editor/syntax-highlighting code is only needed by notebook
             // and highlighted-code views. Keep it out of the initial vendor chunk.
+            // react-syntax-highlighter punya lazy-loader sendiri (HighlightedCode).
             {
               name: 'editor',
-              test: /node_modules[\\/](@tiptap|prosemirror[^\\/]*|refractor|highlight\.js|prismjs)[\\/]/,
+              test: /node_modules[\\/](@tiptap|prosemirror[^\\/]*|refractor|highlight\.js|prismjs|react-syntax-highlighter)[\\/]/,
               priority: 25,
+            },
+            // Parser HTML lengkap (dipakai rehype-raw) berat dan jarang berubah
+            // — dipisah agar bisa diunduh paralel & tetap ter-cache saat
+            // markdown ecosystem ikut version bump.
+            {
+              name: 'html-pipeline',
+              test: /node_modules[\\/](parse5|hast-util-raw|web-namespaces)[\\/]/,
+              priority: 26,
             },
             // Markdown rendering is used by chat/notebook, not the dashboard.
             {
@@ -36,7 +45,7 @@ export default defineConfig({
             {
               name: 'katex',
               test: /node_modules[\\/]katex[\\/]/,
-              priority: 23,
+              priority: 27,
             },
             {
               name: 'motion',

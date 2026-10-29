@@ -7,6 +7,7 @@ from app.sources.youtube_source import YoutubeSource
 from app.services.rag_service import rag_service
 from app.services.cache_service import cache_service
 from app.database import SessionLocal
+from app.exceptions import AppError
 import os
 from app import config
 
@@ -51,6 +52,16 @@ class YoutubeService:
                     mat.progress = progress
                     db.commit()
             chunks = source.extract(progress_cb=_on_progress)
+
+            # Batas durasi maksimum: video sangat panjang (mis. live/stream panjang)
+            # membebani transkrip & RAG. 20 menit s.d. 3 jam didukung penuh.
+            MAX_DURATION_SEC = 3 * 3600
+            if chunks and chunks[-1].timestamp_end and chunks[-1].timestamp_end > MAX_DURATION_SEC:
+                minutes = chunks[-1].timestamp_end / 60
+                raise AppError(
+                    f"Durasi video terlalu panjang ({minutes:.0f} menit). "
+                    "Maksimal 180 menit (3 jam)."
+                )
 
             mat = material_repository.get(db, material_id)
             if mat:
@@ -125,6 +136,8 @@ class YoutubeService:
 
     def _user_friendly_error(self, exc: Exception) -> str:
         err_str = str(exc).lower()
+        if "terlalu panjang" in err_str:
+            return "Gagal: Durasi video terlalu panjang. Maksimal 180 menit (3 jam)."
         if "invalid youtube url" in err_str:
             return "Gagal: URL YouTube tidak valid."
         if "private" in err_str or "not available" in err_str:

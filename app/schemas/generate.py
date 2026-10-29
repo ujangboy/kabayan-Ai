@@ -13,16 +13,18 @@ class GenerateTitleRequest(BaseModel):
 
 class GenerateQuizRequest(BaseModel):
     subject_id: int
-    mcq_count: int = Field(default=5, ge=1, le=30)
+    mcq_count: int = Field(default=5, ge=0, le=30)
     essay_count: int = Field(default=0, ge=0, le=10)
     material_ids: Optional[str] = None
     difficulty: Optional[str] = "sedang"  # mudah / sedang / sulit
+    question_type: Optional[str] = None   # mcq / essay / mixed (opsional; diturunkan dari count)
 
 class GenerateFlashcardRequest(BaseModel):
     subject_id: int
     count: int = Field(default=10, ge=5, le=20)
     material_ids: Optional[str] = None
     batch_id: Optional[str] = None  # jika diisi, generate menambah ke deck yang sudah ada (append)
+    difficulty: Optional[str] = "sedang"  # mudah / sedang / sulit
 
 class GenerateNoteRequest(BaseModel):
     subject_id: int

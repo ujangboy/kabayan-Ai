@@ -6,7 +6,7 @@ import { fadeUp, staggerContainer } from '@/lib/motion';
 import { ICONS } from '@/lib/icons';
 import { Icon , Button} from '@/components/ui';
 
-import { dataAPI, materiAPI, trashAPI, subjectAPI } from '@/services/api';
+import { dataAPI, materiAPI, trashAPI, subjectAPI, audioAPI } from '@/services/api';
 import { useToast } from '@/components/Toast';
 import { formatDate, formatBytes } from '@/utils';
 import { getMaterialStatusLabel } from '@/utils/status';
@@ -83,28 +83,40 @@ export default function DataTab() {
   };
 
   const restoreMutation = useMutation({
-    mutationFn: (item) => (item.material_id ? trashAPI.restoreMaterial(item.material_id) : trashAPI.restore(item.id)),
+    mutationFn: (item) => {
+      // Audio memakai material_id sebagai audio_id (source_type='audio').
+      if (item.source_type === 'audio') return audioAPI.restore(item.material_id);
+      return item.material_id ? trashAPI.restoreMaterial(item.material_id) : trashAPI.restore(item.id);
+    },
     onSuccess: (res, item) => {
       const payload = res?.data || {};
       const mid = item.material_id ?? item.id;
-      const sid = payload.subject_id ?? materialData?.materials?.find(m => m.id === mid)?.subject_id;
       queryClient.invalidateQueries({ queryKey: ['trash'] });
       queryClient.invalidateQueries({ queryKey: ['materials'] });
       queryClient.invalidateQueries({ queryKey: ['data-overview'] });
       queryClient.invalidateQueries({ queryKey: ['subjects'] });
       queryClient.invalidateQueries({ queryKey: ['exam-sessions'] });
       queryClient.invalidateQueries({ queryKey: ['subject-dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['audio'] });
       toast.success(t('settings.data.trashRestored'));
+      // Audio kembali ke halaman Audio, bukan ke daftar materi.
+      if (item.source_type === 'audio') return;
+      const sid = payload.subject_id ?? materialData?.materials?.find(m => m.id === mid)?.subject_id;
       if (sid) navigate(`/materi?subject_id=${sid}&highlight=${mid}`);
     },
     onError: () => toast.error(t('settings.data.trashError')),
   });
 
   const deleteTrashMutation = useMutation({
-    mutationFn: (item) => (item.material_id ? trashAPI.deleteMaterial(item.material_id) : trashAPI.delete(item.id)),
+    mutationFn: (item) => {
+      // Audio: hapus lewat item sampahnya agar ikut menghapus record & file.
+      if (item.source_type === 'audio') return trashAPI.delete(item.id);
+      return item.material_id ? trashAPI.deleteMaterial(item.material_id) : trashAPI.delete(item.id);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(['trash']);
       queryClient.invalidateQueries(['data-overview']);
+      queryClient.invalidateQueries(['audio']);
       toast.success(t('settings.data.trashDeleted'));
     },
     onError: () => toast.error(t('settings.data.trashError')),
@@ -167,6 +179,46 @@ export default function DataTab() {
   });
 
   const handleBackup = () => backupMutation.mutate();
+
+  const deleteBackupMutation = useMutation({
+    mutationFn: (filename) => dataAPI.deleteBackup(filename),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['backups']);
+      toast.success(t('settings.data.backupDeleted'));
+    },
+    onError: () => toast.error(t('settings.data.backupError')),
+  });
+
+  const handleDeleteBackup = (name) => {
+    toast.confirm({
+      title: t('settings.data.backupDeleteConfirm', { name }),
+      message: t('settings.data.backupDeleteConfirm', { name }),
+      danger: true,
+      confirmLabel: t('common.delete'),
+      onConfirm: () => deleteBackupMutation.mutate(name),
+    });
+  };
+
+  const deleteSubjectForeverMutation = useMutation({
+    mutationFn: (id) => subjectAPI.deleteForever(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['subjects-trash'] });
+      queryClient.invalidateQueries({ queryKey: ['subjects'] });
+      queryClient.invalidateQueries({ queryKey: ['data-overview'] });
+      toast.success(t('settings.data.subjectDeletedForever'));
+    },
+    onError: () => toast.error(t('settings.data.trashError')),
+  });
+
+  const handleDeleteSubjectForever = (s) => {
+    toast.confirm({
+      title: t('settings.data.subjectDeleteConfirm', { name: s.name }),
+      message: t('settings.data.subjectDeleteConfirm', { name: s.name }),
+      danger: true,
+      confirmLabel: t('common.delete'),
+      onConfirm: () => deleteSubjectForeverMutation.mutate(s.id),
+    });
+  };
 
   const handleDownloadBackup = async (name) => {
     try {
@@ -353,15 +405,27 @@ export default function DataTab() {
                       {b.created_at} · {formatBytes(b.size)}
                     </p>
                   </div>
-                  <Tooltip label={t('settings.data.backupDownload')}>
-                    <button
-                      onClick={() => handleDownloadBackup(b.filename)}
-                      aria-label={t('settings.data.backupDownload')}
-                      className="p-1.5 rounded-lg text-text-muted hover:text-primary hover:bg-primary/10 transition-colors shrink-0"
-                    >
-                      <Icon name={ICONS.actions.download} size={13} />
-                    </button>
-                  </Tooltip>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Tooltip label={t('settings.data.backupDownload')}>
+                      <button
+                        onClick={() => handleDownloadBackup(b.filename)}
+                        aria-label={t('settings.data.backupDownload')}
+                        className="p-1.5 rounded-lg text-text-muted hover:text-primary hover:bg-primary/10 transition-colors"
+                      >
+                        <Icon name={ICONS.actions.download} size={13} />
+                      </button>
+                    </Tooltip>
+                    <Tooltip label={t('settings.data.backupDelete')}>
+                      <button
+                        onClick={() => handleDeleteBackup(b.filename)}
+                        disabled={deleteBackupMutation.isPending}
+                        aria-label={t('settings.data.backupDelete')}
+                        className="p-1.5 rounded-lg text-text-muted hover:text-danger hover:bg-danger/10 transition-colors"
+                      >
+                        <Icon name={ICONS.actions.delete} size={13} />
+                      </button>
+                    </Tooltip>
+                  </div>
                 </div>
               ))}
             </div>
@@ -411,8 +475,16 @@ export default function DataTab() {
                     </Tooltip>
                     <td className="py-2 pr-3 text-text-secondary">
                       <span className={cn('px-1.5 py-0.5 rounded border text-3xs font-medium',
-                        item.material_id ? 'bg-warning/15 text-warning border-warning/30' : 'bg-card border-border text-text-secondary')}>
-                        {item.material_id ? t('settings.data.trashFromMaterial') : t('settings.data.trashOrphan')}
+                        item.source_type === 'audio'
+                          ? 'bg-primary/15 text-primary-light border-primary/30'
+                          : item.material_id
+                            ? 'bg-warning/15 text-warning border-warning/30'
+                            : 'bg-card border-border text-text-secondary')}>
+                        {item.source_type === 'audio'
+                          ? t('settings.data.trashFromAudio')
+                          : item.material_id
+                            ? t('settings.data.trashFromMaterial')
+                            : t('settings.data.trashOrphan')}
                       </span>
                     </td>
                     <td className="py-2 pr-3 text-text-secondary">{formatBytes(item.size_bytes)}</td>
@@ -463,20 +535,36 @@ export default function DataTab() {
                   <p className="text-xs text-text truncate">{s.name}</p>
                   {s.semester && <p className="text-3xs text-text-muted">{s.semester}</p>}
                 </div>
-                <Tooltip label={t('settings.data.trashRestore')}>
-                  <button
-                    onClick={() => handleRestoreSubject(s)}
-                    disabled={restoreSubjectMutation.isPending}
-                    aria-label={t('settings.data.trashRestore')}
-                    className="p-1.5 rounded-lg text-text-muted hover:text-success hover:bg-success/10 transition-colors shrink-0"
-                  >
-                    {restoreSubjectMutation.isPending && restoreSubjectMutation.variables === s.id ? (
-                      <Icon name={ICONS.status.loading} size={14} className="animate-spin" />
-                    ) : (
-                      <Icon name={ICONS.actions.replay} size={14} />
-                    )}
-                  </button>
-                </Tooltip>
+                <div className="flex items-center gap-1 shrink-0">
+                  <Tooltip label={t('settings.data.trashRestore')}>
+                    <button
+                      onClick={() => handleRestoreSubject(s)}
+                      disabled={restoreSubjectMutation.isPending}
+                      aria-label={t('settings.data.trashRestore')}
+                      className="p-1.5 rounded-lg text-text-muted hover:text-success hover:bg-success/10 transition-colors"
+                    >
+                      {restoreSubjectMutation.isPending && restoreSubjectMutation.variables === s.id ? (
+                        <Icon name={ICONS.status.loading} size={14} className="animate-spin" />
+                      ) : (
+                        <Icon name={ICONS.actions.replay} size={14} />
+                      )}
+                    </button>
+                  </Tooltip>
+                  <Tooltip label={t('settings.data.subjectDeleteForever')}>
+                    <button
+                      onClick={() => handleDeleteSubjectForever(s)}
+                      disabled={deleteSubjectForeverMutation.isPending}
+                      aria-label={t('settings.data.subjectDeleteForever')}
+                      className="p-1.5 rounded-lg text-text-muted hover:text-danger hover:bg-danger/10 transition-colors"
+                    >
+                      {deleteSubjectForeverMutation.isPending && deleteSubjectForeverMutation.variables === s.id ? (
+                        <Icon name={ICONS.status.loading} size={14} className="animate-spin" />
+                      ) : (
+                        <Icon name={ICONS.status.error} size={14} />
+                      )}
+                    </button>
+                  </Tooltip>
+                </div>
               </div>
             ))}
           </div>

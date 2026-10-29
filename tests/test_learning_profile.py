@@ -93,7 +93,7 @@ def test_submit_exam_ingests_profile(db_session, make_subject, monkeypatch):
     monkeypatch.setattr(subj_mod, "subject_service", _FakeSubjSvc())
 
     from app.schemas.exam import SubmitAnswersRequest
-    resp = asyncio.run(submit_exam(session.id, SubmitAnswersRequest(answers={"1": "A"}), db_session))
+    resp = submit_exam(session.id, SubmitAnswersRequest(answers={"1": "A"}), db_session)
     assert resp.status_code == 200
 
     profile = get_or_create(db_session, subject.id)

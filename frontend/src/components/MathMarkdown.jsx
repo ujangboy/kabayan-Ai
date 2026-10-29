@@ -5,11 +5,11 @@
  *   raw string
  *   → normalizeMathDelimiters()   (convert \[..\] and \(..\) → $$ / $,
  *                                  skipping fenced code blocks and inline code)
+ *   → sanitizeUnpairedDelimiters() (hapus $$ yatim & escape $ tunggal yatim,
+ *                                  tanpa menyentuh code maupun markdown lain)
  *   → ReactMarkdown + remarkGfm + remarkMath + rehypeKatex
  *
- * sanitizeUnpairedDelimiters is intentionally NOT called here.
- * rehype-katex handles parse errors gracefully via throwOnError: false.
- * The previous sanitizer was corrupting markdown (##, **, *, ---).
+ * rehype-katex tetap memakai throwOnError: false sebagai jaring pengaman.
  */
 import ReactMarkdown from 'react-markdown';
 import { lazy, Suspense, useRef, useState } from 'react';
@@ -45,10 +45,10 @@ const HighlightedCode = lazy(() => import('./HighlightedCode'));
 export function normalizeMathDelimiters(text) {
   if (!text) return text;
 
-  // Split into alternating [prose, code, prose, code, ...] segments.
-  // The regex captures fenced code blocks AND inline code so we can skip them.
-  // Pattern: ```...``` (fenced, lazy) OR `...` (inline code, no newlines)
-  const CODE_FENCE = /(```[\s\S]*?```|`[^`\n]*`)/g;
+  // Split into alternating [prose, protected, prose, ...] segments.
+  // The regex captures fenced code, inline code, dan blok math yang SUDAH
+  // ber-delimiter — semuanya tidak boleh diproses ulang.
+  const CODE_FENCE = /(```[\s\S]*?```|`[^`\n]*`|\$\$[\s\S]*?\$\$)/g;
 
   const parts = text.split(CODE_FENCE);
 
@@ -68,13 +68,39 @@ export function normalizeMathDelimiters(text) {
  * Order: double-escaped BEFORE single-escaped, block BEFORE inline.
  */
 function convertDelimiters(text) {
-  // Block double-escaped: \\[...\\]  →  $$\n...\n$$
-  text = text.replace(/\\{2}\[([\s\S]*?)\\{2}\]/g,
-    (_, inner) => `$$\n${inner.trim()}\n$$`);
+  // Dollar literal `\$` → penanda visual (fullwidth) SEBELUM remark-math.
+  // Tanpa ini, remark-math memperlakukan `$` pada `\$ 8,00` sebagai pembuka
+  // math dan menelan seluruh teks (termasuk blok kode) sampai `$` berikutnya
+  // menjadi satu latex-error (bug "pre hilang di pesan campuran").
+  text = text.replace(/\\\$/g, '\uFF04');
 
-  // Block single-escaped: \[...\]  →  $$\n...\n$$
+  // `\[...\]` hanya jadi block math ($$) bila diawal baris — di tengah baris,
+  // micromark TIDAK menganggap `$$` mid-line sebagai block opener; `$$` lalu
+  // dipakai sbg inline opening & menelan sisa teks sampai `$` berikutnya.
+  // Mid-line diamankan jadi inline math `$...$` (KaTeX sama-sama render).
+  const atLineStart = (t, offset) => {
+    const lineBegin = t.lastIndexOf('\n', offset - 1) + 1;
+    return /^[\t ]*$/.test(t.slice(lineBegin, offset));
+  };
+
+  // LaTeX mentah tanpa delimiter (model kadang lupa membungkus) → math.
+  // Tanpa ini, \begin{cases}...\end{cases} tampil sebagai teks mentah di UI.
+  text = text.replace(/(\\begin\{[a-zA-Z*]+\}[\s\S]*?\\end\{[a-zA-Z*]+\})/g,
+    (body, _inner, offset, full) => atLineStart(full, offset)
+      ? `$$\n${body}\n$$`
+      : `$${body}$`);
+
+  // Literal `\n` dari JSON yang ter-escape ganda → newline sungguhan.
+  // `\\n` (dua backslash) sengaja tidak disentuh: itu line break LaTeX.
+  text = text.replace(/(?<!\\)\\n/g, '\n');
+  text = text.replace(/\\{2}\[([\s\S]*?)\\{2}\]/g,
+    (_, inner, offset, full) => atLineStart(full, offset)
+      ? `$$\n${inner.trim()}\n$$`
+      : `$${inner.trim()}$`);
   text = text.replace(/\\\[([\s\S]*?)\\\]/g,
-    (_, inner) => `$$\n${inner.trim()}\n$$`);
+    (_, inner, offset, full) => atLineStart(full, offset)
+      ? `$$\n${inner.trim()}\n$$`
+      : `$${inner.trim()}$`);
 
   // Inline double-escaped: \\(...\\)  →  $...$
   text = text.replace(/\\{2}\(([\s\S]*?)\\{2}\)/g,
@@ -89,22 +115,38 @@ function convertDelimiters(text) {
 
 // ─── 2. Unpaired delimiter sanitizer ─────────────────────────────────────────
 /**
- * SAFE version: only strips a trailing unpaired $$ at the very end of the
- * string (mid-stream scenario). Does NOT touch single $ or anything else.
- *
- * The previous version used a ## substitution that corrupted ## headings
- * and other markdown. This version is conservative: one targeted check only.
+ * SAFE version: strips a trailing unpaired $$ and escapes a trailing unpaired
+ * single $ so remark-math cannot swallow the rest of the message as one giant
+ * formula (the usual "KaTeX error" cause). Code spans and complete $$...$$
+ * blocks are left untouched.
  */
 export function sanitizeUnpairedDelimiters(text) {
   if (!text) return text;
 
-  const blockMatches = text.match(/\$\$/g) || [];
+  // Mask code spans/fences with spaces (panjang sama) agar indeks tetap valid.
+  const maskCode = (s) => s
+    .replace(/```[\s\S]*?```/g, (m) => ' '.repeat(m.length))
+    .replace(/`[^`\n]*`/g, (m) => ' '.repeat(m.length));
+  let masked = maskCode(text);
+
+  const blockMatches = masked.match(/(?<!\\)\$\$/g) || [];
   if (blockMatches.length % 2 !== 0) {
     // Remove only the last dangling $$ token, keep everything else
-    const lastIdx = text.lastIndexOf('$$');
+    const lastIdx = masked.lastIndexOf('$$');
     if (lastIdx !== -1) {
       text = text.slice(0, lastIdx) + text.slice(lastIdx + 2);
+      masked = maskCode(text);
     }
+  }
+
+  // Hitung single $ hanya di luar code dan blok $$...$$.
+  const prose = masked.replace(/(?<!\\)\$\$[\s\S]*?(?<!\\)\$\$/g, (m) => ' '.repeat(m.length));
+  const singles = [...prose.matchAll(/(?<!\\)\$/g)];
+
+  if (singles.length % 2 === 1) {
+    // Escape the last unpaired single $ so it cannot swallow the rest as math.
+    const idx = singles[singles.length - 1].index;
+    text = `${text.slice(0, idx)}\\$${text.slice(idx + 1)}`;
   }
 
   return text;
@@ -196,12 +238,14 @@ function TableBlock({ t, children, ...rest }) {
 }
 
 // ─── 4. Main component ────────────────────────────────────────────────────────
-export default function MathMarkdown({ children = '', className = '' }) {
+export default function MathMarkdown({ children = '', className = '', isStreaming = false }) {
   const { t } = useTranslation();
   if (!children) return null;
 
   const raw = String(children);
   const normalized = normalizeMathDelimiters(raw);
+  // Selalu bersihkan delimiter yang belum berpasangan (bukan hanya saat
+  // streaming) — teks final dari AI juga bisa berakhir dengan $ tunggal.
   const safe = sanitizeUnpairedDelimiters(normalized);
 
   return (

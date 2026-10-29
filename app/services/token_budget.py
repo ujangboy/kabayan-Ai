@@ -20,11 +20,16 @@ def _as_count(value, default: int = 0) -> int:
 
 
 def quiz_output_tokens(mcq_count, essay_count=0) -> int:
-    """Plafon output kuis: 5 PG ≈ 1500 token (bukan 4096)."""
+    """Plafon output kuis: 5 PG ≈ 2100 token.
+
+    Kalibrasi: soal + 4 opsi + jawaban + penjelasan dalam bahasa Indonesia
+    (verbose) ≈ 300-360 token per soal. Estimasi lama (200/soal) membuat
+    JSON terpotong di tengah string → parse gagal → 502.
+    """
     mcq = _as_count(mcq_count)
     essay = _as_count(essay_count)
-    estimated = 500 + (mcq * 200) + (essay * 250)
-    return min(MAX_OUTPUT_TOKENS, max(1000, estimated))
+    estimated = 600 + (mcq * 340) + (essay * 400)
+    return min(MAX_OUTPUT_TOKENS, max(1600, estimated))
 
 
 def quiz_context_chars(mcq_count, essay_count=0) -> int:
@@ -35,9 +40,14 @@ def quiz_context_chars(mcq_count, essay_count=0) -> int:
 
 
 def flashcard_output_tokens(count=10) -> int:
-    """Plafon output flashcard: 10 kartu ≈ 1150 token."""
+    """Plafon output flashcard: 10 kartu ≈ 2100 token.
+
+    Kalibrasi: pertanyaan + jawaban + evaluasi per kartu bahasa Indonesia
+    ≈ 110-130 token. Base dinaikkan dari 400→700 karena model reasoning
+    (gpt-oss-*) menguras budget untuk token reasoning sebelum konten JSON.
+    """
     n = _as_count(count, default=10)
-    return min(3000, max(700, 250 + (n * 90)))
+    return min(4096, max(1800, 700 + (n * 140)))
 
 
 def flashcard_context_chars(count=10) -> int:

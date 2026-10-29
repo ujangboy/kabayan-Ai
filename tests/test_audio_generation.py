@@ -143,6 +143,51 @@ def test_run_marks_ready_and_cleans_chunk_files(
     assert chunk_paths and all(not os.path.exists(path) for path in chunk_paths)
 
 
+def test_audio_trash_restore_permanent_lifecycle(
+    db_session, make_subject, make_material, tmp_path
+):
+    """Audio dihapus → masuk sampah (bisa restore) → hapus permanen."""
+    from app.models import TrashItem
+    from app.services import trash_service
+
+    subject = make_subject("Audio")
+    material = make_material(subject.id, status="Ready")
+    out = tmp_path / "hapus.mp3"
+    out.write_bytes(b"ID3-audio")
+
+    rec = AudioGeneration(
+        material_id=material.id,
+        subject_id=subject.id,
+        voice="id-ID-ArdiNeural",
+        status="Ready",
+        progress=100,
+        file_path=str(out),
+    )
+    db_session.add(rec)
+    db_session.commit()
+    db_session.refresh(rec)
+
+    assert audio_service.remove(db_session, rec.id) is True
+    db_session.expire_all()
+    assert db_session.get(AudioGeneration, rec.id).status == "Trashed"
+    assert not out.exists()
+    item = db_session.query(TrashItem).filter_by(
+        source_type="audio", material_id=rec.id
+    ).one()
+    assert item.trash_path and os.path.isfile(item.trash_path)
+
+    assert trash_service.restore_audio(db_session, rec.id) is True
+    db_session.expire_all()
+    assert db_session.get(AudioGeneration, rec.id).status == "Ready"
+    assert out.read_bytes() == b"ID3-audio"
+
+    assert trash_service.trash_audio(db_session, rec.id) is True
+    assert trash_service.delete_audio_permanent(db_session, rec.id) is True
+    db_session.expire_all()
+    assert db_session.get(AudioGeneration, rec.id) is None
+    assert not out.exists()
+
+
 def test_concat_uses_unique_list_file_and_removes_it(monkeypatch, tmp_path):
     seen = []
 

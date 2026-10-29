@@ -381,7 +381,10 @@ class TutorService:
         try:
             cache_service.set_cache(db, cache_key, "", "", full_response)
         except Exception:
-            pass
+            try:
+                db.rollback()  # bersihkan session yang tertaut ("database is locked")
+            except Exception:
+                pass
 
     # ── MEDIUM / COMPLEX: full AI response ────────────────────────────────────
 
@@ -514,7 +517,10 @@ class TutorService:
         try:
             cache_service.set_cache(db, cache_key, "", "", full_response)
         except Exception:
-            pass  # cache failure is non-critical
+            try:
+                db.rollback()  # bersihkan session yang tertaut ("database is locked")
+            except Exception:
+                pass  # cache failure is non-critical
 
     # ── Classification only (for /api/tutor/classify endpoint) ───────────────
 

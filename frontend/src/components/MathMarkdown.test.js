@@ -29,6 +29,26 @@ describe('normalizeMathDelimiters', () => {
     expect(result).not.toContain('\\[');
   });
 
+  it('mid-line \\[...\\] jadi inline $...$ (block $$ hanya di awal baris)', () => {
+    // Di tengah baris, `$$` BUKAN block-opener bagi micromark — dia dipakai
+    // sbg inline delimiter dan menelan sisa teks sampai `$` berikutnya.
+    const input = 'Gradien \\((\\nabla f)\\) dan \\[\\lim f\\]';
+    const result = normalizeMathDelimiters(input);
+    // Bagian \[...\] harus jadi SINGLE dollar math, bukan $$.
+    expect(result).toContain('$\\lim f$');
+    expect(result).not.toContain('$$');
+    // Tidak ada dolar literal yang tertinggal sebagai pembuka liar.
+    const dollars = result.match(/\$/g) || [];
+    expect(dollars.length % 2).toBe(0); // pasang-pasang, tanpa opener liar
+  });
+
+  it('mid-line dolar literal \\$ tidak jadi delimiter math', () => {
+    const input = 'Harga: \\$ 8,00 → \\$ 14,00 (dolar biasa)\n```python\nx=1\n```';
+    const result = normalizeMathDelimiters(input);
+    expect(result).toContain('\uFF04 8,00');
+    expect(result).not.toContain('\\$');
+  });
+
   it('converts \\(...\\) inline to $...$', () => {
     const input = 'Kecepatan adalah \\(v = s/t\\) meter per detik.';
     const result = normalizeMathDelimiters(input);
@@ -208,11 +228,12 @@ describe('sanitizeUnpairedDelimiters', () => {
   });
 
   it('does NOT strip single $ — leaves inline math safe', () => {
-    // Unpaired single $ at stream end is handled by KaTeX throwOnError:false
+    // Unpaired single $ di akhir di-escape agar tidak menelan sisa teks.
     const input = 'Nilai $x = 7$ dan $y =';
     const result = sanitizeUnpairedDelimiters(input);
     // Must not corrupt the paired $x = 7$
     expect(result).toContain('$x = 7$');
+    expect(result).toContain('\\$y');
   });
 
   it('does not touch ## headings', () => {
@@ -242,5 +263,33 @@ describe('sanitizeUnpairedDelimiters', () => {
   it('handles complete block math untouched', () => {
     const input = '$$\n\\int_0^1 x^2\\,dx = \\frac{1}{3}\n$$';
     expect(sanitizeUnpairedDelimiters(input)).toBe(input);
+  });
+});
+
+// ─── LaTeX mentah tanpa delimiter (output AI ujian) ───────────────────────────
+
+describe('normalizeMathDelimiters — LaTeX mentah', () => {
+  it('membungkus \\begin{cases} tanpa delimiter jadi block math', () => {
+    const input = '\\begin{cases} 2x + 3y = 5 \\\\ x - y = 1 \\end{cases}';
+    const result = normalizeMathDelimiters(input);
+    expect(result.startsWith('$$\n\\begin{cases}')).toBe(true);
+    expect(result.trimEnd().endsWith('\\end{cases}\n$$')).toBe(true);
+  });
+
+  it('tidak membungkus ganda blok yang sudah ber-delimiter $$', () => {
+    const input = '$$\n\\begin{cases} x = 1 \\end{cases}\n$$';
+    expect(normalizeMathDelimiters(input)).toBe(input);
+  });
+
+  it('mengubah literal \\n di prose jadi newline, bukan di dalam code', () => {
+    const input = 'Baris satu\\nBaris dua\n\n`kode\\nliteral`';
+    const result = normalizeMathDelimiters(input);
+    expect(result).toContain('Baris satu\nBaris dua');
+    expect(result).toContain('`kode\\nliteral`');
+  });
+
+  it('tidak menyentuh line break LaTeX \\\\n di dalam math', () => {
+    const input = '$$\na \\\\neq b\n$$';
+    expect(normalizeMathDelimiters(input)).toContain('a \\\\neq b');
   });
 });

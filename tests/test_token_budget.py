@@ -11,8 +11,9 @@ from app.services.usage_service import record_usage
 
 
 def test_quiz_output_budget_is_conservative():
-    # 5 soal PG tidak lagi memakai plafon 4096 token.
-    assert tb.quiz_output_tokens(5, 0) == 1500
+    # 5 soal PG ≈ 2300 token (kalibrasi bahasa Indonesia verbose, terpotong
+    # bila dihitung 200/soal — lihat token_budget.quiz_output_tokens).
+    assert tb.quiz_output_tokens(5, 0) == 2300
     assert tb.quiz_output_tokens(5, 0) < 4096
     assert tb.quiz_output_tokens(5, 0) == tb.quiz_output_tokens(5)
 
@@ -20,7 +21,7 @@ def test_quiz_output_budget_is_conservative():
 def test_quiz_budget_scales_and_caps():
     assert tb.quiz_output_tokens(10, 3) > tb.quiz_output_tokens(5, 0)
     assert tb.quiz_output_tokens(50, 20) == 4096
-    assert tb.quiz_output_tokens(1, 0) == 1000
+    assert tb.quiz_output_tokens(1, 0) == 1600
 
 
 def test_quiz_context_is_proportional():
@@ -31,10 +32,11 @@ def test_quiz_context_is_proportional():
 
 
 def test_flashcard_budget_is_conservative():
-    assert tb.flashcard_output_tokens(10) == 1150
+    # 10 kartu ≈ 2100 token (base 700 dikalibrasi untuk model reasoning).
+    assert tb.flashcard_output_tokens(10) == 2100
     assert tb.flashcard_context_chars(10) == 6000
-    assert tb.flashcard_output_tokens(1) == 700
-    assert tb.flashcard_output_tokens(100) == 3000
+    assert tb.flashcard_output_tokens(1) == 1800
+    assert tb.flashcard_output_tokens(100) == 4096
     assert tb.flashcard_output_tokens(10) < 4096
 
 
@@ -80,16 +82,16 @@ def test_quiz_service_passes_proportional_budgets(db_session, make_subject, monk
         mcq_count=5, essay_count=0, title="Quiz Uji",
     )
 
-    assert captured["max_tokens"] == 1500
+    assert captured["max_tokens"] == 2300
     assert captured["max_context_chars"] == 5500
 
 
 def test_flashcard_service_passes_proportional_budgets(db_session, make_subject, monkeypatch):
     subject = make_subject("Fisika")
-    captured = {}
+    calls = []
 
     def fake_generate(**kwargs):
-        captured.update(kwargs)
+        calls.append(kwargs)
         return '[{"question": "Apa itu gaya?", "answer": "Gaya adalah dorongan."}]'
 
     monkeypatch.setattr(flashcard_service_module.ai_service, "generate", fake_generate)
@@ -98,8 +100,10 @@ def test_flashcard_service_passes_proportional_budgets(db_session, make_subject,
         db_session, subject.id, context="materi " * 2000, count=2, title="Deck Uji",
     )
 
-    assert captured["max_tokens"] == 700
-    assert captured["max_context_chars"] == 2800
+    # Panggilan pertama memakai budget proporsional untuk count yang diminta;
+    # panggilan top-up berikutnya boleh lebih kecil sesuai sisa kartu.
+    assert calls[0]["max_tokens"] == 1800  # count=2 → floor 1800
+    assert calls[0]["max_context_chars"] == 2800
 
 
 def test_record_usage_counts_prompt_and_response(db_session):

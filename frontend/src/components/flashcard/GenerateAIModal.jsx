@@ -7,13 +7,16 @@ import { extractErrorMessage } from '@/utils/errors';
 import MaterialPicker from '@/components/MaterialPicker';
 import { Select, Modal, Button , Icon } from '@/components/ui';
 import { useBackgroundJob } from '@/hooks/useBackgroundJob';
+import { useToast } from '@/components/Toast';
 import { useQuery } from '@tanstack/react-query';
 import { formatDate } from '@/utils';
 
 export default function GenerateAIModal({ open, subjects, onClose, onSuccess }) {
   const { t } = useTranslation();
+  const { toast } = useToast();
   const [subjectId, setSubjectId] = useState('');
   const [count, setCount] = useState(10);
+  const [difficulty, setDifficulty] = useState('sedang');
   const [selectedMaterialIds, setSelectedMaterialIds] = useState([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState('');
@@ -55,6 +58,7 @@ export default function GenerateAIModal({ open, subjects, onClose, onSuccess }) 
     runJob('flashcard', t('appLayout.opFlashcard'), (signal) => flashcardAPI.generate({
       subject_id: Number(subjectId),
       count: Math.max(5, Math.min(20, Number(count) || 10)),
+      difficulty,
       material_ids: selectedMaterialIds.length > 0 ? selectedMaterialIds.join(',') : '',
       ...(mode === 'append' && targetBatchId ? { batch_id: targetBatchId } : {}),
     }, { signal }), {
@@ -63,6 +67,7 @@ export default function GenerateAIModal({ open, subjects, onClose, onSuccess }) 
         setIsGenerating(false);
         if (!result) return;
         if (result.detail) { setError(result.detail); return; }
+        toast.success(t('flashcard.generateDone', { count: result?.count ?? 0 }));
         onSuccess(result?.batch_id);
       },
     });
@@ -162,6 +167,30 @@ export default function GenerateAIModal({ open, subjects, onClose, onSuccess }) 
             ))}
           </div>
           <p className="text-3xs text-text-muted mt-1">{t('flashcard.generatePerDeckHint')}</p>
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-text-secondary mb-2">{t('quiz.difficultyLabel')}</label>
+          <div className="flex gap-2">
+            {[
+              { v: 'mudah', l: 'quiz.difficultyEasy' },
+              { v: 'sedang', l: 'quiz.difficultyMedium' },
+              { v: 'sulit', l: 'quiz.difficultyHard' },
+            ].map(opt => (
+              <button
+                key={opt.v}
+                type="button"
+                disabled={isGenerating}
+                onClick={() => setDifficulty(opt.v)}
+                className={`flex-1 py-2 rounded-lg text-xs font-semibold border transition-colors disabled:opacity-50 ${
+                  difficulty === opt.v
+                    ? 'bg-primary/20 text-primary-light border-primary/50'
+                    : 'bg-background text-text-secondary border-border hover:border-primary/40 hover:text-text'
+                }`}
+              >
+                {t(opt.l)}
+              </button>
+            ))}
+          </div>
         </div>
         {isGenerating && (
           <div className="flex items-center gap-2 text-sm text-primary py-1">

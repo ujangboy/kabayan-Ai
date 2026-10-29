@@ -9,7 +9,7 @@ import FeedbackButtons from './FeedbackButtons';
 import TypingIndicator from './TypingIndicator';
 import { cn } from '@/utils';
 
-export default function MessageBubble({ message, isLast, tutorMode, onFeedback }) {
+export default function MessageBubble({ message, isLast, tutorMode, onFeedback, isStreaming }) {
   const { t } = useTranslation();
   const isUser = message.role === 'user';
   const isAssistant = message.role === 'assistant';
@@ -58,7 +58,7 @@ export default function MessageBubble({ message, isLast, tutorMode, onFeedback }
             ) : message.content.startsWith('Error:') ? (
               <span className="text-danger whitespace-pre-wrap">{message.content.slice(6)}</span>
             ) : isAssistant ? (
-              <MathMarkdown>{message.content}</MathMarkdown>
+              <MathMarkdown isStreaming={isStreaming && isLast}>{message.content}</MathMarkdown>
             ) : (
               <span className="whitespace-pre-wrap">{message.content}</span>
             )}

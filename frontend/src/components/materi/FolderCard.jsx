@@ -18,7 +18,9 @@ export function FolderCard({ active, name, count, onClick, tone, index = 0, subj
       className={cn(
         'relative shrink-0 w-44 text-left rounded-lg border p-4 transition-all duration-200 group flex flex-col gap-3 cursor-pointer overflow-hidden',
         'card-base',
-        active ? 'border-primary/50 bg-popover' : 'hover:border-primary/40 hover:bg-wash'
+        active
+          ? 'border-primary/60 bg-gradient-to-br from-primary/25 via-primary/10 to-transparent ring-1 ring-primary/30 shadow-[0_4px_16px_rgba(var(--primary-rgb,99,102,241),0.25)]'
+          : 'hover:border-primary/40 hover:bg-wash'
       )}
     >
       <div className="flex items-center justify-between">

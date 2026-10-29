@@ -79,6 +79,7 @@ export const subjectAPI = {
   getUsage: (id) => api.get(`/subjects/${id}/usage`),
   getTrash: () => api.get('/subjects/trash'),
   restore: (id) => api.post(`/subjects/${id}/restore`),
+  deleteForever: (id) => api.post(`/subjects/${id}/delete-forever`),
 };
 
 // --- NOTES ---
@@ -159,9 +160,11 @@ export const examAPI = {
   generateBlueprint: (payload, config) => api.post('/exam/blueprint', payload, { ...config, timeout: 120000 }),
   generateQuestions: (blueprintId, config) => api.post(`/exam/generate/${blueprintId}`, {}, { ...config, timeout: 300000 }),
   getSessions: (subjectId) => api.get('/exam/sessions', { params: subjectId ? { subject_id: subjectId } : {} }),
-  submit: (sessionId, answers) => api.post(`/exam/submit/${sessionId}`, { answers }, { timeout: 120000 }),
+  submit: (sessionId, answers, config) =>
+    api.post(`/exam/submit/${sessionId}`, { answers }, { timeout: 300000, ...config }),
   getRecommendation: (sessionId) => api.get(`/exam/recommendation/${sessionId}`),
-  getExplanation: (payload) => api.post('/exam/explain', payload, { timeout: 60000 }),
+  // AI internal timeout 90s — jangan biarkan axios menyerah lebih dulu.
+  getExplanation: (payload) => api.post('/exam/explain', payload, { timeout: 180000 }),
   getLearningProfile: (subjectId) => api.get(`/exam/learning-profile/${subjectId}`).then(r => r.data),
 };
 
@@ -183,7 +186,8 @@ export const sessionsAPI = {
   deletePlanItem: (itemId) => api.post(`/exam/sessions/plan-item/${itemId}/delete`),
   submitPlanQuiz: (itemId, payload) => api.post(`/exam/sessions/plan-item/${itemId}/submit-quiz`, payload),
   submitPlanFlashcards: (itemId, payload) => api.post(`/exam/sessions/plan-item/${itemId}/submit-flashcards`, payload),
-  generateSummary: (sessionId, topic, config) => api.post(`/exam/sessions/${sessionId}/summary`, { topic }, config),
+  generateSummary: (sessionId, topic, config) =>
+    api.post(`/exam/sessions/${sessionId}/summary`, { topic }, { timeout: 180000, ...config }),
   delete: (sessionId) => api.delete(`/exam/sessions/${sessionId}`),
 };
 
@@ -230,10 +234,17 @@ export const tutorAPI = {
 // --- AUDIO (TTS materi penuh) ---
 export const audioAPI = {
   generate: (payload, config) => api.post('/audio/generate', payload, { ...config, timeout: 120000 }).then(r => r.data),
-  list: (subjectId) => api.get('/audio', { params: subjectId ? { subject_id: subjectId } : {} }).then(r => r.data),
+  list: (subjectId, includeTrashed = false) => api.get('/audio', {
+    params: {
+      ...(subjectId ? { subject_id: subjectId } : {}),
+      ...(includeTrashed ? { include_trashed: true } : {}),
+    },
+  }).then(r => r.data),
   status: (id) => api.get(`/audio/${id}/status`).then(r => r.data),
   cancel: (id) => api.post(`/audio/${id}/cancel`).then(r => r.data),
   remove: (id) => api.delete(`/audio/${id}`).then(r => r.data),
+  restore: (id) => api.post(`/audio/${id}/restore`).then(r => r.data),
+  deletePermanent: (id) => api.delete(`/audio/${id}/permanent`).then(r => r.data),
   voices: () => api.get('/audio/voices').then(r => r.data),
 };
 
@@ -268,6 +279,7 @@ export const dataAPI = {
   createBackup: () => api.post('/backup/create').then((r) => r.data),
   listBackups: () => api.get('/backup/list').then((r) => r.data),
   downloadBackup: (filename) => api.get('/backup/download', { params: { filename }, responseType: 'blob' }),
+  deleteBackup: (filename) => api.delete('/backup/delete', { params: { filename } }).then((r) => r.data),
 };
 
 // --- SAMPAH (Pengaturan > Data, recycle bin) ---

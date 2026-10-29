@@ -70,7 +70,7 @@ export function ToastProvider({ children }) {
   }, []);
 
   const toast = {
-    success: (msg, dur)  => show(msg, 'success', dur),
+    success: (msg, dur)  => show(msg, 'success', dur ?? 6000),
     error:   (msg, dur)  => show(msg, 'error',   dur ?? 6000),
     warning: (msg, dur)  => show(msg, 'warning', dur ?? 5000),
     info:    (msg, dur)  => show(msg, 'info',    dur),
@@ -99,7 +99,7 @@ function ToastContainer({ toasts, onDismiss }) {
   return (
     <div
       aria-live="polite"
-      className="fixed bottom-5 right-5 z-[9999] flex flex-col gap-2.5 w-full max-w-sm pointer-events-none"
+      className="fixed top-16 right-5 z-[9999] flex flex-col gap-2.5 w-full max-w-sm pointer-events-none"
     >
       <AnimatePresence initial={false}>
         {toasts.map(t => (
@@ -120,9 +120,9 @@ function ToastItem({ toast, onDismiss }) {
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, y: 24, scale: 0.92, filter: 'blur(4px)' }}
+      initial={{ opacity: 0, y: -24, scale: 0.92, filter: 'blur(4px)' }}
       animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
-      exit={{ opacity: 0, y: 12, scale: 0.95, filter: 'blur(2px)' }}
+      exit={{ opacity: 0, y: -12, scale: 0.95, filter: 'blur(2px)' }}
       transition={{ duration: 0.35, ease: [0.32, 0.72, 0, 1] }}
       className={`pointer-events-auto flex items-start gap-3 pl-3.5 pr-2.5 py-3 rounded-lg
         glass ring-1 ${RING[toast.type] || RING.info} ${GLOW[toast.type] || GLOW.info} text-base text-text`}

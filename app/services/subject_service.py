@@ -141,6 +141,22 @@ class SubjectService:
         cache_service.invalidate_all(db)
         return True
 
+    def delete_forever(self, db: Session, id: int) -> bool:
+        """Hapus permanen mata kuliah yang ada di sampah beserta data terkaitnya.
+
+        File materi yang tertinggal di storage/uploads akan disapu oleh
+        cleanup_orphan_files.
+        """
+        subject = subject_repository.get(db, id)
+        if not subject:
+            return False
+        if subject.status != "trashed":
+            return False
+        db.delete(subject)
+        db.commit()
+        cache_service.invalidate_all(db)
+        return True
+
     def recalculate_subject_stats(self, db: Session, subject_id: int) -> Optional[Subject]:
         """Hitung ulang + persist statistik agregat untuk satu subject."""
         subject = subject_repository.get(db, subject_id)

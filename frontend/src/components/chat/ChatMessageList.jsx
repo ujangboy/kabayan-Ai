@@ -55,6 +55,7 @@ export default function ChatMessageList({ chat, isCurrentChatStreaming, onFeedba
               isLast={i === messages.length - 1}
               tutorMode={!!chat?.tutorEnabled}
               onFeedback={onFeedback}
+              isStreaming={isCurrentChatStreaming}
             />
           </motion.div>
         ))}

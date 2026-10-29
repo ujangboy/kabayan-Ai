@@ -27,6 +27,17 @@ export function GenerateQuizModal({ open, onClose, subjects, onSuccess }) {
     { value: 'sulit',  label: 'quiz.difficultyHard',   desc: 'quiz.difficultyHardDesc' },
   ];
 
+  // Tipe soal diturunkan dari jumlah agar chip & input angka selalu konsisten.
+  const questionType = Number(mcqCount) > 0 && Number(essayCount) > 0
+    ? 'mixed'
+    : Number(essayCount) > 0 ? 'essay' : 'mcq';
+
+  const applyType = (type) => {
+    if (type === 'essay') { setMcqCount(0); setEssayCount(3); }
+    else if (type === 'mixed') { setMcqCount(5); setEssayCount(2); }
+    else { setMcqCount(5); setEssayCount(0); }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!subjectId) return setError(t('quiz.errorSubjectRequired'));
@@ -42,6 +53,7 @@ export function GenerateQuizModal({ open, onClose, subjects, onSuccess }) {
       mcq_count: Number(mcqCount) || 0,
       essay_count: Number(essayCount) || 0,
       difficulty,
+      question_type: questionType,
       material_ids: selectedMaterialIds.length > 0 ? selectedMaterialIds.join(',') : '',
     }, { signal }), {
       onError: (err) => {
@@ -133,6 +145,30 @@ export function GenerateQuizModal({ open, onClose, subjects, onSuccess }) {
             ))}
           </div>
           <p className="text-3xs text-text-muted mt-1">{t(DIFFICULTIES.find(d => d.value === difficulty)?.desc)}</p>
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-text-secondary mb-2">{t('quiz.typeLabel')}</label>
+          <div className="flex gap-2">
+            {[
+              { v: 'mcq', l: 'quiz.qtypeMcq' },
+              { v: 'essay', l: 'quiz.qtypeEssay' },
+              { v: 'mixed', l: 'quiz.qtypeMixed' },
+            ].map(opt => (
+              <button
+                key={opt.v}
+                type="button"
+                disabled={isGenerating}
+                onClick={() => applyType(opt.v)}
+                className={`flex-1 py-2 px-1 rounded-lg text-xs font-semibold border transition-colors disabled:opacity-50 ${
+                  questionType === opt.v
+                    ? 'bg-primary/20 text-primary-light border-primary/50'
+                    : 'bg-background text-text-secondary border-border hover:border-primary/40 hover:text-text'
+                }`}
+              >
+                {t(opt.l)}
+              </button>
+            ))}
+          </div>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>

@@ -58,11 +58,14 @@ export default function AudioPage() {
 
   const { data: audioData, isLoading: audioLoading } = useQuery({
     queryKey: ['audio', subjectFilter],
-    queryFn: () => audioAPI.list(subjectFilter || undefined),
+    // include_trashed=true agar bagian "Sampah audio" bisa tampil di halaman ini.
+    queryFn: () => audioAPI.list(subjectFilter || undefined, true),
     // Poll live selama ada audio yang masih diproses, agar progress bar & stage update real-time.
     refetchInterval: (q) => (q.state.data?.audio || []).some((a) => a.status === 'Processing') ? 2000 : false,
   });
-  const audios = useMemo(() => audioData?.audio || [], [audioData]);
+  const allAudios = useMemo(() => audioData?.audio || [], [audioData]);
+  const audios = useMemo(() => allAudios.filter((a) => a.status !== 'Trashed'), [allAudios]);
+  const trashedAudios = useMemo(() => allAudios.filter((a) => a.status === 'Trashed'), [allAudios]);
 
   // Map material_id → audio yang sedang Processing (untuk status per-kartu).
   const audioByMaterialId = useMemo(() => {
@@ -101,6 +104,9 @@ export default function AudioPage() {
       default:
         list.sort((x, y) => new Date(y.created_at || 0) - new Date(x.created_at || 0));
     }
+    // Audio yang masih diproses selalu di atas, apa pun kriteria sort yang dipilih.
+    // Urutan sort stabil, jadi urutan di dalam tiap kelompok tetap terjaga.
+    list.sort((x, y) => (x.status === 'Processing' ? 0 : 1) - (y.status === 'Processing' ? 0 : 1));
     return list;
   }, [audios, audioSort, fileNameById]);
   const visibleMaterials = useMemo(() => {
@@ -126,6 +132,32 @@ export default function AudioPage() {
       queryClient.invalidateQueries(['audio-bg-sync']);
     },
   });
+
+  const restoreMutation = useMutation({
+    mutationFn: (id) => audioAPI.restore(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['audio', subjectFilter]);
+      toast.success(t('audioPage.trashRestored'));
+    },
+  });
+
+  const deletePermanentMutation = useMutation({
+    mutationFn: (id) => audioAPI.deletePermanent(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['audio', subjectFilter]);
+      toast.success(t('audioPage.trashDeleted'));
+    },
+  });
+
+  const handleDeletePermanent = (id) => {
+    toast.confirm({
+      title: t('audioPage.trashDeleteTitle'),
+      message: t('audioPage.trashDeleteConfirm'),
+      danger: true,
+      confirmLabel: t('common.delete'),
+      onConfirm: () => deletePermanentMutation.mutate(id),
+    });
+  };
 
   const handleGenerate = (materialId) => {
     if (!audioVoice) {
@@ -424,6 +456,48 @@ export default function AudioPage() {
                   onDelete={() => handleDelete(a.id)}
                   onRegenerate={() => handleGenerate(a.material_id)}
                 />
+              ))}
+            </div>
+          )}
+          {trashedAudios.length > 0 && (
+            <div className="space-y-2 border-t border-border pt-3">
+              <h3 className="text-xs font-semibold text-text-muted">
+                {t('audioPage.trashTitle', { count: trashedAudios.length })}
+              </h3>
+              {trashedAudios.map((a) => (
+                <div
+                  key={a.id}
+                  className="flex items-center justify-between gap-3 rounded-lg bg-subtle/50 border border-border px-3 py-2"
+                >
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium text-text truncate">
+                      {VOICE_LABEL_KEYS[a.voice] ? t(VOICE_LABEL_KEYS[a.voice]) : a.voice}
+                    </p>
+                    <p className="text-3xs text-text-muted truncate">
+                      {fileNameById.get(String(a.material_id)) || t('audioPage.trashUnknownMaterial')}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-primary"
+                      onClick={() => restoreMutation.mutate(a.id)}
+                    >
+                      <Icon name={ICONS.actions.replay} size={14} />
+                      {t('audioPage.trashRestore')}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-danger"
+                      onClick={() => handleDeletePermanent(a.id)}
+                      aria-label={t('audioPage.trashDelete')}
+                    >
+                      <Icon name={ICONS.actions.delete} size={14} />
+                    </Button>
+                  </div>
+                </div>
               ))}
             </div>
           )}

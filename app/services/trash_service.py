@@ -109,6 +109,90 @@ def trash_material(db: Session, material_id: int) -> bool:
     return True
 
 
+# ─── Audio TTS (soft-delete) ────────────────────────────────────────────────
+# TrashItem.material_id dipakai untuk menyimpan audio_id (tanpa kolom baru);
+# source_type='audio' membedakannya dari materi.
+
+def trash_audio(db: Session, audio_id: int) -> bool:
+    """Soft-delete audio TTS: pindahkan file ke trash + status Trashed."""
+    from app.models import AudioGeneration
+    rec = db.query(AudioGeneration).get(audio_id)
+    if not rec:
+        return False
+    original_status = rec.status
+    filepath = rec.file_path
+    rec.status = "Trashed"
+    db.commit()
+    if filepath and os.path.exists(filepath):
+        if not trash_file_with_meta(db, filepath, "audio", audio_id,
+                                    f"Audio #{audio_id}.mp3", original_status):
+            logger.warning(f"trash_audio: file {filepath} gagal dipindah ke trash.")
+        db.commit()
+    else:
+        # File tidak ada di disk: tetap catat agar item tampil & bisa dihapus permanen.
+        db.add(TrashItem(
+            material_id=audio_id,
+            source_type="audio",
+            original_path=filepath or "",
+            trash_path="",
+            original_filename=f"Audio #{audio_id}.mp3",
+            original_status=original_status,
+            size_bytes=0,
+            trashed_at=utcnow(),
+        ))
+        db.commit()
+    return True
+
+
+def restore_audio(db: Session, audio_id: int) -> bool:
+    """Kembalikan audio dari sampah: file kembali ke lokasi asli + status Ready."""
+    from app.models import AudioGeneration
+    rec = db.query(AudioGeneration).get(audio_id)
+    if not rec:
+        return False
+    items = db.query(TrashItem).filter(
+        TrashItem.source_type == "audio", TrashItem.material_id == audio_id
+    ).all()
+    for it in items:
+        if it.trash_path and os.path.isfile(it.trash_path):
+            try:
+                os.makedirs(os.path.dirname(it.original_path), exist_ok=True)
+                os.rename(it.trash_path, it.original_path)
+                rec.file_path = it.original_path
+            except Exception as e:
+                logger.warning("Gagal restore audio %s: %r", it.trash_path, e)
+                db.rollback()
+                return False
+        db.delete(it)
+    rec.status = "Ready"
+    db.commit()
+    return True
+
+
+def delete_audio_permanent(db: Session, audio_id: int) -> bool:
+    """Hapus permanen audio dari sampah (file trunk + record)."""
+    from app.models import AudioGeneration
+    rec = db.query(AudioGeneration).get(audio_id)
+    items = db.query(TrashItem).filter(
+        TrashItem.source_type == "audio", TrashItem.material_id == audio_id
+    ).all()
+    # Record bisa sudah hilang (mis. materi induk dihapus permanen) sementara
+    # TrashItem-nya tertinggal — tetap bersihkan agar tidak jadi sampah hantu.
+    if not rec and not items:
+        return False
+    for it in items:
+        if it.trash_path:
+            try:
+                os.remove(it.trash_path)
+            except OSError:
+                pass
+        db.delete(it)
+    if rec:
+        db.delete(rec)
+    db.commit()
+    return True
+
+
 def _recover_original_name(trash_name: str) -> str:
     """Best-effort pulihkan nama asli file trash ber-suffix uuid (stem_8hex.ext)."""
     import re
@@ -202,7 +286,9 @@ def restore_material(db: Session, material_id: int):
 def _restore_for_material(db: Session, mat: Material) -> bool:
     restored_status = None
     restored_filepath = None
-    items = db.query(TrashItem).filter(TrashItem.material_id == mat.id).all()
+    items = db.query(TrashItem).filter(
+        TrashItem.material_id == mat.id, TrashItem.source_type == "material"
+    ).all()
     for it in items:
         # Balikan file fisik trash -> lokasi asli
         if it.trash_path and os.path.isfile(it.trash_path):
@@ -246,7 +332,9 @@ def delete_material_permanent(db: Session, material_id: int) -> bool:
         threading.Thread(target=rag_service.rebuild_index, daemon=True).start()
 
     # Hapus file fisik di trash + row TrashItem
-    items = db.query(TrashItem).filter(TrashItem.material_id == material_id).all()
+    items = db.query(TrashItem).filter(
+        TrashItem.material_id == material_id, TrashItem.source_type == "material"
+    ).all()
     for it in items:
         if it.trash_path:
             try:
@@ -287,10 +375,13 @@ def _purge_material_ids(db: Session, material_id: int) -> None:
 
 
 def delete_item_permanent(db: Session, item_id: int) -> bool:
-    """Hapus permanen satu TrashItem (file trunk + row). Non-materi (orphan)."""
+    """Hapus permanen satu TrashItem (file trunk + row). Non-materi (orphan/audio)."""
     it = db.query(TrashItem).filter(TrashItem.id == item_id).first()
     if not it:
         return False
+    if it.source_type == "audio":
+        # Row milik audio TTS: delegasikan ke penghapusan menyeluruh audio.
+        return delete_audio_permanent(db, it.material_id)
     if it.material_id:
         # Row milik materi: delegasikan ke penghapusan menyeluruh materi
         # (file + record + RAG) agar tak meninggalkan materi sampah nyangkut.
@@ -306,10 +397,12 @@ def delete_item_permanent(db: Session, item_id: int) -> bool:
 
 
 def restore_item(db: Session, item_id: int) -> bool:
-    """Restore satu TrashItem non-materi (orphan) ke path aslinya."""
+    """Restore satu TrashItem non-materi (orphan/audio) ke path aslinya."""
     it = db.query(TrashItem).filter(TrashItem.id == item_id).first()
     if not it:
         return False
+    if it.source_type == "audio":
+        return restore_audio(db, it.material_id)
     if it.trash_path and os.path.isfile(it.trash_path):
         try:
             os.makedirs(os.path.dirname(it.original_path), exist_ok=True)
@@ -346,6 +439,13 @@ def empty_trash(db: Session) -> int:
     for mat in trashed:
         rag_service.delete_document_chunks(f"mat_{mat.id}")
         db.delete(mat)
+        count += 1
+
+    # Audio TTS yang di-trash ikut dibersihkan permanen.
+    from app.models import AudioGeneration
+    trashed_audio = db.query(AudioGeneration).filter(AudioGeneration.status == "Trashed").all()
+    for rec in trashed_audio:
+        db.delete(rec)
         count += 1
 
     db.commit()

@@ -27,7 +27,7 @@ engine = create_engine(
     max_overflow=15,
     pool_pre_ping=True,
     pool_recycle=3600,
-    connect_args={"timeout": 15, "check_same_thread": False},
+    connect_args={"timeout": 30, "check_same_thread": False},
 )
 
 @event.listens_for(engine, "connect")
@@ -35,7 +35,7 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
     cursor = dbapi_connection.cursor()
     cursor.execute("PRAGMA journal_mode=WAL")
     cursor.execute("PRAGMA synchronous=NORMAL")
-    cursor.execute("PRAGMA busy_timeout=15000")
+    cursor.execute("PRAGMA busy_timeout=30000")
     cursor.execute("PRAGMA wal_autocheckpoint=1000")
     cursor.execute("PRAGMA foreign_keys=ON")
     cursor.close()

@@ -557,7 +557,12 @@ function HistoryCard({ session: s, onDetail, onDelete, onRetry, onResumeActive, 
       </div>
 
       <div className="mt-auto flex gap-2">
-        {s.status === 'active' && !s.submitted ? (
+        {s.status === 'active' && s.evaluating ? (
+          <div className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-warning/30 bg-warning/10 px-3 py-2 text-xs text-warning" role="status">
+            <Icon name={ICONS.status.loading} size={13} className="animate-spin" />
+            {t('exam.history.evaluating')}
+          </div>
+        ) : s.status === 'active' && !s.submitted ? (
           // Sesi masih berjalan → aksi utama adalah melanjutkan, bukan retry
           // (retry-inplace akan mereset jawaban yang sudah disimpan).
           <>

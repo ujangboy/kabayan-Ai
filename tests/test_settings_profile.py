@@ -21,6 +21,29 @@ def client(db_session):
 
 # ─── /api/profile ─────────────────────────────────────────────────────
 
+class TestSettingsReadEndpoint:
+    def test_get_settings_returns_active_config(self, client, db_session):
+        resp = client.get("/api/settings")
+        assert resp.status_code == 200
+        data = resp.json()
+        # Field inti tersedia untuk panel settings
+        assert "embedding_model" in data
+        assert "display_name" in data
+        assert data["allowed_embedding_models"] == [
+            "all-MiniLM-L6-v2", "paraphrase-multilingual-MiniLM-L12-v2"
+        ]
+        # Nilai embedding model selalu dari allowlist (konsisten dengan POST)
+        assert data["embedding_model"] in data["allowed_embedding_models"]
+
+    def test_roundtrip_post_then_get(self, client, db_session):
+        model = "paraphrase-multilingual-MiniLM-L12-v2"
+        resp = client.post("/api/settings", data={"embedding_model": model})
+        assert resp.status_code == 200
+        got = client.get("/api/settings").json()
+        assert got["embedding_model"] == model
+        settings_service.set_embedding_model(db_session, "all-MiniLM-L6-v2")
+
+
 class TestProfileEndpoint:
     def test_profile_defaults(self, client, db_session):
         resp = client.get("/api/profile")

@@ -149,3 +149,15 @@ def backup_path_for(filename: str) -> Optional[str]:
         return None
     fpath = os.path.join(config.BACKUPS_DIR, safe)
     return fpath if os.path.isfile(fpath) else None
+
+
+def delete_backup(filename: str) -> bool:
+    """Hapus satu arsip backup. Return False bila nama tidak valid / tidak ada."""
+    fpath = backup_path_for(filename)
+    if not fpath:
+        return False
+    try:
+        os.remove(fpath)
+        return True
+    except OSError:
+        return False

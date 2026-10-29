@@ -65,6 +65,7 @@ def test_completed_session_detail_reports_submitted(db_session, make_subject):
         score=0,
         total_questions=1,
         submitted_at=datetime(2026, 10, 23, 7, 0, 0),
+        evaluation_json=json.dumps({"score": 0}),
         questions_json=json.dumps(questions, ensure_ascii=False),
         answers_json=json.dumps({"1": "true"}),
     )
@@ -76,3 +77,26 @@ def test_completed_session_detail_reports_submitted(db_session, make_subject):
 
     assert detail["status"] == "completed"
     assert detail["submitted"] is True
+    assert detail["evaluating"] is False
+
+
+def test_session_detail_reports_evaluation_in_progress(db_session, make_subject):
+    subject = make_subject("Kimia")
+    sess = ExamSession(
+        subject_id=subject.id,
+        status="active",
+        submitted_at=datetime(2026, 10, 23, 8, 0, 0),
+        questions_json=json.dumps({"questions": [{"id": 1, "type": "mcq"}]}),
+        answers_json=json.dumps({"1": "A"}),
+    )
+    db_session.add(sess)
+    db_session.commit()
+    db_session.refresh(sess)
+
+    detail = exam_service.get_session_detail(db_session, sess.id)
+
+    assert detail["submitted"] is False
+    assert detail["evaluating"] is True
+    listed_session = exam_service.get_unified_sessions(db_session, subject.id)[0]
+    assert listed_session["submitted"] is False
+    assert listed_session["evaluating"] is True

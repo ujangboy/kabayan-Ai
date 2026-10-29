@@ -83,14 +83,16 @@ function PendingBanner({ t }) {
             : t('appLayout.aiProcessingMultiple', { count: ops.length })}
         </span>
         <span className="text-warning/70">·</span>
-        <button
-          onClick={() => handleCancel(ops[0])}
-          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md border border-warning/40 hover:bg-warning/20 transition-colors"
-          aria-label={t('appLayout.opCancel')}
-        >
-          <Icon name={ICONS.actions.close} size={11} />
-          {t('appLayout.opCancel')}
-        </button>
+        {ops[0].kind !== 'exam' && (
+          <button
+            onClick={() => handleCancel(ops[0])}
+            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md border border-warning/40 hover:bg-warning/20 transition-colors"
+            aria-label={t('appLayout.opCancel')}
+          >
+            <Icon name={ICONS.actions.close} size={11} />
+            {t('appLayout.opCancel')}
+          </button>
+        )}
       </motion.div>
     </AnimatePresence>
   );
@@ -163,18 +165,12 @@ export default function AppLayout() {
           {location.pathname !== '/notebook' && <Breadcrumbs />}
           <div className="flex-1 overflow-hidden flex flex-col min-w-0">
             <PendingBanner t={t} />
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={location.pathname}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.22, ease: [0.32, 0.72, 0, 1] }}
-                className="flex-1 flex flex-col min-w-0 overflow-hidden"
-              >
-                <Outlet />
-              </motion.div>
-            </AnimatePresence>
+            {/* Tanpa animasi keluar/masuk: AnimatePresence mode="wait" bisa
+                membekukan kontainer di state exit saat chunk lazy terlambat
+                mount — halaman tampil kosong walau sudah ter-render. */}
+            <div key={location.pathname} className="flex-1 flex flex-col min-w-0 overflow-hidden">
+              <Outlet />
+            </div>
           </div>
         </main>
         <AnimatePresence>{searchOpen && <CommandSearch />}</AnimatePresence>

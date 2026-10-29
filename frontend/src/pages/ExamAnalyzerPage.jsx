@@ -113,6 +113,21 @@ export default function ExamAnalyzerPage() {
         if (qid != null) {
           sessionsAPI.detail(qid).then((d) => {
             const st = d.data?.status || 'active';
+            if (d.data?.evaluation) {
+              setSessionData({ ...d.data, session_id: qid });
+              setEvalData(d.data.evaluation);
+              setView((v) => (v === VIEW.QUIZ ? VIEW.RESULT : v));
+              clear();
+              return;
+            }
+            if (d.data?.evaluating) {
+              setSessionData((prev) => ({
+                ...(prev || {}),
+                ...d.data,
+                session_id: qid,
+                evaluating: true,
+              }));
+            }
             if (st !== 'active' || d.data?.submitted) {
               setView((v) => (v === VIEW.QUIZ ? VIEW.HISTORY : v));
               setSessionData((prev) => (prev && (prev.session_id || prev.id) === qid ? null : prev));
@@ -218,6 +233,13 @@ export default function ExamAnalyzerPage() {
     queryClient.invalidateQueries({ queryKey: ['exam-sessions', subjectId] });
     go(VIEW.RESULT);
   };
+  const handleEvaluationStateChange = (evaluating, answersSnapshot) => {
+    setSessionData((prev) => prev ? {
+      ...prev,
+      evaluating,
+      ...(answersSnapshot ? { answers: answersSnapshot } : {}),
+    } : prev);
+  };
 
   // ── Modal handlers (Config + Blueprint sebagai modal/drawer) ──
   const clearAll = () => { setAnalysis(null); setBlueprint(null); setSessionData(null); setEvalData(null); setGenerating(null); setQuizClockStart(null); setRecommend(null); setConfigOpen(false); setBlueprintModal(null); clear(); };
@@ -313,6 +335,11 @@ export default function ExamAnalyzerPage() {
   const handleResumeActive = async (session) => {
     try {
       const d = (await sessionsAPI.detail(session.id)).data;
+      if (d?.evaluating) {
+        queryClient.invalidateQueries({ queryKey: ['exam-sessions', subjectId] });
+        toast.info(t('exam.history.evaluating'));
+        return;
+      }
       if (!d || (d.status || 'active') !== 'active' || d.submitted) {
         queryClient.invalidateQueries({ queryKey: ['exam-sessions', subjectId] });
         toast.info(t('exam.history.resumeUnavailable'));
@@ -391,7 +418,7 @@ export default function ExamAnalyzerPage() {
           >
             {view === VIEW.DASHBOARD  && <DashboardView subjectId={subjectId} subjects={subjects} analysis={analysis} onAnalysisDone={handleAnalysisDone} onStartConfig={() => openConfig(subjectId)} />}
             {view === VIEW.HISTORY    && <HistoryView subjectId={subjectId} subjects={subjects} onSelectSubject={(id) => { setSubjectId(id); go(VIEW.HISTORY); }} onStartConfig={(id) => openConfig(id)} onRetry={handleRetry} onResume={(sd) => { setSessionData(sd); setQuizClockStart(Date.now()); go(VIEW.QUIZ); }} onResumeActive={handleResumeActive} detailId={detailId} setDetailId={setDetailId} pendingPlanTab={pendingPlanTab} setPendingPlanTab={setPendingPlanTab} />}
-            {view === VIEW.QUIZ       && <QuizView sessionData={sessionData} clockStart={quizClockStart} onDone={handleEvalDone} />}
+            {view === VIEW.QUIZ       && <QuizView sessionData={sessionData} clockStart={quizClockStart} onDone={handleEvalDone} onEvaluationStateChange={handleEvaluationStateChange} />}
             {view === VIEW.RESULT     && <ResultView evalData={evalData} onReview={() => go(VIEW.REVIEW)} onFinish={() => { queryClient.invalidateQueries({ queryKey: ['exam-sessions', subjectId] }); clearAll(); go(VIEW.HISTORY); }} sessionId={sessionData?.session_id} onOpenPlanTab={() => { setPendingPlanTab(true); setDetailId(sessionData?.session_id); }} subjectName={sessionData?.subject_name || ''} />}
             {view === VIEW.REVIEW     && <ReviewView sessionData={sessionData} evalData={evalData} />}
           </motion.div>

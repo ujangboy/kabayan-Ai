@@ -304,6 +304,7 @@ async def generate_flashcards(
             title=_derive_deck_title(materials),
             material_ids=req.material_ids or None,
             batch_id=req.batch_id or None,
+            difficulty=req.difficulty or "sedang",
         )
         return JSONResponse({
             "status": "success",

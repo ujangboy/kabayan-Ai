@@ -90,3 +90,48 @@ def test_get_unified_sessions_with_study_plan_does_not_crash(db_session, make_su
     assert sessions[0]["study_plan_progress"] == plan.progress
     assert sessions[0]["study_plan_items"][0]["material_names"] == []
 
+
+def test_generate_questions_honors_mcq_only(db_session, make_subject, monkeypatch):
+    """Blueprint 'Pilihan Ganda' tidak boleh terisi tipe lain walau AI mengembalikan campuran."""
+    import json
+
+    subject = make_subject("Aljabar Linear")
+    bp = ExamBlueprint(
+        subject_id=subject.id,
+        title="UTS Aljabar",
+        exam_type="uts",
+        difficulty="menengah",
+        total_questions=2,
+        duration_minutes=60,
+        question_type="mcq",
+        blueprint_json=json.dumps({
+            "title": "UTS Aljabar",
+            "blueprint_items": [
+                {"topic": "Matriks", "question_count": 2, "question_types": ["mcq"]},
+            ],
+        }),
+    )
+    db_session.add(bp)
+    db_session.commit()
+    db_session.refresh(bp)
+
+    mixed_batch = [
+        {"type": "mcq", "topic": "Matriks", "question": "Apa itu matriks?",
+         "options": {"A": "Tabel angka", "B": "Bilangan"}, "answer": "A"},
+        {"type": "mcq", "topic": "Matriks", "question": "Ordo matriks 2 baris 2 kolom?",
+         "options": {"A": "2x2", "B": "4x4"}, "answer": "A"},
+        {"type": "essay", "topic": "Matriks", "question": "Jelaskan determinan.", "answer": "..."},
+    ]
+
+    monkeypatch.setattr(exam_service, "_exam_context", lambda *a, **k: "konteks materi")
+    monkeypatch.setattr(exam_service, "_bank_rows_for_subjects", lambda *a, **k: [])
+    monkeypatch.setattr(
+        exam_service, "_generate_ai_question_batch",
+        lambda *a, **k: [dict(q) for q in mixed_batch],
+    )
+
+    result = exam_service.generate_questions(db_session, bp.id)
+
+    assert result["questions"]
+    assert {q["type"] for q in result["questions"]} == {"mcq"}
+

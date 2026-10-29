@@ -15,7 +15,7 @@ from app import config
 from app.services.storage_cleanup_service import get_storage_usage
 from app.services.usage_service import get_usage
 from app.services.trash_service import get_trash_count
-from app.services.backup_service import create_backup, list_backups, backup_path_for
+from app.services.backup_service import create_backup, list_backups, backup_path_for, delete_backup
 from app.exceptions import AppError
 from app.schemas.common import StatusMessage
 from app.schemas.responses import UsageResponse
@@ -116,3 +116,11 @@ async def download_backup_archive(filename: str = Query(...)):
         media_type="application/zip",
         filename=os.path.basename(path),
     )
+
+
+@router.delete("/api/backup/delete", response_model=StatusMessage)
+async def delete_backup_archive(filename: str = Query(...)):
+    """Hapus satu arsip backup dari disk."""
+    if not delete_backup(filename):
+        return JSONResponse(status_code=404, content={"detail": "Backup tidak ditemukan."})
+    return JSONResponse({"status": "success", "message": "Backup dihapus."})

@@ -89,7 +89,7 @@ class TestFullChain:
         res = client.post(
             "/api/materials",
             data={"subject_id": str(subj.id)},
-            files={"file": ("bahan.txt", txt.encode("utf-8"), "text/plain")},
+            files={"files": ("bahan.txt", txt.encode("utf-8"), "text/plain")},
         )
         assert res.status_code == 200
 

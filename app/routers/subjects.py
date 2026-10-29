@@ -312,6 +312,14 @@ async def restore_subject(subject_id: int, db: Session = Depends(get_db)):
     return JSONResponse({"status": "success", "message": "Mata kuliah dipulihkan"})
 
 
+@router.post("/api/subjects/{subject_id}/delete-forever", response_model=StatusMessage)
+async def delete_subject_forever(subject_id: int, db: Session = Depends(get_db)):
+    """Hapus permanen mata kuliah dari sampah beserta seluruh data terkaitnya."""
+    if not subject_service.delete_forever(db, subject_id):
+        return JSONResponse(status_code=404, content={"detail": "Mata kuliah tidak ditemukan di sampah."})
+    return JSONResponse({"status": "success", "message": "Mata kuliah dihapus permanen"})
+
+
 @router.get("/api/subjects/{subject_id}/usage", response_model=dict)
 async def get_subject_usage(subject_id: int, db: Session = Depends(get_db)):
     """Hitung jumlah data yang akan ikut terhapus bila mata kuliah dihapus.

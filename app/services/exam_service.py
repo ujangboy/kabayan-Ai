@@ -500,6 +500,9 @@ class ExamService:
 
         blueprint_data = _load_blueprint_json(blueprint)
         raw_items = blueprint_data.get("blueprint_items", [])
+        # Tipe soal yang dipilih user wajib dipakai di SEMUA sumber soal
+        # (bank, batch AI, fallback pengisi). "mixed" = bebas campuran.
+        requested_qtype = normalize_type(blueprint.question_type or "mixed")
         target_total = max(
             1,
             int(blueprint.total_questions or sum(
@@ -535,6 +538,15 @@ class ExamService:
                 db.commit()
             return context
 
+        def keep_requested_type(questions: list[dict]) -> list[dict]:
+            # AI kadang mengembalikan tipe lain walau diminta satu tipe.
+            if requested_qtype == "mixed":
+                return questions
+            return [
+                q for q in questions
+                if normalize_type(q.get("type"), "mcq") == requested_qtype
+            ]
+
         for item in items:
             topic = item.get("topic", "Umum")
             needed = max(0, int(item.get("question_count", 0) or 0))
@@ -543,6 +555,8 @@ class ExamService:
             diff = item.get("difficulty", blueprint.difficulty)
             qtypes = item.get("question_types") or [blueprint.question_type]
             qtypes = [normalize_type(t) for t in qtypes if normalize_type(t) != "mixed"] or ["mcq"]
+            if requested_qtype != "mixed":
+                qtypes = [requested_qtype]
             bloom = item.get("bloom_level", blueprint.bloom_level)
             concepts = ", ".join(item.get("key_concepts", [topic]))
             default_type = qtypes[0] if len(qtypes) == 1 else "mcq"
@@ -572,7 +586,7 @@ class ExamService:
                 )
                 if not batch:
                     break
-                for question in batch:
+                for question in keep_requested_type(batch):
                     key = question_key(question)
                     if not key or key in seen_keys:
                         continue
@@ -584,7 +598,9 @@ class ExamService:
             # Masih kurang → ambil dari topik lain di bank (tetap unik).
             if len(topic_questions) < needed:
                 fallback_rows = self._bank_rows_for_subjects(
-                    db, subject_ids, limit=max(200, target_total * 10)
+                    db, subject_ids,
+                    question_type=None if requested_qtype == "mixed" else requested_qtype,
+                    limit=max(200, target_total * 10)
                 )
                 random.shuffle(fallback_rows)
                 fill = self._select_bank_questions(
@@ -610,13 +626,14 @@ class ExamService:
             missing = target_total - len(all_questions)
             batch = self._generate_ai_question_batch(
                 db, blueprint, ensure_context(),
-                topic="Campuran", count=missing, qtypes=["mixed"],
+                topic="Campuran", count=missing,
+                qtypes=["mixed"] if requested_qtype == "mixed" else [requested_qtype],
                 bloom=blueprint.bloom_level, difficulty=blueprint.difficulty,
                 key_concepts="campuran seluruh materi",
             )
             if not batch:
                 break
-            for question in batch:
+            for question in keep_requested_type(batch):
                 key = question_key(question)
                 if not key or key in seen_keys:
                     continue
@@ -628,7 +645,9 @@ class ExamService:
         # Terakhir, coba bank lintas topik tanpa filter.
         if len(all_questions) < target_total:
             fallback_rows = self._bank_rows_for_subjects(
-                db, subject_ids, limit=max(200, target_total * 10)
+                db, subject_ids,
+                question_type=None if requested_qtype == "mixed" else requested_qtype,
+                limit=max(200, target_total * 10)
             )
             random.shuffle(fallback_rows)
             fill = self._select_bank_questions(
@@ -641,12 +660,8 @@ class ExamService:
         if not all_questions:
             raise ValueError("Tidak ada soal tersedia. Pastikan materi sudah Ready lalu coba lagi.")
 
-        if len(all_questions) < target_total:
-            raise ValueError(
-                f"Baru {len(all_questions)} dari {target_total} soal yang berhasil disusun. "
-                "Tambahkan materi yang sudah Ready atau kurangi jumlah soal, lalu coba lagi."
-            )
-
+        # Maksimalkan: lanjutkan dengan soal yang berhasil disusun walaupun kurang
+        # dari target (mis. materi sedikit). User tetap mendapat ujian, bukan error.
         all_questions = all_questions[:target_total]
         if used_bank_ids:
             question_bank_repository.increment_used(db, list(used_bank_ids))
@@ -1316,7 +1331,10 @@ class ExamService:
             "overall_feedback": evaluation.get("overall_feedback", "") if evaluation else "",
             "performance_level": evaluation.get("performance_level", "") if evaluation else "",
             "material_names": material_names,
-            "submitted": s.submitted_at is not None,
+            # submitted_at is also used as an atomic claim while AI grading runs.
+            # Only completed data should be treated as submitted by clients.
+            "submitted": evaluation is not None or (s.status or "active") != "active",
+            "evaluating": s.submitted_at is not None and evaluation is None and (s.status or "active") == "active",
             "started_at": s.started_at.isoformat() if s.started_at else None,
             "submitted_at": s.submitted_at.isoformat() if s.submitted_at else None,
             **questions_data,
@@ -1411,6 +1429,12 @@ class ExamService:
                 "total_questions": s.total_questions,
                 "best_score": s.best_score, "latest_score": s.latest_score,
                 "grade": s.grade, "progress": s.progress, "status": s.status or "active",
+                "submitted": bool(s.evaluation_json) or (s.status or "active") != "active",
+                "evaluating": (
+                    s.submitted_at is not None
+                    and not s.evaluation_json
+                    and (s.status or "active") == "active"
+                ),
                 "weak_topics": _load_topics_json(s.weak_topics_json),
                 "strong_topics": _load_topics_json(s.strong_topics_json),
                 "attempt_count": len(attempts), "attempts": attempt_list,

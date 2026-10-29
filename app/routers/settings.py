@@ -11,6 +11,16 @@ router = APIRouter()
 # membuat loading model gagal saat dipakai (dan mengacaukan cache hash).
 ALLOWED_EMBEDDING_MODELS = {"all-MiniLM-L6-v2", "paraphrase-multilingual-MiniLM-L12-v2"}
 
+@router.get("/api/settings")
+async def get_settings(db: Session = Depends(get_db)):
+    """Baca pengaturan aktif untuk panel Settings (baca-saja)."""
+    return JSONResponse({
+        "embedding_model": settings_service.get_embedding_model(db),
+        "allowed_embedding_models": sorted(ALLOWED_EMBEDDING_MODELS),
+        "display_name": settings_service.get_display_name(db),
+        "language": settings_service.get_language(db),
+    })
+
 @router.post("/api/settings", response_model=StatusMessage)
 async def save_settings(
     embedding_model: str = Form(..., max_length=120),

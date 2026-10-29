@@ -3,6 +3,11 @@ from langchain_core.prompts import PromptTemplate
 FLASHCARD_PROMPT_TEMPLATE = """Hasilkan TEPAT {count} flashcard dari teks berikut — tidak kurang, tidak lebih. \
 Jika variasi konsep tidak cukup, ambil sudut pandang berbeda (definisi, contoh, penerapan, perbandingan).
 
+TINGKAT KESULITAN: {difficulty}
+- mudah: pertanyaan definisi/ingatan sederhana, jawaban singkat 1-2 kalimat.
+- sedang: pertanyaan pemahaman & penerapan konsep, jawaban 2-3 kalimat dengan contoh.
+- sulit: pertanyaan analisis/perbandingan/multi-langkah, jawaban mendalam 3-4 kalimat.
+
 ATURAN WAJIB:
 1. Pertanyaan natural dan spesifik, bukan pernyataan yang hanya diganti tanda tanya.
 2. Jawaban singkat, alami, mudah dipahami; tebalkan istilah penting dengan **bold**.
@@ -20,6 +25,6 @@ Teks:
 {context}"""
 
 FLASHCARD_PROMPT = PromptTemplate(
-    input_variables=["context", "count"],
+    input_variables=["context", "count", "difficulty"],
     template=FLASHCARD_PROMPT_TEMPLATE
 )
