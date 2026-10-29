@@ -18,6 +18,13 @@ export default function MessageBubble({ message, isLast, tutorMode, onFeedback, 
     return (
       <div className="flex justify-end group">
         <div className="relative max-w-[75%]">
+          {message.attachment?.url && (
+            <img
+              src={message.attachment.url}
+              alt={message.attachment.name || ''}
+              className="max-w-full h-auto rounded-lg mb-1.5 max-h-64 shadow-sm"
+            />
+          )}
           <div className="rounded-2xl rounded-br-md bg-primary-solid text-primary-foreground px-4 py-2.5 text-15 leading-relaxed shadow-sm whitespace-pre-wrap">
             {message.content}
           </div>
@@ -30,7 +37,7 @@ export default function MessageBubble({ message, isLast, tutorMode, onFeedback, 
   }
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2" aria-busy={isAssistant && isStreaming && isLast ? 'true' : undefined}>
       <div className="flex items-start gap-3">
         {tutorMode ? (
           <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center text-white text-xs font-bold shrink-0 shadow-sm ring-1 ring-black/10">

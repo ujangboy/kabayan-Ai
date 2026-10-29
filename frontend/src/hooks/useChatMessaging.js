@@ -17,25 +17,26 @@ export function useChatMessaging() {
   const [isNoteSaving, setIsNoteSaving] = useState(false);
   const isNoteSavingRef = useRef(false);
 
-  const sendMessage = async (text) => {
+  const sendMessage = async (text, attachment = null) => {
     const state = useChatStore.getState();
     const chat = state.getCurrentChat();
     const chatId = chat?.id;
-    const trimmed = text.trim();
-    if (!trimmed || !chatId) return;
+    const trimmed = (text || '').trim();
+    if ((!trimmed && !attachment) || !chatId) return;
     const isTutor = !!chat?.tutorEnabled;
     const { addMessage, updateLastMessage, patchLastMessage, setStreaming, selectedDocs } = state;
 
     const newMsg = {
       id: `temp-${Date.now()}`,
       role: 'user',
-      content: trimmed,
+      content: trimmed || t('chat.imagePlaceholder'),
+      ...(attachment ? { attachment: { url: attachment.url, name: attachment.name } } : {}),
       created_at: new Date().toISOString(),
     };
     const assistantPlaceholder = {
       id: `temp-${Date.now()}-a`,
       role: 'assistant',
-      content: '',
+      content: attachment ? t('chat.readingImage') : '',
       created_at: new Date().toISOString(),
     };
     addMessage(chatId, newMsg);
@@ -53,7 +54,33 @@ export function useChatMessaging() {
     setStreaming(true, chatId);
     try {
       const history = (chat.messages || []).map((m) => ({ role: m.role, content: m.content }));
-      if (isTutor) {
+      if (attachment) {
+        // Vision: lampiran gambar → 1 panggilan POST /api/chat/vision (bukan stream).
+        const formData = new FormData();
+        formData.append('session_id', String(chatId));
+        formData.append('message', trimmed);
+        formData.append('file', attachment.file, attachment.file?.name || attachment.name);
+
+        const visionController = new AbortController();
+        useJobStore.getState().setController(jobKey, visionController);
+        const res = await fetch('/api/chat/vision', {
+          method: 'POST',
+          body: formData,
+          signal: visionController.signal,
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(
+            typeof data?.detail === 'string' ? data.detail : t('chat.visionFailed'),
+          );
+        }
+        const data = await res.json();
+        const markdown = data.transcription
+          ? `**Teks yang saya baca:**\n> ${String(data.transcription).replace(/\n/g, '\n> ')}\n\n**Jawaban:**\n${data.answer}`
+          : `**Jawaban:**\n${data.answer}`;
+        updateLastMessage(chatId, markdown);
+        if (data.msg_id) patchLastMessage(chatId, { msgId: data.msg_id });
+      } else if (isTutor) {
         await streamChat({
           chatId,
           endpoint: '/api/tutor/chat',

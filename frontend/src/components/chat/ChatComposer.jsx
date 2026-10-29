@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ICONS } from '@/lib/icons';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -15,19 +15,30 @@ const QUICK_PROMPTS = [
 ];
 
 const MAX_TEXTAREA_HEIGHT = 144;
+// Paritas dengan CHAT_IMAGE_MAX_MB backend (app/config.py).
+const MAX_IMAGE_MB = 10;
 
 export default function ChatComposer({ onSend, isStreaming, onStop, tutorMode, onSaveNote, isNoteSaving }) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const [input, setInput] = useState('');
   const [showQuickPrompts, setShowQuickPrompts] = useState(false);
+  const [attachment, setAttachment] = useState(null);  // {file, name, url}
+  const [attachError, setAttachError] = useState('');
   const textareaRef = useRef(null);
   const fileInputRef = useRef(null);
 
+  useEffect(() => () => {
+    if (attachment?.url) URL.revokeObjectURL(attachment.url);
+  }, []);  // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleSend = () => {
     const text = input;
-    if (!text.trim()) return;
-    onSend(text);
+    if (!text.trim() && !attachment) return;
+    onSend(text, attachment);
+    if (attachment?.url) URL.revokeObjectURL(attachment.url);
+    setAttachment(null);
+    setAttachError('');
     setInput('');
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
@@ -51,15 +62,41 @@ export default function ChatComposer({ onSend, isStreaming, onStop, tutorMode, o
     el.style.overflowY = el.scrollHeight > MAX_TEXTAREA_HEIGHT ? 'auto' : 'hidden';
   };
 
+  const removeAttachment = () => {
+    if (attachment?.url) URL.revokeObjectURL(attachment.url);
+    setAttachment(null);
+    setAttachError('');
+  };
+
   const handleAttach = () => {
     if (fileInputRef.current) fileInputRef.current.click();
-    else toast.info('Fitur lampiran segera hadir');
+  };
+
+  const isAllowedType = (file) => {
+    const type = (file.type || '').toLowerCase();
+    const name = (file.name || '').toLowerCase();
+    return (
+      ['image/jpeg', 'image/png', 'image/webp'].includes(type) ||
+      (!type && /\.(jpe?g|png|webp)$/.test(name))
+    );
   };
 
   const handleFileChange = (e) => {
     const file = e.target.files?.[0];
-    if (file) toast.info(`Lampiran "${file.name}" segera hadir — backend belum mendukung upload di chat.`);
     e.target.value = '';
+    setAttachError('');
+    if (!file) return;
+    if (!isAllowedType(file)) {
+      setAttachError(t('chat.invalidImageType'));
+      return;
+    }
+    if (file.size > MAX_IMAGE_MB * 1024 * 1024) {
+      setAttachError(t('chat.imageTooLarge'));
+      return;
+    }
+    // jsdom tidak punya createObjectURL — preview screenshot di test pakai nama file saja.
+    const url = typeof URL.createObjectURL === 'function' ? URL.createObjectURL(file) : null;
+    setAttachment({ file, name: file.name, url });
   };
 
   return (
@@ -122,6 +159,42 @@ export default function ChatComposer({ onSend, isStreaming, onStop, tutorMode, o
         )}
       </AnimatePresence>
 
+      {/* Strip preview lampiran (di atas kotak composer) */}
+      {(attachment || attachError) && (
+        <div className="mb-2">
+          {attachment && (
+            <div className="flex items-center gap-3 rounded-xl border border-border bg-popover px-2.5 py-2 shadow-card">
+              {attachment.url ? (
+                <img
+                  src={attachment.url}
+                  alt=""
+                  className="h-12 w-12 rounded-lg object-cover shrink-0"
+                />
+              ) : (
+                <span className="h-12 w-12 rounded-lg bg-card-hover flex items-center justify-center shrink-0">
+                  <Icon name={ICONS.ui.camera} size={18} className="text-text-secondary" />
+                </span>
+              )}
+              <span className="flex-1 min-w-0 truncate text-2xs text-text-secondary">
+                {attachment.name}
+              </span>
+              <button
+                onClick={removeAttachment}
+                className="flex h-11 w-11 items-center justify-center rounded-full text-text-secondary hover:bg-card-hover hover:text-text transition-all duration-150 shrink-0"
+                aria-label={t('chat.removeAttachment')}
+              >
+                <Icon name={ICONS.ui.close} size={16} />
+              </button>
+            </div>
+          )}
+          {attachError && (
+            <p role="alert" className="mt-1.5 text-2xs text-danger flex items-center gap-1.5">
+              {attachError}
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Main composer box */}
       <div className={cn(
         'flex items-end gap-2 rounded-2xl border shadow-card px-2.5 py-2 transition-all duration-200',
@@ -144,17 +217,32 @@ export default function ChatComposer({ onSend, isStreaming, onStop, tutorMode, o
           </button>
         </Tooltip>
 
-        {/* Paperclip attachment */}
-        <Tooltip label={t('chat.attachFile', 'Lampiran')}>
-          <button
-            onClick={handleAttach}
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-card-hover text-text-secondary hover:text-text transition-all duration-150 shrink-0 mb-1"
-            aria-label={t('chat.attachFile', 'Lampiran')}
-          >
-            <Icon name={ICONS.communication.attach} size={16} />
-          </button>
-        </Tooltip>
-        <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileChange} />
+        {/* Paperclip attachment (hidden di mode Tutor — v1 vision hanya mode normal) */}
+        {!tutorMode && (
+          <>
+            <Tooltip label={t('chat.attachImage')}>
+              <button
+                onClick={handleAttach}
+                className={cn(
+                  "flex h-8 w-8 items-center justify-center rounded-full transition-all duration-150 shrink-0 mb-1",
+                  attachment
+                    ? "bg-primary/10 text-primary-light"
+                    : "bg-card-hover text-text-secondary hover:text-text"
+                )}
+                aria-label={t('chat.attachImage')}
+              >
+                <Icon name={ICONS.communication.attach} size={16} />
+              </button>
+            </Tooltip>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="hidden"
+              onChange={handleFileChange}
+            />
+          </>
+        )}
 
         {/* Auto-growing textarea */}
         <div className="flex-1 min-w-0 flex items-end gap-1.5">
@@ -196,7 +284,7 @@ export default function ChatComposer({ onSend, isStreaming, onStop, tutorMode, o
               exit={{ scale: 0.8, opacity: 0 }}
               transition={{ duration: 0.15 }}
               onClick={handleSend}
-              disabled={!input.trim()}
+              disabled={!input.trim() && !attachment}
               whileTap={{ scale: 0.9 }}
               className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-solid text-white hover:bg-primary-solid-hover disabled:opacity-35 disabled:cursor-not-allowed transition-all duration-150 shrink-0 mb-1 shadow-card"
               aria-label={t('chat.send')}
