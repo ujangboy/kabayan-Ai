@@ -1,3 +1,4 @@
+import json
 import time
 import re
 import threading
@@ -9,9 +10,11 @@ from pydantic import BaseModel
 from typing import Dict, Any, List, Optional as Opt, Type
 from app import config
 from app.database import SessionLocal
+from app import database
 from app.services.cache_service import cache_service
 from app.services.settings_service import settings_service
 from app.services.usage_service import record_usage
+from app.exceptions import AppError
 
 logger = logging.getLogger(__name__)
 
@@ -147,7 +150,7 @@ global_rate_limiter = InternalRateLimiter()
 class CapabilityRouter:
     CAPABILITIES = {
         "chat":          config.GROQ_MODEL,
-        "vision":        "meta-llama/llama-4-scout-17b-16e-instruct",
+        "vision":        config.GROQ_VISION_MODEL,
         "reasoning":     config.GROQ_MODEL,
         "summary":       config.GROQ_MODEL,
         "quiz":          config.GROQ_MODEL,
@@ -416,6 +419,87 @@ class AIService:
             await asyncio.to_thread(record_usage, rec_db, "chat", full_response, prompt_str)
         finally:
             rec_db.close()
+
+    # ─── Vision (lampiran gambar di chat) ────────────────────────────────────
+    def _get_groq_client(self):
+        """Client groq SDK langsung (bukan ChatGroq) — visi multimodal lebih
+        stabil. Factory terpisah agar test bisa mem-patch."""
+        from groq import Groq
+
+        return Groq(api_key=config.GROQ_API_KEY, timeout=60.0, max_retries=2)
+
+    def vision_read(self, user_text: str, data_url: str) -> dict:
+        """Baca gambar + jawab pertanyaan user → {transcription, answer}.
+
+        Tanpa cache (gambar unik) & tanpa history/RAG — hemat kuota TPM.
+        """
+        from app.prompts.chat import VISION_PROMPT
+
+        global_rate_limiter.check_limit("vision")
+        prompt_str = VISION_PROMPT.format(pertanyaan=user_text)
+        messages = [{
+            "role": "user",
+            "content": [
+                {"type": "text", "text": prompt_str},
+                {"type": "image_url", "image_url": {"url": data_url}},
+            ],
+        }]
+
+        def _call():
+            client = self._get_groq_client()
+            return client.chat.completions.create(
+                model=CapabilityRouter.get_model("vision"),
+                messages=messages,
+                temperature=0.2,
+                max_tokens=CAPABILITY_MAX_TOKENS.get("vision", DEFAULT_MAX_TOKENS),
+                response_format={"type": "json_object"},
+                extra_body={"reasoning_effort": "none"},
+            )
+
+        try:
+            resp = _retry_with_backoff(_call)
+        except Exception as e:
+            err = str(e).lower()
+            if "401" in err or "authentication" in err or "invalid api key" in err:
+                raise AppError(
+                    "Groq API key tidak valid. Periksa file .env lalu restart backend.",
+                    status_code=401,
+                )
+            if "429" in err or "rate limit" in err:
+                raise AppError(
+                    "Kuota gratis Groq penuh (sekitar 1 gambar per menit). "
+                    "Tunggu sebentar lalu coba lagi.",
+                    status_code=429,
+                )
+            if any(x in err for x in ["timeout", "connection", "502", "503", "504"]):
+                raise AppError(
+                    "Koneksi ke Groq API terputus. Coba kirim ulang gambarnya.",
+                    status_code=502,
+                )
+            logger.error("[VISION_ERROR] %s", e)
+            raise AppError("Gagal membaca gambar. Silakan coba lagi.", status_code=500)
+
+        content = (resp.choices[0].message.content or "").strip()
+        transcription, answer = "", content
+        m = re.search(r"\{.*\}", content, re.DOTALL)
+        if m:
+            try:
+                parsed = json.loads(m.group(0))
+                transcription = str(parsed.get("transcription", "")).strip()
+                _answer = str(parsed.get("answer", "")).strip()
+                answer = _answer or content
+            except Exception:
+                logger.warning("[VISION] JSON hasil vision gagal diparse, pakai teks mentah.")
+
+        # Logging pemakaian non-fatal; session sendiri agar tak tertahan.
+        # Akses via atribut modul agar patch test (database.SessionLocal) berlaku.
+        rec_db = database.SessionLocal()
+        try:
+            record_usage(rec_db, "vision", content, prompt_str)
+        finally:
+            rec_db.close()
+
+        return {"transcription": transcription, "answer": answer}
 
 
 ai_service = AIService()

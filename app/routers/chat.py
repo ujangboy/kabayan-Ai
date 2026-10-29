@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, BackgroundTasks
+from fastapi import APIRouter, Depends, BackgroundTasks, Form, File, UploadFile
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from typing import List, Optional
@@ -186,6 +186,65 @@ async def chat_endpoint(request: ChatRequest, db: Session = Depends(get_db)):
 class ExportRequest(BaseModel):
     content: str
     subject_id: Optional[int] = None
+
+
+@router.post("/api/chat/vision", response_model=dict)
+async def chat_vision_endpoint(
+    session_id: str = Form(...),
+    message: str = Form(""),
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+):
+    """Lampirkan gambar di chat → AI (vision Groq) membaca & menjawab.
+
+    Pola persist sama dengan stream_and_persist: pesan user disimpan dengan
+    session request (lalu ditutup SEBELUM panggilan AI), pesan assistant
+    disimpan dengan session baru agar koneksi pool SQLite tidak ditahan.
+    """
+    try:
+        from app.services.ai_service import ai_service
+        from app.services.image_service import prepare_image
+
+        raw = await file.read()
+        data_url = prepare_image(raw)
+
+        user_text = (message or "").strip() or "Apa isi gambar ini?"
+
+        chat = chat_repository.get_or_create_by_uuid(db, session_id)
+        chat_id = chat.id
+        chat_repository.add_message(db, chat_id, "user", user_text)
+        db.commit()
+        db.close()  # lepaskan koneksi pool sebelum panggilan AI (pola lama)
+
+        result = ai_service.vision_read(user_text, data_url)
+
+        markdown = (
+            "**Teks yang saya baca:**\n> "
+            + result["transcription"].replace("\n", "\n> ")
+            + "\n\n**Jawaban:**\n" + result["answer"]
+        )
+
+        persist_db = database.SessionLocal()
+        try:
+            msg = chat_repository.add_message(persist_db, chat_id, "assistant", markdown)
+            persist_db.commit()
+            msg_id = msg.id
+        except Exception:
+            persist_db.rollback()
+            msg_id = 0
+        finally:
+            persist_db.close()
+
+        return {
+            "transcription": result["transcription"],
+            "answer": result["answer"],
+            "chat_id": chat_id,
+            "msg_id": msg_id,
+        }
+    except AppError as e:
+        return JSONResponse(status_code=e.status_code, content={"detail": e.message})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"detail": f"Gagal memproses gambar: {e}"})
 
 @router.post("/api/export/note", response_model=StatusMessage)
 async def export_note(request: ExportRequest, db: Session = Depends(get_db)):

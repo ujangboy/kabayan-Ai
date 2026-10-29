@@ -31,6 +31,14 @@ elif not re.fullmatch(r"gsk_[A-Za-z0-9]{20,}", GROQ_API_KEY):
 # (ringan, respons bersih tanpa blok <think>). Cek model via groq models.list().
 GROQ_MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-20b")
 
+# Model vision (baca gambar di chat). Per Okt 2026 model aktif Groq adalah
+# qwen3-vision; llama-4-scout sudah deprecated (lihat docs/PROTECTED_BASELINE.md §4).
+GROQ_VISION_MODEL = os.getenv("GROQ_VISION_MODEL", "qwen/qwen3.8-27b")
+
+# Lampiran gambar di chat: batas ukuran & sisi-terpanjang sebelum dikirim ke model.
+CHAT_IMAGE_MAX_MB = 10
+CHAT_IMAGE_MAX_DIM = 2048
+
 # We use sentence-transformers locally for embeddings
 EMBEDDING_MODEL = "all-MiniLM-L6-v2"
 TEMPERATURE = 0.2
