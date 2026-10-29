@@ -36,7 +36,8 @@ export default function ChatComposer({ onSend, isStreaming, onStop, tutorMode, o
     const text = input;
     if (!text.trim() && !attachment) return;
     onSend(text, attachment);
-    if (attachment?.url) URL.revokeObjectURL(attachment.url);
+    // objectURL TIDAK di-revoke di sini — kepemilikan pindah ke bubble user
+    // (MessageBubble) agar thumbnail tetap tampil sampai composer dimount ulang.
     setAttachment(null);
     setAttachError('');
     setInput('');
@@ -96,6 +97,7 @@ export default function ChatComposer({ onSend, isStreaming, onStop, tutorMode, o
     }
     // jsdom tidak punya createObjectURL — preview screenshot di test pakai nama file saja.
     const url = typeof URL.createObjectURL === 'function' ? URL.createObjectURL(file) : null;
+    if (attachment?.url) URL.revokeObjectURL(attachment.url); // ganti lampiran → lepaskan URL lama
     setAttachment({ file, name: file.name, url });
   };
 
