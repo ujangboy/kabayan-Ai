@@ -1,5 +1,7 @@
+import os
 from typing import Optional
 
+from app import config
 from app.repositories.settings_repository import setting_repository
 from sqlalchemy.orm import Session
 
@@ -9,7 +11,23 @@ SETTING_KEY_DISPLAY_NAME = "profile.display_name"
 SETTING_KEY_PHOTO_PATH = "profile.photo_path"
 SETTING_KEY_LANGUAGE = "app.language"
 APP_DEFAULT_LANGUAGE = "id"
-APP_VERSION = "0.1.1"
+
+
+def _read_app_version() -> str:
+    """Versi aplikasi = satu-satunya sumber kebenaran di version.txt root
+    (di-sync release-please bersama frontend/package.json)."""
+    try:
+        with open(os.path.join(config.BASE_DIR, "version.txt"), encoding="utf-8") as f:
+            v = f.read().strip()
+        if v:
+            return v
+    except OSError:
+        # Aman: develop manual tanpa version.txt tetap dapat fallback.
+        pass
+    return "0.1.1"
+
+
+APP_VERSION = _read_app_version()
 
 
 class SettingsService:

@@ -96,7 +96,7 @@ setelah migrasi feature-based):**
 ```python
 CAPABILITIES = {
     "chat": "openai/gpt-oss-20b",
-    "vision": "meta-llama/llama-4-scout-17b-16e-instruct",
+    "vision": "qwen/qwen3.8-27b",
     "reasoning": "openai/gpt-oss-120b",
     "summary": "openai/gpt-oss-120b",
     "quiz": "openai/gpt-oss-120b",
@@ -104,6 +104,11 @@ CAPABILITIES = {
     "prediction": "openai/gpt-oss-120b"
 }
 ```
+
+**Pembaruan Oct 2026 — vision:** `llama-4-scout` sudah DEPRECATED di Groq;
+vision sekarang wajib `qwen/qwen3.8-27b` (default `config.GROQ_VISION_MODEL`,
+dipakai `POST /api/chat/vision` via groq SDK langsung, JSON mode
+`reasoning_effort="none"`). JANGAN kembali ke llama-4-scout.
 
 **JANGAN PERNAH balik ke:** `llama-3.3-70b-versatile`,
 `llama-3.2-90b-vision-preview`, atau `deepseek-r1-distill-llama-70b` —
