@@ -97,11 +97,11 @@ export const notesAPI = {
   },
   generate: (payload, config) => api.post('/notes/generate', payload, {
     headers: { 'Content-Type': 'application/json' },
-    timeout: 120000,
+    timeout: 300000,
     ...config,
   }),
-  detectContext: (history) => api.post('/notebook/detect-context', { history }),
-  generateTitle: (content) => api.post('/notebook/generate-title', { content }),
+  detectContext: (history) => api.post('/notebook/detect-context', { history }, { timeout: 120000 }),
+  generateTitle: (content) => api.post('/notebook/generate-title', { content }, { timeout: 120000 }),
   delete: (id) => api.post(`/notes/${id}/delete`),
   clear: () => api.post('/notes/clear'),
   rename: (id, title) => api.put(`/notes/${id}/rename`,
@@ -121,7 +121,7 @@ export const flashcardAPI = {
   delete: (id) => api.post(`/flashcards/${id}/delete`),
   batchDelete: (ids) => api.post('/flashcards/batch-delete', { ids }).then(r => r.data),
   clear: () => api.post('/flashcards/clear'),
-  generate: (payload, config) => api.post('/flashcards/generate', payload, config).then(r => r.data),
+  generate: (payload, config) => api.post('/flashcards/generate', payload, { timeout: 300000, ...config }).then(r => r.data),
   review: (flashcardId, rating, responseTimeMs) => api.post('/flashcards/review', {
     flashcard_id: flashcardId,
     rating,
@@ -135,7 +135,7 @@ export const flashcardAPI = {
 export const quizAPI = {
   getAll: () => api.get('/quizzes'),
   getQuestions: (id) => api.get(`/quizzes/${id}/questions`),
-  generate: (payload, config) => api.post('/quizzes/generate', payload, config).then(r => r.data),
+  generate: (payload, config) => api.post('/quizzes/generate', payload, { timeout: 300000, ...config }).then(r => r.data),
   saveScore: (id, score) => api.post(`/quizzes/${id}/score`,
     new URLSearchParams({ score: String(score) }).toString(),
     { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
