@@ -264,7 +264,7 @@ def _derive_deck_title(materials):
     return re.sub(r'\s+', ' ', stem).strip() or base
 
 @router.post("/api/flashcards/generate", response_model=dict)
-async def generate_flashcards(
+def generate_flashcards(
     req: GenerateFlashcardRequest,
     db: Session = Depends(get_db)
 ):

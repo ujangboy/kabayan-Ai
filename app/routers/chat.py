@@ -192,7 +192,7 @@ class ExportRequest(BaseModel):
 
 
 @router.post("/api/chat/vision", response_model=dict)
-async def chat_vision_endpoint(
+def chat_vision_endpoint(
     session_id: str = Form(...),
     message: str = Form(""),
     file: UploadFile = File(...),
@@ -215,7 +215,7 @@ async def chat_vision_endpoint(
                 f"Ukuran gambar terlalu besar (maksimal {config.CHAT_IMAGE_MAX_MB} MB).",
                 status_code=400,
             )
-        raw = await file.read()
+        raw = file.file.read()
         data_url = prepare_image(raw)
 
         user_text = (message or "").strip() or "Apa isi gambar ini?"
@@ -276,7 +276,7 @@ async def export_note(request: ExportRequest, db: Session = Depends(get_db)):
         raise AppError(str(e), status_code=500)
 
 @router.post("/api/export/flashcards", response_model=StatusMessage)
-async def export_flashcards(request: ExportRequest, db: Session = Depends(get_db)):
+def export_flashcards(request: ExportRequest, db: Session = Depends(get_db)):
     try:
         count = flashcard_service.generate_flashcards(db, request.subject_id, request.content)
         return {"status": "success", "message": f"{count} Flashcard berhasil dibuat"}

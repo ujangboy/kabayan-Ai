@@ -102,7 +102,7 @@ async def get_quiz_questions(quiz_id: int, db: Session = Depends(get_db)):
 from app.schemas.generate import GenerateQuizRequest
 
 @router.post("/api/quizzes/generate", response_model=dict)
-async def generate_quiz(
+def generate_quiz(
     req: GenerateQuizRequest,
     db: Session = Depends(get_db)
 ):

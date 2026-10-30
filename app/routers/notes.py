@@ -89,7 +89,7 @@ async def update_note_content(note_id: int, db: Session = Depends(get_db), conte
     return JSONResponse({"status": "success"})
 
 @router.post("/api/notes/{note_id}/action", response_model=dict)
-async def note_action(note_id: int, action: str = Form(...), db: Session = Depends(get_db)):
+def note_action(note_id: int, action: str = Form(...), db: Session = Depends(get_db)):
     success, updated_content = notes_service.process_action(db, note_id, action)
     if not success:
         return JSONResponse(status_code=404, content={"detail": "Note not found"})
@@ -102,7 +102,7 @@ async def clear_notes(db: Session = Depends(get_db)):
     return JSONResponse({"status": "success", "message": "Notes cleared"})
 
 @router.post("/api/notes/generate", response_model=dict)
-async def generate_notes_ai(
+def generate_notes_ai(
     req: NotesGenerateRequest,
     db: Session = Depends(get_db)
 ):
@@ -196,7 +196,7 @@ async def notebook_generate(request: NotebookGenerateRequest, db: Session = Depe
     return JSONResponse({"status": "success", "message": "Catatan berhasil disimpan ke Notebook!"})
 
 @router.post("/api/notebook/detect-context", response_model=dict)
-async def detect_context(request: DetectContextRequest, db: Session = Depends(get_db)):
+def detect_context(request: DetectContextRequest, db: Session = Depends(get_db)):
     """Detect mata_kuliah dan topic dari riwayat chat menggunakan AI."""
     chat_history = [m.model_dump() for m in request.history]
     if not chat_history:
@@ -247,7 +247,7 @@ async def detect_context(request: DetectContextRequest, db: Session = Depends(ge
         return JSONResponse({"mata_kuliah": "tidak_diketahui", "topic": "", "subject_id": None})
 
 @router.post("/api/notebook/generate-title", response_model=dict)
-async def generate_title(request: GenerateTitleRequest, db: Session = Depends(get_db)):
+def generate_title(request: GenerateTitleRequest, db: Session = Depends(get_db)):
     """Generate judul deskriptif dari konten catatan menggunakan AI."""
     content = request.content
     if not content.strip():
