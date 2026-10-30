@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.3.0](https://github.com/ujangboy/kabayan-Pintar/compare/v0.2.0...v0.3.0) (2026-10-30)
+
+
+### Features
+
+* rebranding kabayan agent → kabayan pintar ([7e9509e](https://github.com/ujangboy/kabayan-Pintar/commit/7e9509e5b33aa7afd1e48b0b73b518aabf32ccd8))
+* siapkan rilis v1.0.0 — tema multi, launcher kp, LICENSE, README panduan cepat ([c8632b2](https://github.com/ujangboy/kabayan-Pintar/commit/c8632b2b6d1e79b41cb99df22b4d4a2600f380c8))
+
+
+### Bug Fixes
+
+* **api:** pindahkan endpoint AI ke threadpool agar event loop tidak beku ([5843e05](https://github.com/ujangboy/kabayan-Pintar/commit/5843e05981e1cb756660748a916d2ee01c7850e0))
+* **rag:** bersihkan chunk dan audio saat hapus permanen subjek ([13dd2f2](https://github.com/ujangboy/kabayan-Pintar/commit/13dd2f2c4221d150ac96c2e27b7d432c75f4b31e))
+* **rag:** buang chunk saat materi dibatalkan saat indexing ([a1a8207](https://github.com/ujangboy/kabayan-Pintar/commit/a1a82079e38de8587250d5927f54138b6dad1c05))
+* **ui:** perpanjang timeout generate AI menjadi 300 detik ([256049e](https://github.com/ujangboy/kabayan-Pintar/commit/256049e1052dd656c3fdfc417a2797c36533d7d5))
+
 ## [0.2.0](https://github.com/ujangboy/kabayan-Ai/compare/v0.1.1...v0.2.0) (2026-10-29)
 
 
