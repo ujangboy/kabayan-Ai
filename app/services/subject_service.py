@@ -5,6 +5,11 @@ from sqlalchemy import or_
 from app.models import Subject
 from typing import List, Optional
 import datetime
+import logging
+import os
+import threading
+
+logger = logging.getLogger(__name__)
 
 
 def compute_subject_stats(db: Session, subject: Subject) -> dict:
@@ -144,16 +149,47 @@ class SubjectService:
     def delete_forever(self, db: Session, id: int) -> bool:
         """Hapus permanen mata kuliah yang ada di sampah beserta data terkaitnya.
 
-        File materi yang tertinggal di storage/uploads akan disapu oleh
-        cleanup_orphan_files.
+        RAG chunk dan file audio dihapus eksplisit karena cleanup_orphan_files
+        hanya menyapu storage/uploads. File materi di uploads tetap disapu oleh
+        cleanup_orphan_files saat startup.
         """
         subject = subject_repository.get(db, id)
         if not subject:
             return False
         if subject.status != "trashed":
             return False
+
+        from app.models import AudioGeneration, Material
+        from app.services.rag_service import rag_service
+
+        material_ids = [
+            m.id for m in db.query(Material).filter(Material.subject_id == id).all()
+        ]
+        audio_files = [
+            a.file_path
+            for a in db.query(AudioGeneration).filter(AudioGeneration.subject_id == id).all()
+            if a.file_path
+        ]
+
+        # DB dulu (sumber kebenaran), file & index setelahnya (best-effort).
         db.delete(subject)
         db.commit()
+
+        for mid in material_ids:
+            try:
+                rag_service.delete_document_chunks(f"mat_{mid}")
+            except Exception as exc:
+                logger.warning("delete_forever: gagal hapus chunk mat_%s: %s", mid, exc)
+
+        if rag_service._should_rebuild():
+            threading.Thread(target=rag_service.rebuild_index, daemon=True).start()
+
+        for path in audio_files:
+            try:
+                os.remove(path)
+            except OSError:
+                pass
+
         cache_service.invalidate_all(db)
         return True
 
