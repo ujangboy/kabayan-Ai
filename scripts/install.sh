@@ -21,10 +21,19 @@ pip install -q -r requirements.txt
 echo "==> [3/4] Install dependensi frontend (npm ci)"
 (cd frontend && npm ci --silent)
 
-echo "==> [4/4] Selesai!"
+echo "==> [4/4] Pasang perintah 'kp' ke ~/.local/bin"
+chmod +x "$DIR/kp"
+mkdir -p "$HOME/.local/bin"
+ln -sf "$DIR/kp" "$HOME/.local/bin/kp"
+case ":$PATH:" in
+  *":$HOME/.local/bin:"*) ;;
+  *) echo "[!] Tambahkan ini ke ~/.bashrc lalu buka terminal baru:"
+     echo "    export PATH=\"\$HOME/.local/bin:\$PATH\"" ;;
+esac
+
 echo ""
-echo "Selanjutnya jalankan:"
-echo "  ./kp            # mulai backend + frontend dan buka browser"
+echo "Selesai. Buka terminal baru lalu ketik:"
+echo "  kp              # mulai backend (8000) + frontend (5173)"
 echo "Atau secara manual:"
 echo "  source venv/bin/activate && uvicorn app.main:app --reload --port 8000"
 echo "  cd frontend && npm run dev"

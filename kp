@@ -7,7 +7,16 @@
 #   ./kp --install    # install dependensi dari nol (venv + npm ci) sebelum jalan
 set -euo pipefail
 
-DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Resolve symlink (~/.local/bin/kp) ke file asli di folder proyek.
+SOURCE="${BASH_SOURCE[0]}"
+while [ -L "$SOURCE" ]; do
+  TARGET="$(readlink "$SOURCE")"
+  case "$TARGET" in
+    /*) SOURCE="$TARGET" ;;
+    *) SOURCE="$(cd "$(dirname "$SOURCE")" && pwd)/$TARGET" ;;
+  esac
+done
+DIR="$(cd "$(dirname "$SOURCE")" && pwd)"
 cd "$DIR"
 
 install() {
@@ -25,7 +34,17 @@ install() {
   echo "==> Install dependensi frontend..."
   (cd frontend && npm ci --silent)
 
-  echo "==> Selesai install. Jalankan './kp' untuk mulai."
+  echo "==> Memasang perintah 'kp'..."
+  chmod +x "$DIR/kp"
+  mkdir -p "$HOME/.local/bin"
+  ln -sf "$DIR/kp" "$HOME/.local/bin/kp"
+  case ":$PATH:" in
+    *":$HOME/.local/bin:"*) ;;
+    *) echo "[!] Tambahkan ini ke ~/.bashrc lalu buka terminal baru:"
+       echo "    export PATH=\"\$HOME/.local/bin:\$PATH\"" ;;
+  esac
+
+  echo "==> Selesai install. Ketik 'kp' dari terminal mana saja untuk mulai."
 }
 
 run() {

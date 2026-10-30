@@ -41,28 +41,43 @@ API key Groq **tidak di-commit** — isi di `.env` milik Anda sendiri (lihat di 
 
 ## Panduan pemasangan cepat
 
-### Cara 1 — launcher satu baris `kp` (termudah, tanpa `cd`)
+### Cara 1 — clone, pasang sekali, lalu ketik `kp` dari terminal mana saja
 
-```bash
-chmod +x kp
-./kp --install   # install dependensi dari nol (satu kali saja)
-./kp             # nyalakan backend (8000) + frontend (5173), lalu buka browser
-```
-
-### Cara 2 — git clone biasa
+**Linux / WSL / Git Bash**
 
 ```bash
 git clone <repo-url> kabayan-pintar
 cd kabayan-pintar
 chmod +x kp
-./kp --install && ./kp
+./kp --install   # install dependensi + daftarkan perintah `kp`
 ```
 
-### Cara 3 — unduh ZIP
+**Windows (PowerShell / CMD)**
 
-Unduh ZIP dari GitHub → ekstrak → masuk folder → jalankan `./kp --install && ./kp`.
+```powershell
+git clone <repo-url> kabayan-pintar
+cd kabayan-pintar
+.\kp --install
+```
 
-### Cara 4 — instalasi satu baris dari luar repo (setelah extract ZIP)
+Tutup terminal, buka terminal baru, lalu ketik:
+
+```bash
+kp
+```
+
+Backend (8000) + frontend (5173) menyala di terminal itu. URL-nya juga
+dicetak, tinggal salin:
+
+- Frontend: **http://127.0.0.1:5173**
+- API/docs: **http://127.0.0.1:8000/docs**
+
+### Cara 2 — unduh ZIP
+
+Unduh ZIP dari GitHub → ekstrak → masuk folder → jalankan `./kp --install`
+(Linux/WSL) atau `.\kp --install` (Windows), lalu buka terminal baru dan ketik `kp`.
+
+### Cara 3 — installer skrip
 
 ```bash
 bash scripts/install.sh   # jalankan di dalam folder proyek
