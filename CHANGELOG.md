@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/ujangboy/kabayan-Pintar/compare/v0.3.0...v0.4.0) (2026-10-30)
+
+
+### Features
+
+* **launcher:** pasang perintah kp global agar bisa dipanggil dari terminal mana saja ([467d330](https://github.com/ujangboy/kabayan-Pintar/commit/467d330f539e1e639a9f1c0539f1f246ad27ef15))
+
 ## [0.3.0](https://github.com/ujangboy/kabayan-Pintar/compare/v0.2.0...v0.3.0) (2026-10-30)
 
 
