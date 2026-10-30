@@ -8,7 +8,7 @@ set -e
 cd "$(dirname "$0")"
 
 echo "========================================="
-echo "      MENYALAKAN KABAYAN AI v2..."
+echo "      MENYALAKAN KABAYAN PINTAR v2..."
 echo "========================================="
 echo ""
 

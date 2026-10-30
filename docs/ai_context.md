@@ -15,7 +15,7 @@
 ## 2. Peta Folder & Lokasi File (Index Map)
 Agar hemat token, langsung tuju file/folder spesifik berdasarkan kebutuhan tugas:
 
-*   **Konfigurasi & API Key:** `kabayan_pintar/.env` (Jangan pernah dibaca ulang kecuali inisialisasi awal).
+*   **Konfigurasi & API Key:** `kabayan-pintar/.env` (Jangan pernah dibaca ulang kecuali inisialisasi awal).
 *   **Routing API Backend:** `routers/` atau `main.py` (Tempat mendaftarkan endpoint FastAPI).
 *   **Logika Bisnis & Fitur AI:** `services/` (Tempat pemrosesan materi, pembuatan kuis/flashcard).
 *   **Akses Database & RAG:** `services/rag_service.py` (LanceDB vector store + similarity search).

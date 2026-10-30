@@ -2,7 +2,7 @@
 title Kabayan Pintar v2 Launcher
 color 0A
 echo =========================================
-echo      MENYALAKAN KABAYAN AI v2...
+echo      MENYALAKAN KABAYAN PINTAR v2...
 echo =========================================
 echo.
 
