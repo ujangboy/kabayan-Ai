@@ -164,12 +164,17 @@ class MaterialService:
 
             rag_service.index_document(doc_id, chunks)
 
+            db.expire_all()
+            mat = material_repository.get(db, material_id) if material_id else None
+            if material_id and (not mat or mat.status != "Processing"):
+                # User cancel/trash tepat saat indexing — buang chunk hantu.
+                rag_service.delete_document_chunks(doc_id)
+                return
+
             self._set_progress(db, material_id, 90, "Mengindeks ke RAG...")
 
-            if material_id:
-                mat = material_repository.get(db, material_id)
-                if mat and mat.status == "Processing":
-                    material_repository.update(db, mat, {"status": "Ready", "progress": 100, "stage": "Selesai"})
+            if material_id and mat:
+                material_repository.update(db, mat, {"status": "Ready", "progress": 100, "stage": "Selesai"})
 
             cache_service.invalidate_all(db)
             db.commit()

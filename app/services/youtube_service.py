@@ -97,12 +97,17 @@ class YoutubeService:
             rag_service.index_document(doc_id, chunks)
 
             # Update status — hanya jika masih "Processing" (batal jika user cancel)
+            db.expire_all()
             mat = material_repository.get(db, material_id)
-            if mat and mat.status == "Processing":
-                mat.status = "Ready"
-                mat.progress = 100
-                mat.stage = "Selesai"
-                db.commit()
+            if not mat or mat.status != "Processing":
+                # Cancel/trash tepat saat indexing — buang chunk hantu.
+                rag_service.delete_document_chunks(doc_id)
+                return
+
+            mat.status = "Ready"
+            mat.progress = 100
+            mat.stage = "Selesai"
+            db.commit()
 
             # Invalidate cache
             cache_service.invalidate_all(db)
