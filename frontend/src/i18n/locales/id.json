@@ -1088,6 +1088,7 @@
     "tabs": {
       "profile": "Profil",
       "language": "Bahasa",
+      "appearance": "Tampilan",
       "data": "Data",
       "aiLimit": "Limit AI",
       "about": "Tentang"
@@ -1114,6 +1115,10 @@
       "id": "Bahasa Indonesia",
       "en": "Bahasa Inggris",
       "su": "Bahasa Sunda"
+    },
+    "appearance": {
+      "title": "Tema Tampilan",
+      "subtitle": "Pilih tema warna aplikasi. Tersimpan di perangkat ini."
     },
     "data": {
       "title": "Data Aplikasi",

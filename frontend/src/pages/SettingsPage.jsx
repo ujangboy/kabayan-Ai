@@ -7,6 +7,7 @@ import { fadeUp, easeStandard } from '@/lib/motion';
 import { cn } from '@/utils';
 import ProfileTab from '@/components/settings/ProfileTab';
 import LanguageTab from '@/components/settings/LanguageTab';
+import AppearanceTab from '@/components/settings/AppearanceTab';
 import DataTab from '@/components/settings/DataTab';
 import AiLimitTab from '@/components/settings/AiLimitTab';
 import AboutTab from '@/components/settings/AboutTab';
@@ -14,6 +15,7 @@ import AboutTab from '@/components/settings/AboutTab';
 const TABS = [
   { key: 'profile', icon: ICONS.ui.user, labelKey: 'settings.tabs.profile' },
   { key: 'language', icon: ICONS.ui.languages, labelKey: 'settings.tabs.language' },
+  { key: 'appearance', icon: ICONS.ui.palette, labelKey: 'settings.tabs.appearance' },
   { key: 'data', icon: ICONS.ui.database, labelKey: 'settings.tabs.data' },
   { key: 'aiLimit', icon: ICONS.ui.cpu, labelKey: 'settings.tabs.aiLimit' },
   { key: 'about', icon: ICONS.status.info, labelKey: 'settings.tabs.about' },
@@ -28,6 +30,7 @@ export default function SettingsPage() {
     switch (active) {
       case 'profile': return <ProfileTab />;
       case 'language': return <LanguageTab />;
+      case 'appearance': return <AppearanceTab />;
       case 'data': return <DataTab />;
       case 'aiLimit': return <AiLimitTab />;
       case 'about': return <AboutTab />;

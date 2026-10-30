@@ -14,13 +14,26 @@
     <meta name="theme-color" content="#101815" media="(prefers-color-scheme: dark)" />
     <title>Kabayan Pintar</title>
     <script>
-      // Anti-FOUC: set tema sebelum paint (default dark).
+      // Anti-FOUC: set tema sebelum paint. Sumber: appTheme (id registry
+      // lib/themes.js) + appThemeMode (mode gelap/terang, ditulis applyTheme).
+      // Fallback: key legacy 'theme' lalu prefers-color-scheme (default dark).
       (function () {
         try {
-          var t = localStorage.getItem('theme');
-          if (!t) t = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
-          document.documentElement.classList.toggle('dark', t !== 'light');
-          document.documentElement.style.colorScheme = t === 'light' ? 'light' : 'dark';
+          var id = localStorage.getItem('appTheme');
+          var mode = localStorage.getItem('appThemeMode');
+          if (!id || !mode) {
+            mode = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+            var legacy = localStorage.getItem('theme');
+            if (legacy === 'light' || legacy === 'dark') mode = legacy;
+            id = mode === 'light' ? 'kabayan-light' : 'kabayan-dark';
+          }
+          // id valid + mode hilang (tulis parsial): cukup data-theme —
+          // token theme block lengkap; class/colorScheme ikut markup/CSS.
+          document.documentElement.setAttribute('data-theme', id);
+          if (mode) {
+            document.documentElement.classList.toggle('dark', mode === 'dark');
+            document.documentElement.style.colorScheme = mode;
+          }
         } catch (e) {}
       })();
     </script>

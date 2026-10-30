@@ -8,6 +8,10 @@ import '@fontsource-variable/inter';
 import '@fontsource-variable/plus-jakarta-sans';
 import './i18n';
 import './index.css';
+import { syncMetaTheme } from './lib/theme';
+
+// Tint bar browser mengikuti bg tema tersimpan (lihat lib/themes.js).
+syncMetaTheme();
 
 const queryClient = new QueryClient({
   defaultOptions: {

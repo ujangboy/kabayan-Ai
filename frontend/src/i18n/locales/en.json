@@ -1088,6 +1088,7 @@
     "tabs": {
       "profile": "Profile",
       "language": "Language",
+      "appearance": "Appearance",
       "data": "Data",
       "aiLimit": "AI Usage",
       "about": "About"
@@ -1114,6 +1115,10 @@
       "id": "Indonesian",
       "en": "English",
       "su": "Sundanese"
+    },
+    "appearance": {
+      "title": "Color Theme",
+      "subtitle": "Pick your app theme. Saved on this device."
     },
     "data": {
       "title": "App Data",

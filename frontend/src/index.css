@@ -553,8 +553,8 @@
     text-align: center;
     margin: 1.25rem auto;
     padding: 0.9rem 1.5rem;
-    background: rgba(20, 184, 166, 0.06);
-    border: 1px solid rgba(20, 184, 166, 0.18);
+    background: rgb(var(--accent) / 0.06);
+    border: 1px solid rgb(var(--accent) / 0.18);
     border-radius: 10px;
     overflow-x: auto;
     max-width: 100%;
@@ -794,7 +794,7 @@
 }
 .note-editor-content [data-math-inline]:hover,
 .note-editor-content [data-math-block]:hover {
-  background-color: rgba(20, 184, 166, 0.08);
+  background-color: rgb(var(--accent) / 0.08);
 }
 .note-editor-content [data-math-block] {
   display: flex;
@@ -891,4 +891,289 @@
 .dom-copy-label {
   font-size: 10px;
   letter-spacing: 0.02em;
+}
+
+/* ── Tema ala OpenCode (appearance) ──────────────────────────────────────────
+   Setiap tema = override PENUH token semantik, spesifisitas html[data-theme]
+   di atas :root/.dark. Tema kabayan-light/-dark memakai token default di atas
+   tanpa blok sendiri. Mode theme = sumber class .dark (diset lib/theme.js). */
+
+/* Tokyo Night — biru neon + ungu */
+html[data-theme='tokyo-night'] {
+  --bg-base: 26 27 38;
+  --bg-subtle: 31 35 53;
+  --bg-surface: 36 41 60;
+  --popover: 47 51 77;
+  --border-subtle: rgba(192, 202, 245, 0.07);
+  --border-strong: rgba(192, 202, 245, 0.15);
+  --text-primary: #c0caf5;
+  --text-secondary: #a9b1d6;
+  --text-muted: #565f89;
+  --text-primary-rgb: 192 202 245;
+  --text-secondary-rgb: 169 177 214;
+  --text-muted-rgb: 86 95 137;
+  --accent: 122 162 247;
+  --accent-hover: 158 178 250;
+  --accent-light: 122 162 247;
+  --accent-solid: 61 89 161;
+  --accent-solid-hover: 46 68 121;
+  --sun: 224 175 104;
+  --wash: rgba(192, 202, 245, 0.065);
+  --wash-strong: rgba(192, 202, 245, 0.11);
+  --wash-rgb: 192 202 245;
+  --wash-alpha: 0.065;
+  --wash-strong-rgb: 192 202 245;
+  --wash-strong-alpha: 0.11;
+  --code-bg: #1f2335;
+  --shadow-card: none;
+  --success: 158 206 106;
+  --danger: 247 118 142;
+  --warning: 224 175 104;
+  --info: 125 207 255;
+  color-scheme: dark;
+}
+
+/* Dracula — pink + ungu atas arwah gelap */
+html[data-theme='dracula'] {
+  --bg-base: 40 42 54;
+  --bg-subtle: 43 45 63;
+  --bg-surface: 52 55 70;
+  --popover: 68 71 90;
+  --border-subtle: rgba(248, 248, 242, 0.07);
+  --border-strong: rgba(248, 248, 242, 0.15);
+  --text-primary: #f8f8f2;
+  --text-secondary: #b6bcc8;
+  --text-muted: #6272a4;
+  --text-primary-rgb: 248 248 242;
+  --text-secondary-rgb: 182 188 200;
+  --text-muted-rgb: 98 114 164;
+  --accent: 189 147 249;
+  --accent-hover: 212 174 250;
+  --accent-light: 224 198 255;
+  --accent-solid: 123 82 171;
+  --accent-solid-hover: 108 72 151;
+  --sun: 255 184 108;
+  --wash: rgba(248, 248, 242, 0.065);
+  --wash-strong: rgba(248, 248, 242, 0.11);
+  --wash-rgb: 248 248 242;
+  --wash-alpha: 0.065;
+  --wash-strong-rgb: 248 248 242;
+  --wash-strong-alpha: 0.11;
+  --code-bg: #21222c;
+  --shadow-card: none;
+  --success: 80 250 123;
+  --danger: 255 85 85;
+  --warning: 241 250 140;
+  --info: 139 233 253;
+  color-scheme: dark;
+}
+
+/* Nord — biru es minimalis */
+html[data-theme='nord'] {
+  --bg-base: 46 52 64;
+  --bg-subtle: 51 58 72;
+  --bg-surface: 59 66 82;
+  --popover: 67 76 94;
+  --border-subtle: rgba(236, 239, 244, 0.07);
+  --border-strong: rgba(236, 239, 244, 0.15);
+  --text-primary: #eceff4;
+  --text-secondary: #d0d8e2;
+  --text-muted: #a0aab8;
+  --text-primary-rgb: 236 239 244;
+  --text-secondary-rgb: 208 216 226;
+  --text-muted-rgb: 160 170 184;
+  --accent: 136 192 208;
+  --accent-hover: 161 202 222;
+  --accent-light: 176 208 222;
+  --accent-solid: 77 111 148;
+  --accent-solid-hover: 66 96 128;
+  --sun: 235 203 139;
+  --wash: rgba(236, 239, 244, 0.065);
+  --wash-strong: rgba(236, 239, 244, 0.11);
+  --wash-rgb: 236 239 244;
+  --wash-alpha: 0.065;
+  --wash-strong-rgb: 236 239 244;
+  --wash-strong-alpha: 0.11;
+  --code-bg: #333a48;
+  --shadow-card: none;
+  --success: 163 190 140;
+  --danger: 191 97 106;
+  --warning: 208 135 112;
+  --info: 129 161 193;
+  color-scheme: dark;
+}
+
+/* Gruvbox Dark — retro hangat, accent oranye #fe8019 */
+html[data-theme='gruvbox-dark'] {
+  --bg-base: 40 40 40;
+  --bg-subtle: 50 48 47;
+  --bg-surface: 60 56 54;
+  --popover: 80 73 69;
+  --border-subtle: rgba(235, 219, 178, 0.07);
+  --border-strong: rgba(235, 219, 178, 0.15);
+  --text-primary: #ebdbb2;
+  --text-secondary: #d5c4a1;
+  --text-muted: #928374;
+  --text-primary-rgb: 235 219 178;
+  --text-secondary-rgb: 213 196 161;
+  --text-muted-rgb: 146 131 116;
+  --accent: 254 128 25;
+  --accent-hover: 255 154 69;
+  --accent-light: 255 171 92;
+  --accent-solid: 181 83 14;
+  --accent-solid-hover: 169 74 12;
+  --sun: 250 189 47;
+  --wash: rgba(235, 219, 178, 0.065);
+  --wash-strong: rgba(235, 219, 178, 0.11);
+  --wash-rgb: 235 219 178;
+  --wash-alpha: 0.065;
+  --wash-strong-rgb: 235 219 178;
+  --wash-strong-alpha: 0.11;
+  --code-bg: #3c3836;
+  --shadow-card: none;
+  --success: 184 187 38;
+  --danger: 251 73 52;
+  --warning: 250 189 47;
+  --info: 131 165 152;
+  color-scheme: dark;
+}
+
+/* Catppuccin Latte — abu-abu lembut, aksen pink/ungu/biru pastel (gen dgn Mocha) */
+html[data-theme='catppuccin-latte'] {
+  --bg-base: 239 241 245;
+  --bg-subtle: 230 233 239;
+  --bg-surface: 250 251 253;
+  --popover: 255 255 255;
+  --border-subtle: rgba(76, 79, 105, 0.08);
+  --border-strong: rgba(76, 79, 105, 0.16);
+  --text-primary: #4c4f69;
+  --text-secondary: #5c5f77;
+  --text-muted: #a6adc8;
+  --text-primary-rgb: 76 79 105;
+  --text-secondary-rgb: 92 95 119;
+  --text-muted-rgb: 166 173 200;
+  --accent: 136 57 239;
+  --accent-hover: 122 48 221;
+  --accent-light: 116 49 207;
+  --accent-solid: 122 47 221;
+  --accent-solid-hover: 104 38 186;
+  --sun: 223 142 29;
+  --wash: rgba(76, 79, 105, 0.045);
+  --wash-strong: rgba(76, 79, 105, 0.08);
+  --wash-rgb: 76 79 105;
+  --wash-alpha: 0.045;
+  --wash-strong-rgb: 76 79 105;
+  --wash-strong-alpha: 0.08;
+  --code-bg: #e7eaf1;
+  --shadow-card: 0 1px 2px rgba(76, 79, 105, 0.04), 0 14px 34px -30px rgba(76, 79, 105, 0.35);
+  --success: 35 120 30;
+  --danger: 210 15 57;
+  --warning: 154 107 15;
+  --info: 30 102 245;
+  color-scheme: light;
+}
+
+/* GitHub Light Default — putih bersih & profesional */
+html[data-theme='github-light'] {
+  --bg-base: 255 255 255;
+  --bg-subtle: 246 248 250;
+  --bg-surface: 255 255 255;
+  --popover: 255 255 255;
+  --border-subtle: rgba(31, 35, 40, 0.08);
+  --border-strong: rgba(31, 35, 40, 0.16);
+  --text-primary: #1f2328;
+  --text-secondary: #59636e;
+  --text-muted: #8c959f;
+  --text-primary-rgb: 31 35 40;
+  --text-secondary-rgb: 89 99 110;
+  --text-muted-rgb: 140 149 159;
+  --accent: 9 105 218;
+  --accent-hover: 5 80 174;
+  --accent-light: 5 80 174;
+  --accent-solid: 9 105 218;
+  --accent-solid-hover: 5 80 174;
+  --sun: 212 167 44;
+  --wash: rgba(31, 35, 40, 0.045);
+  --wash-strong: rgba(31, 35, 40, 0.08);
+  --wash-rgb: 31 35 40;
+  --wash-alpha: 0.045;
+  --wash-strong-rgb: 31 35 40;
+  --wash-strong-alpha: 0.08;
+  --code-bg: #f6f8fa;
+  --shadow-card: 0 1px 2px rgba(31, 35, 40, 0.04), 0 14px 34px -30px rgba(31, 35, 40, 0.35);
+  --success: 26 127 55;
+  --danger: 207 34 46;
+  --warning: 154 103 0;
+  --info: 9 105 218;
+  color-scheme: light;
+}
+
+/* One Light — putih/abu terang berimbang */
+html[data-theme='one-light'] {
+  --bg-base: 250 250 250;
+  --bg-subtle: 240 240 241;
+  --bg-surface: 255 255 255;
+  --popover: 255 255 255;
+  --border-subtle: rgba(56, 58, 66, 0.08);
+  --border-strong: rgba(56, 58, 66, 0.15);
+  --text-primary: #383a42;
+  --text-secondary: #696c77;
+  --text-muted: #a0a1a7;
+  --text-primary-rgb: 56 58 66;
+  --text-secondary-rgb: 105 108 119;
+  --text-muted-rgb: 160 161 167;
+  --accent: 64 120 242;
+  --accent-hover: 45 100 220;
+  --accent-light: 45 100 220;
+  --accent-solid: 52 103 204;
+  --accent-solid-hover: 44 90 180;
+  --sun: 152 104 1;
+  --wash: rgba(56, 58, 66, 0.045);
+  --wash-strong: rgba(56, 58, 66, 0.08);
+  --wash-rgb: 56 58 66;
+  --wash-alpha: 0.045;
+  --wash-strong-rgb: 56 58 66;
+  --wash-strong-alpha: 0.08;
+  --code-bg: #f0f0f1;
+  --shadow-card: 0 1px 2px rgba(56, 58, 66, 0.04), 0 14px 34px -30px rgba(56, 58, 66, 0.35);
+  --success: 47 125 59;
+  --danger: 201 51 47;
+  --warning: 163 98 10;
+  --info: 1 115 168;
+  color-scheme: light;
+}
+
+/* Solarized Light — cream hangat, ramah mata (sains Ethan Schoonover) */
+html[data-theme='solarized-light'] {
+  --bg-base: 253 246 227;
+  --bg-subtle: 238 232 213;
+  --bg-surface: 254 252 243;
+  --popover: 255 254 249;
+  --border-subtle: rgba(88, 110, 117, 0.08);
+  --border-strong: rgba(88, 110, 117, 0.15);
+  --text-primary: #586e75;
+  --text-secondary: #657b83;
+  --text-muted: #93a1a1;
+  --text-primary-rgb: 88 110 117;
+  --text-secondary-rgb: 101 123 131;
+  --text-muted-rgb: 147 161 161;
+  --accent: 38 139 210;
+  --accent-hover: 32 110 170;
+  --accent-light: 24 104 158;
+  --accent-solid: 24 104 158;
+  --accent-solid-hover: 20 88 134;
+  --sun: 181 137 0;
+  --wash: rgba(88, 110, 117, 0.045);
+  --wash-strong: rgba(88, 110, 117, 0.08);
+  --wash-rgb: 88 110 117;
+  --wash-alpha: 0.045;
+  --wash-strong-rgb: 88 110 117;
+  --wash-strong-alpha: 0.08;
+  --code-bg: #eee8d5;
+  --shadow-card: 0 1px 2px rgba(88, 110, 117, 0.04), 0 14px 34px -30px rgba(88, 110, 117, 0.35);
+  --success: 74 115 0;
+  --danger: 192 43 40;
+  --warning: 150 97 0;
+  --info: 24 104 158;
+  color-scheme: light;
 }

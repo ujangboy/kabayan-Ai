@@ -172,6 +172,7 @@ export const ICONS = {
     user: 'person',
     camera: 'photo_camera',
     languages: 'language',
+    palette: 'palette',
     globe: 'public',
     bell: 'notifications',
     info: 'info',

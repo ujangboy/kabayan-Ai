@@ -1088,6 +1088,7 @@
     "tabs": {
       "profile": "Profil",
       "language": "Basa",
+      "appearance": "Penampakan",
       "data": "Data",
       "aiLimit": "Pamakéan AI",
       "about": "Ngeunaan"
@@ -1114,6 +1115,10 @@
       "id": "Basa Indonésia",
       "en": "Basa Inggris",
       "su": "Basa Sunda"
+    },
+    "appearance": {
+      "title": "Téma Penampakan",
+      "subtitle": "Pilih téma warna aplikasi. Disimpen dina alat ieu."
     },
     "data": {
       "title": "Data Aplikasi",

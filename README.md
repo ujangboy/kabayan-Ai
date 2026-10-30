@@ -3,117 +3,127 @@
 Study workspace berbasis FastAPI + React untuk mengelola mata kuliah, materi,
 catatan, flashcard, quiz, simulasi ujian, dan tutor AI.
 
-## Isi
+Proyek ini dibangun dengan **vibe coding** — ditulis sejumlah besar oleh AI
+(Kilo/Claude) dengan panduan desain sistem dan arsitektur yang konsisten, lalu
+diverifikasi oleh manusia lewat tes dan audit. Cocok sebagai starter untuk
+proyek AI-assisted atau untuk dipelajari cara membangun aplikasi AI full-stack.
 
-- `app/` — paket backend FastAPI, entry point `app.main:app`
-  - `app/main.py` — entry point aplikasi dan lifecycle worker
-  - `app/config.py` — konfigurasi environment dan path storage
-  - `app/database.py` — koneksi database dan `Base` SQLAlchemy
-  - `app/models.py` — model data (SQLAlchemy)
-  - `app/routers/` — endpoint API
-  - `app/services/` — logika bisnis
-  - `app/repositories/` — akses data
-  - `app/parsers/` — ekstraksi teks PDF/DOCX/PPTX/XLSX/YouTube
-  - `app/agents/` — definisi agent
-  - `app/prompts/` — template prompt
-- `frontend/` — UI React/Vite + Tailwind
-- `alembic/` — migrasi database
-- `scripts/` — skrip operasional (backup, seed, rebuild index)
-- `tests/` — test backend (pytest)
-- `docs/` — dokumen proyek (aturan agent, baseline, konteks AI)
+---
 
-Data runtime (database, upload, vector store, backup) disimpan di `storage/`
-dan tidak di-commit.
+## AI yang digunakan
 
-## Setup Environment (Penting — Jangan Bocorkan API Key)
+| Leksi | Digunakan untuk |
+|-------|-----------------|
+| **Groq (llama-3.1-8b-instant / gpt-oss-20b / qwen-vision)** | Chat AI, tutor, generate flashcard & quiz, analisis ujian, RAG |
+| **sentence-transformers (all-MiniLM-L6-v2)** | Embedding lokal untuk pencarian vektor (RAG) |
+| **LanceDB** | Penyimpanan vektor persisten |
 
-API key **TIDAK** di-commit. Alur yang benar:
+API key Groq **tidak di-commit** — isi di `.env` milik Anda sendiri (lihat di bawah).
 
-1. Salin template (aman, tanpa nilai rahasia):
-   ```bash
-   cp .env.example .env
-   ```
-2. Edit `.env` dan isi `GROQ_API_KEY` dengan key asli dari
-   https://console.groq.com/keys (format: `gsk_<40+ karakter>`).
-3. `.env` sudah di-ignore oleh `.gitignore` — jangan pernah mengisi nilai
-   nyata di `.env.example` maupun di commit mana pun.
-4. **Jangan share screenshot yang memuat key.** Jika key bocor, segera
-   *revoke* di console Groq dan buat key baru.
+---
 
-### Secret Scanning (Pencegahan Kebocoran)
+## Isi proyek
 
-Setiap commit dicek otomatis agar tidak ada secret (Groq/OpenAI/AWS key,
-token) yang masuk ke Git history:
+- `app/` — backend FastAPI (entry `app.main:app`): config, database, models, routers, services, parsers, agents, prompts
+- `frontend/` — UI React 19 + Vite + Tailwind (port 5173 dev)
+- `alembic/` — migrasi database SQLite (source of truth skema)
+- `scripts/` — skrip operasi (backup, seed, install)
+- `tests/` — tes backend (pytest) + frontend (vitest)
+- `docs/` — aturan agent, baseline, konteks AI
+- `storage/` — database, upload, vector store (runtime, **tidak di-commit**)
+
+---
+
+## Panduan pemasangan cepat
+
+### Cara 1 — launcher satu baris `kp` (termudah, tanpa `cd`)
 
 ```bash
-bash scripts/security/install-hooks.sh   # arahkan git hooks ke .githooks/
+chmod +x kp
+./kp --install   # install dependensi dari nol (satu kali saja)
+./kp             # nyalakan backend (8000) + frontend (5173), lalu buka browser
 ```
 
-Hook akan memblokir commit jika ada `.env` ter-stage atau pola secret di
-konten staged. Jika terlanjur false-positive, bypass dengan
-`git commit --no-verify` (hindari kecuali yakin aman).
-
-## Cara Menjalankan
-
-Backend:
+### Cara 2 — git clone biasa
 
 ```bash
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
+git clone <repo-url> kabayan-pintar
+cd kabayan-pintar
+chmod +x kp
+./kp --install && ./kp
 ```
 
-Frontend (terminal terpisah):
+### Cara 3 — unduh ZIP
+
+Unduh ZIP dari GitHub → ekstrak → masuk folder → jalankan `./kp --install && ./kp`.
+
+### Cara 4 — instalasi satu baris dari luar repo (setelah extract ZIP)
 
 ```bash
-cd frontend
-npm ci
-npm run dev
+bash scripts/install.sh   # jalankan di dalam folder proyek
 ```
 
-Atau jalankan keduanya sekaligus dari folder `frontend`:
+Buka browser ke **http://127.0.0.1:5173** (frontend). Backend API di
+**http://127.0.0.1:8000** (docs: `/docs`).
+
+> **Port:** `5173` = Vite dev server (frontend development); `8000` = FastAPI
+> backend. Saat `npm run build` dipakai (production), semuanya disajikan via
+> FastAPI di port 8000.
+
+### Pengaturan wajib sebelum fitur AI jalan
+
+Salin template dan isi `GROQ_API_KEY`:
 
 ```bash
-npm run dev:all
+cp .env.example .env
+# edit .env, masukkan GROQ_API_KEY dari https://console.groq.com/keys
 ```
 
-## Test & Quality Gates
+`.env` sudah di-`.gitignore` dan **tidak pernah di-commit**. Setiap pengguna
+miliki data sendiri di `storage/`.
 
-Backend:
+---
+
+## Tes & quality gates
 
 ```bash
+# Backend
 pytest -q
-```
 
-Frontend:
-
-```bash
+# Frontend (di folder frontend/)
 cd frontend
-npm test          # vitest
-npm run build     # vite production build
-npm run lint      # oxlint
+npm test      # vitest
+npm run build # vite production build
+npm run lint  # oxlint
 ```
 
-## Database & Migrasi
+---
 
-Alembic adalah source of truth schema. Saat aplikasi start, `app/main.py`
-menjalankan `alembic upgrade head`. Untuk memeriksa drift model vs database:
+## Database & migrasi
+
+Alembic adalah source of truth skema. Saat aplikasi start, `app/main.py`
+menjalankan `alembic upgrade head`.
 
 ```bash
 alembic current
-alembic check     # harus: "No new upgrade operations detected."
+alembic check   # harus: "No new upgrade operations detected."
 ```
 
-Test `tests/test_migrations.py` juga memastikan database baru hasil migrasi
-memiliki schema yang sama persis dengan `app/models.py`.
+---
 
 ## Teknologi
 
 - Python 3.12 / FastAPI
 - SQLAlchemy + Alembic (SQLite)
 - React 19 + Vite + Tailwind CSS
-- LanceDB + sentence-transformers untuk RAG
+- LanceDB + sentence-transformers (RAG)
+- Groq (AI chat/tutor/generate)
+
+---
+
+## Lisensi
+
+MIT. Lihat berkas `LICENSE`.
 
 Dokumen penting (folder `docs/`): `ATURAN_KERJA_DENGAN_AGENT.md`,
 `PROTECTED_BASELINE.md`, `ai_context.md`.

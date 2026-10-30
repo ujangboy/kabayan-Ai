@@ -63,3 +63,10 @@ frontend/node_modules/
 
 # Superpowers/SDD scratch (ledger eksekusi rencana)
 .superpowers/
+
+# Kilo agent runtime (bukan sumber proyek)
+.kilo/skills/
+.kilo/plans/
+
+# Skrip uji satu kali (bukan bagian rilis utama)
+scripts/testing/

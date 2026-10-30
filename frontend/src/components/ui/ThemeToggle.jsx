@@ -1,5 +1,7 @@
-import { forwardRef, useEffect, useState } from 'react';
+import { forwardRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useThemeId, toggleDefaultTheme } from '@/lib/theme';
+import { findTheme } from '@/lib/themes';
 
 function SunIcon() {
   return (
@@ -20,16 +22,10 @@ function MoonIcon() {
 
 export const ThemeToggle = forwardRef(function ThemeToggle({ className = '', ...props }, ref) {
   const { t } = useTranslation();
-  const [theme, setTheme] = useState(() =>
-    document.documentElement.classList.contains('dark') ? 'dark' : 'light'
-  );
-
-  useEffect(() => {
-    const root = document.documentElement;
-    root.classList.toggle('dark', theme === 'dark');
-    root.style.colorScheme = theme;
-    try { localStorage.setItem('theme', theme); } catch (e) {}
-  }, [theme]);
+  // Sumber state = data-theme di <html> (subscribes event 'kabayan-theme')
+  // agar selalu sinkron dgn tema yang dipilih dari Settings → Tampilan.
+  const themeId = useThemeId();
+  const isDark = findTheme(themeId)?.mode !== 'light';
 
   return (
     <button
@@ -38,12 +34,12 @@ export const ThemeToggle = forwardRef(function ThemeToggle({ className = '', ...
       {...props}
       onClick={(e) => {
         props.onClick?.(e);
-        setTheme((t) => (t === 'dark' ? 'light' : 'dark'));
+        toggleDefaultTheme();
       }}
       className={`relative z-[11] rounded-xl p-2 text-text-secondary transition-[background-color,color] duration-150 hover:bg-wash hover:text-text active:scale-[0.98] ${className}`}
-      aria-label={theme === 'dark' ? t('settings.themeSwitchToLight') : t('settings.themeSwitchToDark')}
+      aria-label={isDark ? t('settings.themeSwitchToLight') : t('settings.themeSwitchToDark')}
     >
-      {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
+      {isDark ? <SunIcon /> : <MoonIcon />}
     </button>
   );
 });

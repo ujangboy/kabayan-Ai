@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+# kp — Kabayan Pintar launcher
+# Jalankan langsung dari mana saja tanpa perlu `cd` ke folder proyek.
+# Cara pakai:
+#   chmod +x kp
+#   ./kp              # jalankan backend (8000) + frontend (5173), lalu buka browser
+#   ./kp --install    # install dependensi dari nol (venv + npm ci) sebelum jalan
+set -euo pipefail
+
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$DIR"
+
+install() {
+  echo "==> Menyalin template env..."
+  cp -n .env.example .env 2>/dev/null || true
+
+  echo "==> Membuat venv Python..."
+  if [ ! -d venv ]; then
+    python3 -m venv venv
+  fi
+  # shellcheck disable=SC1091
+  . venv/bin/activate
+  pip install -q -r requirements.txt
+
+  echo "==> Install dependensi frontend..."
+  (cd frontend && npm ci --silent)
+
+  echo "==> Selesai install. Jalankan './kp' untuk mulai."
+}
+
+run() {
+  if [ ! -d venv ] || [ ! -d frontend/node_modules ]; then
+    echo "[!] Belum diinstall. Jalankan: ./kp --install"
+    exit 1
+  fi
+  # shellcheck disable=SC1091
+  . venv/bin/activate
+  cd frontend
+  echo "==> Kabayan Pintar sedang berjalan..."
+  echo "    Backend : http://127.0.0.1:8000"
+  echo "    Frontend: http://127.0.0.1:5173"
+  echo "    Tekan Ctrl+C untuk berhenti."
+  echo ""
+  npm run dev:all
+}
+
+case "${1:-}" in
+  --install|install) install ;;
+  ""|run|start) run ;;
+  *) echo "Penggunaan: ./kp [--install]" ;;
+esac

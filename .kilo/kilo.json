@@ -1,0 +1,50 @@
+{
+  "$schema": "https://app.kilo.ai/config.json",
+  "model": "anthropic/claude-sonnet-4.5",
+  "default_agent": "code",
+  "permission": {
+    "bash": {
+      "npm *": "allow",
+      "npx *": "allow",
+      "pnpm *": "allow",
+      "yarn *": "allow",
+      "pip *": "allow",
+      "pip3 *": "allow",
+      "python *": "allow",
+      "python3 *": "allow",
+      "pytest *": "allow",
+      "alembic *": "allow",
+      "uvicorn *": "allow",
+      "node *": "allow",
+      "git *": "allow",
+      "ls *": "allow",
+      "cat *": "allow",
+      "find *": "allow",
+      "grep *": "allow",
+      "head *": "allow",
+      "tail *": "allow"
+    },
+    "edit": {
+      "app/**": "allow",
+      "frontend/**": "allow",
+      "alembic/**": "allow",
+      "scripts/**": "allow",
+      "tests/**": "allow",
+      "*.py": "allow",
+      "*.ts": "allow",
+      "*.tsx": "allow",
+      "*.js": "allow",
+      "*.jsx": "allow",
+      "*.json": "allow",
+      "*.md": "allow",
+      "requirements.txt": "allow",
+      "alembic.ini": "allow"
+    }
+  },
+  "instructions": [
+    "README.md",
+    "DESIGN.md",
+    "AGENTS.md",
+    "CLAUDE.md"
+  ]
+}
