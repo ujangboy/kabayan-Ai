@@ -1,5 +1,5 @@
 @echo off
-title Kabayan AI v2 Launcher
+title Kabayan Pintar v2 Launcher
 color 0A
 echo =========================================
 echo      MENYALAKAN KABAYAN AI v2...

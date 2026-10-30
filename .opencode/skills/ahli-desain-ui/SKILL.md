@@ -1,17 +1,17 @@
 ---
 name: ahli-desain-ui
-description: Panduan mendesain dan membangun antarmuka (UI/UX) yang konsisten, aksesibel, dan reusable di frontend repo kabayan_agent (React 19 + Tailwind + Radix UI)
+description: Panduan mendesain dan membangun antarmuka (UI/UX) yang konsisten, aksesibel, dan reusable di frontend repo kabayan_pintar (React 19 + Tailwind + Radix UI)
 ---
 
 # SKILL: Ahli Desain UI
 
 Ringkasan
 ---
-Panduan praktis untuk merancang dan mengimplementasikan UI di repo `kabayan_agent`. Fokus pada konsistensi visual, komponen yang dapat dipakai ulang, aksesibilitas, dan keselarasan dengan design tokens yang sudah ada.
+Panduan praktis untuk merancang dan mengimplementasikan UI di repo `kabayan_pintar`. Fokus pada konsistensi visual, komponen yang dapat dipakai ulang, aksesibilitas, dan keselarasan dengan design tokens yang sudah ada.
 
 Ruang lingkup
 ---
-- Workspace-scoped: berlaku untuk `frontend/` repo ini (`kabayan_agent`).
+- Workspace-scoped: berlaku untuk `frontend/` repo ini (`kabayan_pintar`).
 - Stack saat ini: React 19, Vite, Tailwind CSS v3, Radix UI primitives, framer-motion, zustand (state), @tanstack/react-query (data), tiptap (rich text editor), i18next (multi-bahasa), react-router-dom v7.
 
 Kapan dipakai

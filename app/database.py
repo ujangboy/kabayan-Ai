@@ -1,5 +1,5 @@
 """
-Kabayan AI — Database engine with WAL mode + QueuePool.
+Kabayan Pintar — Database engine with WAL mode + QueuePool.
 
 Optimizations:
   - WAL journal mode for concurrent reads + single writer

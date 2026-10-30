@@ -1,5 +1,5 @@
 """
-FAQ Service for Kabayan AI Tutor.
+FAQ Service for Kabayan Pintar Tutor.
 
 Handles:
 - Fuzzy keyword-based lookup against tutor_faq table (0 token cost)

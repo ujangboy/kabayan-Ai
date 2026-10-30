@@ -1,6 +1,6 @@
 ---
 version: 3.1
-name: kabayan-agent-design-system
+name: kabayan-pintar-design-system
 description: >
   Design system Kabayan Pintar v3.1 — "Meja Belajar". Kanvas sage sejuk,
   tinta hijau hutan, aksen pandan, dan kunyit untuk satu momen penting.

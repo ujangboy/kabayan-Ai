@@ -1,5 +1,5 @@
 """
-Centralized Error Handler — Kabayan AI.
+Centralized Error Handler — Kabayan Pintar.
 
 Unified error handling system that:
 1. Handles AppError (from exceptions.py) with its specific status/message

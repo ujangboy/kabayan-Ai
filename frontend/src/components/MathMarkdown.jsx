@@ -1,5 +1,5 @@
 /**
- * MathMarkdown — shared renderer for all AI output in Kabayan AI.
+ * MathMarkdown — shared renderer for all AI output in Kabayan Pintar.
  *
  * Pipeline:
  *   raw string

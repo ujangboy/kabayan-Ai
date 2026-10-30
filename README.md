@@ -1,4 +1,4 @@
-# kabayan_agent
+# kabayan_pintar
 
 Study workspace berbasis FastAPI + React untuk mengelola mata kuliah, materi,
 catatan, flashcard, quiz, simulasi ujian, dan tutor AI.

@@ -1,5 +1,5 @@
 """
-Smart Classifier untuk AI Tutor Kabayan AI.
+Smart Classifier untuk AI Tutor Kabayan Pintar.
 
 Mengklasifikasikan pesan siswa ke tiga tier tanpa token cost:
   SIMPLE  (~70%) — definisi, rumus dasar, FAQ → jawab dari database

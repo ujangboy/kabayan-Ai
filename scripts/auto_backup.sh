@@ -3,7 +3,7 @@
 # Kabayan Pintar — Backup Otomatis Harian
 # ------------------------------------------------------------
 # Dipanggil Windows Task Scheduler lewat:
-#   wsl.exe -d Ubuntu-24.04 --cd /home/a7916/Projects/kabayan-agent \
+#   wsl.exe -d Ubuntu-24.04 --cd /home/a7916/Projects/kabayan-pintar \
 #     -- bash scripts/auto_backup.sh
 #
 # Yang dikerjakan:

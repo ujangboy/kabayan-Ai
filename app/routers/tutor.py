@@ -1,5 +1,5 @@
 """
-Tutor Router — Kabayan AI Tutor endpoints.
+Tutor Router — Kabayan Pintar Tutor endpoints.
 
 Endpoints:
   POST /api/tutor/chat      — main streaming chat (hybrid SIMPLE/MEDIUM/COMPLEX)

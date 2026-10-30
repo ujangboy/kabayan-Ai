@@ -1,5 +1,5 @@
 """
-Prompt templates untuk AI Tutor Kabayan AI.
+Prompt templates untuk AI Tutor Kabayan Pintar.
 
 Menggunakan metode Socratic: membimbing siswa dengan pertanyaan
 balik, hint bertahap, dan penjelasan terstruktur — bukan langsung
@@ -73,7 +73,7 @@ LEVEL_INSTRUCTIONS = {
 
 TUTOR_FAQ_WRAPPER_PROMPT = PromptTemplate(
     input_variables=["mata_kuliah", "question", "faq_answer", "student_level"],
-    template="""Kamu adalah Kabayan AI Tutor untuk mata pelajaran {mata_kuliah}.
+    template="""Kamu adalah Kabayan Pintar Tutor untuk mata pelajaran {mata_kuliah}.
 
 Seorang siswa bertanya: "{question}"
 

@@ -9,7 +9,7 @@ import { cn } from '@/utils';
 /**
  * Icon — wrapper terpusat untuk Google Material Symbols (style Rounded).
  *
- * Satu-satunya cara render icon di Kabayan AI. Nama icon WAJIB diambil dari
+ * Satu-satunya cara render icon di Kabayan Pintar. Nama icon WAJIB diambil dari
  * registry ICONS (src/lib/icons.js), jangan hardcode / import package langsung.
  *
  * Props:

@@ -1,6 +1,6 @@
 ---
 name: frontend-backend-arsitektur
-description: Panduan merancang ulang frontend jadi komponen terukur dan merapikan/standarisasi arsitektur backend (API contract, layering, observability) untuk repo kabayan_agent
+description: Panduan merancang ulang frontend jadi komponen terukur dan merapikan/standarisasi arsitektur backend (API contract, layering, observability) untuk repo kabayan_pintar
 ---
 
 # SKILL: Desain Frontend & Merapikan Arsitektur Backend
@@ -11,7 +11,7 @@ Panduan tersetruktur untuk merancang ulang frontend menjadi komponen terukur dan
 
 Ruang lingkup
 ---
-- Workspace-scoped: berlaku untuk repo ini (`kabayan_agent`).
+- Workspace-scoped: berlaku untuk repo ini (`kabayan_pintar`).
 - Fokus pada UI/UX componentization, API contract, data flow, observability, deployment, dan pengujian.
 
 Input yang dibutuhkan

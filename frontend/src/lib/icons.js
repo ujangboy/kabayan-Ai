@@ -1,7 +1,7 @@
 /**
  * Icon Registry — Google Material Symbols (style Rounded).
  *
- * Satu-satunya sumber kebenaran untuk nama icon di Kabayan AI.
+ * Satu-satunya sumber kebenaran untuk nama icon di Kabayan Pintar.
  * Setiap key semantic memetakan ke nama glyph Material Symbols (snake_case),
  * lalu <Icon /> (components/ui/Icon.jsx) me-resolve nama tersebut ke SVG
  * component via lib/iconMap.js.

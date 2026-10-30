@@ -1,5 +1,5 @@
 /**
- * Global error utilities — Kabayan AI
+ * Global error utilities — Kabayan Pintar
  *
  * Rules:
  *   - Never render raw exception objects, stack traces, or internal JSON.

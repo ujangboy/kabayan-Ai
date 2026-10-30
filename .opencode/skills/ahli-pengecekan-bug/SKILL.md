@@ -1,6 +1,6 @@
 ---
 name: ahli-pengecekan-bug
-description: Panduan triage, diagnosa, dan perbaikan bug lintas backend/frontend/data/AI beserta langkah migrasi/alihat antar lapisan untuk repo kabayan_agent
+description: Panduan triage, diagnosa, dan perbaikan bug lintas backend/frontend/data/AI beserta langkah migrasi/alihat antar lapisan untuk repo kabayan_pintar
 ---
 
 # SKILL: Pengcekan Bug dan Alih Backend/Frontend/Data/AI
@@ -11,7 +11,7 @@ Panduan terstruktur untuk menemukan, mendiagnosis, dan menuntaskan bug yang meli
 
 Ruang lingkup
 ---
-- Workspace-scoped: berlaku untuk repo ini (`kabayan_agent`).
+- Workspace-scoped: berlaku untuk repo ini (`kabayan_pintar`).
 - Gunakan saat ada bug yang melibatkan satu atau lebih dari: backend (API, DB), frontend (UI, requests), data (skema, integritas), AI (model, inferensi, prompting).
 
 Kapan dipakai

@@ -1,4 +1,4 @@
-# ATURAN KERJA DENGAN AI AGENT — Kabayan AI
+# ATURAN KERJA DENGAN AI AGENT — Kabayan Pintar
 
 > Dokumen ini WAJIB dibaca AI agent di awal SETIAP sesi kerja, sebelum
 > membaca file lain manapun (termasuk PROTECTED_BASELINE.md dan

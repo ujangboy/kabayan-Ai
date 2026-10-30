@@ -1,5 +1,5 @@
 """
-Tutor Service — orchestrates the hybrid routing pipeline for Kabayan AI Tutor.
+Tutor Service — orchestrates the hybrid routing pipeline for Kabayan Pintar Tutor.
 
 Flow per request:
   1. classify(message)  → SIMPLE / MEDIUM / COMPLEX

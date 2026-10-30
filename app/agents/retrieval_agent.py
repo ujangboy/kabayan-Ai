@@ -1,5 +1,5 @@
 """
-Retrieval Agent — Agentic RAG (CRAG-style) untuk Kabayan AI.
+Retrieval Agent — Agentic RAG (CRAG-style) untuk Kabayan Pintar.
 
 Siklus self-correction tanpa LangGraph (drop-in untuk migrasi nanti):
   1. RETRIEVE   — rag_service.search(query, doc_ids, top_k)

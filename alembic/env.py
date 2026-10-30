@@ -1,5 +1,5 @@
 """
-Alembic env.py — Kabayan AI migration configuration.
+Alembic env.py — Kabayan Pintar migration configuration.
 
 Uses database.py engine and config.STORAGE_DIR for the database path.
 """

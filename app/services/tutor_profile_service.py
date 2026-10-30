@@ -1,6 +1,6 @@
 """
 Tutor Profile Service — manages adaptive learning profile for the single-user
-local Kabayan AI Tutor app.
+local Kabayan Pintar Tutor app.
 
 The profile is a singleton identified by user_key="local" (no users table).
 It influences tutor prompt adaptation and tracks usage statistics.

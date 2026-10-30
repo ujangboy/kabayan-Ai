@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Kabayan AI v2 Launcher — versi WSL / Linux
+# Kabayan Pintar v2 Launcher — versi WSL / Linux
 # Pengganti jalankan_kabayan.bat (cmd)
 
 set -e

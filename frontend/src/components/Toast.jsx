@@ -1,5 +1,5 @@
 /**
- * Global Toast System — Kabayan AI (Apple-style)
+ * Global Toast System — Kabayan Pintar (Apple-style)
  *
  * Usage:
  *   const { toast } = useToast();

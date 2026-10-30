@@ -1,5 +1,5 @@
 """
-Feedback Service untuk AI Tutor Kabayan AI.
+Feedback Service untuk AI Tutor Kabayan Pintar.
 
 Menyimpan rating siswa terhadap respons tutor (helpful / somewhat / not_helpful)
 beserta flag & komentar opsional, lalu menghitung statistik helpful_rate.
